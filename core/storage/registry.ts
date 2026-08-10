@@ -1,6 +1,8 @@
 import 'server-only';
 import { AdapterConfigError, type AdapterId, type StorageAdapter } from './contract';
 import { localAdapter } from './adapters/local';
+import { neonAdapter } from './adapters/neon';
+import { supabaseAdapter } from './adapters/supabase';
 
 /**
  * Picks the storage backend for this deployment.
@@ -16,8 +18,10 @@ import { localAdapter } from './adapters/local';
 
 const REGISTERED: Partial<Record<AdapterId, () => StorageAdapter>> = {
   local: () => localAdapter,
-  // supabase, neon, cloudflare, firebase, convex, pocketbase and appwrite
-  // register here as they land. Each is one file plus one line.
+  supabase: () => supabaseAdapter,
+  neon: () => neonAdapter,
+  // cloudflare, firebase, convex, pocketbase and appwrite register here as they
+  // land. Each is one file plus one line — that is the point of the contract.
 };
 
 /** Hosts where the filesystem is read-only or discarded between requests. */
@@ -30,7 +34,14 @@ function inferAdapterId(): AdapterId {
   if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
     candidates.push('supabase');
   }
-  if (process.env.POSTGRES_URL && process.env.BLOB_READ_WRITE_TOKEN) candidates.push('neon');
+  // Neon needs a database and somewhere for uploads to go. Checking both means
+  // a half-configured project is caught here rather than at the first upload.
+  if (
+    (process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.NEON_DATABASE_URL) &&
+    process.env.BLOB_READ_WRITE_TOKEN
+  ) {
+    candidates.push('neon');
+  }
   if (process.env.CONVEX_DEPLOYMENT) candidates.push('convex');
   if (process.env.FIREBASE_SERVICE_ACCOUNT) candidates.push('firebase');
   if (process.env.CLOUDFLARE_ACCOUNT_ID && process.env.D1_DATABASE_ID)

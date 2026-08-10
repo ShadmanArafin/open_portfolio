@@ -38,8 +38,47 @@ jobs:
       - name: Format check
         run: npm run format:check
 
+      - name: Test
+        run: npm run test
+
       - name: Build
         run: npm run build
+
+  storage-conformance:
+    name: Storage conformance against real Postgres
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    # Supabase and Neon share one SQL engine, so exercising it against a genuine
+    # Postgres verifies most of both without needing an account for either.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: opb_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run the conformance suite
+        run: npm run test
+        env:
+          TEST_POSTGRES_URL: postgres://postgres:postgres@localhost:5432/opb_test
 
   content-safety:
     name: No personal or client-owned content

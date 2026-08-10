@@ -56,14 +56,31 @@ unanswered enquiries — each linking straight to the screen that fixes it.
 **Export and import.** One JSON file containing the content and the media. This
 is your backup and the way to move between machines.
 
+## Choose your backend
+
+| Backend                | Free tier                 | Works on Vercel/Netlify | Best for                                                                |
+| ---------------------- | ------------------------- | ----------------------- | ----------------------------------------------------------------------- |
+| **Local filesystem**   | free forever, no account  | no                      | trying it out, a VPS, Docker, a Raspberry Pi                            |
+| **Supabase**           | 500MB database, 1GB files | yes                     | one account for everything; note free projects pause after ~1 week idle |
+| **Neon + Vercel Blob** | 0.5GB database, 1GB blob  | yes                     | deploying on Vercel; resumes instantly after idling                     |
+
+You do not have to choose in advance. Whichever service's environment variables
+are present is the one that gets used, so provisioning a database is the only
+step. See [.env.example](.env.example).
+
+Adding another backend is one file implementing `StorageAdapter`, one line in
+the registry, and a green run of the conformance suite — 21 tests covering
+round-tripping, concurrent writes, expiry, namespace isolation, and the rule
+that auth state never travels inside a content export.
+
 ## Stack
 
 - **Next.js 16** (App Router) + **React 19** + **TypeScript 5.5**
 - **Tailwind 3.4** for the public site, with typography and colour driven by CSS
   variables the editor writes at runtime
 - **[Astryx](https://astryx.atmeta.com)** for the admin panel
-- **Filesystem storage** behind a `StorageAdapter` interface, with hosted
-  backends to follow
+- **Pluggable storage** behind a `StorageAdapter` interface — local filesystem,
+  Supabase, or Neon + Vercel Blob
 - **scrypt + httpOnly session cookies** for admin authentication
 - **React Router** still drives the admin, mounted inside one Next route —
   transitional, and removed when the admin moves to shadcn/ui
@@ -73,12 +90,11 @@ is your backup and the way to move between machines.
 Being direct about this, because the gaps are structural rather than cosmetic
 and you should not discover them after typing in a portfolio:
 
-- **No hosted backend yet.** Content is stored on the server's filesystem, which
-  works on a VPS, a Raspberry Pi or Docker — but not on Vercel, Netlify or
-  Cloudflare, where the disk is discarded between deploys. The app refuses to
-  start with that combination rather than losing your content silently. Hosted
-  backends (Supabase, Neon, Firebase, Convex, Cloudflare, PocketBase, Appwrite)
-  are next.
+- **The hosted backends are new.** Supabase and Neon are implemented and pass
+  the conformance suite's database tests against a real Postgres in CI, but
+  neither has been run against the live services yet, so treat 0.4 as
+  experimental if you use one. Firebase, Convex, Cloudflare, PocketBase and
+  Appwrite are not built.
 - **No email.** Enquiries reach your inbox in the admin, but nothing is emailed
   to you yet.
 - **No blog, no page builder, no themes.** Later releases.
@@ -105,11 +121,12 @@ to the homepage.
 | --------- | --------------------------------------------------------------------------------------------- |
 | 0.1       | Open-source groundwork: MIT licence, no personal data, lint and CI, demo content              |
 | 0.2       | Next.js App Router, server rendering, working SEO, Open Graph, sitemap, real 404              |
-| 0.3 (now) | Server-side auth, publishing that reaches visitors, a contact form that delivers              |
-| 0.4       | Pluggable storage — Supabase, Firebase, Convex, Cloudflare, PocketBase, Neon, Appwrite, local |
-| 0.5       | One-click deploy, first-run setup wizard, profession presets                                  |
-| 0.6       | Block and page builder, six themes, deep design tokens                                        |
-| 0.7       | Blog, newsletter capture, integrations                                                        |
+| 0.3       | Server-side auth, publishing that reaches visitors, a contact form that delivers              |
+| 0.4 (now) | Pluggable storage: local, Supabase and Neon, with a conformance suite every backend must pass |
+| 0.5       | Remaining backends — Firebase, Convex, Cloudflare, PocketBase, Appwrite                       |
+| 0.6       | One-click deploy, first-run setup wizard, profession presets                                  |
+| 0.7       | Block and page builder, six themes, deep design tokens                                        |
+| 0.8       | Blog, newsletter capture, integrations                                                        |
 | 1.0       | Stable                                                                                        |
 
 ## Deploying
