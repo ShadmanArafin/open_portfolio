@@ -15,15 +15,20 @@ to keep one: students, designers, developers, photographers, writers.
 
 ## Deploy your own
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FShadmanArafin%2Fopen_portfolio_builder&env=OPB_SETUP_TOKEN&envDescription=A%20password%20of%20your%20choosing%20that%20proves%20this%20site%20is%20yours.%20Type%20any%20long%20random%20phrase%20and%20keep%20it%20somewhere%20safe%20—%20you%20will%20be%20asked%20for%20it%20once.&envLink=https%3A%2F%2Fgithub.com%2FShadmanArafin%2Fopen_portfolio_builder%23deploying&integration-ids=oac_3sK3gnG06emjIEVL09jjntDD&project-name=my-portfolio&repository-name=my-portfolio)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FShadmanArafin%2Fopen_portfolio_builder&project-name=my-portfolio&repository-name=my-portfolio&env=OPB_SETUP_TOKEN&envDescription=Invent+any+long+phrase.+You+will+be+asked+for+it+once%2C+to+prove+the+site+is+yours.&envLink=https%3A%2F%2Fgithub.com%2FShadmanArafin%2Fopen_portfolio_builder%23what-happens-on-first-run&stores=%5B%7B%22type%22%3A%22integration%22%2C%22integrationSlug%22%3A%22neon%22%2C%22productSlug%22%3A%22neon%22%2C%22protocol%22%3A%22storage%22%7D%2C%7B%22type%22%3A%22blob%22%2C%22access%22%3A%22public%22%7D%5D)
 
-Three things happen: Vercel copies this repository into your own GitHub account,
-prompts you to add a Neon database (free), and asks you to invent one setup
-phrase. Then open your new site, claim it with that phrase, and answer four
-questions. No keys to find, nothing to install, nothing to configure.
+Vercel copies this repository into your own GitHub account, provisions a free
+Neon Postgres database and a Blob store for your images, and asks you to invent
+one setup phrase. Then open your new site, claim it with that phrase, and answer
+four questions.
 
-If you would rather not use Vercel, everything below works the same on Netlify,
-Cloudflare or your own server — see [Choose your backend](#choose-your-backend).
+No keys to find, nothing to install. The database connection string and the blob
+token are set for you and you never see either.
+
+> The database and blob store are requested through Vercel's `stores` deploy
+> parameter. If the button ever stops provisioning them, deploy anyway and add
+> **Neon** and **Blob** from your project's Storage tab — the app reads whichever
+> backend's variables are present, so nothing else changes.
 
 ## Running it locally
 
