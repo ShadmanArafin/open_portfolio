@@ -2,6 +2,7 @@ import 'server-only';
 import { AdapterConfigError, type AdapterId, type StorageAdapter } from './contract';
 import { localAdapter } from './adapters/local';
 import { neonAdapter } from './adapters/neon';
+import { postgresAdapter } from './adapters/postgres';
 import { supabaseAdapter } from './adapters/supabase';
 
 /**
@@ -20,6 +21,7 @@ const REGISTERED: Partial<Record<AdapterId, () => StorageAdapter>> = {
   local: () => localAdapter,
   supabase: () => supabaseAdapter,
   neon: () => neonAdapter,
+  postgres: () => postgresAdapter,
   // cloudflare, firebase, convex, pocketbase and appwrite register here as they
   // land. Each is one file plus one line — that is the point of the contract.
 };
@@ -48,6 +50,15 @@ function inferAdapterId(): AdapterId {
     candidates.push('cloudflare');
   if (process.env.POCKETBASE_URL) candidates.push('pocketbase');
   if (process.env.APPWRITE_ENDPOINT) candidates.push('appwrite');
+
+  // A bare connection string with no blob store attached means a plain
+  // Postgres. Checked last, so a more specific match always wins.
+  if (
+    !candidates.length &&
+    (process.env.OPB_POSTGRES_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL)
+  ) {
+    candidates.push('postgres');
+  }
 
   // Ambiguity is an error, never a guess. Silently picking one of two
   // configured databases is how content ends up split across both.

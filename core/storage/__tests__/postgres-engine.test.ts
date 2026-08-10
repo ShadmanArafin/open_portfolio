@@ -18,6 +18,14 @@ import type { StorageAdapter } from '../contract';
 const TEST_URL = process.env.TEST_POSTGRES_URL;
 
 if (TEST_URL) {
+  const loadReal = async (): Promise<StorageAdapter> => {
+    // The adapter reads its connection string from the same variables a real
+    // deployment would, so point one of them at the test database rather than
+    // teaching the adapter about a test-only variable.
+    process.env.DATABASE_URL = TEST_URL;
+    return (await import('../adapters/postgres')).postgresAdapter;
+  };
+
   const load = async (): Promise<StorageAdapter> => {
     const pg = await import('../adapters/_shared/postgres');
     const sql = () => pg.getSql(TEST_URL);
@@ -55,6 +63,18 @@ if (TEST_URL) {
       },
     };
   };
+
+  // The shipped adapter, media included: it stores uploads on disk, so unlike
+  // the hosted pair every part of it can be exercised here.
+  runConformanceSuite({ describe, it, expect } as never, 'postgres adapter', loadReal, async () => {
+    const { getSql, provisionSchema } = await import('../adapters/_shared/postgres');
+    const sql = getSql(TEST_URL);
+    await provisionSchema(sql);
+    await sql`TRUNCATE opb_content, opb_owner, opb_kv`;
+    const { rm } = await import('node:fs/promises');
+    const path = await import('node:path');
+    await rm(path.join(process.cwd(), '.opb', 'media'), { recursive: true, force: true });
+  });
 
   runConformanceSuite(
     { describe, it, expect } as never,

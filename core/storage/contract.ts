@@ -21,7 +21,15 @@ import type { CMSState } from '@/cms/types/cms';
  */
 
 export type AdapterId =
-  'local' | 'supabase' | 'firebase' | 'convex' | 'cloudflare' | 'pocketbase' | 'neon' | 'appwrite';
+  | 'local'
+  | 'postgres'
+  | 'supabase'
+  | 'neon'
+  | 'firebase'
+  | 'convex'
+  | 'cloudflare'
+  | 'pocketbase'
+  | 'appwrite';
 
 export type Channel = 'published' | 'draft';
 
