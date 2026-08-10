@@ -1,0 +1,19 @@
+# Normalise line endings.
+#
+# Without this, a Windows checkout rewrites every file to CRLF while git stores
+# LF, so `npm run format:check` fails locally for Windows contributors and
+# passes in CI — a confusing split that makes people "fix" formatting that was
+# never broken.
+* text=auto eol=lf
+
+# Binary files must never be converted.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.avif binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
