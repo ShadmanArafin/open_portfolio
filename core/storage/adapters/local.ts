@@ -100,24 +100,49 @@ const media: MediaAdapter = {
 };
 
 /**
+ * Serialises writes per target path.
+ *
+ * Renaming onto the same destination from two places at once is fine on Linux
+ * and fails with EPERM on Windows, where the destination is briefly locked. So
+ * rather than racing and hoping, writes to a given file queue behind each
+ * other. The observable behaviour is unchanged — last writer still wins — but
+ * it wins by arriving last rather than by winning a coin toss, and no caller
+ * ever sees an error for having written at an inconvenient moment.
+ */
+const writeQueues = new Map<string, Promise<void>>();
+
+/**
  * Writes a file so a reader never sees a partial one.
  *
- * The temp name has to be unique per write. With a fixed `.tmp`, two concurrent
- * writers both create the same temp file, the first rename consumes it, and the
- * second fails with ENOENT — so a second publish arriving while the first is
- * still in flight throws instead of simply losing the race. Each writer now
- * renames a file only it knows about, which makes the outcome last-writer-wins
- * rather than an error.
+ * The temp name is unique per write. With a fixed `.tmp`, two writers create
+ * the same temp file, the first rename consumes it, and the second fails with
+ * ENOENT — a second publish arriving mid-flight would throw rather than simply
+ * lose the race.
  */
 async function atomicWrite(target: string, contents: string): Promise<void> {
-  const temp = `${target}.${process.pid}.${randomBytes(6).toString('hex')}.tmp`;
+  const previous = writeQueues.get(target) ?? Promise.resolve();
+
+  const run = previous
+    .catch(() => {})
+    .then(async () => {
+      const temp = `${target}.${process.pid}.${randomBytes(6).toString('hex')}.tmp`;
+      try {
+        await writeFile(temp, contents, 'utf8');
+        await rename(temp, target);
+      } catch (err) {
+        // Never leave a stray temp file behind on failure.
+        await unlink(temp).catch(() => {});
+        throw err;
+      }
+    });
+
+  writeQueues.set(target, run);
   try {
-    await writeFile(temp, contents, 'utf8');
-    await rename(temp, target);
-  } catch (err) {
-    // Never leave a stray temp file behind on failure.
-    await unlink(temp).catch(() => {});
-    throw err;
+    await run;
+  } finally {
+    // Drop the entry once this is the last write, so the map cannot grow
+    // without bound over the life of the process.
+    if (writeQueues.get(target) === run) writeQueues.delete(target);
   }
 }
 
