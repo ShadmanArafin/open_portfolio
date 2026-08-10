@@ -7,13 +7,25 @@ stays yours.
 Built for people who need a portfolio but should not have to learn a framework
 to keep one: students, designers, developers, photographers, writers.
 
-> **Status: alpha (0.3).** It runs, the public site is properly
+> **Status: alpha (0.5).** It runs, the public site is properly
 > server-rendered, the editor works, and the admin now has real
 > authentication. Read
 > [What does not work yet](#what-does-not-work-yet) before using it for
 > anything real.
 
-## Running it
+## Deploy your own
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FShadmanArafin%2Fopen_portfolio_builder&env=OPB_SETUP_TOKEN&envDescription=A%20password%20of%20your%20choosing%20that%20proves%20this%20site%20is%20yours.%20Type%20any%20long%20random%20phrase%20and%20keep%20it%20somewhere%20safe%20—%20you%20will%20be%20asked%20for%20it%20once.&envLink=https%3A%2F%2Fgithub.com%2FShadmanArafin%2Fopen_portfolio_builder%23deploying&integration-ids=oac_3sK3gnG06emjIEVL09jjntDD&project-name=my-portfolio&repository-name=my-portfolio)
+
+Three things happen: Vercel copies this repository into your own GitHub account,
+prompts you to add a Neon database (free), and asks you to invent one setup
+phrase. Then open your new site, claim it with that phrase, and answer four
+questions. No keys to find, nothing to install, nothing to configure.
+
+If you would rather not use Vercel, everything below works the same on Netlify,
+Cloudflare or your own server — see [Choose your backend](#choose-your-backend).
+
+## Running it locally
 
 Node 20 or newer. No account, no API key, nothing to sign up for.
 
@@ -90,11 +102,12 @@ that auth state never travels inside a content export.
 Being direct about this, because the gaps are structural rather than cosmetic
 and you should not discover them after typing in a portfolio:
 
-- **The hosted backends are new.** Supabase and Neon are implemented and pass
-  the conformance suite's database tests against a real Postgres in CI, but
-  neither has been run against the live services yet, so treat 0.4 as
-  experimental if you use one. Firebase, Convex, Cloudflare, PocketBase and
-  Appwrite are not built.
+- **File uploads on a hosted backend are unverified.** The database half of
+  Supabase and Neon has been run end to end against a real Postgres — claim,
+  sign in, publish, and the live site served from the database. Uploading images
+  goes to Supabase Storage or Vercel Blob, and neither of those has been
+  exercised against the live service yet. Everything else works.
+- **Firebase, Convex, Cloudflare, PocketBase and Appwrite** are not built yet.
 - **No email.** Enquiries reach your inbox in the admin, but nothing is emailed
   to you yet.
 - **No blog, no page builder, no themes.** Later releases.
@@ -122,9 +135,9 @@ to the homepage.
 | 0.1       | Open-source groundwork: MIT licence, no personal data, lint and CI, demo content              |
 | 0.2       | Next.js App Router, server rendering, working SEO, Open Graph, sitemap, real 404              |
 | 0.3       | Server-side auth, publishing that reaches visitors, a contact form that delivers              |
-| 0.4 (now) | Pluggable storage: local, Supabase and Neon, with a conformance suite every backend must pass |
-| 0.5       | Remaining backends — Firebase, Convex, Cloudflare, PocketBase, Appwrite                       |
-| 0.6       | One-click deploy, first-run setup wizard, profession presets                                  |
+| 0.4       | Pluggable storage: local, Supabase and Neon, with a conformance suite every backend must pass |
+| 0.5 (now) | One-click deploy, first-run wizard, profession vocabulary packs                               |
+| 0.6       | Remaining backends — Firebase, Convex, Cloudflare, PocketBase, Appwrite                       |
 | 0.7       | Block and page builder, six themes, deep design tokens                                        |
 | 0.8       | Blog, newsletter capture, integrations                                                        |
 | 1.0       | Stable                                                                                        |
@@ -136,11 +149,23 @@ Vercel, Netlify or Cloudflare with no configuration. The SPA rewrite files the
 old client-routed build needed are gone — routing is handled by the framework
 now.
 
-On first visit you will be sent to `/setup` to claim the site: pick an email
-and a passphrase, and that becomes the only account that can edit it. Set an
-`OPB_SETUP_TOKEN` environment variable before deploying — the claim form
-requires it in any production build, so a stranger who finds the URL before you
-cannot take ownership.
+### What happens on first run
+
+1. **Claim the site at `/setup`.** You give an email and a passphrase; that
+   becomes the only account that can edit it. On a public host you also enter
+   your `OPB_SETUP_TOKEN`, which is what stops a stranger who finds the URL
+   before you from taking ownership. There is deliberately no "but I'm on
+   localhost" exemption — the only evidence of that is a header anyone can send.
+2. **Answer four questions.** Your name and what you do, the kind of work you
+   show, a colour, then publish. The second one renames sections to language
+   that fits your field: a photographer gets _Series_ and _Brands shot for_
+   where a developer gets _Projects_ and _Stack_. It changes wording only, so
+   nothing you have written can be lost by it.
+3. **That's it — you have a live site.** The demo projects stay as examples
+   until you replace them, and the dashboard lists whatever is still
+   unfinished with a link to the screen that fixes it.
+
+Every step is skippable. None of it is permanent.
 
 ## Contributing
 

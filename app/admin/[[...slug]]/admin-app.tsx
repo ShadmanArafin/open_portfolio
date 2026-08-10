@@ -76,6 +76,9 @@ const AdminRecommendationsCMS = lazy(() =>
 const AdminArtifactsCMS = lazy(() =>
   import('@/admin/pages/AdminArtifactsCMS').then((m) => ({ default: m.AdminArtifactsCMS }))
 );
+const AdminWelcome = lazy(() =>
+  import('@/admin/pages/AdminWelcome').then((m) => ({ default: m.AdminWelcome }))
+);
 const AdminNavigationCMS = lazy(() =>
   import('@/admin/pages/AdminNavigationCMS').then((m) => ({ default: m.AdminNavigationCMS }))
 );
@@ -102,6 +105,7 @@ export default function AdminApp() {
                 <Route path="/login" element={<AdminLogin />} />
                 <Route path="/" element={<AdminLayout />}>
                   <Route index element={<AdminDashboard />} />
+                  <Route path="welcome" element={<AdminWelcome />} />
                   <Route path="analytics" element={<AdminAnalytics />} />
                   <Route path="pages" element={<AdminPagesEditor />} />
                   <Route path="projects" element={<AdminProjectsCMS />} />

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Outlet, Navigate } from 'react-router-dom';
+import { Outlet, Navigate, useLocation } from 'react-router-dom';
 import { AppShell } from '@astryxdesign/core/AppShell';
 import { TopNav } from '@astryxdesign/core/TopNav';
 import { Button } from '@astryxdesign/core/Button';
@@ -27,8 +27,10 @@ export const AdminLayout: React.FC = () => {
     clearStorageError,
     isDurable,
     authReady,
+    draftData,
   } = useCMS();
   const { theme, toggleTheme } = useTheme();
+  const location = useLocation();
   const [publishMessage, setPublishMessage] = useState<string | null>(null);
   const [publishing, setPublishing] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
@@ -50,6 +52,15 @@ export const AdminLayout: React.FC = () => {
   // absolute "/admin/login" here would resolve to "/admin/admin/login".
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  // A site still carrying the seed's placeholder name has never been set up.
+  // Detecting it from the content itself means no extra flag to store, and no
+  // way for the two to disagree — and once the name is changed, by the wizard
+  // or by hand, this never fires again.
+  const looksUnconfigured = draftData.settings.fullName === 'Your Name';
+  if (looksUnconfigured && !location.pathname.endsWith('/welcome')) {
+    return <Navigate to="/welcome" replace />;
   }
 
   const handlePublish = async () => {
