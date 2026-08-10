@@ -26,6 +26,7 @@ export const AdminLayout: React.FC = () => {
     storageError,
     clearStorageError,
     isDurable,
+    authReady,
   } = useCMS();
   const { theme, toggleTheme } = useTheme();
   const [publishMessage, setPublishMessage] = useState<string | null>(null);
@@ -33,8 +34,22 @@ export const AdminLayout: React.FC = () => {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
 
+  // The session is an httpOnly cookie, so whether we are signed in is only
+  // knowable after asking the server. Redirecting before that answer arrives
+  // bounced every deep link to the login page, which the middleware then sent
+  // back to the dashboard — an endless round trip that lost the requested page.
+  if (!authReady) {
+    return (
+      <div className="min-h-screen bg-bg flex items-center justify-center font-mono text-xs uppercase tracking-widest text-text-muted animate-pulse">
+        Checking your session...
+      </div>
+    );
+  }
+
+  // Router-relative: the admin router is mounted with basename="/admin", so an
+  // absolute "/admin/login" here would resolve to "/admin/admin/login".
   if (!isAuthenticated) {
-    return <Navigate to="/admin/login" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   const handlePublish = async () => {

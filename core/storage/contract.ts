@@ -67,11 +67,52 @@ export interface HealthReport {
   latencyMs: number;
 }
 
+/**
+ * Short-lived server state: sessions, one-time codes, rate-limit counters.
+ *
+ * Deliberately separate from content. Auth state must never travel in a content
+ * export, and a backup restored onto another machine must not carry live
+ * sessions with it.
+ */
+export type KvNamespace = 'session' | 'otp' | 'ratelimit';
+
+export interface KvAdapter {
+  get<T>(ns: KvNamespace, key: string): Promise<T | null>;
+  set<T>(ns: KvNamespace, key: string, value: T, ttlSeconds: number): Promise<void>;
+  del(ns: KvNamespace, key: string): Promise<void>;
+  /** Returns the new count. Used for rate limiting. */
+  incr(ns: KvNamespace, key: string, ttlSeconds: number): Promise<number>;
+  /** Drops every key in a namespace — "sign out everywhere". */
+  clear(ns: KvNamespace): Promise<void>;
+}
+
+/**
+ * The person who owns this instance.
+ *
+ * There is exactly one. Multi-user is a hosted-product concern, and modelling
+ * it now would mean carrying permission checks through every screen for a
+ * capability nobody self-hosting a portfolio has asked for.
+ */
+export interface OwnerRecord {
+  email: string;
+  /** scrypt, stored as `scrypt$N$r$p$salt$hash`. Never the passphrase itself. */
+  passphraseHash: string;
+  createdAt: string;
+  /** Bumped to invalidate every existing session at once. */
+  sessionEpoch: number;
+}
+
 export interface StorageAdapter {
   readonly id: AdapterId;
   readonly displayName: string;
   readonly docsUrl: string;
   readonly capabilities: AdapterCapabilities;
+
+  /** Null until the instance is claimed. */
+  readOwner(): Promise<OwnerRecord | null>;
+  writeOwner(owner: OwnerRecord): Promise<void>;
+
+  readonly kv: KvAdapter;
 
   /** Cheap round trip, surfaced in the admin so a broken backend is visible. */
   health(): Promise<HealthReport>;

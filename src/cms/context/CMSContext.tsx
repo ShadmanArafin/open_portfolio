@@ -25,10 +25,12 @@ interface CMSContextType {
   pendingChangeSummary: string;
 
   isAuthenticated: boolean;
+  /** False until the server has answered. Guards must wait for it. */
+  authReady: boolean;
   login: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
-  logout: () => void;
+  logout: () => Promise<void>;
 
-  submitContactMessage: (msg: any) => boolean;
+  submitContactMessage: (msg: any) => Promise<boolean>;
   updateMessageStatus: (id: string, status: any) => void;
   deleteMessage: (id: string) => void;
 
@@ -78,6 +80,7 @@ export const CMSProvider: React.FC<CMSProviderProps> = ({ children, initialData 
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [authStatus, setAuthStatus] = useState<boolean>(() => cmsService.isAuthenticated());
   const [storageError, setStorageError] = useState<string | null>(null);
+  const [authReady, setAuthReady] = useState(false);
 
   // Storage is browser-only, so the server cannot read it. Load it on mount and
   // swap: the HTML ships with the server's content, then the editor's own
@@ -85,11 +88,16 @@ export const CMSProvider: React.FC<CMSProviderProps> = ({ children, initialData 
   // backend the server can query.
   useEffect(() => {
     let cancelled = false;
-    void cmsService.init().then(() => {
+    void cmsService.init().then(async () => {
       if (cancelled) return;
       setPublishedData(cmsService.getPublishedData());
       setDraftData(cmsService.getDraftData());
-      setAuthStatus(cmsService.isAuthenticated());
+      // The session lives in an httpOnly cookie, so the only way to know
+      // whether we are signed in is to ask the server.
+      const signedIn = await cmsService.refreshAuth();
+      if (cancelled) return;
+      setAuthStatus(signedIn);
+      setAuthReady(true);
     });
     return () => {
       cancelled = true;
@@ -154,12 +162,30 @@ export const CMSProvider: React.FC<CMSProviderProps> = ({ children, initialData 
     return res;
   }, []);
 
-  const logout = useCallback(() => {
-    cmsService.logout();
+  const logout = useCallback(async () => {
+    await cmsService.logout();
     setAuthStatus(false);
   }, []);
 
-  const submitContactMessage = useCallback((msg: any) => cmsService.submitContactMessage(msg), []);
+  /**
+   * Sends an enquiry to the server.
+   *
+   * It used to be written into the *sender's* own IndexedDB, which meant the
+   * site owner never received anything and the success message was a lie.
+   */
+  const submitContactMessage = useCallback(async (msg: any) => {
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(msg),
+      });
+      const data = (await res.json().catch(() => ({}))) as { ok?: boolean };
+      return Boolean(data.ok);
+    } catch {
+      return false;
+    }
+  }, []);
   const updateMessageStatus = useCallback(
     (id: string, status: any) => cmsService.updateMessageStatus(id, status),
     []
@@ -202,6 +228,7 @@ export const CMSProvider: React.FC<CMSProviderProps> = ({ children, initialData 
         hasUnpublishedChanges,
         pendingChangeSummary,
         isAuthenticated: authStatus,
+        authReady,
         login,
         logout,
         submitContactMessage,

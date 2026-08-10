@@ -245,9 +245,12 @@ export const AdminSidebar: React.FC = () => {
               icon={<LogOut aria-hidden />}
               variant="ghost"
               size="sm"
-              onClick={() => {
-                logout();
-                navigate('/admin/login');
+              onClick={async () => {
+                // Await the server: navigating first would race the request
+                // that actually destroys the session, and a cancelled fetch
+                // would leave the session alive on the server.
+                await logout();
+                navigate('/login');
               }}
             />
           </HStack>

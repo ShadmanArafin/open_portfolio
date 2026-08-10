@@ -7,9 +7,9 @@ stays yours.
 Built for people who need a portfolio but should not have to learn a framework
 to keep one: students, designers, developers, photographers, writers.
 
-> **Status: pre-alpha (0.2).** It runs, the public site is properly
-> server-rendered and the editor genuinely works — but **the admin is not safe
-> to deploy publicly yet** and content lives only in your own browser. Read
+> **Status: alpha (0.3).** It runs, the public site is properly
+> server-rendered, the editor works, and the admin now has real
+> authentication. Read
 > [What does not work yet](#what-does-not-work-yet) before using it for
 > anything real.
 
@@ -62,7 +62,9 @@ is your backup and the way to move between machines.
 - **Tailwind 3.4** for the public site, with typography and colour driven by CSS
   variables the editor writes at runtime
 - **[Astryx](https://astryx.atmeta.com)** for the admin panel
-- **IndexedDB** for content and media, behind a `ContentStore` interface
+- **Filesystem storage** behind a `StorageAdapter` interface, with hosted
+  backends to follow
+- **scrypt + httpOnly session cookies** for admin authentication
 - **React Router** still drives the admin, mounted inside one Next route —
   transitional, and removed when the admin moves to shadcn/ui
 
@@ -71,20 +73,24 @@ is your backup and the way to move between machines.
 Being direct about this, because the gaps are structural rather than cosmetic
 and you should not discover them after typing in a portfolio:
 
-- **Publishing does not change what visitors see.** Content lives in the
-  editor's own browser (IndexedDB). A visitor loads whatever content was
-  compiled into the JavaScript bundle at build time.
-- **The contact form does not reach you.** A submitted message is written to the
-  _sender's_ browser storage. It is never delivered anywhere.
-- **The admin gate is not authentication.** `NEXT_PUBLIC_ADMIN_PASSCODE` is compiled
-  into the public JavaScript bundle and readable by anyone who opens the site.
-  The session is an unsigned object in `localStorage`. Run the admin locally
-  only.
-- **No email, no blog, no hosted backend.** These arrive with the storage and
-  integration work.
+- **No hosted backend yet.** Content is stored on the server's filesystem, which
+  works on a VPS, a Raspberry Pi or Docker — but not on Vercel, Netlify or
+  Cloudflare, where the disk is discarded between deploys. The app refuses to
+  start with that combination rather than losing your content silently. Hosted
+  backends (Supabase, Neon, Firebase, Convex, Cloudflare, PocketBase, Appwrite)
+  are next.
+- **No email.** Enquiries reach your inbox in the admin, but nothing is emailed
+  to you yet.
+- **No blog, no page builder, no themes.** Later releases.
+- **No password reset.** If you forget your passphrase, delete
+  `.opb/state/owner.json` and claim the site again.
 
-The first three all come down to the same thing: content is not yet in a store
-the server can read. That is the next release.
+**Fixed in 0.3:** publishing now actually publishes — the admin sends your
+content to the server and visitors see it. The contact form delivers to your
+inbox instead of writing into the sender's own browser. And the admin has real
+authentication: a passphrase hashed with scrypt, an httpOnly session cookie the
+browser cannot read, rate limiting, and cross-site request rejection. The
+passcode that used to sit in the public JavaScript bundle is gone.
 
 **Fixed in 0.2:** every page is now server-rendered with its own title,
 description, Open Graph and Twitter tags drawn from your SEO settings — that
@@ -98,8 +104,8 @@ to the homepage.
 | Version   | What lands                                                                                    |
 | --------- | --------------------------------------------------------------------------------------------- |
 | 0.1       | Open-source groundwork: MIT licence, no personal data, lint and CI, demo content              |
-| 0.2 (now) | Next.js App Router, server rendering, working SEO, Open Graph, sitemap, real 404              |
-| 0.3       | Server-side auth with passkeys, and a contact form that actually delivers                     |
+| 0.2       | Next.js App Router, server rendering, working SEO, Open Graph, sitemap, real 404              |
+| 0.3 (now) | Server-side auth, publishing that reaches visitors, a contact form that delivers              |
 | 0.4       | Pluggable storage — Supabase, Firebase, Convex, Cloudflare, PocketBase, Neon, Appwrite, local |
 | 0.5       | One-click deploy, first-run setup wizard, profession presets                                  |
 | 0.6       | Block and page builder, six themes, deep design tokens                                        |
@@ -113,8 +119,11 @@ Vercel, Netlify or Cloudflare with no configuration. The SPA rewrite files the
 old client-routed build needed are gone — routing is handled by the framework
 now.
 
-Deploying the public site is fine. **Do not expose `/admin` publicly** until
-real authentication lands — see above.
+On first visit you will be sent to `/setup` to claim the site: pick an email
+and a passphrase, and that becomes the only account that can edit it. On a
+public host, set an `OPB_SETUP_TOKEN` environment variable first — the claim
+form requires it, so a stranger who finds the URL before you cannot take
+ownership.
 
 ## Contributing
 

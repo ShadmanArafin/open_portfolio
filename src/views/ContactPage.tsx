@@ -82,7 +82,7 @@ export const ContactPage: React.FC = () => {
     // mail delivery yet, so the confirmation below deliberately tells the
     // sender to email directly if it's urgent.
     trackEvent('Contact submitted');
-    const stored = submitContactMessage({
+    const stored = await submitContactMessage({
       name: formData.name.trim(),
       email: formData.email.trim(),
       company: formData.company.trim() || undefined,

@@ -32,7 +32,7 @@ export const AdminLogin: React.FC = () => {
     try {
       const res = await login(email, password);
       if (res.success) {
-        navigate('/admin');
+        navigate('/');
       } else {
         setError(res.error || 'Invalid email or passcode.');
       }

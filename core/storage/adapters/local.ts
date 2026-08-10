@@ -2,7 +2,16 @@ import 'server-only';
 import { mkdir, readFile, readdir, stat, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { CMSState } from '@/cms/types/cms';
-import type { Channel, HealthReport, MediaAdapter, MediaRecord, StorageAdapter } from '../contract';
+import type {
+  Channel,
+  HealthReport,
+  KvAdapter,
+  KvNamespace,
+  MediaAdapter,
+  MediaRecord,
+  OwnerRecord,
+  StorageAdapter,
+} from '../contract';
 
 /**
  * Filesystem-backed storage.
@@ -93,6 +102,75 @@ function channelPath(channel: Channel): string {
   return path.join(CONTENT_DIR, `${channel}.json`);
 }
 
+const STATE_DIR = path.join(ROOT, 'state');
+const OWNER_FILE = path.join(STATE_DIR, 'owner.json');
+
+interface KvEntry<T> {
+  value: T;
+  expiresAt: number;
+}
+
+function kvPath(ns: string): string {
+  return path.join(STATE_DIR, `kv-${ns}.json`);
+}
+
+async function readKv(ns: string): Promise<Record<string, KvEntry<unknown>>> {
+  try {
+    return JSON.parse(await readFile(kvPath(ns), 'utf8'));
+  } catch {
+    return {};
+  }
+}
+
+async function writeKv(ns: string, data: Record<string, KvEntry<unknown>>): Promise<void> {
+  await mkdir(STATE_DIR, { recursive: true });
+  // Expired entries are dropped on every write, so the file cannot grow without
+  // bound from rate-limit counters that are never read again.
+  const now = Date.now();
+  const live = Object.fromEntries(Object.entries(data).filter(([, e]) => e.expiresAt > now));
+  await writeFile(kvPath(ns), JSON.stringify(live), 'utf8');
+}
+
+const kv: KvAdapter = {
+  async get<T>(ns: KvNamespace, key: string): Promise<T | null> {
+    const entry = (await readKv(ns))[key];
+    if (!entry || entry.expiresAt <= Date.now()) return null;
+    return entry.value as T;
+  },
+
+  async set<T>(ns: KvNamespace, key: string, value: T, ttlSeconds: number) {
+    const data = await readKv(ns);
+    data[key] = { value, expiresAt: Date.now() + ttlSeconds * 1000 };
+    await writeKv(ns, data);
+  },
+
+  async del(ns: KvNamespace, key: string) {
+    const data = await readKv(ns);
+    delete data[key];
+    await writeKv(ns, data);
+  },
+
+  async incr(ns: KvNamespace, key: string, ttlSeconds: number) {
+    const data = await readKv(ns);
+    const entry = data[key];
+    const current = entry && entry.expiresAt > Date.now() ? (entry.value as number) : 0;
+    const next = current + 1;
+    data[key] = {
+      value: next,
+      // Keep the original window: refreshing the TTL on every attempt would let
+      // a steady stream of requests hold a counter open indefinitely.
+      expiresAt:
+        entry && entry.expiresAt > Date.now() ? entry.expiresAt : Date.now() + ttlSeconds * 1000,
+    };
+    await writeKv(ns, data);
+    return next;
+  },
+
+  async clear(ns: KvNamespace) {
+    await writeKv(ns, {});
+  },
+};
+
 export const localAdapter: StorageAdapter = {
   id: 'local',
   displayName: 'Local filesystem',
@@ -131,7 +209,26 @@ export const localAdapter: StorageAdapter = {
   async provision() {
     await mkdir(CONTENT_DIR, { recursive: true });
     await mkdir(MEDIA_DIR, { recursive: true });
+    await mkdir(STATE_DIR, { recursive: true });
   },
+
+  async readOwner(): Promise<OwnerRecord | null> {
+    try {
+      return JSON.parse(await readFile(OWNER_FILE, 'utf8')) as OwnerRecord;
+    } catch {
+      return null;
+    }
+  },
+
+  async writeOwner(owner: OwnerRecord) {
+    await mkdir(STATE_DIR, { recursive: true });
+    const temp = `${OWNER_FILE}.tmp`;
+    await writeFile(temp, JSON.stringify(owner, null, 2), 'utf8');
+    const { rename } = await import('node:fs/promises');
+    await rename(temp, OWNER_FILE);
+  },
+
+  kv,
 
   async readSnapshot(channel) {
     try {

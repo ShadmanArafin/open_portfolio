@@ -11,9 +11,6 @@ import {
   mediaIdFromUrl,
 } from '../utils/mediaUrls';
 
-const CMS_AUTH_KEY = 'opb.auth';
-const AUTH_TTL_MS = 7 * 24 * 60 * 60 * 1000;
-
 /** How long to wait after the last keystroke before writing to storage. */
 const SAVE_DEBOUNCE_MS = 400;
 
@@ -284,6 +281,33 @@ export class CMSService {
     this.notify();
   }
 
+  /**
+   * Sends the published snapshot to the server.
+   *
+   * Without this the whole publish flow is local theatre: the draft becomes the
+   * published copy in this browser and a visitor sees none of it. Returns false
+   * on failure so the caller can tell the user rather than showing success.
+   */
+  private async pushToServer(state: CMSState): Promise<{ ok: boolean; error?: string }> {
+    try {
+      const res = await fetch('/api/admin/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: state }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
+      if (!res.ok || !data.ok) {
+        return {
+          ok: false,
+          error: data.error ?? `The server refused the publish (${res.status}).`,
+        };
+      }
+      return { ok: true };
+    } catch {
+      return { ok: false, error: 'Could not reach the server to publish.' };
+    }
+  }
+
   public async publishDraft(): Promise<boolean> {
     if (!this.store) return false;
 
@@ -338,6 +362,18 @@ export class CMSService {
       ]);
     } catch (err) {
       this.emitError(err instanceof Error ? err.message : 'Failed to publish.');
+      this.notify();
+      return false;
+    }
+
+    // The local copies are saved; now make it real for visitors. A failure here
+    // is reported rather than swallowed — the previous behaviour of reporting
+    // success while nothing left the browser is the bug this replaces.
+    const pushed = await this.pushToServer(this.publishedState);
+    if (!pushed.ok) {
+      this.emitError(
+        `${pushed.error} Your changes are saved in this browser, but the live site has not been updated.`
+      );
       this.notify();
       return false;
     }
@@ -658,50 +694,60 @@ export class CMSService {
 
   // --- AUTHENTICATION ---
   //
-  // Local gate only. The passcode lives in .env.local and is still bundled
-  // into the client build, so this keeps casual visitors out of /admin and
-  // nothing more. Real auth arrives with the hosted backend.
+  // All of it now happens on the server. What used to be here was a passcode
+  // compiled into the public bundle, compared in the browser, with the result
+  // recorded as an unsigned object in localStorage that anyone could forge.
+  //
+  // The session is an httpOnly cookie the browser cannot read, so this class
+  // holds only a cached yes/no answer, refreshed from /api/auth/session.
+
+  private authState = false;
 
   public isAuthenticated(): boolean {
+    return this.authState;
+  }
+
+  /** Asks the server whether this browser currently holds a valid session. */
+  public async refreshAuth(): Promise<boolean> {
     try {
-      const raw = localStorage.getItem(CMS_AUTH_KEY);
-      if (!raw) return false;
-      const { expiresAt } = JSON.parse(raw) as { expiresAt: number };
-      if (Date.now() > expiresAt) {
-        localStorage.removeItem(CMS_AUTH_KEY);
-        return false;
-      }
-      return true;
+      const res = await fetch('/api/auth/session', { cache: 'no-store' });
+      const data = (await res.json()) as { signedIn?: boolean };
+      this.authState = Boolean(data.signedIn);
     } catch {
-      return false;
+      this.authState = false;
     }
+    this.notify();
+    return this.authState;
   }
 
   public async login(email: string, pass: string): Promise<{ success: boolean; error?: string }> {
-    const expectedEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
-    const expectedPass = process.env.NEXT_PUBLIC_ADMIN_PASSCODE;
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, passphrase: pass }),
+      });
+      const data = (await res.json()) as { ok?: boolean; error?: string };
 
-    if (!expectedPass) {
-      return {
-        success: false,
-        error:
-          'No admin passcode configured. Set NEXT_PUBLIC_ADMIN_PASSCODE in .env.local and restart the dev server.',
-      };
+      if (!data.ok) {
+        return { success: false, error: data.error ?? 'That did not work.' };
+      }
+
+      this.authState = true;
+      this.notify();
+      return { success: true };
+    } catch {
+      return { success: false, error: 'Could not reach the server.' };
     }
-
-    const emailOk = !expectedEmail || email.trim().toLowerCase() === expectedEmail.toLowerCase();
-    if (!emailOk || pass !== expectedPass) {
-      return { success: false, error: 'Invalid email or passcode.' };
-    }
-
-    localStorage.setItem(CMS_AUTH_KEY, JSON.stringify({ expiresAt: Date.now() + AUTH_TTL_MS }));
-    this.notify();
-    return { success: true };
   }
 
-  public logout(): void {
-    localStorage.removeItem(CMS_AUTH_KEY);
-    this.notify();
+  public async logout(): Promise<void> {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } finally {
+      this.authState = false;
+      this.notify();
+    }
   }
 }
 
