@@ -1,5 +1,4 @@
 import 'server-only';
-import { headers } from 'next/headers';
 import { timingSafeEqual } from 'node:crypto';
 import { getStorageAdapter } from '@/core/storage/registry';
 import { checkPassphraseStrength, hashPassphrase } from './passphrase';
@@ -20,12 +19,6 @@ function constantTimeEquals(a: string, b: string): boolean {
   return timingSafeEqual(bufA, bufB);
 }
 
-async function isLoopbackRequest(): Promise<boolean> {
-  const h = await headers();
-  const host = (h.get('host') ?? '').split(':')[0];
-  return host === 'localhost' || host === '127.0.0.1' || host === '::1' || host === '[::1]';
-}
-
 export interface ClaimEligibility {
   allowed: boolean;
   /** True when the deployer must supply OPB_SETUP_TOKEN to continue. */
@@ -42,8 +35,15 @@ export async function getClaimEligibility(): Promise<ClaimEligibility> {
     return { allowed: true, requiresToken: true };
   }
 
-  // Running it on your own machine is proof enough that it is yours.
-  if (process.env.NODE_ENV !== 'production' || (await isLoopbackRequest())) {
+  // Development only. There is deliberately no "but the request looked like it
+  // came from localhost" exemption here: the only evidence available at this
+  // layer is the Host header, which the client sends and can set to anything.
+  // A stranger could have posted `Host: localhost` to a deployed site and
+  // claimed ownership of it without the token — defeating the entire point of
+  // this check. Proof of deploy control has to come from something the
+  // attacker cannot write, which is why production requires the environment
+  // variable and nothing else.
+  if (process.env.NODE_ENV !== 'production') {
     return { allowed: true, requiresToken: false };
   }
 

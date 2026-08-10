@@ -120,10 +120,10 @@ old client-routed build needed are gone — routing is handled by the framework
 now.
 
 On first visit you will be sent to `/setup` to claim the site: pick an email
-and a passphrase, and that becomes the only account that can edit it. On a
-public host, set an `OPB_SETUP_TOKEN` environment variable first — the claim
-form requires it, so a stranger who finds the URL before you cannot take
-ownership.
+and a passphrase, and that becomes the only account that can edit it. Set an
+`OPB_SETUP_TOKEN` environment variable before deploying — the claim form
+requires it in any production build, so a stranger who finds the URL before you
+cannot take ownership.
 
 ## Contributing
 

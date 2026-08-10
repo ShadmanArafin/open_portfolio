@@ -1,6 +1,6 @@
 import 'server-only';
 import { createHash, randomBytes } from 'node:crypto';
-import { cookies, headers } from 'next/headers';
+import { cookies } from 'next/headers';
 import { getStorageAdapter } from '@/core/storage/registry';
 import { SESSION_COOKIE } from './constants';
 
@@ -37,24 +37,22 @@ function hashToken(token: string): string {
 /**
  * Whether to mark the session cookie `Secure`.
  *
- * Not simply `NODE_ENV === 'production'`. Someone self-hosting runs a
- * production build on `localhost` all the time — to check it before deploying,
- * or behind a reverse proxy that terminates TLS — and a `Secure` cookie over
- * plain HTTP is silently discarded by the browser. The symptom is a login form
- * that accepts the passphrase and then does nothing at all, which is close to
- * undebuggable if you do not already know this rule exists.
+ * Decided from the environment, never from the request. An earlier version
+ * treated a `Host` of `localhost` as proof the connection was loopback, which
+ * is not proof of anything — the client chooses that header. Trusting it let a
+ * caller downgrade cookie protection by asking for it.
  *
- * Loopback is exempt because it cannot be intercepted; everything else gets the
- * flag whenever the request arrived over HTTPS or we are in production.
+ * `OPB_ALLOW_INSECURE_COOKIES` exists for the one legitimate case: running a
+ * production build over plain HTTP on a machine you control, to check it before
+ * deploying. Without an escape hatch the browser silently discards the cookie
+ * and the login form appears to accept the passphrase and do nothing, which is
+ * close to undebuggable. Setting an environment variable is a deliberate act by
+ * the operator; sending a header is not.
  */
-async function shouldUseSecureCookie(): Promise<boolean> {
-  const h = await headers();
-  const host = (h.get('host') ?? '').toLowerCase();
-  const isLoopback = /^(localhost|127\.0\.0\.1|\[::1\]|::1)(:\d+)?$/.test(host);
-  if (isLoopback) return false;
-
-  const proto = h.get('x-forwarded-proto') ?? '';
-  return process.env.NODE_ENV === 'production' || proto === 'https';
+function shouldUseSecureCookie(): boolean {
+  if (process.env.NODE_ENV !== 'production') return false;
+  if (process.env.OPB_ALLOW_INSECURE_COOKIES === '1') return false;
+  return true;
 }
 
 export async function createSession(email: string, epoch: number): Promise<void> {
@@ -71,7 +69,7 @@ export async function createSession(email: string, epoch: number): Promise<void>
   const store = await cookies();
   store.set(SESSION_COOKIE, token, {
     httpOnly: true,
-    secure: await shouldUseSecureCookie(),
+    secure: shouldUseSecureCookie(),
     sameSite: 'lax',
     path: '/',
     maxAge: SESSION_TTL_SECONDS,
