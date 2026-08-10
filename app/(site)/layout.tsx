@@ -4,6 +4,14 @@ import { Footer } from '@/components/Footer';
 import { SideSectionIndicator } from '@/components/common/SideSectionIndicator';
 import { SiteProviders } from './providers';
 
+/**
+ * Content lives in storage and can change without a rebuild, so pages cannot be
+ * frozen at build time. Sixty seconds is a placeholder: once publishing runs
+ * through the server it will call `revalidateTag`, updates will be immediate,
+ * and this can go back up to an hour.
+ */
+export const revalidate = 60;
+
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
   const content = await getPublishedContent();
 

@@ -1,26 +1,32 @@
+import 'server-only';
 import { cache } from 'react';
 import type { CMSState } from '@/cms/types/cms';
 import { INITIAL_CMS_STATE } from '@/cms/data/initialData';
+import { getStorageAdapter } from '@/core/storage/registry';
 
 /**
  * The single server-side read of published content.
  *
  * Every page goes through this one function rather than reaching for content
- * directly, so there is exactly one place to swap when real storage lands. It
- * is wrapped in React's `cache` so a request that renders six sections still
+ * directly, so there is exactly one place to change as storage evolves. React's
+ * `cache` deduplicates within a request, so a page rendering six sections still
  * performs one read.
  *
- * Today it returns the built-in seed. That is a deliberate intermediate state:
- * content currently lives in the editor's own browser (IndexedDB), which the
- * server cannot see, so the server-rendered HTML is the seed and the browser
- * swaps in stored content on hydration. Once the storage adapters exist this
- * becomes a real query and the swap disappears.
+ * A backend that is unreachable falls back to the seed rather than throwing.
+ * A portfolio that renders demo content is recoverable; a portfolio that
+ * returns a 500 because a free-tier database is asleep is not.
  */
 export const getPublishedContent = cache(async (): Promise<CMSState> => {
+  try {
+    const stored = await getStorageAdapter().readSnapshot('published');
+    if (stored) return stored;
+  } catch (err) {
+    console.error('[content] Could not read published content; serving the seed.', err);
+  }
   return INITIAL_CMS_STATE;
 });
 
-/** Published projects, newest first, excluding drafts and archived work. */
+/** Published projects in display order. */
 export async function getPublishedProjects() {
   const content = await getPublishedContent();
   return [...content.projects]

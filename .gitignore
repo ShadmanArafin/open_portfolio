@@ -34,3 +34,6 @@ Thumbs.db
 # Next.js
 .next/
 next-env.d.ts
+
+# Local content store (filesystem adapter)
+.opb/
