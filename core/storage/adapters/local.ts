@@ -1,5 +1,6 @@
 import 'server-only';
-import { mkdir, readFile, readdir, stat, unlink, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, readdir, rename, stat, unlink, writeFile } from 'node:fs/promises';
+import { randomBytes } from 'node:crypto';
 import path from 'node:path';
 import type { CMSState } from '@/cms/types/cms';
 import type {
@@ -97,6 +98,28 @@ const media: MediaAdapter = {
     }
   },
 };
+
+/**
+ * Writes a file so a reader never sees a partial one.
+ *
+ * The temp name has to be unique per write. With a fixed `.tmp`, two concurrent
+ * writers both create the same temp file, the first rename consumes it, and the
+ * second fails with ENOENT — so a second publish arriving while the first is
+ * still in flight throws instead of simply losing the race. Each writer now
+ * renames a file only it knows about, which makes the outcome last-writer-wins
+ * rather than an error.
+ */
+async function atomicWrite(target: string, contents: string): Promise<void> {
+  const temp = `${target}.${process.pid}.${randomBytes(6).toString('hex')}.tmp`;
+  try {
+    await writeFile(temp, contents, 'utf8');
+    await rename(temp, target);
+  } catch (err) {
+    // Never leave a stray temp file behind on failure.
+    await unlink(temp).catch(() => {});
+    throw err;
+  }
+}
 
 function channelPath(channel: Channel): string {
   return path.join(CONTENT_DIR, `${channel}.json`);
@@ -222,10 +245,7 @@ export const localAdapter: StorageAdapter = {
 
   async writeOwner(owner: OwnerRecord) {
     await mkdir(STATE_DIR, { recursive: true });
-    const temp = `${OWNER_FILE}.tmp`;
-    await writeFile(temp, JSON.stringify(owner, null, 2), 'utf8');
-    const { rename } = await import('node:fs/promises');
-    await rename(temp, OWNER_FILE);
+    await atomicWrite(OWNER_FILE, JSON.stringify(owner, null, 2));
   },
 
   kv,
@@ -242,13 +262,7 @@ export const localAdapter: StorageAdapter = {
 
   async writeSnapshot(channel, state) {
     await mkdir(CONTENT_DIR, { recursive: true });
-    const target = channelPath(channel);
-    // Write then rename: a crash mid-write leaves the previous content intact
-    // instead of a truncated file that parses as nothing.
-    const temp = `${target}.tmp`;
-    await writeFile(temp, JSON.stringify(state, null, 2), 'utf8');
-    const { rename } = await import('node:fs/promises');
-    await rename(temp, target);
+    await atomicWrite(channelPath(channel), JSON.stringify(state, null, 2));
   },
 
   media,
