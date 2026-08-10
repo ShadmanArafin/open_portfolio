@@ -38,7 +38,7 @@ export const LiquidDualCTA: React.FC = () => {
   // Spring transition timing as specified
   const springTransition = prefersReducedMotion
     ? { duration: 0.15 }
-    : { type: 'spring', stiffness: 290, damping: 26, mass: 0.8 };
+    : ({ type: 'spring', stiffness: 290, damping: 26, mass: 0.8 } as const);
 
   return (
     // The mouse handlers drive a decorative morph between the two buttons and
