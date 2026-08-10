@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { VStack, HStack } from '@astryxdesign/core/Layout';
 import { useCMS } from '../../cms/context/CMSContext';

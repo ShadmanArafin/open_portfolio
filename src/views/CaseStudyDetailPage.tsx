@@ -1,6 +1,7 @@
+'use client';
+
 import React, { useEffect } from 'react';
 import { trackEvent } from '../utils/analytics';
-import { useParams, Link, Navigate } from 'react-router-dom';
 import { ArrowUpRight, ArrowLeft } from 'lucide-react';
 import { Container } from '../components/common/Container';
 import { Section } from '../components/common/Section';
@@ -9,6 +10,8 @@ import { ContactCTASection } from '../components/ContactCTASection';
 import { useCMS } from '../cms/context/CMSContext';
 import { formatYearRange } from '../cms/utils/dates';
 
+import Link from 'next/link';
+import { notFound, useParams } from 'next/navigation';
 export const CaseStudyDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const { data } = useCMS();
@@ -34,7 +37,9 @@ export const CaseStudyDetailPage: React.FC = () => {
   }, [viewedCaseStudy?.slug]);
 
   if (caseStudyIndex === -1) {
-    return <Navigate to="/case-studies" replace />;
+    // A real 404, not a silent redirect to the index. The old behaviour hid
+    // broken links from users and told crawlers the page existed.
+    notFound();
   }
 
   const study = caseStudiesList[caseStudyIndex];
@@ -50,7 +55,7 @@ export const CaseStudyDetailPage: React.FC = () => {
           {/* Back to Case Studies link */}
           <div className="mb-8">
             <Link
-              to="/case-studies"
+              href="/case-studies"
               className="inline-flex items-center gap-2 font-body text-xs sm:text-sm font-medium text-text-secondary hover:text-text-primary transition-colors group"
             >
               <ArrowLeft className="w-4 h-4 transition-transform duration-200 group-hover:-translate-x-1" />
@@ -252,7 +257,7 @@ export const CaseStudyDetailPage: React.FC = () => {
               {nextStudy.title}
             </h3>
             <Link
-              to={`/case-studies/${nextStudy.slug}`}
+              href={`/case-studies/${nextStudy.slug}`}
               className="inline-flex items-center justify-center gap-2 h-[42px] px-6 sm:px-7 rounded-full font-body text-xs sm:text-[13px] font-medium uppercase tracking-wider bg-text-primary text-bg hover:opacity-90 transition-all duration-250 group cursor-pointer shadow-sm select-none"
             >
               <span>EXPLORE CASE STUDY {nextStudy.number}</span>

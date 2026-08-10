@@ -6,7 +6,9 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
 
 export default tseslint.config(
-  { ignores: ['dist', 'node_modules', 'coverage', '.vite'] },
+  // `.next` holds generated output — linting it reports thousands of problems
+  // in code nobody wrote and nobody can fix.
+  { ignores: ['.next', 'next-env.d.ts', 'node_modules', 'coverage', 'dist'] },
 
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],

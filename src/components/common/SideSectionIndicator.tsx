@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+'use client';
 
+import React, { useState, useEffect } from 'react';
+
+import { usePathname } from 'next/navigation';
 interface SectionMarker {
   id: string;
   label: string;
@@ -21,10 +23,10 @@ const SECTION_MARKERS: SectionMarker[] = [
 export const SideSectionIndicator: React.FC = () => {
   const [activeSectionId, setActiveSectionId] = useState<string>('hero');
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const location = useLocation();
+  const pathname = usePathname();
 
   // Desktop only on the homepage
-  const isHomePage = location.pathname === '/';
+  const isHomePage = pathname === '/';
 
   useEffect(() => {
     if (!isHomePage) return;

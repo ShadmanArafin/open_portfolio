@@ -39,17 +39,21 @@ const DEFAULT_SRC: Record<Exclude<AnalyticsProvider, 'none'>, string> = {
 };
 
 export function getAnalyticsConfig(): AnalyticsConfig {
-  const env = import.meta.env as Record<string, string | undefined>;
-  const provider = (env.VITE_ANALYTICS_PROVIDER ?? 'none').toLowerCase() as AnalyticsProvider;
+  // Read as whole property accesses, never `env[name]`: Next inlines
+  // NEXT_PUBLIC_* at build time by static substitution, so a computed lookup
+  // silently resolves to undefined in a production build.
+  const provider = (
+    process.env.NEXT_PUBLIC_ANALYTICS_PROVIDER ?? 'none'
+  ).toLowerCase() as AnalyticsProvider;
 
   return {
     provider: provider === 'plausible' || provider === 'umami' ? provider : 'none',
-    domain: env.VITE_ANALYTICS_DOMAIN ?? '',
+    domain: process.env.NEXT_PUBLIC_ANALYTICS_DOMAIN ?? '',
     scriptSrc:
-      env.VITE_ANALYTICS_SRC ??
+      process.env.NEXT_PUBLIC_ANALYTICS_SRC ??
       (provider !== 'none' ? (DEFAULT_SRC[provider as 'plausible'] ?? '') : ''),
-    websiteId: env.VITE_ANALYTICS_WEBSITE_ID ?? '',
-    shareUrl: env.VITE_ANALYTICS_SHARE_URL ?? '',
+    websiteId: process.env.NEXT_PUBLIC_ANALYTICS_WEBSITE_ID ?? '',
+    shareUrl: process.env.NEXT_PUBLIC_ANALYTICS_SHARE_URL ?? '',
   };
 }
 

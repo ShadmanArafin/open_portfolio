@@ -7,9 +7,9 @@ stays yours.
 Built for people who need a portfolio but should not have to learn a framework
 to keep one: students, designers, developers, photographers, writers.
 
-> **Status: pre-alpha (0.1).** This is the groundwork release. It runs, and the
-> editor genuinely works — but **the admin is not safe to deploy publicly yet**
-> and content lives only in your own browser. Read
+> **Status: pre-alpha (0.2).** It runs, the public site is properly
+> server-rendered and the editor genuinely works — but **the admin is not safe
+> to deploy publicly yet** and content lives only in your own browser. Read
 > [What does not work yet](#what-does-not-work-yet) before using it for
 > anything real.
 
@@ -58,11 +58,13 @@ is your backup and the way to move between machines.
 
 ## Stack
 
-- **Vite 5** + **React 19** + **TypeScript 5.5**
+- **Next.js 16** (App Router) + **React 19** + **TypeScript 5.5**
 - **Tailwind 3.4** for the public site, with typography and colour driven by CSS
   variables the editor writes at runtime
 - **[Astryx](https://astryx.atmeta.com)** for the admin panel
 - **IndexedDB** for content and media, behind a `ContentStore` interface
+- **React Router** still drives the admin, mounted inside one Next route —
+  transitional, and removed when the admin moves to shadcn/ui
 
 ## What does not work yet
 
@@ -74,37 +76,42 @@ and you should not discover them after typing in a portfolio:
   compiled into the JavaScript bundle at build time.
 - **The contact form does not reach you.** A submitted message is written to the
   _sender's_ browser storage. It is never delivered anywhere.
-- **The admin gate is not authentication.** `VITE_ADMIN_PASSCODE` is compiled
+- **The admin gate is not authentication.** `NEXT_PUBLIC_ADMIN_PASSCODE` is compiled
   into the public JavaScript bundle and readable by anyone who opens the site.
   The session is an unsigned object in `localStorage`. Run the admin locally
   only.
-- **SEO settings are inert.** The screen saves them; nothing reads them. Every
-  route serves the same static title, and there are no Open Graph tags, so
-  links do not unfurl on social platforms.
-- **No email, no blog, no hosted backend.** There is no server, so none of these
-  are possible in this build.
+- **No email, no blog, no hosted backend.** These arrive with the storage and
+  integration work.
 
-All of it is fixed by the Next.js migration, which is the next release. The
-short version of why: none of these features can exist without a server, and
-this build does not have one.
+The first three all come down to the same thing: content is not yet in a store
+the server can read. That is the next release.
+
+**Fixed in 0.2:** every page is now server-rendered with its own title,
+description, Open Graph and Twitter tags drawn from your SEO settings — that
+screen previously saved to fields nothing read. Project and case-study pages are
+statically pre-rendered, `sitemap.xml` and `robots.txt` are generated from your
+content, and an unknown URL returns a real 404 instead of silently redirecting
+to the homepage.
 
 ## Roadmap
 
 | Version   | What lands                                                                                    |
 | --------- | --------------------------------------------------------------------------------------------- |
-| 0.1 (now) | Open-source groundwork: MIT licence, no personal data, lint and CI, demo content              |
-| 0.2       | Next.js App Router, real server-side auth with passkeys, working SEO and Open Graph           |
-| 0.3       | Pluggable storage — Supabase, Firebase, Convex, Cloudflare, PocketBase, Neon, Appwrite, local |
-| 0.4       | One-click deploy, first-run setup wizard, profession presets                                  |
-| 0.5       | Block and page builder, six themes, deep design tokens                                        |
-| 0.6       | Blog, newsletter capture, integrations                                                        |
+| 0.1       | Open-source groundwork: MIT licence, no personal data, lint and CI, demo content              |
+| 0.2 (now) | Next.js App Router, server rendering, working SEO, Open Graph, sitemap, real 404              |
+| 0.3       | Server-side auth with passkeys, and a contact form that actually delivers                     |
+| 0.4       | Pluggable storage — Supabase, Firebase, Convex, Cloudflare, PocketBase, Neon, Appwrite, local |
+| 0.5       | One-click deploy, first-run setup wizard, profession presets                                  |
+| 0.6       | Block and page builder, six themes, deep design tokens                                        |
+| 0.7       | Blog, newsletter capture, integrations                                                        |
 | 1.0       | Stable                                                                                        |
 
 ## Deploying
 
-`vercel.json` and `public/_redirects` both rewrite unknown paths to
-`index.html`, which client-side routing needs — without one, every route except
-`/` returns 404 on refresh.
+`npm run build` produces a standard Next.js build, so it deploys as-is to
+Vercel, Netlify or Cloudflare with no configuration. The SPA rewrite files the
+old client-routed build needed are gone — routing is handled by the framework
+now.
 
 Deploying the public site is fine. **Do not expose `/admin` publicly** until
 real authentication lands — see above.

@@ -44,7 +44,7 @@ person. A licence covers our copyright — it grants nothing in someone else's
 trademark, and it is no defence at all for attributing words to a person who
 never said them. See [public/demo/LICENSE.md](public/demo/LICENSE.md).
 
-**No secrets in the client bundle.** Anything prefixed `VITE_` is compiled into
+**No secrets in the client bundle.** Anything prefixed `NEXT_PUBLIC_` is compiled into
 the JavaScript and is readable by every visitor. If a value must stay private,
 it cannot live in this build at all.
 

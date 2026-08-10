@@ -1,5 +1,6 @@
+'use client';
+
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { ArrowUpRight } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa6';
 import { motion } from 'framer-motion';
@@ -7,6 +8,7 @@ import { Container } from './common/Container';
 import { useCMS } from '../cms/context/CMSContext';
 import { CMSImage } from './common/CMSImage';
 
+import Link from 'next/link';
 export const HeroSection: React.FC = () => {
   const { data } = useCMS();
 
@@ -93,7 +95,7 @@ export const HeroSection: React.FC = () => {
         >
           {/* Primary Action Button */}
           <Link
-            to="/contact"
+            href="/contact"
             className="inline-flex items-center justify-center gap-2 h-[42px] px-6 sm:px-7 rounded-full font-body text-xs sm:text-[13px] font-medium uppercase tracking-wider bg-text-primary text-bg border border-transparent hover:opacity-90 transition-all duration-250 shadow-sm hover:-translate-y-[1px] group cursor-pointer select-none"
           >
             <span>

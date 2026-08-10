@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { TextInput } from '../components/AdminFields';
 import { useNavigate } from 'react-router-dom';

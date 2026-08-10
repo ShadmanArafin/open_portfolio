@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { trackEvent } from '../utils/analytics';
 import { Container } from '../components/common/Container';

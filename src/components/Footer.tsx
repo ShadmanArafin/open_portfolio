@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { trackEvent } from '../utils/analytics';
 import { Mail, Copy, Check, Download, ArrowUpRight } from 'lucide-react';

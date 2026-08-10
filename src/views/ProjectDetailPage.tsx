@@ -1,6 +1,7 @@
+'use client';
+
 import React, { useEffect } from 'react';
 import { trackEvent } from '../utils/analytics';
-import { useParams, Link } from 'react-router-dom';
 import { Container } from '../components/common/Container';
 import { Section } from '../components/common/Section';
 import { SectionLabel } from '../components/common/SectionLabel';
@@ -12,6 +13,8 @@ import { useCMS } from '../cms/context/CMSContext';
 import { formatYearRange } from '../cms/utils/dates';
 import { CMSImage } from '../components/common/CMSImage';
 
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
 export const ProjectDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const { data } = useCMS();
@@ -61,7 +64,7 @@ export const ProjectDetailPage: React.FC = () => {
         <Container>
           <div className="mb-8">
             <Link
-              to="/work"
+              href="/work"
               className="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-text-muted hover:text-text-primary transition-colors font-body"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
@@ -320,7 +323,7 @@ export const ProjectDetailPage: React.FC = () => {
               <span className="font-mono text-xs font-medium tracking-wider uppercase text-text-muted block">
                 NEXT PROJECT
               </span>
-              <Link to={`/work/${nextProject.slug}`} className="group inline-block">
+              <Link href={`/work/${nextProject.slug}`} className="group inline-block">
                 <h2 className="font-display text-3xl sm:text-5xl font-medium tracking-tight text-text-primary group-hover:text-accent transition-colors leading-tight">
                   {nextProject.name} ↗
                 </h2>

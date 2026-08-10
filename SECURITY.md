@@ -48,7 +48,7 @@ before disclosing.
 This project is **pre-1.0 and not yet safe to deploy publicly.** These are known
 and are being fixed, so they are not useful vulnerability reports:
 
-- The admin gate is a `VITE_`-prefixed environment variable, which is compiled
+- The admin gate is a `NEXT_PUBLIC_`-prefixed environment variable, which is compiled
   into the JavaScript bundle and readable by anyone who opens the site. **It is
   not authentication.**
 - The login session is an unsigned object in `localStorage` and can be forged.

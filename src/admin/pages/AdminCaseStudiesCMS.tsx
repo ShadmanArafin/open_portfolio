@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { Selector, TextArea, TextInput } from '../components/AdminFields';
 import { VStack, HStack } from '@astryxdesign/core/Layout';

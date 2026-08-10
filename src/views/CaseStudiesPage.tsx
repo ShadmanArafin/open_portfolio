@@ -1,5 +1,6 @@
+'use client';
+
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { ArrowUpRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Container } from '../components/common/Container';
@@ -10,6 +11,7 @@ import { ContactCTASection } from '../components/ContactCTASection';
 import { CMSImage } from '../components/common/CMSImage';
 import { useCMS } from '../cms/context/CMSContext';
 
+import Link from 'next/link';
 export const CaseStudiesPage: React.FC = () => {
   const { data } = useCMS();
   const header = data.sections.find((s) => s.id === 'case-studies-page');
@@ -61,7 +63,7 @@ export const CaseStudiesPage: React.FC = () => {
                 transition={{ duration: 0.6, delay: idx * 0.12, ease: [0.16, 1, 0.3, 1] }}
               >
                 <Link
-                  to={`/case-studies/${study.slug}`}
+                  href={`/case-studies/${study.slug}`}
                   className="group flex flex-col block h-full"
                 >
                   {/* Image Container with Hover Scale */}

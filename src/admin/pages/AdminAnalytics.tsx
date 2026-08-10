@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useMemo } from 'react';
 import { VStack } from '@astryxdesign/core/Layout';
 import { Grid } from '@astryxdesign/core/Grid';

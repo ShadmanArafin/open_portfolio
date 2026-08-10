@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { VStack } from '@astryxdesign/core/Layout';

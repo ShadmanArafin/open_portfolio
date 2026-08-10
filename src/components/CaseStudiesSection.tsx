@@ -1,5 +1,6 @@
+'use client';
+
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { ArrowUpRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Container } from './common/Container';
@@ -9,6 +10,7 @@ import { Reveal } from './common/Reveal';
 import { useCMS } from '../cms/context/CMSContext';
 import { CMSImage } from './common/CMSImage';
 
+import Link from 'next/link';
 export const CaseStudiesSection: React.FC = () => {
   const { data } = useCMS();
   const section = data.sections.find((s) => s.id === 'case-studies');
@@ -53,7 +55,10 @@ export const CaseStudiesSection: React.FC = () => {
               viewport={{ once: true, margin: '-5% 0px' }}
               transition={{ duration: 0.6, delay: index * 0.12, ease: [0.16, 1, 0.3, 1] }}
             >
-              <Link to={`/case-studies/${study.slug}`} className="group flex flex-col block h-full">
+              <Link
+                href={`/case-studies/${study.slug}`}
+                className="group flex flex-col block h-full"
+              >
                 {/* Image Container with Hover Scale */}
                 <div className="w-full aspect-[16/10] rounded-2xl overflow-hidden border border-border bg-surface-secondary mb-6 relative shadow-sm">
                   {study.coverImage ? (
@@ -121,7 +126,7 @@ export const CaseStudiesSection: React.FC = () => {
         <div className="mt-14 sm:mt-20 flex justify-end">
           <Reveal type="fade-up" delay={0.4}>
             <Link
-              to="/case-studies"
+              href="/case-studies"
               aria-label="View All Case Studies"
               className="inline-flex items-center justify-center gap-2 h-[42px] px-6 rounded-full bg-transparent text-text-primary border border-border hover:border-text-primary/40 hover:bg-surface-secondary font-body text-xs sm:text-[13px] font-medium uppercase tracking-wider transition-all duration-250 hover:-translate-y-[1px] group cursor-pointer shadow-sm select-none"
             >

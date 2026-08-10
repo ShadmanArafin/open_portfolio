@@ -1,6 +1,7 @@
+'use client';
+
 import React, { useState } from 'react';
 import { trackEvent } from '../utils/analytics';
-import { Link } from 'react-router-dom';
 import { ProjectItem } from '../cms/types/cms';
 import { formatYearRange } from '../cms/utils/dates';
 import { CMSImage } from './common/CMSImage';
@@ -8,6 +9,7 @@ import { ArrowUpRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ImageLightboxModal } from './common/ImageLightboxModal';
 
+import Link from 'next/link';
 interface ProjectPreviewProps {
   project: ProjectItem;
   index: number;
@@ -76,7 +78,10 @@ export const ProjectPreview: React.FC<ProjectPreviewProps> = ({ project }) => {
                   another project's "next project" link, which you could not get
                   to in the first place. */}
               <h3 className="font-display text-2xl sm:text-3xl lg:text-4xl font-medium tracking-tight text-text-primary mb-4 leading-tight">
-                <Link to={`/work/${project.slug}`} className="hover:text-accent transition-colors">
+                <Link
+                  href={`/work/${project.slug}`}
+                  className="hover:text-accent transition-colors"
+                >
                   {project.title}
                 </Link>
               </h3>
@@ -124,7 +129,7 @@ export const ProjectPreview: React.FC<ProjectPreviewProps> = ({ project }) => {
                     Full case
                   </span>
                   <Link
-                    to={`/work/${project.slug}`}
+                    href={`/work/${project.slug}`}
                     aria-label={`Read the ${project.title} case page`}
                     className="inline-flex items-center gap-1.5 font-medium text-text-primary hover:text-accent transition-colors group cursor-pointer"
                   >

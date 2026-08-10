@@ -1,7 +1,9 @@
+'use client';
+
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { cn } from '../../utils/cn';
 
+import Link from 'next/link';
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'whatsapp';
   to?: string;
@@ -53,7 +55,7 @@ export const Button: React.FC<ButtonProps> = ({
 
   if (to) {
     return (
-      <Link to={to} className={cn(baseStyles, variants[variant], className)}>
+      <Link href={to} className={cn(baseStyles, variants[variant], className)}>
         {content}
       </Link>
     );

@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { Container } from '../components/common/Container';
 import { SectionLabel } from '../components/common/SectionLabel';

@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useRef } from 'react';
 import { Button } from '@astryxdesign/core/Button';
 import { VStack } from '@astryxdesign/core/Layout';

@@ -1,5 +1,6 @@
+'use client';
+
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { Section } from './common/Section';
 import { Container } from './common/Container';
 import { SectionLabel } from './common/SectionLabel';
@@ -8,6 +9,7 @@ import { ArrowUpRight } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa6';
 import { useCMS } from '../cms/context/CMSContext';
 
+import Link from 'next/link';
 export const ContactCTASection: React.FC = () => {
   const { data } = useCMS();
   const section = data.sections.find((s) => s.id === 'contact');
@@ -51,7 +53,7 @@ export const ContactCTASection: React.FC = () => {
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-3.5">
                 {/* Primary Button — Contact Page */}
                 <Link
-                  to={section?.primaryCtaUrl || '/contact'}
+                  href={section?.primaryCtaUrl || '/contact'}
                   aria-label="Go to Contact Page"
                   className="inline-flex items-center justify-center gap-2 h-[42px] px-6 rounded-full bg-text-primary text-bg font-body text-xs sm:text-[13px] font-medium uppercase tracking-wider hover:opacity-90 transition-all duration-250 hover:-translate-y-[1px] group cursor-pointer shadow-sm select-none"
                 >

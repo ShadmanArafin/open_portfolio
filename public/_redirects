@@ -1,4 +1,0 @@
-# Client-side routing: every path that is not a real file is served index.html,
-# otherwise /work/:slug and /admin 404 on refresh. Netlify and Cloudflare Pages
-# read this file; Vercel reads vercel.json.
-/*  /index.html  200

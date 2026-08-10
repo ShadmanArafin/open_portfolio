@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { TextArea, TextInput } from '../components/AdminFields';
 import { EmptyState } from '@astryxdesign/core/EmptyState';

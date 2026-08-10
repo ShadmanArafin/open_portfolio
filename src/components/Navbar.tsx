@@ -1,5 +1,6 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
 import { ThemeToggle } from './common/ThemeToggle';
 import { ArrowUpRight, Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -7,11 +8,13 @@ import { Container } from './common/Container';
 import { cn } from '../utils/cn';
 import { useCMS } from '../cms/context/CMSContext';
 
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 export const Navbar: React.FC = () => {
   const { data } = useCMS();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const location = useLocation();
+  const pathname = usePathname();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -28,7 +31,7 @@ export const Navbar: React.FC = () => {
 
   useEffect(() => {
     setMobileMenuOpen(false);
-  }, [location]);
+  }, [pathname]);
 
   const navLinks = [...(data.navLinks ?? [])]
     .filter((link) => link.visible !== false)
@@ -55,7 +58,7 @@ export const Navbar: React.FC = () => {
             {/* LEFT: Clean Text Logo */}
             <div className="justify-self-start">
               <Link
-                to="/"
+                href="/"
                 className="font-display font-medium text-base sm:text-lg tracking-tight text-text-primary group"
               >
                 <span className="hidden xs:inline-block uppercase tracking-wider">{fullName}</span>
@@ -66,11 +69,11 @@ export const Navbar: React.FC = () => {
             {/* CENTER: Desktop Nav Links Truly Centered in Viewport */}
             <nav className="hidden md:flex items-center justify-center gap-7 lg:gap-8 justify-self-center">
               {navLinks.map((link) => {
-                const isActive = location.pathname === link.path;
+                const isActive = pathname === link.path;
                 return (
                   <Link
                     key={link.id}
-                    to={link.path}
+                    href={link.path}
                     className={cn(
                       'relative font-body text-sm sm:text-[15px] font-medium transition-colors duration-200 py-1 group',
                       isActive ? 'text-text-primary' : 'text-text-secondary hover:text-text-primary'
@@ -93,7 +96,7 @@ export const Navbar: React.FC = () => {
               <ThemeToggle />
 
               <Link
-                to="/contact"
+                href="/contact"
                 aria-label={`Contact ${fullName}`}
                 className="inline-flex items-center justify-center gap-2 h-[42px] px-5 sm:px-6 rounded-full text-xs sm:text-[13px] font-medium uppercase tracking-wider font-body bg-text-primary text-bg hover:opacity-90 transition-all duration-250 hover:-translate-y-[1px] group cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
               >
@@ -131,7 +134,7 @@ export const Navbar: React.FC = () => {
               {navLinks.map((link) => (
                 <Link
                   key={link.id}
-                  to={link.path}
+                  href={link.path}
                   onClick={() => setMobileMenuOpen(false)}
                   className="font-display text-2xl sm:text-3xl font-medium text-text-primary hover:text-accent transition-colors"
                 >
@@ -143,7 +146,7 @@ export const Navbar: React.FC = () => {
             <div className="pt-8 border-t border-border flex flex-col gap-4">
               <ThemeToggle className="w-full justify-center" />
               <Link
-                to="/contact"
+                href="/contact"
                 onClick={() => setMobileMenuOpen(false)}
                 className="w-full h-[42px] rounded-full inline-flex items-center justify-center font-medium uppercase tracking-wider font-body text-xs sm:text-[13px] bg-text-primary text-bg"
               >

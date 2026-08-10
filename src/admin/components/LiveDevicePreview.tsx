@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Monitor, Tablet, Smartphone, ExternalLink, X, RefreshCw } from 'lucide-react';
 import { useCMS } from '../../cms/context/CMSContext';

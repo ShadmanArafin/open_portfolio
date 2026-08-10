@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { VStack, HStack } from '@astryxdesign/core/Layout';

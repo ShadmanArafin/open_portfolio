@@ -1,3 +1,5 @@
+'use client';
+
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { CMSState, MediaItem } from '../types/cms';
 import { cmsService } from '../services/cmsService';
@@ -53,13 +55,46 @@ function detectPreviewFlag(): boolean {
   return new URLSearchParams(window.location.search).get('preview') === 'true';
 }
 
-export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [publishedData, setPublishedData] = useState<CMSState>(() => cmsService.getPublishedData());
-  const [draftData, setDraftData] = useState<CMSState>(() => cmsService.getDraftData());
+interface CMSProviderProps {
+  children: React.ReactNode;
+  /**
+   * Content rendered on the server for the first paint.
+   *
+   * Without it the server and the browser disagree about what to draw and React
+   * discards the server HTML. Stored content still wins — `cmsService.init()`
+   * replaces this the moment IndexedDB has loaded.
+   */
+  initialData?: CMSState;
+}
+
+export const CMSProvider: React.FC<CMSProviderProps> = ({ children, initialData }) => {
+  const [publishedData, setPublishedData] = useState<CMSState>(
+    () => initialData ?? cmsService.getPublishedData()
+  );
+  const [draftData, setDraftData] = useState<CMSState>(
+    () => initialData ?? cmsService.getDraftData()
+  );
   const [isPreviewMode, setIsPreviewMode] = useState<boolean>(detectPreviewFlag);
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [authStatus, setAuthStatus] = useState<boolean>(() => cmsService.isAuthenticated());
   const [storageError, setStorageError] = useState<string | null>(null);
+
+  // Storage is browser-only, so the server cannot read it. Load it on mount and
+  // swap: the HTML ships with the server's content, then the editor's own
+  // stored content takes over. This bridge disappears once content lives in a
+  // backend the server can query.
+  useEffect(() => {
+    let cancelled = false;
+    void cmsService.init().then(() => {
+      if (cancelled) return;
+      setPublishedData(cmsService.getPublishedData());
+      setDraftData(cmsService.getDraftData());
+      setAuthStatus(cmsService.isAuthenticated());
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const unsubscribe = cmsService.subscribe(() => {

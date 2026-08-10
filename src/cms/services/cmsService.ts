@@ -678,14 +678,14 @@ export class CMSService {
   }
 
   public async login(email: string, pass: string): Promise<{ success: boolean; error?: string }> {
-    const expectedEmail = import.meta.env.VITE_ADMIN_EMAIL as string | undefined;
-    const expectedPass = import.meta.env.VITE_ADMIN_PASSCODE as string | undefined;
+    const expectedEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+    const expectedPass = process.env.NEXT_PUBLIC_ADMIN_PASSCODE;
 
     if (!expectedPass) {
       return {
         success: false,
         error:
-          'No admin passcode configured. Set VITE_ADMIN_PASSCODE in .env.local and restart the dev server.',
+          'No admin passcode configured. Set NEXT_PUBLIC_ADMIN_PASSCODE in .env.local and restart the dev server.',
       };
     }
 

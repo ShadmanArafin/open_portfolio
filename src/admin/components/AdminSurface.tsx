@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { Theme } from '@astryxdesign/core/theme';
 import { neutralTheme } from '@astryxdesign/theme-neutral/built';

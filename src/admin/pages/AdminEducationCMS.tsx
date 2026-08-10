@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { Selector, TextInput } from '../components/AdminFields';
 import { AdminRecord, AdminRecordList } from '../components/AdminRecord';

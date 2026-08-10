@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { Outlet, Navigate } from 'react-router-dom';
 import { AppShell } from '@astryxdesign/core/AppShell';

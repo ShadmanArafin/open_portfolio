@@ -1,10 +1,12 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { CalendarDays, ChevronRight } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa6';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCMS } from '../cms/context/CMSContext';
 
+import Link from 'next/link';
 export const LiquidDualCTA: React.FC = () => {
   const { data } = useCMS();
   const [isHovered, setIsHovered] = useState(false);
@@ -85,7 +87,7 @@ export const LiquidDualCTA: React.FC = () => {
         className="relative z-10 h-14 rounded-full overflow-hidden shadow-sm flex-shrink-0"
       >
         <Link
-          to="/contact"
+          href="/contact"
           className="w-full h-full inline-flex items-center justify-center px-6 rounded-full font-body text-sm font-bold uppercase tracking-wider bg-text-primary text-bg transition-colors duration-300 hover:bg-accent hover:text-[#101212] group cursor-pointer whitespace-nowrap"
         >
           <AnimatePresence mode="wait">

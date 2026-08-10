@@ -1,5 +1,6 @@
+'use client';
+
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { HeroSection } from '../components/HeroSection';
 import { BrandTrustSection } from '../components/BrandTrustSection';
 import { ProjectPreview } from '../components/ProjectPreview';
@@ -17,6 +18,7 @@ import { Reveal } from '../components/common/Reveal';
 import { ArrowUpRight } from 'lucide-react';
 import { useCMS } from '../cms/context/CMSContext';
 
+import Link from 'next/link';
 /**
  * Homepage sections render in the order stored in the CMS, so the reorder
  * controls in the Homepage Builder actually move things. Only ids present in
@@ -97,7 +99,7 @@ function WorkSection() {
           <div className="w-full mt-16 sm:mt-24 flex justify-start sm:justify-end items-center">
             <Reveal type="fade-up">
               <Link
-                to={config.primaryCtaUrl || '/work'}
+                href={config.primaryCtaUrl || '/work'}
                 aria-label={config.primaryCtaLabel}
                 className="inline-flex items-center justify-center gap-2 h-[42px] px-5 sm:px-6 rounded-full font-body text-xs sm:text-[13px] font-medium uppercase tracking-wider bg-text-primary text-bg border border-transparent hover:opacity-90 transition-all duration-250 shadow-sm hover:-translate-y-[1px] group cursor-pointer select-none"
               >

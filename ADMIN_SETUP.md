@@ -20,14 +20,14 @@ npm run dev
 The passcode lives in `.env.local` (which is git-ignored, so it never leaves your machine):
 
 ```env
-VITE_ADMIN_EMAIL=you@example.com
-VITE_ADMIN_PASSCODE=pick-your-own-passcode
+NEXT_PUBLIC_ADMIN_EMAIL=you@example.com
+NEXT_PUBLIC_ADMIN_PASSCODE=pick-your-own-passcode
 ```
 
-Change the passcode to something only you know, then restart the dev server — Vite only reads
+Change the passcode to something only you know, then restart the dev server — Next only reads
 env files at startup.
 
-> **This is a local gate, not real security.** Anything prefixed `VITE_` is bundled into the
+> **This is a local gate, not real security.** Anything prefixed `NEXT_PUBLIC_` is bundled into the
 > JavaScript and readable by anyone who opens the site. Do not put `/admin` on a public URL
 > until the hosted backend with proper authentication is in place (section 6).
 
@@ -161,7 +161,7 @@ Until then, treat `/admin` as a local tool.
 
 ```bash
 npm run build     # type-checks, then bundles to dist/
-npm run preview   # serve the built output locally
+npm run start     # serve the built output locally
 ```
 
 The admin is lazy-loaded into separate chunks, so visitors to the public pages never download it.
@@ -196,15 +196,15 @@ UK or EU. Umami has a free tier and can be self-hosted.
 Add to `.env.local` and rebuild:
 
 ```
-VITE_ANALYTICS_PROVIDER=plausible
-VITE_ANALYTICS_DOMAIN=yourdomain.com
+NEXT_PUBLIC_ANALYTICS_PROVIDER=plausible
+NEXT_PUBLIC_ANALYTICS_DOMAIN=yourdomain.com
 ```
 
-For Umami use `VITE_ANALYTICS_PROVIDER=umami` with `VITE_ANALYTICS_WEBSITE_ID`.
-Self-hosted installs also need `VITE_ANALYTICS_SRC` pointing at your script.
+For Umami use `NEXT_PUBLIC_ANALYTICS_PROVIDER=umami` with `NEXT_PUBLIC_ANALYTICS_WEBSITE_ID`.
+Self-hosted installs also need `NEXT_PUBLIC_ANALYTICS_SRC` pointing at your script.
 
 Optionally create a read-only share link in the provider and set
-`VITE_ANALYTICS_SHARE_URL` — the Analytics page embeds it, so the charts appear
+`NEXT_PUBLIC_ANALYTICS_SHARE_URL` — the Analytics page embeds it, so the charts appear
 in the admin instead of on the provider's site.
 
 **Enquiry numbers do not need any of this.** They come from the contact form

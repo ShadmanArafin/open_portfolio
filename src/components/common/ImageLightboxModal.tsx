@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useEffect } from 'react';
 import { resolveAssetUrl } from '../../cms/utils/mediaUrls';
 import { motion, AnimatePresence } from 'framer-motion';

@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useId } from 'react';
 import { CollapsibleGroup, useCollapsible } from '@astryxdesign/core/Collapsible';
 import { Card } from '@astryxdesign/core/Card';
