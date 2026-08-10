@@ -157,18 +157,19 @@ export function runConformanceSuite(
       const adapter = await getAdapter();
       await adapter.provision();
 
-      // The requirement is not "last writer wins" — it is that the stored
-      // document is one of the two, never a torn mixture of both.
-      await Promise.all([
-        adapter.writeSnapshot('published', makeTestContent('writer-a')),
-        adapter.writeSnapshot('published', makeTestContent('writer-b')),
-      ]);
+      // The requirement is not "last writer wins" — it is that every write
+      // succeeds and the stored document is one of them, never a torn mixture
+      // and never an error. Six writers rather than two, because a two-way race
+      // is easy to win by luck on a fast filesystem and this check exists to
+      // catch the case that only shows up under real contention.
+      const writers = ['a', 'b', 'c', 'd', 'e', 'f'];
+      await Promise.all(
+        writers.map((id) => adapter.writeSnapshot('published', makeTestContent(`writer-${id}`)))
+      );
 
       const read = await adapter.readSnapshot('published');
       expect(read !== null).toBe(true);
-      expect(read?.settings.fullName === 'writer-a' || read?.settings.fullName === 'writer-b').toBe(
-        true
-      );
+      expect(writers.some((id) => read?.settings.fullName === `writer-${id}`)).toBe(true);
     });
 
     // Skipped when there is no object store attached — see ConformanceOptions.
