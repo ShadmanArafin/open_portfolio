@@ -45,19 +45,22 @@ before disclosing.
 
 ## Known limitations of the current release
 
-This project is **pre-1.0 and not yet safe to deploy publicly.** These are known
-and are being fixed, so they are not useful vulnerability reports:
+This project is **pre-1.0**. These are known and tracked, so they are not useful
+vulnerability reports:
 
-- The admin gate is a `NEXT_PUBLIC_`-prefixed environment variable, which is compiled
-  into the JavaScript bundle and readable by anyone who opens the site. **It is
-  not authentication.**
-- The login session is an unsigned object in `localStorage` and can be forged.
-- There is no server, so content lives in the editor's own browser and the
-  contact form does not deliver anything to the site owner.
-- Uploaded files are not validated for type, size or content.
+- **No email, so no password reset and no OTP.** Recovering a forgotten
+  passphrase means deleting the owner record and claiming the site again.
+- **No two-factor authentication.** Passphrase only; passkeys are planned.
+- **Uploaded files are not validated** for type, size or content, and SVG
+  uploads are not sanitised. Only the site owner can upload, so this is a
+  self-inflicted risk rather than a public one — but do not treat the media
+  library as a safe place for untrusted files.
+- **Drafts still live in the editor's browser.** Only published content is
+  stored server-side.
 
-Real authentication, server-side sessions and upload validation arrive with the
-Next.js migration. Until then, run the admin locally only.
+What _is_ in scope and worth reporting: anything that lets a visitor read or
+change content, claim an unclaimed site, bypass the session check, or reach an
+admin route or API endpoint without a valid session.
 
 ## Supported versions
 

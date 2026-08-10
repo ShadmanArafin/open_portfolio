@@ -13,26 +13,43 @@ step that seems to need one, that is a bug worth reporting.
 git clone https://github.com/ShadmanArafin/open_portfolio_builder.git
 cd open_portfolio_builder
 npm install
-cp .env.example .env.local   # then set your own passcode
 npm run dev
 ```
 
-- Public site: http://localhost:3000/
-- Admin: http://localhost:3000/admin
+- Public site: <http://localhost:3000/>
+- Admin: <http://localhost:3000/admin>
 
-Content is stored in your browser's IndexedDB, so your local edits never leave
-your machine and cannot affect anyone else.
+The first run sends you to `/setup` to claim the site with an email and a
+passphrase of your choosing. Nothing else is required — no account, no keys, no
+database. Content is stored under `.opb/`; delete that folder to start over.
+
+Published content is stored on disk under `.opb/`, so your local edits never
+leave your machine and cannot affect anyone else.
 
 ## Before you open a pull request
 
 ```bash
 npm run typecheck   # must pass
 npm run lint        # must pass
+npm run format:check
+npm run test        # must pass
 npm run build       # must pass
 ```
 
-CI runs the same three, plus a check that no personal data has crept into the
-repository.
+CI runs all of these, plus a guard that no personal data has crept into the
+repository and a gitleaks scan.
+
+**Test with `npm ci`, not `npm install`.** A populated `node_modules` lets npm
+reuse what is already installed and hides peer-dependency conflicts. CI installs
+from the lockfile on a clean machine, which is the only honest test — and this
+exact mistake has merged a broken dependency bump before.
+
+To run the storage conformance suite against a real database:
+
+```bash
+docker run -d --name opb-pg -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=opb_test -p 55432:5432 postgres:16
+TEST_POSTGRES_URL="postgres://postgres:postgres@localhost:55432/opb_test" npx vitest run
+```
 
 ## The rules that are not obvious
 
@@ -44,9 +61,14 @@ person. A licence covers our copyright — it grants nothing in someone else's
 trademark, and it is no defence at all for attributing words to a person who
 never said them. See [public/demo/LICENSE.md](public/demo/LICENSE.md).
 
-**No secrets in the client bundle.** Anything prefixed `NEXT_PUBLIC_` is compiled into
-the JavaScript and is readable by every visitor. If a value must stay private,
-it cannot live in this build at all.
+**No secrets in the client bundle.** Anything prefixed `NEXT_PUBLIC_` is compiled
+into the JavaScript and is readable by every visitor. Server-only modules start
+with `import 'server-only'` so a mistake here is a build failure rather than a
+breach — keep it that way.
+
+**Never derive an authorization decision from a request header.** A
+`Host: localhost` check in the claim flow was a real auth bypass. Environment
+variables and cookies only.
 
 **Write for someone who does not code.** This project's users are students,
 designers, photographers and writers. Interface copy, error messages and setup

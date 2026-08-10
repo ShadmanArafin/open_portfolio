@@ -17,21 +17,21 @@ npm run dev
 
 ### Signing in
 
-The passcode lives in `.env.local` (which is git-ignored, so it never leaves your machine):
+The first time you open the site you are sent to `/setup` to claim it. You choose
+an email and a passphrase there, and that becomes the only account that can edit
+the site. Nobody else can claim it afterwards.
 
-```env
-NEXT_PUBLIC_ADMIN_EMAIL=you@example.com
-NEXT_PUBLIC_ADMIN_PASSCODE=pick-your-own-passcode
-```
+There is nothing to put in a file. The passphrase is hashed with scrypt and
+stored by whichever backend you are using; the session is an httpOnly cookie the
+browser cannot read.
 
-Change the passcode to something only you know, then restart the dev server — Next only reads
-env files at startup.
+On a public host you must set `OPB_SETUP_TOKEN` to any long random string before
+deploying. The claim form asks for it, which is what stops a stranger who finds
+your URL first from taking ownership. `npm run dev` does not need it.
 
-> **This is a local gate, not real security.** Anything prefixed `NEXT_PUBLIC_` is bundled into the
-> JavaScript and readable by anyone who opens the site. Do not put `/admin` on a public URL
-> until the hosted backend with proper authentication is in place (section 6).
-
----
+**If you forget your passphrase** there is no reset yet. Delete the owner record
+and claim the site again — `.opb/state/owner.json` on the local backend, or the
+`opb_owner` row on a database backend. Your content is untouched.
 
 ## 2. How editing works
 
