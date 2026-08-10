@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1200" width="1600" height="1200" role="img" aria-label="Abstract image grid mockup">
+  <rect width="1600" height="1200" fill="#0D0F0F"/>
+  <g fill="#1B1F1F">
+    <rect x="80" y="80" width="460" height="600" rx="12"/><rect x="570" y="80" width="460" height="290" rx="12"/><rect x="570" y="390" width="460" height="290" rx="12"/><rect x="1060" y="80" width="460" height="600" rx="12"/>
+    <rect x="80" y="710" width="460" height="410" rx="12"/><rect x="570" y="710" width="950" height="410" rx="12"/>
+  </g>
+  <g fill="#35F2B3" opacity=".28">
+    <circle cx="310" cy="330" r="90"/><rect x="700" y="160" width="200" height="130" rx="10"/><circle cx="1290" cy="380" r="120"/><rect x="180" y="840" width="260" height="150" rx="10"/><circle cx="1045" cy="915" r="110"/>
+  </g>
+</svg>

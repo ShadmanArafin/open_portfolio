@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 48" width="200" height="48" role="img" aria-label="Initech">
+  <g fill="#8A8A85">
+    <rect x="12" y="14" width="20" height="20" rx="5" fill="none" stroke="#8A8A85" stroke-width="4"/>
+    <rect x="20" y="21" width="4" height="6"/>
+    <text x="42" y="31" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="19" font-weight="700" letter-spacing="-0.4">initech</text>
+  </g>
+</svg>

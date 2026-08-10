@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000" role="img" aria-label="Abstract dashboard interface mockup">
+  <rect width="1600" height="1000" fill="#0D0F0F"/>
+  <rect x="0" y="0" width="240" height="1000" fill="#141717"/>
+  <g fill="#2A2E2E"><rect x="32" y="56" width="120" height="14" rx="7"/><rect x="32" y="140" width="176" height="12" rx="6"/><rect x="32" y="180" width="150" height="12" rx="6"/><rect x="32" y="220" width="164" height="12" rx="6"/><rect x="32" y="260" width="130" height="12" rx="6"/></g>
+  <rect x="32" y="176" width="176" height="20" rx="6" fill="#35F2B3" opacity=".18"/>
+  <g fill="#181B1B"><rect x="296" y="120" width="380" height="200" rx="16"/><rect x="716" y="120" width="380" height="200" rx="16"/><rect x="1136" y="120" width="380" height="200" rx="16"/></g>
+  <g fill="#35F2B3"><rect x="328" y="160" width="90" height="26" rx="6"/><rect x="748" y="160" width="70" height="26" rx="6"/><rect x="1168" y="160" width="110" height="26" rx="6"/></g>
+  <g fill="#2A2E2E"><rect x="328" y="208" width="180" height="12" rx="6"/><rect x="748" y="208" width="150" height="12" rx="6"/><rect x="1168" y="208" width="196" height="12" rx="6"/></g>
+  <rect x="296" y="368" width="1220" height="520" rx="16" fill="#181B1B"/>
+  <g fill="#35F2B3" opacity=".55"><rect x="360" y="700" width="60" height="120" rx="6"/><rect x="450" y="640" width="60" height="180" rx="6"/><rect x="540" y="560" width="60" height="260" rx="6"/><rect x="630" y="660" width="60" height="160" rx="6"/><rect x="720" y="500" width="60" height="320" rx="6"/><rect x="810" y="600" width="60" height="220" rx="6"/><rect x="900" y="460" width="60" height="360" rx="6"/><rect x="990" y="580" width="60" height="240" rx="6"/></g>
+  <rect x="360" y="420" width="220" height="16" rx="8" fill="#2A2E2E"/>
+</svg>

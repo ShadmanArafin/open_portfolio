@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or help getting set up
+    url: https://github.com/ShadmanArafin/open_portfolio_builder/discussions
+    about: Ask in Discussions — questions get answered faster there than in the issue tracker.
+  - name: Report a security vulnerability
+    url: https://github.com/ShadmanArafin/open_portfolio_builder/security/advisories/new
+    about: Please report privately. Do not open a public issue for a security problem.

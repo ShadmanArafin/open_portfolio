@@ -1,0 +1,145 @@
+/*
+ * Admin surface adjustments.
+ *
+ * The neutral palette, type scale, radii, spacing and motion all come from
+ * @astryxdesign/theme-neutral via the `Theme` provider in AdminSurface — this
+ * file only does two things the design system can't know about:
+ *
+ *   1. bridges this app's own CSS variables onto Astryx tokens, so the
+ *      Tailwind classes still present in the admin resolve to neutral values
+ *      while screens are migrated to components;
+ *   2. applies the editor typeface choice.
+ *
+ * Nothing here leaks to the public site: every rule is scoped to `.admin-ui`,
+ * and the iframe preview is a separate document.
+ */
+
+.admin-ui {
+  /* Bridge: this app's tokens -> Astryx neutral. */
+  --bg-primary: var(--color-background-body);
+  --surface-primary: var(--color-background-card);
+  --surface-secondary: var(--color-background-muted);
+  --text-primary: var(--color-text-primary);
+  --text-secondary: var(--color-text-secondary);
+  --text-muted: var(--color-text-disabled);
+  --border-color: var(--color-border);
+  --border-color-hover: var(--color-border-emphasized);
+  --accent-color: var(--color-accent);
+
+  /* Typography tokens this app's Tailwind config reads. */
+  --font-display: var(--font-family-heading);
+  --font-body: var(--font-family-body);
+  --font-sans: var(--font-family-body);
+  /* One typeface across the whole editor, including mono-styled labels. */
+  --font-mono: var(--font-family-body);
+
+  color: var(--color-text-primary);
+  background-color: var(--color-background-body);
+
+  /* Re-read the family here. `Theme` sits above this element and sets
+     font-family from its own --font-family-body, so without this the
+     [data-admin-font] override below would change the variable while the
+     inherited value kept winning. */
+  font-family: var(--font-family-body);
+}
+
+/* ---------------------------------------------------------------------------
+ * Editor typeface — admin only. Figtree is the Astryx neutral default; Plus
+ * Jakarta Sans is offered as an alternative. Overrides the theme's font tokens
+ * for this subtree, which is what every Astryx component reads.
+ * ------------------------------------------------------------------------- */
+.admin-ui[data-admin-font='figtree'] {
+  --font-family-body:
+    Figtree, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-family-heading:
+    Figtree, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+.admin-ui[data-admin-font='jakarta'] {
+  --font-family-body:
+    'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,
+    sans-serif;
+  --font-family-heading:
+    'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,
+    sans-serif;
+}
+
+/* ---------------------------------------------------------------------------
+ * Interim styling for screens still on Tailwind classes. These fall away as
+ * each screen moves to Astryx components.
+ * ------------------------------------------------------------------------- */
+.admin-ui .rounded-sm {
+  border-radius: var(--radius-none);
+}
+.admin-ui .rounded,
+.admin-ui .rounded-md,
+.admin-ui .rounded-lg {
+  border-radius: var(--radius-inner);
+}
+.admin-ui .rounded-xl {
+  border-radius: var(--radius-element);
+}
+.admin-ui .rounded-2xl {
+  border-radius: var(--radius-container);
+}
+.admin-ui .rounded-3xl {
+  border-radius: var(--radius-page);
+}
+
+.admin-ui .h-\[42px\],
+.admin-ui .h-\[38px\] {
+  height: var(--size-element-md);
+}
+
+/*
+ * Scrollbars.
+ *
+ * The side nav genuinely overflows — 21 destinations across four sections —
+ * so it scrolls by design. The default OS scrollbar just made that read as a
+ * hard rule down the panel, so thin it out to a token-coloured thumb.
+ */
+.admin-ui * {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-emphasized) transparent;
+}
+
+.admin-ui *::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.admin-ui *::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.admin-ui *::-webkit-scrollbar-thumb {
+  background-color: var(--color-border-emphasized);
+  border-radius: var(--radius-full);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.admin-ui *::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-icon-secondary);
+}
+
+/* The site transitions every property on every element; across a dense editor
+   that reads as lag. Limit it to elements that actually change state. */
+.admin-ui *,
+.admin-ui *::before,
+.admin-ui *::after {
+  transition: none;
+}
+
+.admin-ui button,
+.admin-ui a,
+.admin-ui input,
+.admin-ui select,
+.admin-ui textarea,
+.admin-ui [role='button'] {
+  transition:
+    background-color var(--duration-fast) ease,
+    border-color var(--duration-fast) ease,
+    color var(--duration-fast) ease,
+    opacity var(--duration-fast) ease;
+}

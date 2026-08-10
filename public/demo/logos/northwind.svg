@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 48" width="200" height="48" role="img" aria-label="Northwind">
+  <g fill="#8A8A85">
+    <path d="M12 34V14h4l10 13V14h4v20h-4L16 21v13z"/>
+    <text x="42" y="31" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="19" font-weight="600" letter-spacing="0.5">Northwind</text>
+  </g>
+</svg>

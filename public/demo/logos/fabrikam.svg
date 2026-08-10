@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 48" width="200" height="48" role="img" aria-label="Fabrikam">
+  <g fill="#8A8A85">
+    <path d="M14 34V14h18v4H19v4h11v4H19v8z"/>
+    <rect x="34" y="14" width="4" height="20"/>
+    <text x="48" y="31" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="18" font-weight="600" font-style="italic">Fabrikam</text>
+  </g>
+</svg>

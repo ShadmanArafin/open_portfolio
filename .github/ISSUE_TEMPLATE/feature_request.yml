@@ -1,0 +1,42 @@
+name: Feature request
+description: Suggest something the builder should be able to do
+labels: ['enhancement', 'needs triage']
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: Describe the situation rather than the solution — it often turns out there is a better answer than the one either of us thought of first.
+      placeholder: I am a photographer and there is no way to show a series of images as a gallery without creating a separate project for each one.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like to see?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: profession
+    attributes:
+      label: What do you use the builder for?
+      description: This project supports many kinds of portfolio, and knowing who needs something helps us prioritise.
+      options:
+        - Design
+        - Software development
+        - Photography
+        - Writing
+        - Student / early career
+        - Marketing
+        - Something else
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: no-code
+    attributes:
+      label: Would this need to work without code?
+      options:
+        - label: A non-technical person should be able to do this entirely from the admin.

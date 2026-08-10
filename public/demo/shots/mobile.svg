@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1500" width="1200" height="1500" role="img" aria-label="Abstract mobile app screens mockup">
+  <rect width="1200" height="1500" fill="#0D0F0F"/>
+  <g>
+    <rect x="120" y="150" width="420" height="1200" rx="52" fill="#141717" stroke="#232727" stroke-width="4"/>
+    <rect x="270" y="182" width="120" height="16" rx="8" fill="#232727"/>
+    <rect x="164" y="260" width="332" height="220" rx="20" fill="#35F2B3" opacity=".22"/>
+    <g fill="#232727"><rect x="164" y="520" width="240" height="18" rx="9"/><rect x="164" y="560" width="332" height="12" rx="6"/><rect x="164" y="592" width="290" height="12" rx="6"/></g>
+    <g fill="#181B1B"><rect x="164" y="660" width="156" height="156" rx="16"/><rect x="340" y="660" width="156" height="156" rx="16"/><rect x="164" y="836" width="156" height="156" rx="16"/><rect x="340" y="836" width="156" height="156" rx="16"/></g>
+    <rect x="164" y="1050" width="332" height="56" rx="28" fill="#35F2B3"/>
+  </g>
+  <g>
+    <rect x="660" y="150" width="420" height="1200" rx="52" fill="#141717" stroke="#232727" stroke-width="4"/>
+    <rect x="810" y="182" width="120" height="16" rx="8" fill="#232727"/>
+    <g fill="#181B1B"><rect x="704" y="260" width="332" height="96" rx="14"/><rect x="704" y="376" width="332" height="96" rx="14"/><rect x="704" y="492" width="332" height="96" rx="14"/><rect x="704" y="608" width="332" height="96" rx="14"/></g>
+    <g fill="#35F2B3" opacity=".6"><circle cx="750" cy="308" r="20"/><circle cx="750" cy="424" r="20"/><circle cx="750" cy="540" r="20"/><circle cx="750" cy="656" r="20"/></g>
+    <rect x="704" y="760" width="332" height="240" rx="18" fill="#35F2B3" opacity=".14"/>
+  </g>
+</svg>

@@ -1,0 +1,93 @@
+name: Bug report
+description: Something is broken or behaves unexpectedly
+labels: ['bug', 'needs triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting this. Please do **not** use this form for security
+        problems — see [SECURITY.md](../blob/main/SECURITY.md) instead.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you expect, and what happened instead?
+      placeholder: I clicked Publish and the change did not appear on the site.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to /admin/projects
+        2. Change the title of a project
+        3. Click Publish
+        4. Open the homepage
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where in the app?
+      options:
+        - Public site
+        - Admin — dashboard
+        - Admin — editing content
+        - Admin — media / uploads
+        - Admin — settings, appearance or SEO
+        - Publishing / version history
+        - Export, import or backup
+        - Local setup / getting it running
+        - Somewhere else
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: From package.json, or the commit you are on.
+      placeholder: '0.1.0'
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and OS
+      placeholder: Chrome 141 on Windows 11
+    validations:
+      required: true
+
+  - type: dropdown
+    id: dashboard-warnings
+    attributes:
+      label: Does the admin dashboard show any warnings?
+      description: The readiness checks often name the real problem before you have to hunt for it.
+      options:
+        - 'No — everything is green'
+        - 'Yes — there are warnings (please describe below)'
+        - 'I could not open the admin'
+    validations:
+      required: true
+
+  - type: textarea
+    id: console
+    attributes:
+      label: Console errors
+      description: Open your browser devtools, reload, and paste anything red. Optional but very useful.
+      render: text
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and this is not a duplicate.
+          required: true
+        - label: I have removed any personal information from screenshots and logs.
+          required: true

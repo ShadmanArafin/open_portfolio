@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en" data-theme="dark" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      Placeholder head tags. These are static because this build is a
+      client-rendered SPA, so /admin/seo currently has nothing to write into.
+      Making SEO settings real is the job of the Next.js migration.
+    -->
+    <title>Portfolio</title>
+    <meta name="description" content="A portfolio built with Open Portfolio Builder." />
+
+    <!-- Early theme restoration script to eliminate refresh flash -->
+    <script>
+      (function () {
+        var t = localStorage.getItem('opb.theme');
+        if (t !== 'dark' && t !== 'light') {
+          t = 'dark';
+        }
+        document.documentElement.dataset.theme = t;
+        if (t === 'dark') {
+          document.documentElement.classList.add('dark');
+          document.documentElement.classList.remove('light');
+          document.documentElement.style.colorScheme = 'dark';
+        } else {
+          document.documentElement.classList.add('light');
+          document.documentElement.classList.remove('dark');
+          document.documentElement.style.colorScheme = 'light';
+        }
+      })();
+    </script>
+
+    <!-- Google Fonts — default pairing; the CMS swaps these at runtime -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Instrument+Serif:wght@400&family=Geist+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body
+    class="bg-bg text-text-primary antialiased selection:bg-accent/20 selection:text-accent font-sans"
+  >
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

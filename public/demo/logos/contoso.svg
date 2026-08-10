@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 48" width="200" height="48" role="img" aria-label="Contoso">
+  <g fill="#8A8A85">
+    <circle cx="22" cy="24" r="10" fill="none" stroke="#8A8A85" stroke-width="4"/>
+    <circle cx="22" cy="24" r="3"/>
+    <text x="40" y="31" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="19" font-weight="500" letter-spacing="2">CONTOSO</text>
+  </g>
+</svg>

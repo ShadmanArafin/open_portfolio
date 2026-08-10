@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1200" width="1600" height="1200" role="img" aria-label="Abstract editorial layout mockup">
+  <rect width="1600" height="1200" fill="#F3F3EF"/>
+  <rect x="120" y="120" width="640" height="24" rx="12" fill="#0D0F0F"/>
+  <rect x="120" y="172" width="900" height="24" rx="12" fill="#0D0F0F"/>
+  <rect x="120" y="224" width="480" height="24" rx="12" fill="#0D0F0F"/>
+  <rect x="120" y="320" width="1360" height="2" fill="#DADADA"/>
+  <g fill="#B8B8B2"><rect x="120" y="372" width="600" height="12" rx="6"/><rect x="120" y="404" width="640" height="12" rx="6"/><rect x="120" y="436" width="560" height="12" rx="6"/><rect x="120" y="468" width="620" height="12" rx="6"/><rect x="120" y="500" width="380" height="12" rx="6"/></g>
+  <rect x="840" y="372" width="640" height="440" rx="12" fill="#00B97D" opacity=".2"/>
+  <g fill="#B8B8B2"><rect x="120" y="620" width="600" height="12" rx="6"/><rect x="120" y="652" width="540" height="12" rx="6"/><rect x="120" y="684" width="610" height="12" rx="6"/></g>
+  <rect x="120" y="880" width="1360" height="2" fill="#DADADA"/>
+  <g fill="#B8B8B2"><rect x="120" y="932" width="400" height="14" rx="7"/><rect x="600" y="932" width="400" height="14" rx="7"/><rect x="1080" y="932" width="400" height="14" rx="7"/></g>
+</svg>

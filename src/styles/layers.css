@@ -1,0 +1,15 @@
+/*
+ * Cascade layer order — must load before any layered CSS.
+ *
+ * A layer's position is fixed the first time it appears, so this statement has
+ * to come before the Astryx stylesheets; otherwise `astryx-base` registers
+ * first and Tailwind's Preflight ends up ranked above it, cancelling Astryx
+ * component styles (`button { background-color: transparent }`).
+ *
+ * Later layers win. Unlayered CSS — Tailwind's components/utilities and this
+ * app's own rules — outranks all of these, which is what the Astryx docs mean
+ * by "consumer styles always override".
+ *
+ * This is the explicit layer order step from `astryx docs migration`.
+ */
+@layer tw-preflight, reset, astryx-base, astryx-theme;

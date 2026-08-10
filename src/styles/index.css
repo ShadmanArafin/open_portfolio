@@ -1,0 +1,192 @@
+/* Preflight is layered so Astryx component styles can outrank it; see layers.css. */
+@layer tw-preflight {
+  @tailwind base;
+}
+
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /*
+   * Typography tokens. Tailwind's font-sans / font-display / font-body /
+   * font-mono utilities read these, so changing them re-fonts the whole site.
+   *
+   * These are the defaults used before the CMS hydrates; the appearance
+   * settings overwrite --font-display / --font-body / --font-sans on :root at
+   * runtime. Fonts are not theme-dependent, so this sits outside the
+   * light/dark blocks.
+   */
+  :root {
+    --font-display: 'Instrument Serif', Georgia, serif;
+    --font-body: 'Geist', system-ui, sans-serif;
+    --font-sans: 'Geist', system-ui, sans-serif;
+    --font-mono:
+      ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+      monospace;
+  }
+
+  :root,
+  :root[data-theme='dark'],
+  :root.dark {
+    --bg-primary: var(--color-bg-dark, #0d0f0f);
+    --surface-primary: #121414;
+    --surface-secondary: #181a1a;
+    --text-primary: #f5f5f2;
+    --text-secondary: #9b9d9d;
+    --text-muted: #707373;
+    --border-color: var(--color-border-dark, #1b1b1b);
+    --border-color-hover: #2b2b2b;
+    --border-strong: #2a2a2a;
+    --accent-color: var(--color-accent-dark, #35f2b3);
+    --badge-bg: rgba(53, 242, 179, 0.08);
+    --badge-border: rgba(53, 242, 179, 0.25);
+    --btn-primary-bg: #f5f5f2;
+    --btn-primary-text: #101212;
+    --btn-secondary-border: var(--color-border-dark, #1b1b1b);
+
+    /* Section background tokens (Dark) */
+    --section-hero: var(--color-bg-dark, #0d0f0f);
+    --section-work: var(--color-bg-dark, #0d0f0f);
+    --section-about: #101212;
+    --section-capabilities: #0e1010;
+    --section-experience: #111313;
+    --section-contact: var(--color-bg-dark, #0d0f0f);
+    --section-footer: #0b0d0d;
+
+    color-scheme: dark;
+  }
+
+  :root[data-theme='light'],
+  :root.light {
+    --bg-primary: var(--color-bg-light, #f3f3ef);
+    --surface-primary: #ffffff;
+    --surface-secondary: #eaeae5;
+    --text-primary: #101212;
+    --text-secondary: #656868;
+    --text-muted: #939595;
+    --border-color: var(--color-border-light, #dadada);
+    --border-color-hover: #c5c5c5;
+    --border-strong: #c0c0c0;
+    --accent-color: var(--color-accent-light, #00b97d);
+    --badge-bg: rgba(0, 185, 125, 0.08);
+    --badge-border: rgba(0, 185, 125, 0.25);
+    --btn-primary-bg: #101212;
+    --btn-primary-text: #f3f3ef;
+    --btn-secondary-border: var(--color-border-light, #dadada);
+
+    /* Section background tokens (Light) */
+    --section-hero: var(--color-bg-light, #f3f3ef);
+    --section-work: var(--color-bg-light, #f3f3ef);
+    --section-about: #f7f7f3;
+    --section-capabilities: #efefeb;
+    --section-experience: #f6f6f2;
+    --section-contact: #ecede8;
+    --section-footer: var(--color-bg-light, #f3f3ef);
+
+    color-scheme: light;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition:
+      background-color 250ms ease,
+      color 250ms ease,
+      border-color 250ms ease;
+  }
+
+  body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: var(--font-body, system-ui, sans-serif);
+    font-weight: 400;
+    overflow-x: hidden;
+    min-height: 100vh;
+    transition:
+      background-color 250ms ease,
+      color 250ms ease;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display, Georgia, serif);
+    color: var(--text-primary);
+    letter-spacing: -0.025em;
+  }
+}
+
+/* 1440px desktop margin rule */
+@media (min-width: 1440px) {
+  .site-container {
+    padding-left: 80px !important;
+    padding-right: 80px !important;
+  }
+}
+
+/* Custom Selection */
+::selection {
+  background-color: rgba(53, 242, 179, 0.2);
+  color: var(--accent-color);
+}
+
+:root[data-theme='light'] ::selection {
+  background-color: rgba(0, 185, 125, 0.2);
+  color: var(--accent-color);
+}
+
+/* Hide scrollbar for clean visual experience */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Clip Reveal Animation Utility */
+.clip-text-parent {
+  overflow: hidden;
+  display: block;
+}
+
+/* Infinite Marquee Track Animation */
+@keyframes marquee-slide {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-marquee-slow {
+  display: flex;
+  width: max-content;
+  animation: marquee-slide 34s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee-slow:hover {
+  animation-play-state: paused;
+}
+
+/* Reduced Motion Override */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+  .animate-marquee-slow {
+    animation: none !important;
+    width: 100% !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+  }
+}
