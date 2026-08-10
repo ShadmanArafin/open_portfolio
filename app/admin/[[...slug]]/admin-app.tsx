@@ -90,10 +90,10 @@ export default function AdminApp() {
         <ToastProvider>
           {/* basename keeps every `to="/projects"` inside the admin resolving
               under /admin, so the existing screens need no path changes. */}
-          <BrowserRouter
-            basename="/admin"
-            future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-          >
+          {/* No `future` prop: the v7 flags this used to opt into are the
+              default behaviour in React Router 7, and passing them now is a
+              type error. */}
+          <BrowserRouter basename="/admin">
             <Suspense
               fallback={
                 <div className="min-h-screen bg-bg flex items-center justify-center font-mono text-xs uppercase tracking-widest text-text-muted animate-pulse">
