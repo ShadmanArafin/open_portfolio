@@ -9,8 +9,10 @@
 > The unannotated original is archived at [PLAN-ORIGINAL.md](PLAN-ORIGINAL.md)
 > if you want the reasoning as it stood before any code was written.
 >
-> Last updated: 2026-08-11 · Version 0.5.0 · CI green on `main`; email and the
-> durable inbox are on `feat/email-and-inbox`, reviewed and not yet merged.
+> Last updated: 2026-08-11 · Version 0.5.0 · CI green on `main`.
+> Read [Handoff notes](#handoff-notes-for-whoever-picks-this-up) first if you
+> are starting on a new machine — it carries the running instructions, the
+> invariants, and every known bug.
 
 ## Status at a glance
 
@@ -617,33 +619,133 @@ Written for another engineer or AI agent starting fresh on a different machine.
 Everything here is something that cost time to learn and is not obvious from the
 code.
 
-### Get running
+### Where things stand, exactly
+
+Everything described in this file is on `main`. There is no work in progress and
+no unmerged branch — the email and durable-inbox work was reviewed, fixed and
+merged before this note was written.
+
+The last substantial change was Phase 8's first slice: SMTP email, enquiry
+notification, passphrase reset, and moving the contact inbox out of the
+published content snapshot onto its own storage surface. Its design is in
+[specs/2026-08-11-email-and-inbox-design.md](specs/2026-08-11-email-and-inbox-design.md)
+and the task-by-task plan in
+[plans/2026-08-11-email-and-inbox.md](plans/2026-08-11-email-and-inbox.md).
+Both are worth reading before touching `core/email/`, `core/storage/` or the
+contact route — they record the reasoning, not just the result.
+
+### Get running on a new machine
 
 ```bash
 git clone https://github.com/ShadmanArafin/open_portfolio_builder.git
 cd open_portfolio_builder
-npm install
-npm run dev          # http://localhost:3000, then claim the site at /setup
+npm ci                # ci, not install — see "Things that will bite you"
+npm run dev           # http://localhost:3000, then claim the site at /setup
 ```
 
 No account, no keys, no database. The local filesystem adapter is the default
 and stores everything under `.opb/`. Delete that folder to reset to a fresh
 install. `npm run dev` needs no `OPB_SETUP_TOKEN`; a production build does.
 
-Verify before you change anything:
+### The two Docker containers the full test suite needs
+
+Neither is optional if you want the real numbers. Without them a large part of
+the suite skips, silently and by design — a skipped test is not a passing one.
 
 ```bash
-npm run typecheck && npm run lint && npm run format:check && npm run test && npm run build
+docker run -d --name opb-pg   -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=opb_test \
+  -p 55432:5432 postgres:16
+docker run -d --name opb-mail -p 1025:1025 -p 8025:8025 axllent/mailpit
 ```
 
-To exercise the SQL backends against a real database:
+Mailpit's web inbox is at <http://localhost:8025>. On later sessions just
+`docker start opb-pg opb-mail`.
+
+### Verify before you change anything
 
 ```bash
-docker run -d --name opb-pg -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=opb_test -p 55432:5432 postgres:16
-TEST_POSTGRES_URL="postgres://postgres:postgres@localhost:55432/opb_test" npx vitest run
+npm run typecheck && npm run lint && npm run format:check && npm run build
+node scripts/check-no-personal-data.mjs
+
+# Tests, with both containers running:
+TEST_POSTGRES_URL="postgres://postgres:postgres@localhost:55432/opb_test" \
+TEST_MAILPIT_URL=http://localhost:8025 \
+npm run test
 ```
 
-That takes the suite from 21 tests to 59.
+The numbers you should see, as of this writing:
+
+| Check                     | Expected                                              |
+| ------------------------- | ----------------------------------------------------- |
+| `typecheck`               | 0 errors                                              |
+| `lint`                    | **0 errors**, 64 warnings — the warnings are baseline |
+| `format:check`            | clean                                                 |
+| `check-no-personal-data`  | clean, listed by git                                  |
+| `test` with no containers | 98 passed, 7 skipped                                  |
+| `test` with both          | **168 passed, 2 skipped**                             |
+
+The 2 remaining skips are the Supabase and Neon conformance runs, which need
+real cloud credentials. Everything else runs locally.
+
+### Running the app with email
+
+```bash
+docker start opb-mail
+OPB_SMTP_HOST=localhost OPB_SMTP_PORT=1025 OPB_SITE_URL=http://localhost:3000 npm run dev
+```
+
+Submit the contact form and the notification appears at
+<http://localhost:8025>. Stop the container and submit again: the visitor still
+sees success, the enquiry is still in `/admin/messages`, and the SMTP error is
+shown on the message and raised on the dashboard. That asymmetry is deliberate
+and is the point of the design — see "Invariants worth not breaking".
+
+`OPB_SITE_URL` is **required** for passphrase reset, in development too. Reset
+links are built from it and never from the request, because a link built from a
+caller-supplied `Host` mails the owner a valid token pointing at somebody else's
+domain.
+
+### Environment variables added recently
+
+All optional except where noted. Full list with commentary in `.env.example`.
+
+| Variable                      | Meaning                                                    |
+| ----------------------------- | ---------------------------------------------------------- |
+| `OPB_SMTP_HOST`               | Presence of this alone selects the SMTP transport          |
+| `OPB_SMTP_PORT`               | Defaults to 587                                            |
+| `OPB_SMTP_USER` / `_PASSWORD` | Optional — Mailpit needs neither                           |
+| `OPB_SMTP_SECURE`             | `1` for implicit TLS on port 465 only                      |
+| `OPB_MAIL_FROM`               | Defaults to `no-reply@<your SMTP host>`                    |
+| `OPB_SITE_URL`                | **Required for passphrase reset**, and for canonical links |
+
+### Invariants worth not breaking
+
+These were each arrived at the hard way. Changing one is a decision, not a
+refactor.
+
+**A mail failure must never lose an enquiry, and must never be silent.** The
+contact route stores first and notifies second, and records the send outcome on
+the message. This project has twice shipped bugs that were silent _and_
+invisible specifically to the one person able to report them — uploaded images
+that rendered as a blank pixel only the owner's own browser could resolve, and
+before that a contact form that filed enquiries into the sender's own browser.
+Do not make a third.
+
+**`sendMail()` never throws.** Every failure is a returned value. A caller that
+wraps it in a try/catch and swallows the reason has defeated the point.
+
+**Never derive an authorization decision from a request header.** A
+`Host: localhost` check in the claim flow was a real auth bypass. Reset links
+come from `OPB_SITE_URL`. Cookies and environment only.
+
+**Enquiries never travel inside published content.** They are separate storage
+now, and `withoutEnquiries()` in `core/content/sanitise.ts` strips them at the
+publish boundary — including out of nested version snapshots, because the
+published document is serialised into the HTML of every public page.
+
+**`getStorageAdapter()` is async and provisions once per process.** Await it.
+It was synchronous until recently, and the change fixed a defect where an
+upgraded instance never created its `opb_messages` table.
 
 ### Things that will bite you
 
@@ -657,16 +759,26 @@ compatible `eslint-plugin-jsx-a11y`, and TypeScript 7 falls outside
 `typescript-eslint`'s peer range. Do not bump either until upstream catches up.
 Dependabot will keep proposing it.
 
-**Tailwind is pinned to 3.4, on purpose.** PR #7 (Tailwind 4) is open and held
-until the token work lands — see Phase 2.
+**Tailwind is pinned to 3.4.** PR #7 (Tailwind 4) is open and was held until the
+design tokens existed. They exist now, so it is unblocked — but it replaces the
+JS config with CSS-first `@theme`, and the cascade-layer ordering below is
+load-bearing, so treat it as real work rather than a version bump.
 
-**Never derive an authorization decision from a request header.** A
-`Host: localhost` check in the claim flow was a real auth bypass, caught by
-review. Environment variables and cookies only.
+**Cascade layer order matters.** `src/styles/layers.css` must be imported before
+the Astryx stylesheets. Tailwind 3 emits Preflight unlayered and a layer's rank
+is fixed the first time it appears; get it wrong and
+`button { background-color: transparent }` silently cancels Astryx button fills.
 
-**Admin paths are router-relative.** The admin runs under
-`basename="/admin"`, so `to="/admin/login"` resolves to `/admin/admin/login`.
-Write `to="/login"`.
+**Admin paths are router-relative.** The admin runs under `basename="/admin"`,
+so `to="/admin/login"` resolves to `/admin/admin/login`. Write `to="/login"`.
+Related: Astryx's `Link` is a plain anchor, not router-aware — inside the admin
+it needs an `onClick` that calls `preventDefault()` and `navigate()`, or a cold
+load will 404 outside the router.
+
+**`middleware.ts` redirects sessionless `/admin/*` requests.** Any new
+unauthenticated admin entry point must be exempted there, or the query string is
+silently dropped. This is how the emailed reset link broke: it worked from
+inside the app and failed on the cold load that is the only real-world path.
 
 **Windows and Linux disagree about concurrent renames.** Linux allows a rename
 onto a file another rename is touching; Windows returns `EPERM`. The local
@@ -677,13 +789,70 @@ platform, that is not evidence it passes on the other — Docker is right there.
 see a diff touching every file, your checkout is CRLF and something is wrong
 with your git config, not with the code.
 
+**Prettier does not read `.gitignore`.** Agent scratch and generated
+directories have to be listed in `.prettierignore` separately, or `format:check`
+fails on files that are not part of the project.
+
+**Do not run a background agent and foreground work in the same checkout.** Two
+processes editing one working tree produced transient `ReferenceError`s from
+reading files mid-write, and one agent watched another's commit land underneath
+it. Use a worktree or wait.
+
+### Known bugs and deferred items
+
+Nothing here is a blocker; all of it is real and none of it is fixed.
+
+**Bug — `/admin/welcome`'s Skip link is inert.** It navigates without setting
+`fullName`, so `AdminLayout`'s guard bounces straight back to it. This is the
+first screen every new deployer meets, so it is the highest-value item on this
+list. Found twice, root-caused the second time, never fixed because it was
+outside the branch that found it.
+
+**Cosmetic — the `unread-messages` health check pluralises wrongly**, producing
+"2 enquiry enquiries unread".
+
+**Robustness — `/api/admin/messages` has no rate limiting**, unlike every
+sibling admin route. Owner-only and same-origin, so the risk is low.
+
+**Robustness — an inert leftover after a crash.** If a process dies between the
+message migration's append and its snapshot-clear, a copy stays in that
+channel's snapshot and is never revisited, because the guard is
+destination-based. Self-heals on the next publish for `published`, not for
+`draft`.
+
+**Reporting — a database hiccup renders as an empty inbox, not an error.**
+`app/api/admin/messages/route.ts` calls `messages.list()` outside its `try`, and
+`CMSContext` swallows a non-ok response. The cause that made this matter is
+fixed; the amplifier is not.
+
+**Test gap — `transport.test.ts`'s "implicit TLS only for the documented value"
+asserts only the positive case.** It never checks that `'true'` or `'0'` leave
+TLS off, so its title currently overstates what it proves.
+
+### What is genuinely unverified
+
+Be careful about claiming otherwise. Only four things need a cloud account, and
+none of them block local development — see
+[Finishing locally, before any cloud account](#finishing-locally-before-any-cloud-account).
+
+1. **Vercel Blob.** Proprietary, no emulator, and it is what the Deploy button
+   provisions — so it is the highest-priority cloud check. The database half of
+   Neon is proven; the object-store half has never run.
+2. **Supabase Storage against the live service.** The code path is exercised
+   locally, but `supabase start` has not been wired into the suite yet.
+3. **Real SMTP deliverability.** Mailpit accepts everything; a real provider
+   enforces SPF, DKIM and rate limits.
+4. **The Deploy button flow**, and anything measured on a public URL —
+   Lighthouse budgets, securityheaders.com, Mozilla Observatory.
+
 ### Architecture in three sentences
 
 `app/` holds routes only. `core/` holds server-only domain logic — storage
-adapters behind one contract, auth, content reads — and every file there starts
-with `import 'server-only'` so a leaked credential is a build failure. `src/`
-still holds the public site components (`src/views`, `src/components`) and the
-old admin (`src/admin`), which is the part Phase 7 replaces.
+adapters behind one contract, auth, email, content reads — and files there start
+with `import 'server-only'` so a leaked credential is a build failure, except
+`core/theme/*`, which deliberately runs in the browser too. `src/` still holds
+the public site components (`src/views`, `src/components`) and the old admin
+(`src/admin`), which is the part Phase 7 replaces.
 
 ### Adding a storage backend
 
@@ -693,31 +862,41 @@ env-var inference in `inferAdapterId()`, and a green run of
 `core/storage/adapters/_shared/postgres.ts` — Supabase, Neon and generic
 Postgres all do, which is why the fourth one cost almost nothing.
 
-**The conformance suite is not optional.** It has already caught two real
-concurrency bugs that only appeared on one platform. An adapter without a green
-run should not ship.
+**The conformance suite is not optional.** It has caught three real concurrency
+bugs so far, two of which only appeared on one platform. An adapter without a
+green run should not ship.
 
-### Deliberate deviations from the plan below
+### Deliberate deviations from the plan above
 
 These are decisions, not oversights, and the reasoning is in each phase block:
 
-- **Passphrase auth instead of passkeys.** Session machinery supports adding them.
+- **Passphrase auth instead of passkeys.** Reset by email now exists; passkeys
+  and OTP still do not. The session machinery supports adding them.
 - **`src/pages` renamed `src/views`.** Next reserves `pages`.
 - **The admin still runs React Router** inside one Next route, on purpose, so
   the framework migration could land without also rewriting twenty screens.
 - **`work`/`timeline` collection merges not done.** Still four collections.
 - **Content core still lives in `src/cms/`,** not `core/content/`.
-- **Tailwind 4 deferred** until tokens exist.
+- **Tailwind 4 deferred** — no longer blocked, just not done.
+- **The integrations registry was deferred behind its first integration.** SMTP
+  was built concretely first, on the reasoning that an abstraction over
+  twenty-five services designed from zero examples is wrong in ways only a
+  second consumer reveals. Build Turnstile next, then extract the registry from
+  the two of them.
 
 ### Verifying your work
 
 Claims in this repository are expected to be backed by something you ran. The
 patterns used throughout:
 
-- Server rendering: `curl` the route and grep the raw HTML for the content and
-  the meta tags. If it is only in the DOM after hydration, it is not
+- **Server rendering:** `curl` the route and grep the raw HTML for the content
+  and the meta tags. If it is only in the DOM after hydration, it is not
   server-rendered.
-- Auth: check the failure cases, not the success case. Wrong passphrase, wrong
-  email, no session, cross-site origin.
-- Storage: run the conformance suite against a real database in Docker.
-- Anything visual: load it in a browser and check the console is clean.
+- **Auth:** check the failure cases, not the success case. Wrong passphrase,
+  wrong email, no session, cross-site origin, a replayed reset link.
+- **Storage:** run the conformance suite against a real database in Docker.
+- **Email:** send to Mailpit and read what arrived, including the headers.
+- **Anything visual:** load it in a browser and check the console is clean.
+- **Any bug fix:** confirm the new test fails against the unfixed code before
+  you fix it. A test that never failed proves nothing, and this rule has already
+  caught a fix that did not work.
