@@ -75,9 +75,10 @@ export const AdminSidebar: React.FC = () => {
     {
       title: 'Overview',
       entries: [
-        { label: 'Dashboard', path: '/admin', icon: LayoutDashboard },
-        { label: 'Analytics', path: '/admin/analytics', icon: BarChart3 },
-        { label: 'Homepage', path: '/admin/pages', icon: FileText },
+        { label: 'Dashboard', path: '/', icon: LayoutDashboard },
+        { label: 'Analytics', path: '/analytics', icon: BarChart3 },
+        { label: 'Homepage', path: '/homepage', icon: FileText },
+        { label: 'Pages', path: '/pages', icon: FileText },
       ],
     },
     {
@@ -89,19 +90,19 @@ export const AdminSidebar: React.FC = () => {
           children: [
             {
               label: 'Selected work',
-              path: '/admin/projects',
+              path: '/projects',
               icon: Briefcase,
               count: draftData.projects.length,
             },
             {
               label: 'Case studies',
-              path: '/admin/case-studies',
+              path: '/case-studies',
               icon: BookOpen,
               count: draftData.caseStudies.length,
             },
             {
               label: 'Brands',
-              path: '/admin/brands',
+              path: '/brands',
               icon: Building2,
               count: draftData.brands.length,
             },
@@ -113,31 +114,31 @@ export const AdminSidebar: React.FC = () => {
           children: [
             {
               label: 'Experience',
-              path: '/admin/experience',
+              path: '/experience',
               icon: HistoryIcon,
               count: draftData.experience.length,
             },
             {
               label: 'Education',
-              path: '/admin/education',
+              path: '/education',
               icon: GraduationCap,
               count: draftData.education.length,
             },
             {
               label: 'Process steps',
-              path: '/admin/process',
+              path: '/process',
               icon: Workflow,
               count: draftData.processSteps.length,
             },
             {
               label: 'Capabilities',
-              path: '/admin/capabilities',
+              path: '/capabilities',
               icon: Layers,
               count: draftData.capabilityGroups.length,
             },
             {
               label: 'Recommendations',
-              path: '/admin/recommendations',
+              path: '/recommendations',
               icon: Quote,
               count: draftData.recommendations.length,
             },
@@ -149,13 +150,13 @@ export const AdminSidebar: React.FC = () => {
           children: [
             {
               label: 'Media library',
-              path: '/admin/media',
+              path: '/media',
               icon: ImageIcon,
               count: draftData.media.length,
             },
             {
               label: 'Visual explorations',
-              path: '/admin/artifacts',
+              path: '/artifacts',
               icon: Sparkle,
               count: draftData.artifacts.length,
             },
@@ -165,9 +166,7 @@ export const AdminSidebar: React.FC = () => {
     },
     {
       title: 'Inbox',
-      entries: [
-        { label: 'Messages', path: '/admin/messages', icon: Mail, count: unread || undefined },
-      ],
+      entries: [{ label: 'Messages', path: '/messages', icon: Mail, count: unread || undefined }],
     },
     {
       title: 'Configuration',
@@ -176,22 +175,29 @@ export const AdminSidebar: React.FC = () => {
           label: 'Site settings',
           icon: Settings2,
           children: [
-            { label: 'Navigation', path: '/admin/navigation', icon: MenuIcon },
-            { label: 'Footer & social', path: '/admin/footer', icon: PanelBottom },
-            { label: 'Microcopy', path: '/admin/microcopy', icon: Type },
-            { label: 'Appearance', path: '/admin/appearance', icon: Palette },
-            { label: 'SEO', path: '/admin/seo', icon: Search },
-            { label: 'General & backup', path: '/admin/settings', icon: Sliders },
+            { label: 'Navigation', path: '/navigation', icon: MenuIcon },
+            { label: 'Footer & social', path: '/footer', icon: PanelBottom },
+            { label: 'Microcopy', path: '/microcopy', icon: Type },
+            { label: 'Appearance', path: '/appearance', icon: Palette },
+            { label: 'SEO', path: '/seo', icon: Search },
+            { label: 'General & backup', path: '/settings', icon: Sliders },
           ],
         },
-        { label: 'Version history', path: '/admin/history', icon: HistoryIcon },
+        { label: 'Version history', path: '/history', icon: HistoryIcon },
       ],
     },
   ];
 
-  // `/admin` would prefix-match every child route, so it matches exactly.
+  /*
+   * Paths here are relative to the router's basename, not absolute.
+   *
+   * `<Link to="/admin/projects">` inside `basename="/admin"` resolves to
+   * `/admin/admin/projects` — every link in this sidebar was broken, and every
+   * item's selected state was permanently false, because `location.pathname`
+   * has the basename stripped and could never match a string that included it.
+   */
   const isSelected = (path: string) =>
-    path === '/admin' ? location.pathname === '/admin' : location.pathname.startsWith(path);
+    path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
 
   const countBadge = (count?: number) =>
     count !== undefined && count > 0 ? (

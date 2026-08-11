@@ -35,6 +35,9 @@ const AdminDashboard = lazy(() =>
 const AdminAnalytics = lazy(() =>
   import('@/admin/pages/AdminAnalytics').then((m) => ({ default: m.AdminAnalytics }))
 );
+const AdminSitePages = lazy(() =>
+  import('@/admin/pages/AdminSitePages').then((m) => ({ default: m.AdminSitePages }))
+);
 const AdminPagesEditor = lazy(() =>
   import('@/admin/pages/AdminPagesEditor').then((m) => ({ default: m.AdminPagesEditor }))
 );
@@ -114,7 +117,8 @@ export default function AdminApp() {
                   <Route index element={<AdminDashboard />} />
                   <Route path="welcome" element={<AdminWelcome />} />
                   <Route path="analytics" element={<AdminAnalytics />} />
-                  <Route path="pages" element={<AdminPagesEditor />} />
+                  <Route path="homepage" element={<AdminPagesEditor />} />
+                  <Route path="pages" element={<AdminSitePages />} />
                   <Route path="projects" element={<AdminProjectsCMS />} />
                   <Route path="case-studies" element={<AdminCaseStudiesCMS />} />
                   <Route path="brands" element={<AdminBrandsCMS />} />

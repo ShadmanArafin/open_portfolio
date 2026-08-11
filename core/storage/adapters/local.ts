@@ -4,7 +4,6 @@ import { randomBytes } from 'node:crypto';
 import path from 'node:path';
 import type { CMSState, ContactMessage } from '@/cms/types/cms';
 import type {
-  SnapshotRead,
   Channel,
   HealthReport,
   KvAdapter,

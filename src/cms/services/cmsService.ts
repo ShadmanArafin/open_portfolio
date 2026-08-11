@@ -273,6 +273,70 @@ export class CMSService {
       this.pendingDraftSave = true;
       this.emitError(err instanceof Error ? err.message : 'Failed to save your draft.');
     }
+
+    // And to the server, which is what Preview reads.
+    //
+    // The local copy alone is the original architecture's mistake in miniature:
+    // a draft that only exists in the editor's own browser cannot be previewed
+    // on a phone, cannot be picked up on another machine, and disappears with
+    // the site data. Failing here is reported but not fatal — the local save
+    // already succeeded, so the work is not lost.
+    await this.pushDraftToServer();
+  }
+
+  /**
+   * Sends the draft to the server's draft channel.
+   *
+   * Conditional on the revision we last saw, so two tabs cannot silently
+   * overwrite each other. On conflict the server sends back what it has; the
+   * work here is kept and the person is told, rather than one side vanishing.
+   */
+  private async pushDraftToServer(): Promise<void> {
+    // Learn where the server is before the first save, so even that one is
+    // conditional. Otherwise the first autosave from a second tab overwrites
+    // whatever the first tab had done, which is the exact case this is for.
+    if (this.draftRevision === undefined) {
+      try {
+        const res = await fetch('/api/admin/draft');
+        const data = (await res.json().catch(() => ({}))) as { revision?: number };
+        this.draftRevision = data.revision ?? 0;
+      } catch {
+        this.draftRevision = 0;
+      }
+    }
+
+    const snapshot = clone(this.draftState);
+    snapshot.versions = [];
+    snapshot.activityLogs = [];
+    snapshot.messages = [];
+
+    try {
+      const res = await fetch('/api/admin/draft', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: snapshot, expectedRevision: this.draftRevision }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        revision?: number;
+        error?: string;
+        conflict?: { current: number };
+      };
+
+      if (res.status === 409) {
+        // Adopt the server's revision so the *next* save is a deliberate
+        // overwrite rather than an endless loop of rejected autosaves.
+        this.draftRevision = data.conflict?.current;
+        this.emitError(
+          data.error ?? 'This site was changed somewhere else. Your next save will overwrite it.'
+        );
+        return;
+      }
+
+      if (res.ok && data.ok) this.draftRevision = data.revision;
+    } catch {
+      // Offline, or the server is down. The local draft is already saved.
+    }
   }
 
   // --- DRAFT & PUBLISH ---
@@ -297,6 +361,9 @@ export class CMSService {
    * published copy in this browser and a visitor sees none of it. Returns false
    * on failure so the caller can tell the user rather than showing success.
    */
+  /** The draft revision this editor last saw. Undefined until the first save. */
+  private draftRevision: number | undefined;
+
   private async pushToServer(state: CMSState): Promise<{ ok: boolean; error?: string }> {
     try {
       const res = await fetch('/api/admin/publish', {

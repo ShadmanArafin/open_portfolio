@@ -20,21 +20,20 @@
 | --------------------------- | ------------------ | ---------------------------------------------------------------------------- |
 | 0 — Repo publishable        | **Done, verified** | MIT, no personal data, CI, guards                                            |
 | 1 — Next.js + SEO           | **Done, verified** | Server-rendered, real metadata, sitemap, 404                                 |
-| 2 — Tokens + primitives     | **Partially done** | Tokens, publish gate done. Primitives and Tailwind 4 remain                  |
+| 2 — Tokens + primitives     | **Partially done** | Tokens, gate, primitives done. Tailwind 4 remains                            |
 | 3 — Storage contract        | **Done, verified** | Contract, local adapter, registry, server read                               |
 | 4 — Auth                    | **Done, verified** | Passphrase + sessions. **Passkeys/OTP not built**                            |
-| 5 — Write path              | **Partially done** | Publish, contact, blocks, pages, preview done. **Per-record writes missing** |
+| 5 — Write path              | **Done**           | Publish, contact, blocks, pages, preview, revisions                          |
 | 6 — Hosted adapters         | **Done, verified** | Supabase, Neon, Postgres. **Uploads unverified**                             |
-| 7 — shadcn admin            | **Not started**    | Admin still Astryx + React Router                                            |
+| 7 — Admin (Astryx)          | **In progress**    | Page builder works end to end. **MediaPicker, settings merge remain**        |
 | 8 — Adapters + integrations | **Partially done** | SMTP, notification, reset done. **5 backends, registry, vault, OTP missing** |
 | 9 — Blog, themes, presets   | **Barely started** | Only profession vocabulary packs                                             |
 
-**Where to start:** Phase 7's admin. The public half is now complete — a page
-built from blocks renders at its own address, joins the sitemap and the
-navigation, and previews before it is published. What is missing is the half a
-user touches: there is no screen for creating a page, adding a block or picking
-an image. Everything below Phase 7 is now waiting on it rather than the other
-way round.
+**Where to start:** the media picker, then Phase 8's adapters. A person can now
+sign in, build a page from blocks, preview it and publish it — the loop is
+closed and verified in a browser. The next thing they hit is images: a field can
+upload a new file but cannot reuse one already in the library, which is the
+first place the builder still asks somebody to do bookkeeping by hand.
 
 This supersedes an earlier note here that said to start with blocks on the
 grounds that the primitives "need blocks to have somewhere to live". That has it
@@ -78,9 +77,9 @@ development.
 | --------------------------------------------- | --------------------------------------------------------------------------- |
 | Phase 2 primitives, ESLint bans, publish gate | Nothing external needed                                                     |
 | Phase 5 blocks, pages, `draftMode()` preview  | Nothing external needed                                                     |
-| Phase 7 shadcn admin, MediaPicker, builder    | Nothing external needed                                                     |
+| Phase 7 admin: MediaPicker, builder polish    | Nothing external needed                                                     |
 | Phase 9 blog, newsletter capture, themes      | Nothing external needed                                                     |
-| Postgres / Supabase / Neon **database** half  | `postgres:16` — already wired; with Mailpit takes the suite from 230 to 304 |
+| Postgres / Supabase / Neon **database** half  | `postgres:16` — already wired; with Mailpit takes the suite from 294 to 368 |
 | Supabase **Storage** half                     | `supabase start` runs the real `storage-api` container                      |
 | Email send path                               | `axllent/mailpit` — already wired                                           |
 | PocketBase, Appwrite adapters                 | Both ship official Docker images                                            |
@@ -111,10 +110,10 @@ Four things, and only four:
 
 1. **Phase 2 remainder** — the publish-time contrast gate is small and
    `checkContrast` is ready; then Tailwind 4 (PR #7), now unblocked.
-2. **Phase 5 blocks and pages** — the largest single piece, and what Phases 7
-   and 9 both sit on. The primitives from Phase 2 land here.
-3. **Phase 7 admin on shadcn** — `MediaPicker` first; it unblocks every image
-   field.
+2. ~~**Phase 5 blocks and pages**~~ — done. Blocks, pages, routing, preview and
+   revisions all shipped; the record-per-row storage split moved to Phase 9.
+3. **Phase 7 `MediaPicker`** — the last thing between the builder and being
+   genuinely no-code. The shadcn rebuild is cancelled; see Phase 7.
 4. **Phase 8 adapters** — five files, each against its own local emulator.
 5. **Phase 8 integrations registry + vault** — now with two real consumers
    (SMTP and Turnstile) to design the abstraction against, rather than none.
@@ -572,7 +571,7 @@ Passkey + OTP + sessions + claim + CSRF + rate limiting + CSP/headers. `requireO
 > deliberately narrowed. The plan asked for per-record writes; what shipped is
 > optimistic concurrency on the snapshot — `readSnapshotMeta` returns a revision,
 > `writeSnapshot` takes one and refuses if it has moved on, and both saving and
-> publishing return 409 with the *other* version attached rather than a bare
+> publishing return 409 with the _other_ version attached rather than a bare
 > "someone else changed this".
 >
 > The reason for narrowing: the two problems per-record writes solve are lost
@@ -587,7 +586,7 @@ Passkey + OTP + sessions + claim + CSRF + rate limiting + CSP/headers. `requireO
 > The file-backed adapter passed every revision test while real Postgres failed
 > four: `INSERT … ON CONFLICT DO UPDATE … WHERE revision = expected` cannot
 > express a conditional update, because guarding the insert leaves no row to
-> conflict *with*, so the update branch never runs. It is now a CTE that either
+> conflict _with_, so the update branch never runs. It is now a CTE that either
 > updates a matching row or inserts when the caller expected nothing. The
 > conformance suite also caught the test shim silently dropping the argument —
 > which would have made the whole feature look like it worked.
@@ -666,20 +665,56 @@ Supabase (built-in auth, presigned storage) and Neon+Vercel Blob (SQL, **no** bu
 
 ### Phase 7 — Admin (4–5 weeks)
 
-> ### NOT STARTED
+> ### IN PROGRESS — the page builder works end to end
 >
-> The admin is still **Astryx + React Router**, mounted client-side inside
-> `app/admin/[[...slug]]`. Everything in this phase remains:
+> **The shadcn rebuild is cancelled.** This repo's `CLAUDE.md` names Astryx as
+> the admin's design system and instructs every screen to be built from it.
+> Rewriting a working Astryx admin in a second component library would be churn
+> that contradicts the project's own standing instruction, and it would buy
+> nothing a user can see. Phase 7 is therefore "build the missing screens in
+> Astryx", not "rebuild the existing ones in shadcn".
 >
-> - `npx shadcn init`, then the AdminShell. Port the sidebar IA from
->   `src/admin/components/AdminSidebar.tsx` as _data_, not as markup.
-> - **Build `<MediaPicker>` first.** It unblocks every image field and the
->   fixed-4-slot problem. Today there is no way to reuse an uploaded image
->   without hand-copying an `idb:` string.
-> - The block builder (three panes; `@dnd-kit` reorder **in the outline, not on
->   the canvas** — keyboard-operable, touch-friendly, testable).
+> **Built:** `/admin/pages` — create a page, set its address with live checking,
+> choose draft or published, add blocks from a grouped palette, reorder, hide and
+> remove them, edit every field, set per-page SEO, and preview. Verified in a
+> browser end to end: sign in → add a block → publish → the page is live at its
+> own address with a correct heading outline, while a draft stays 404 to the
+> public.
+>
+> **Reorder is in the outline, not on a canvas** — as planned, and with buttons
+> rather than `@dnd-kit`. Buttons work with a keyboard, work on a phone, and can
+> be tested; dragging a pixel-perfect canvas is the demo that sells a builder and
+> the interaction that excludes anyone not using a mouse.
+>
+> **Blocks describe their editor as data**, not as a component. `BlockField[]`
+> on each definition, one generic form renders all of them. A per-block editor
+> component would mean the thirtieth block type is a React file as well as a
+> definition, and thirty chances to disagree about what a text field looks like.
+> A test walks every field path against the real schema, because a typo in a
+> path is invisible: the form renders, typing works, and the value lands
+> somewhere the block never reads.
+>
+> **Three bugs found by loading the admin in a browser**, all pre-existing:
+>
+> - **Every sidebar link was broken.** They were absolute (`/admin/projects`)
+>   inside a router with `basename="/admin"`, so they resolved to
+>   `/admin/admin/projects`. Selection highlighting was permanently off for the
+>   same reason. Nothing failed — the markup is valid and the destination
+>   redirects — which is why it survived. Now covered by a test.
+> - **The sign-in screen told people to look in `.env.local`** for a passcode
+>   that has not existed since Phase 0 deleted `VITE_ADMIN_PASSCODE`.
+> - **Drafts never reached the server.** `saveDraft` wrote to the editor's own
+>   browser, so Preview could only ever show the published site — silently, via
+>   the fallback. It now posts to `/api/admin/draft` with the revision it last
+>   saw.
+>
+> **Still to do in this phase:**
+>
+> - A real `<MediaPicker>`. Image fields upload a new file; there is no way to
+>   pick one already in the library.
 > - Progressive disclosure on record editors, and collapse the five duplicate
 >   settings routes into `settings/[panel]`.
+> - A Home page built from blocks. The theme's fixed sections still own `/`.
 >
 > **The one thing built here:** `src/admin/pages/AdminWelcome.tsx`, the first-run
 > wizard, deliberately written in plain Tailwind so it survives the component
@@ -862,8 +897,8 @@ The numbers you should see, as of this writing:
 | `lint`                    | **0 errors**, 64 warnings — the warnings are baseline |
 | `format:check`            | clean                                                 |
 | `check-no-personal-data`  | clean, listed by git                                  |
-| `test` with no containers | 230 passed, 7 skipped                                 |
-| `test` with both          | **304 passed, 2 skipped**                             |
+| `test` with no containers | 294 passed, 7 skipped                                 |
+| `test` with both          | **368 passed, 2 skipped**                             |
 
 The 2 remaining skips are the Supabase and Neon conformance runs, which need
 real cloud credentials. Everything else runs locally.

@@ -50,7 +50,11 @@ export const AdminLogin: React.FC = () => {
               <VStack gap={1}>
                 <Heading level={1}>Sign in</Heading>
                 <Text type="supporting" display="block">
-                  Enter the admin email and passcode from your .env.local file.
+                  {/* This used to say "from your .env.local file", from the
+                      days when the passcode was compiled into the public
+                      bundle. There is no such file and no such passcode now:
+                      the owner sets these when they claim the site. */}
+                  Use the email and passphrase you chose when you set this site up.
                 </Text>
               </VStack>
 
@@ -69,7 +73,7 @@ export const AdminLogin: React.FC = () => {
                 />
 
                 <TextInput
-                  label="Passcode"
+                  label="Passphrase"
                   type="password"
                   value={password}
                   onChange={(value) => setPassword(value)}

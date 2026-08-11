@@ -15,6 +15,7 @@ import {
   Text,
 } from '../primitives';
 import { deeper } from '../primitives/heading-level';
+import type { BlockField } from './fields';
 import type { BlockDefinition } from './schema';
 
 /**
@@ -49,6 +50,28 @@ const mediaSchema = z.object({
   decorative: z.boolean().optional(),
 });
 
+/** A picture and the decision about its alt text, described once. */
+const mediaFields = (prefix: string): BlockField[] => [
+  { kind: 'media', path: prefix ? `${prefix}.src` : 'src', label: 'Image' },
+  {
+    kind: 'text',
+    path: prefix ? `${prefix}.alt` : 'alt',
+    label: 'Describe this image',
+    help: 'What someone who cannot see it would need to know. Leave blank only if it is purely decorative.',
+  },
+  {
+    kind: 'toggle',
+    path: prefix ? `${prefix}.decorative` : 'decorative',
+    label: 'Purely decorative',
+    help: 'Hides it from screen readers instead of announcing it.',
+  },
+];
+
+const ctaFields: BlockField[] = [
+  { kind: 'text', path: 'label', label: 'Button text', placeholder: 'Get in touch' },
+  { kind: 'text', path: 'href', label: 'Where it goes', placeholder: '/contact' },
+];
+
 const ctaSchema = z.object({
   label: z.string().min(1),
   href: z.string().min(1),
@@ -72,6 +95,27 @@ const hero: BlockDefinition<HeroProps> = {
   group: 'identity',
   schema: heroProps,
   defaults: () => ({ headline: 'A short, specific statement about what you do.' }),
+  fields: [
+    { kind: 'text', path: 'eyebrow', label: 'Small line above', placeholder: 'Designer' },
+    {
+      kind: 'textarea',
+      path: 'headline',
+      label: 'Headline',
+      rows: 2,
+      help: 'Around 60 characters reads best. Say what you do, not that you are passionate about it.',
+    },
+    { kind: 'textarea', path: 'subhead', label: 'Supporting line', rows: 3 },
+    {
+      kind: 'list',
+      path: 'cta',
+      label: 'Buttons',
+      itemNoun: 'button',
+      titlePath: 'label',
+      max: 2,
+      fields: ctaFields,
+      newItem: () => ({ label: 'Get in touch', href: '/contact' }),
+    },
+  ],
   frameDefaults: { spacing: 'loose' },
   checks: [
     {
@@ -126,6 +170,15 @@ const richText: BlockDefinition<RichTextProps> = {
   group: 'identity',
   schema: richTextProps,
   defaults: () => ({ paragraphs: ['Write something here.'] }),
+  fields: [
+    { kind: 'text', path: 'heading', label: 'Heading' },
+    {
+      kind: 'paragraphs',
+      path: 'paragraphs',
+      label: 'Text',
+      help: 'Leave a blank line between paragraphs.',
+    },
+  ],
   Render: ({ props, frame, headingLevel }) => (
     <Band frame={frame}>
       <Stack gap={5}>
@@ -159,6 +212,21 @@ const image: BlockDefinition<ImageProps> = {
   group: 'work',
   schema: imageProps,
   defaults: () => ({ media: { src: '', alt: '' } }),
+  fields: [
+    ...mediaFields('media'),
+    { kind: 'text', path: 'caption', label: 'Caption' },
+    {
+      kind: 'choice',
+      path: 'ratio',
+      label: 'Shape',
+      options: [
+        { value: '16 / 9', label: 'Wide' },
+        { value: '4 / 3', label: 'Classic' },
+        { value: '1 / 1', label: 'Square' },
+        { value: '3 / 4', label: 'Tall' },
+      ],
+    },
+  ],
   checks: [
     {
       id: 'no-image',
@@ -203,6 +271,30 @@ const gallery: BlockDefinition<GalleryProps> = {
   group: 'work',
   schema: galleryProps,
   defaults: () => ({ items: [{ src: '', alt: '' }] }),
+  fields: [
+    { kind: 'text', path: 'heading', label: 'Heading' },
+    {
+      kind: 'choice',
+      path: 'columns',
+      label: 'Across',
+      help: 'A maximum, not a promise — the grid uses fewer when there is no room.',
+      options: [
+        { value: 2, label: 'Two' },
+        { value: 3, label: 'Three' },
+        { value: 4, label: 'Four' },
+      ],
+    },
+    {
+      kind: 'list',
+      path: 'items',
+      label: 'Images',
+      itemNoun: 'image',
+      titlePath: 'alt',
+      min: 1,
+      fields: [...mediaFields(''), { kind: 'text', path: 'caption', label: 'Caption' }],
+      newItem: () => ({ src: '', alt: '' }),
+    },
+  ],
   checks: [
     {
       id: 'empty-items',
@@ -266,6 +358,22 @@ const stats: BlockDefinition<StatsProps> = {
   group: 'credentials',
   schema: statsProps,
   defaults: () => ({ items: [{ value: '0', label: 'Something worth counting' }] }),
+  fields: [
+    { kind: 'text', path: 'heading', label: 'Heading' },
+    {
+      kind: 'list',
+      path: 'items',
+      label: 'Numbers',
+      itemNoun: 'number',
+      titlePath: 'label',
+      min: 1,
+      fields: [
+        { kind: 'text', path: 'value', label: 'The figure', placeholder: '12' },
+        { kind: 'text', path: 'label', label: 'What it counts', placeholder: 'Years working' },
+      ],
+      newItem: () => ({ value: '0', label: 'Something worth counting' }),
+    },
+  ],
   Render: ({ props, frame, headingLevel }) => (
     <Band frame={frame}>
       <Stack gap={6}>
@@ -300,6 +408,21 @@ const ctaBanner: BlockDefinition<CtaBannerProps> = {
     headline: 'Have something worth building?',
     cta: [{ label: 'Get in touch', href: '/contact' }],
   }),
+  fields: [
+    { kind: 'text', path: 'headline', label: 'Headline' },
+    { kind: 'textarea', path: 'description', label: 'Supporting line', rows: 2 },
+    {
+      kind: 'list',
+      path: 'cta',
+      label: 'Buttons',
+      itemNoun: 'button',
+      titlePath: 'label',
+      min: 1,
+      max: 2,
+      fields: ctaFields,
+      newItem: () => ({ label: 'Get in touch', href: '/contact' }),
+    },
+  ],
   frameDefaults: { surface: 'raised', align: 'center' },
   Render: ({ props, frame, headingLevel }) => (
     <Band frame={frame}>
@@ -356,6 +479,32 @@ const cards: BlockDefinition<CardsProps> = {
   group: 'credentials',
   schema: cardsProps,
   defaults: () => ({ items: [{ title: 'Something you do' }] }),
+  fields: [
+    { kind: 'text', path: 'heading', label: 'Heading' },
+    {
+      kind: 'choice',
+      path: 'columns',
+      label: 'Across',
+      options: [
+        { value: 2, label: 'Two' },
+        { value: 3, label: 'Three' },
+      ],
+    },
+    {
+      kind: 'list',
+      path: 'items',
+      label: 'Cards',
+      itemNoun: 'card',
+      titlePath: 'title',
+      min: 1,
+      fields: [
+        { kind: 'text', path: 'title', label: 'Title' },
+        { kind: 'textarea', path: 'body', label: 'Text', rows: 3 },
+        { kind: 'text', path: 'href', label: 'Link (optional)', placeholder: '/work/example' },
+      ],
+      newItem: () => ({ title: 'Something you do' }),
+    },
+  ],
   Render: ({ props, frame, headingLevel }) => (
     <Band frame={frame}>
       <Stack gap={6}>

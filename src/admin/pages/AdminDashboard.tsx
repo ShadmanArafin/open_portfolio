@@ -106,7 +106,7 @@ export const AdminDashboard: React.FC = () => {
           variant="primary"
           icon={<FileText aria-hidden />}
           as={Link as never}
-          href="/admin/pages"
+          href="/homepage"
         />
       </AstryxHeader>
 

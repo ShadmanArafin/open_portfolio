@@ -2,6 +2,7 @@ import { z } from 'zod';
 import type React from 'react';
 import type { BlockFrame } from '../primitives/frame';
 import type { HeadingLevel } from '../primitives/heading-level';
+import type { BlockField } from './fields';
 
 /**
  * The block envelope, and the contract a block definition satisfies.
@@ -112,6 +113,13 @@ export interface BlockDefinition<P = unknown> {
   schema: z.ZodType<P>;
   /** A valid, empty-ish instance. What "Add block" inserts. */
   defaults(): P;
+
+  /**
+   * The editor for this block, described as data rather than built as a
+   * component. One generic form renders every block from this, so adding a
+   * block type stays one file and no admin screen has to learn about it.
+   */
+  fields: BlockField[];
 
   /**
    * Which frame controls are meaningful for this block. The settings panel
