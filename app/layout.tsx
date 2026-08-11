@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { buildMetadata } from '@/core/content/metadata';
 import { getPublishedContent } from '@/core/content/read';
+import { buildThemeStylesheet } from '@/core/theme/tokens';
 import { THEME_STORAGE_KEY } from '@/context/themeConstants';
 
 /*
@@ -49,13 +50,23 @@ const themeScript = `
 })();
 `.trim();
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Both palettes, generated from the published appearance settings. Rendered
+  // here rather than written from an effect, so the first paint is already the
+  // site's own colours instead of the built-in ones.
+  const content = await getPublishedContent();
+  const themeTokens = buildThemeStylesheet(content.appearance);
+
   return (
     // suppressHydrationWarning: the script above mutates <html> before React
     // sees it, so the server and client markup differ here by design.
     <html lang="en" data-theme="dark" className="dark" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        {/* Values are all generated from parsed colours — nothing a user typed
+            reaches this string verbatim. Covered by a test in
+            core/theme/__tests__/tokens.test.ts. */}
+        <style dangerouslySetInnerHTML={{ __html: themeTokens }} />
         {/* Default pairing. The appearance editor swaps these at runtime;
             self-hosting them via next/font comes with the token rework. */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />

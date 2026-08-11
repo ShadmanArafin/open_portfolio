@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { CMSState, MediaItem } from '../types/cms';
 import { cmsService } from '../services/cmsService';
 import { loadGoogleFonts } from '../../utils/googleFonts';
+import { buildThemeStylesheet } from '@/core/theme/tokens';
 
 interface CMSContextType {
   /** What the site should render: published content, or the draft in preview mode. */
@@ -132,19 +133,25 @@ export const CMSProvider: React.FC<CMSProviderProps> = ({ children, initialData 
       appearance.monoFontFamily || undefined
     );
 
-    const root = document.documentElement;
-    const vars: [string, string | undefined][] = [
-      ['--color-accent-dark', appearance.accentDark],
-      ['--color-accent-light', appearance.accentLight],
-      ['--color-bg-dark', appearance.backgroundDark],
-      ['--color-bg-light', appearance.backgroundLight],
-      ['--color-border-dark', appearance.strokeDark],
-      ['--color-border-light', appearance.strokeLight],
-    ];
-    vars.forEach(([name, value]) => {
-      if (value) root.style.setProperty(name, value);
-    });
-  }, [appearance]);
+    // Colours are server-rendered from the published appearance, so a visitor
+    // is painted the right palette immediately and there is nothing to do here.
+    // The draft preview is the exception: it is showing colours the server has
+    // not been told about yet.
+    if (!isPreviewMode) return;
+
+    // A stylesheet rather than inline properties on the root, so both palettes
+    // are present and switching between light and dark inside the preview still
+    // works. Inline values would pin whichever mode was current when they were
+    // written.
+    const id = 'opb-draft-theme';
+    let el = document.getElementById(id) as HTMLStyleElement | null;
+    if (!el) {
+      el = document.createElement('style');
+      el.id = id;
+      document.head.appendChild(el);
+    }
+    el.textContent = buildThemeStylesheet(appearance);
+  }, [appearance, isPreviewMode]);
 
   const updateDraft = useCallback((updater: (draft: CMSState) => void) => {
     cmsService.updateDraft(updater);
