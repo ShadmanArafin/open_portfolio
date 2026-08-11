@@ -37,6 +37,15 @@ export interface ContentBundle {
   media: { id: string; mimeType: string; dataUrl: string }[];
 }
 
+/** What `POST /api/admin/media` returns once the backend has the bytes. */
+interface UploadedMedia {
+  key: string;
+  url: string;
+  mimeType: string;
+  sizeBytes: number;
+  uploadedAt: string;
+}
+
 type ErrorListener = (message: string) => void;
 
 function clone<T>(value: T): T {
@@ -527,31 +536,52 @@ export class CMSService {
   // --- MEDIA ---
 
   /**
-   * Store an uploaded file as a real Blob and register it in the media library.
-   * Content references it as `idb:<id>`; `resolveAssetUrl` turns that back into
-   * something an `<img>` can load.
+   * Send an uploaded file to the server and register it in the media library.
+   *
+   * The bytes go to whichever storage backend is configured, and the content
+   * records `/api/media/<key>` — a URL that resolves for anyone, not just the
+   * browser that did the uploading. The previous design kept uploads in this
+   * browser's IndexedDB and wrote an `idb:` reference into the content, which
+   * published to visitors as a blank pixel.
    */
   public async uploadMedia(file: File, meta?: { altText?: string }): Promise<MediaItem | null> {
-    if (!this.store) return null;
+    const body = new FormData();
+    body.append('file', file);
 
-    const id = `media-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-
+    let payload: { ok: boolean; error?: string; media?: UploadedMedia };
     try {
-      await this.store.putMedia(id, file);
-    } catch (err) {
-      this.emitError(err instanceof Error ? err.message : 'Upload failed.');
+      const res = await fetch('/api/admin/media', { method: 'POST', body });
+      payload = await res.json();
+    } catch {
+      this.emitError('Could not reach the server. Check your connection and try again.');
       return null;
     }
 
-    registerMediaBlob(id, file);
+    if (!payload.ok || !payload.media) {
+      this.emitError(payload.error ?? 'Upload failed.');
+      return null;
+    }
+
+    const { key, url, mimeType, sizeBytes } = payload.media;
+
+    // Kept locally as well, so the editor renders the new image immediately
+    // rather than waiting on a round trip to the store it was just written to.
+    if (this.store) {
+      try {
+        await this.store.putMedia(key, file);
+        registerMediaBlob(key, file);
+      } catch {
+        // A full quota is not a reason to lose an upload the server accepted.
+      }
+    }
 
     const dimensions = await this.probeDimensions(file);
     const item: MediaItem = {
-      id,
+      id: key,
       name: file.name,
-      url: makeIdbUrl(id),
-      type: file.type === 'application/pdf' ? 'pdf' : file.type.includes('svg') ? 'svg' : 'image',
-      sizeBytes: file.size,
+      url,
+      type: mimeType === 'application/pdf' ? 'pdf' : 'image',
+      sizeBytes,
       dimensions,
       uploadedAt: new Date().toISOString().split('T')[0],
       altText: meta?.altText ?? file.name.replace(/\.[^.]+$/, ''),
@@ -585,6 +615,18 @@ export class CMSService {
   }
 
   public async deleteMediaItem(mediaId: string): Promise<void> {
+    const item = this.draftState.media.find((m) => m.id === mediaId);
+
+    // Legacy items only ever existed in this browser, so there is nothing on
+    // the server to remove for them.
+    if (item && !isIdbUrl(item.url)) {
+      try {
+        await fetch(`/api/admin/media?key=${encodeURIComponent(mediaId)}`, { method: 'DELETE' });
+      } catch (err) {
+        console.warn('[cms] Failed to remove server media', mediaId, err);
+      }
+    }
+
     if (this.store) {
       try {
         await this.store.deleteMedia(mediaId);
@@ -600,7 +642,10 @@ export class CMSService {
 
   /** How many places in the content tree reference a given media item. */
   public countMediaUsage(mediaId: string): number {
-    const needle = makeIdbUrl(mediaId);
+    // Match on the URL actually written into content. Uploads now carry
+    // `/api/media/<key>`; anything from before still carries `idb:<id>`.
+    const item = this.draftState.media.find((m) => m.id === mediaId);
+    const needle = item?.url ?? makeIdbUrl(mediaId);
     const haystack = JSON.stringify({ ...this.draftState, media: [], versions: [] });
     return haystack.split(`"${needle}"`).length - 1;
   }
