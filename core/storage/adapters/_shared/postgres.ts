@@ -1,7 +1,14 @@
 import 'server-only';
 import postgres, { type Sql } from 'postgres';
-import type { CMSState } from '@/cms/types/cms';
-import type { Channel, HealthReport, KvAdapter, KvNamespace, OwnerRecord } from '../../contract';
+import type { CMSState, ContactMessage } from '@/cms/types/cms';
+import type {
+  Channel,
+  HealthReport,
+  KvAdapter,
+  KvNamespace,
+  MessagesAdapter,
+  OwnerRecord,
+} from '../../contract';
 
 /**
  * Content, owner and short-lived state over plain SQL.
@@ -77,6 +84,21 @@ export async function provisionSchema(sql: Sql): Promise<void> {
 
   // Expired rows are swept lazily on write; this makes that sweep cheap.
   await sql`CREATE INDEX IF NOT EXISTS opb_kv_expires_at_idx ON opb_kv (expires_at)`;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS opb_messages (
+      id           text PRIMARY KEY,
+      received_at  timestamptz NOT NULL,
+      data         jsonb NOT NULL
+    )
+  `;
+
+  // `list` only ever orders newest-first; the index matches that, not the
+  // primary key.
+  await sql`
+    CREATE INDEX IF NOT EXISTS opb_messages_received_at_idx
+      ON opb_messages (received_at DESC)
+  `;
 }
 
 export async function health(sql: Sql, label: string): Promise<HealthReport> {
@@ -190,6 +212,57 @@ export function makeKvAdapter(getConnection: () => Sql): KvAdapter {
     async clear(ns: KvNamespace): Promise<void> {
       const sql = getConnection();
       await sql`DELETE FROM opb_kv WHERE ns = ${ns}`;
+    },
+  };
+}
+
+/**
+ * The inbox, as a table.
+ *
+ * `append` is a single INSERT, so it is atomic without a lock and fifty
+ * simultaneous enquiries produce fifty rows. `ON CONFLICT DO NOTHING` makes it
+ * safe to replay, which is what lets the migration out of the snapshot run on
+ * every boot without duplicating anything.
+ */
+export function makeMessagesAdapter(getConnection: () => Sql): MessagesAdapter {
+  return {
+    async append(message) {
+      const sql = getConnection();
+      await sql`
+        INSERT INTO opb_messages (id, received_at, data)
+        VALUES (${message.id}, ${message.receivedAt}, ${sql.json(message as never)})
+        ON CONFLICT (id) DO NOTHING
+      `;
+    },
+
+    async list(options) {
+      const sql = getConnection();
+      const limit = options?.limit ?? null;
+      const rows = limit
+        ? await sql<{ data: ContactMessage }[]>`
+            SELECT data FROM opb_messages ORDER BY received_at DESC LIMIT ${limit}
+          `
+        : await sql<{ data: ContactMessage }[]>`
+            SELECT data FROM opb_messages ORDER BY received_at DESC
+          `;
+      return rows.map((row) => row.data);
+    },
+
+    async update(id, patch) {
+      const sql = getConnection();
+      // `||` is a shallow merge, which is exactly what a patch is. Doing it in
+      // the database rather than read-modify-write keeps a concurrent status
+      // change from clobbering a concurrent notification result.
+      await sql`
+        UPDATE opb_messages
+           SET data = data || ${sql.json(patch as never)}
+         WHERE id = ${id}
+      `;
+    },
+
+    async remove(id) {
+      const sql = getConnection();
+      await sql`DELETE FROM opb_messages WHERE id = ${id}`;
     },
   };
 }

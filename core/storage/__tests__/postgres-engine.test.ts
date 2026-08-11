@@ -61,45 +61,21 @@ if (TEST_URL) {
         remove: async () => {},
         list: async () => [],
       },
-      // Not part of the SQL engine either, until the task that adds
-      // `makeMessagesAdapter` — see the `skipMessages` passed below.
-      messages: {
-        append: async () => {
-          throw new Error('messages support has not landed on this engine yet');
-        },
-        list: async () => {
-          throw new Error('messages support has not landed on this engine yet');
-        },
-        update: async () => {
-          throw new Error('messages support has not landed on this engine yet');
-        },
-        remove: async () => {
-          throw new Error('messages support has not landed on this engine yet');
-        },
-      },
+      messages: pg.makeMessagesAdapter(sql),
     };
   };
 
   // The shipped adapter, media included: it stores uploads on disk, so unlike
   // the hosted pair every part of it can be exercised here.
-  //
-  // `skipMessages` until the follow-up task wires `makeMessagesAdapter` in —
-  // remove it then, so this suite goes back to covering the inbox too.
-  runConformanceSuite(
-    { describe, it, expect } as never,
-    'postgres adapter',
-    loadReal,
-    async () => {
-      const { getSql, provisionSchema } = await import('../adapters/_shared/postgres');
-      const sql = getSql(TEST_URL);
-      await provisionSchema(sql);
-      await sql`TRUNCATE opb_content, opb_owner, opb_kv`;
-      const { rm } = await import('node:fs/promises');
-      const path = await import('node:path');
-      await rm(path.join(process.cwd(), '.opb', 'media'), { recursive: true, force: true });
-    },
-    { skipMessages: true }
-  );
+  runConformanceSuite({ describe, it, expect } as never, 'postgres adapter', loadReal, async () => {
+    const { getSql, provisionSchema } = await import('../adapters/_shared/postgres');
+    const sql = getSql(TEST_URL);
+    await provisionSchema(sql);
+    await sql`TRUNCATE opb_content, opb_owner, opb_kv, opb_messages`;
+    const { rm } = await import('node:fs/promises');
+    const path = await import('node:path');
+    await rm(path.join(process.cwd(), '.opb', 'media'), { recursive: true, force: true });
+  });
 
   runConformanceSuite(
     { describe, it, expect } as never,
@@ -109,9 +85,9 @@ if (TEST_URL) {
       const { getSql, provisionSchema } = await import('../adapters/_shared/postgres');
       const sql = getSql(TEST_URL);
       await provisionSchema(sql);
-      await sql`TRUNCATE opb_content, opb_owner, opb_kv`;
+      await sql`TRUNCATE opb_content, opb_owner, opb_kv, opb_messages`;
     },
-    { skipMedia: true, skipMessages: true }
+    { skipMedia: true }
   );
 } else {
   describe('storage conformance: shared Postgres engine', () => {

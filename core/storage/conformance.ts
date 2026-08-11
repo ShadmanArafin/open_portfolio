@@ -73,16 +73,6 @@ export interface ConformanceOptions {
    * nothing.
    */
   skipMedia?: boolean;
-  /**
-   * Skips the messages tests.
-   *
-   * For an adapter that satisfies `StorageAdapter` structurally but does not
-   * carry a real inbox yet — the SQL-backed adapters between the task that
-   * widens the contract and the one that wires `messages` into the shared
-   * engine. Without this, their placeholder throwing turns "not built yet"
-   * into a spurious failure instead of an honest, temporary gap.
-   */
-  skipMessages?: boolean;
 }
 
 export function runConformanceSuite(
@@ -184,8 +174,6 @@ export function runConformanceSuite(
 
     // Skipped when there is no object store attached — see ConformanceOptions.
     const describeMedia = options.skipMedia ? skip : describe;
-    // Skipped where the inbox is not implemented yet — see ConformanceOptions.
-    const describeMessages = options.skipMessages ? skip : describe;
 
     describeMedia('media', () => {
       it('stores, resolves and removes an asset', async () => {
@@ -239,7 +227,7 @@ export function runConformanceSuite(
       });
     });
 
-    describeMessages('messages', () => {
+    describe('messages', () => {
       const enquiry = (id: string, receivedAt: string): ContactMessage => ({
         id,
         name: `Sender ${id}`,

@@ -31,19 +31,13 @@ async function truncate(adapter: { provision: () => Promise<void> }) {
     process.env.NEON_DATABASE_URL ||
     process.env.POSTGRES_URL!;
   const sql = getSql(url);
-  await sql`TRUNCATE opb_content, opb_owner, opb_kv`;
+  await sql`TRUNCATE opb_content, opb_owner, opb_kv, opb_messages`;
 }
 
-// `skipMessages` until the follow-up task wires `makeMessagesAdapter` into
-// these two adapters — remove it then, so this suite covers the inbox too.
 if (SUPABASE_READY) {
   const load = async () => (await import('../adapters/supabase')).supabaseAdapter;
-  runConformanceSuite(
-    { describe, it, expect } as never,
-    'supabase',
-    load,
-    async () => truncate(await load()),
-    { skipMessages: true }
+  runConformanceSuite({ describe, it, expect } as never, 'supabase', load, async () =>
+    truncate(await load())
   );
 } else {
   describe('storage conformance: supabase', () => {
@@ -53,12 +47,8 @@ if (SUPABASE_READY) {
 
 if (NEON_READY) {
   const load = async () => (await import('../adapters/neon')).neonAdapter;
-  runConformanceSuite(
-    { describe, it, expect } as never,
-    'neon',
-    load,
-    async () => truncate(await load()),
-    { skipMessages: true }
+  runConformanceSuite({ describe, it, expect } as never, 'neon', load, async () =>
+    truncate(await load())
   );
 } else {
   describe('storage conformance: neon', () => {
