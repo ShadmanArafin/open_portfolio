@@ -36,10 +36,29 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       { source: '/:path*', headers: securityHeaders },
-      // The admin must never be indexed, and must never be cached by a CDN.
+      /*
+       * The admin must never be indexed, and never held by a shared cache.
+       *
+       * The second half of that sentence was a comment rather than a header:
+       * only `X-Robots-Tag` was set, so nothing stopped a CDN or a browser
+       * keeping a signed-in page and handing it to whoever asked next.
+       *
+       * `no-store` covers the HTTP caches. It does **not** constrain Cache
+       * Storage, which a service worker writes to directly and which ignores
+       * these headers entirely — so this is not a licence to cache the admin in
+       * a service worker later. See docs/research/MOBILE-AND-PWA.md.
+       */
       {
         source: '/admin/:path*',
-        headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
+        headers: [
+          { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+          { key: 'Cache-Control', value: 'private, no-store, max-age=0, must-revalidate' },
+        ],
+      },
+      // Same for everything the admin talks to.
+      {
+        source: '/api/admin/:path*',
+        headers: [{ key: 'Cache-Control', value: 'private, no-store, max-age=0, must-revalidate' }],
       },
     ];
   },

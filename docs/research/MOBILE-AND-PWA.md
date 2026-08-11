@@ -9,15 +9,15 @@ release note.
 
 **Measured state of this app**, from a real browser at 375 px:
 
-| Measurement                                     | Value                        |
-| ----------------------------------------------- | ---------------------------- |
-| Horizontal overflow on the public site          | none                         |
-| `h1` overflowing its own box                    | **406 px** in a 375 px view  |
-| Interactive elements below 24 px                | **6**                        |
-| Interactive elements below 44 px                | **17**                       |
-| Manifest / service worker / PWA of any kind     | **none**                     |
-| Viewport meta                                   | present (Next.js default)    |
-| Responsive utility classes in the entire admin  | **17**                       |
+| Measurement                                    | Value                       |
+| ---------------------------------------------- | --------------------------- |
+| Horizontal overflow on the public site         | none                        |
+| `h1` overflowing its own box                   | **406 px** in a 375 px view |
+| Interactive elements below 24 px               | **6**                       |
+| Interactive elements below 44 px               | **17**                      |
+| Manifest / service worker / PWA of any kind    | **none**                    |
+| Viewport meta                                  | present (Next.js default)   |
+| Responsive utility classes in the entire admin | **17**                      |
 
 Read §1 for why this is worth doing, §3 before writing any service-worker code,
 and §5 today — it is the only part that needs an answer from you rather than a
@@ -32,17 +32,17 @@ sprint.
 Every quote below is verbatim from an official vendor page fetched during the
 research pass. These are not analyst summaries.
 
-| Platform             | Position on editing from a phone                                                                                                                          | Source                                                                                                                                                    |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Webflow**          | _"Webflow requires a mouse-and-keyboard device (i.e., desktop or laptop computer) with a screen width of at least 1268px."_                                | <https://help.webflow.com/hc/en-us/articles/33961260162323-Intro-to-Webflow>                                                                               |
-| **Webflow**          | _"Starting August 4, 2026, the legacy Editor will no longer be available."_                                                                               | <https://help.webflow.com/hc/en-us/articles/48412420902675-Legacy-Editor-deprecation-FAQ>                                                                  |
-| **Wix**              | _"Currently, you can't edit sites created in the Wix Editor or Studio Editor using the Wix mobile app."_ — filed as a feature request, "collecting votes" | <https://support.wix.com/en/article/wix-owner-app-request-editing-your-site-from-the-app>                                                                  |
-| **Squarespace**      | _"You can edit block content in the app, but it's not possible to add or rearrange blocks on pages in the app."_                                          | <https://support.squarespace.com/hc/en-us/articles/360002093708-Edit-your-site-with-the-Squarespace-app>                                                   |
-| **Squarespace**      | Eight apps discontinued 2016–2023, including the **Portfolio app (March 2019)** and the **Blog app (July 2019)**                                           | <https://support.squarespace.com/hc/en-us/articles/206544757-Discontinued-features>                                                                        |
-| **Adobe Portfolio**  | _"**We do not support editing on mobile and tablet devices.** For optimal editing experience, we suggest editing your site on a desktop"_                 | <https://help.myportfolio.com/hc/en-us/articles/360038045914-Supported-Browsers-and-Devices>                                                               |
-| **Framer**           | Canvas requires _"a device running Windows, macOS, Linux, or ChromeOS"_ — iOS and Android are listed for *published sites* and absent from the Canvas list | <https://www.framer.com/help/articles/requirements/>                                                                                                       |
-| **Ghost**            | Android app retired; notice dated **February 2020**, Play listing now HTTP 404. No replacement, no roadmap commitment                                      | <https://ghost.org/changelog/android/> · <https://forum.ghost.org/t/android-app-status/43033>                                                              |
-| **WordPress**        | Two apps from one codebase, and: _"Managing your site across both apps is currently unsupported and may lead to issues like data conflicts"_               | <https://jetpack.com/support/switch-to-the-jetpack-app/>                                                                                                   |
+| Platform            | Position on editing from a phone                                                                                                                           | Source                                                                                                   |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| **Webflow**         | _"Webflow requires a mouse-and-keyboard device (i.e., desktop or laptop computer) with a screen width of at least 1268px."_                                | <https://help.webflow.com/hc/en-us/articles/33961260162323-Intro-to-Webflow>                             |
+| **Webflow**         | _"Starting August 4, 2026, the legacy Editor will no longer be available."_                                                                                | <https://help.webflow.com/hc/en-us/articles/48412420902675-Legacy-Editor-deprecation-FAQ>                |
+| **Wix**             | _"Currently, you can't edit sites created in the Wix Editor or Studio Editor using the Wix mobile app."_ — filed as a feature request, "collecting votes"  | <https://support.wix.com/en/article/wix-owner-app-request-editing-your-site-from-the-app>                |
+| **Squarespace**     | _"You can edit block content in the app, but it's not possible to add or rearrange blocks on pages in the app."_                                           | <https://support.squarespace.com/hc/en-us/articles/360002093708-Edit-your-site-with-the-Squarespace-app> |
+| **Squarespace**     | Eight apps discontinued 2016–2023, including the **Portfolio app (March 2019)** and the **Blog app (July 2019)**                                           | <https://support.squarespace.com/hc/en-us/articles/206544757-Discontinued-features>                      |
+| **Adobe Portfolio** | _"**We do not support editing on mobile and tablet devices.** For optimal editing experience, we suggest editing your site on a desktop"_                  | <https://help.myportfolio.com/hc/en-us/articles/360038045914-Supported-Browsers-and-Devices>             |
+| **Framer**          | Canvas requires _"a device running Windows, macOS, Linux, or ChromeOS"_ — iOS and Android are listed for _published sites_ and absent from the Canvas list | <https://www.framer.com/help/articles/requirements/>                                                     |
+| **Ghost**           | Android app retired; notice dated **February 2020**, Play listing now HTTP 404. No replacement, no roadmap commitment                                      | <https://ghost.org/changelog/android/> · <https://forum.ghost.org/t/android-app-status/43033>            |
+| **WordPress**       | Two apps from one codebase, and: _"Managing your site across both apps is currently unsupported and may lead to issues like data conflicts"_               | <https://jetpack.com/support/switch-to-the-jetpack-app/>                                                 |
 
 The Webflow retirement is the sharpest datum. The legacy Editor was the
 standalone overlay that clients realistically used from an iPad; its replacement
@@ -56,7 +56,7 @@ its forum, so the old `discourse.webflow.com` threads about tablet support now
 301-redirect to `community.webflow.com/ask-answer` and their content is
 unrecoverable (**those complaint quotes are UNVERIFIED**). Statamic quietly
 stopped claiming its Control Panel is responsive between v2 and v6, but an
-*absence* of a marketing claim is weak evidence and the widely-quoted "edit from
+_absence_ of a marketing claim is weak evidence and the widely-quoted "edit from
 your phone" lines could not be verified on any live Statamic page
 (**UNVERIFIED**).
 
@@ -90,18 +90,18 @@ The honest, defensible form of the claim is narrower and more useful:
 
 Do not write "the industry is abandoning mobile" in marketing copy. Write "no
 major builder will let you edit your site from your phone; we do" — and mean
-*content*.
+_content_.
 
 ### 1.3 What it means for us
 
 The dossier sorts the field into three tiers. We are, by architecture, in the
 first one and did not have to choose it:
 
-| Tier                        | Who                                              | What it costs them                                                     |
-| --------------------------- | ------------------------------------------------ | ---------------------------------------------------------------------- |
-| **Responsive admin, no app**| Sanity, Statamic, Ghost, WordPress mobile web    | CSS discipline. No store, no second codebase, no review queue.          |
-| **Companion app**           | Squarespace, Wix, Format                         | A native team, forever. Squarespace killed eight apps getting here.     |
-| **Desktop-only**            | Webflow, Framer, Adobe Portfolio, Carrd          | Nothing — they simply refuse the phone.                                 |
+| Tier                         | Who                                           | What it costs them                                                  |
+| ---------------------------- | --------------------------------------------- | ------------------------------------------------------------------- |
+| **Responsive admin, no app** | Sanity, Statamic, Ghost, WordPress mobile web | CSS discipline. No store, no second codebase, no review queue.      |
+| **Companion app**            | Squarespace, Wix, Format                      | A native team, forever. Squarespace killed eight apps getting here. |
+| **Desktop-only**             | Webflow, Framer, Adobe Portfolio, Carrd       | Nothing — they simply refuse the phone.                             |
 
 Our admin is already a single responsive React SPA behind
 `app/admin/[[...slug]]`. Making it work at 375 px is a CSS and layout problem,
@@ -142,15 +142,15 @@ sync engine, no.
 Estimates are developer-days for one maintainer who knows this codebase. They
 are my calibration, not measurements.
 
-| #   | Work                                              | Effort  | Risk       | Unlocks                                                                 |
-| --- | ------------------------------------------------- | ------- | ---------- | ----------------------------------------------------------------------- |
-| 0   | Tap targets + the overflowing `h1`                | ~1 d    | None       | WCAG 2.2 AA on the public site; the right to claim "works on a phone"   |
-| 1   | Viewport, manifest, icons, `apple-touch-icon`     | ~1 d    | Low        | Installability; iOS storage exemption; the precondition for iOS push    |
-| 2   | Mobile admin layout                               | 10–20 d | Scope      | The entire competitive claim in §1                                      |
-| 3   | Install nudge (iOS instructions only)             | ~0.5 d  | Nagging    | Conversion into the installed state that 1 depends on                   |
-| 4   | Connectivity awareness (no caching)               | ~1 d    | None       | "Don't lose my save on the train", told honestly                        |
-| 5   | Notifications for new contact messages            | 1 d → 5 d | iOS silence | Owner finds out about an enquiry without opening the admin           |
-| 6   | *Optional, later:* service worker with caching    | ~2 d + review | **High** — see §3.1 | Offline fallback page, faster repeat loads               |
+| #   | Work                                           | Effort        | Risk                | Unlocks                                                               |
+| --- | ---------------------------------------------- | ------------- | ------------------- | --------------------------------------------------------------------- |
+| 0   | Tap targets + the overflowing `h1`             | ~1 d          | None                | WCAG 2.2 AA on the public site; the right to claim "works on a phone" |
+| 1   | Viewport, manifest, icons, `apple-touch-icon`  | ~1 d          | Low                 | Installability; iOS storage exemption; the precondition for iOS push  |
+| 2   | Mobile admin layout                            | 10–20 d       | Scope               | The entire competitive claim in §1                                    |
+| 3   | Install nudge (iOS instructions only)          | ~0.5 d        | Nagging             | Conversion into the installed state that 1 depends on                 |
+| 4   | Connectivity awareness (no caching)            | ~1 d          | None                | "Don't lose my save on the train", told honestly                      |
+| 5   | Notifications for new contact messages         | 1 d → 5 d     | iOS silence         | Owner finds out about an enquiry without opening the admin            |
+| 6   | _Optional, later:_ service worker with caching | ~2 d + review | **High** — see §3.1 | Offline fallback page, faster repeat loads                            |
 
 ### Phase 0 — Fix our own accessibility first (~1 day, no risk)
 
@@ -195,8 +195,8 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     start_url: '/admin',
     scope: '/',
     display: 'standalone',
-    background_color: /* from appearance settings */,
-    theme_color: /* from appearance settings */,
+    background_color: appearance.background, // from the owner's appearance settings
+    theme_color: appearance.accent, //     "
     icons: [
       { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
       { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },
@@ -208,12 +208,12 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
 
 Decisions embedded there, and why:
 
-- **`start_url: '/admin'`.** The person who installs a portfolio *builder* is the
+- **`start_url: '/admin'`.** The person who installs a portfolio _builder_ is the
   owner, not a visitor. `middleware.ts` already sends a session-less visitor to
   `/admin/login`, so both audiences land somewhere sensible. If we ever want a
   visitor-facing install, that needs a second manifest linked only from the
-  public layout — *(implementation detail not covered by the dossier; verify
-  before relying on it)*.
+  public layout — _(implementation detail not covered by the dossier; verify
+  before relying on it)_.
 - **`display: 'standalone'`.** iOS 26 removed installability requirements
   entirely — WebKit: _"There are now zero requirements for 'installability' in
   Safari"_ and _"By default, every website added to the Home Screen opens as a
@@ -224,7 +224,7 @@ Decisions embedded there, and why:
   `standalone` satisfies both readings and costs nothing.
 - **No `orientation`.** Setting `orientation: "portrait"` locks an installed PWA
   to portrait and engages **SC 1.3.4 Orientation (AA)**. Omit it.
-- **192 *and* 512.** Chromium's install criteria require both — MDN: icons _"must
+- **192 _and_ 512.** Chromium's install criteria require both — MDN: icons _"must
   contain a 192px and a 512px icon"_
   (<https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Making_PWAs_installable>).
   We currently ship one `favicon.svg` and nothing else.
@@ -246,8 +246,8 @@ Decisions embedded there, and why:
   is a special Route Handler that is cached by default unless it uses a
   [Request-time API] or dynamic config option"_
   (<https://nextjs.org/docs/app/api-reference/file-conventions/metadata/manifest>).
-  Reading the site name and theme colour is worth the invocation — this is *their*
-  site's icon on *their* home screen — but set a `revalidate`.
+  Reading the site name and theme colour is worth the invocation — this is _their_
+  site's icon on _their_ home screen — but set a `revalidate`.
 
 **Worth adding cheaply while we are here:** `shortcuts` (long-press the icon →
 "Inbox", "New page") is in the type and costs three lines. `screenshots` with
@@ -285,7 +285,7 @@ and budget regions in pixels first. The evidence that should shape it:
   primary action sits under the iPhone home indicator. Baseline widely available
   since January 2020 — <https://developer.mozilla.org/en-US/docs/Web/CSS/env>.
 - **`dvh`/`svh`, never `vh`** for sheet and panel heights. Plain `vh` equals the
-  *large* variant — the viewport with browser UI retracted — so a `100vh` sheet
+  _large_ variant — the viewport with browser UI retracted — so a `100vh` sheet
   is clipped whenever the toolbar is showing.
 - **Inputs at ≥16 px.** _"If the `font-size` of an `<input>` is 16px or larger,
   Safari on iOS will focus into the input normally. But as soon as the
@@ -298,7 +298,7 @@ and budget regions in pixels first. The evidence that should shape it:
   layout that depends on it.
 
 **Scope discipline is the real risk here.** The line Squarespace draws after
-years of iteration is the line to copy: *content yes, structure no.* Editing
+years of iteration is the line to copy: _content yes, structure no._ Editing
 text, swapping an image, reordering within a list with buttons, reading the
 inbox, publishing — all yes. A drag-and-drop block canvas at 375 px is where
 this turns from three weeks into three months, and §7 shows it is also the item
@@ -340,7 +340,7 @@ automatic retry when connectivity returns. About forty lines. No service worker,
 no cache, no outbox — therefore none of §3.
 
 Note that `navigator.onLine` alone is unreliable — it reports online for a
-captive-portal Wi-Fi *(engineering note, not from the dossier)*. Next's
+captive-portal Wi-Fi _(engineering note, not from the dossier)_. Next's
 `useOffline` uses a better heuristic worth copying; see §6.
 
 ### Phase 5 — Notifications for new contact messages (1 day, or 5)
@@ -363,16 +363,16 @@ reach.
 
 ### What we are deliberately not building
 
-| Not building                            | Why                                                                                                                                                                                          |
-| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **A native app**                        | Squarespace killed eight. Ghost killed its one and never replaced it. Format's, which does exactly what we would build, has 4 ratings. Two codebases and a review queue, forever.             |
-| **Serwist's `defaultCache` unmodified** | It caches authenticated admin HTML, RSC payloads and `/api/admin/*` JSON for 24 hours in an origin-scoped cache. §3.1.                                                                        |
-| **Offline editing / an outbox**         | Background Sync does not exist on iOS, so it can only flush when the app is next opened (§3.2). Cache API cannot replay POSTs or Server Actions at all. Vercel's own answer is retry, not cache. |
-| **A drag-and-drop layout canvas at 375 px** | Everyone who built one retreated from it. HTML5 drag-and-drop is `n` on Firefox Android 153 and Samsung Internet 30. **SC 2.5.7** would require a no-drag equivalent anyway.               |
-| **`beforeinstallprompt`**               | `false` on Firefox, Safari, iOS Safari. Next's own docs advise against it.                                                                                                                    |
-| **`orientation: "portrait"` in the manifest** | Locks an installed app to one orientation, engaging **SC 1.3.4 (AA)**.                                                                                                                 |
-| **`user-scalable=no` to stop iOS input zoom** | Fails **SC 1.4.4**, and iOS 10+ ignores `user-scalable`, `maximum-scale` and `minimum-scale` by default anyway — so it damages accessibility without even working.                      |
-| **iOS splash screens in v1**            | One image per device size class, hand-generated, and whether iOS 26 still needs them is **UNVERIFIED**.                                                                                       |
+| Not building                                  | Why                                                                                                                                                                                              |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **A native app**                              | Squarespace killed eight. Ghost killed its one and never replaced it. Format's, which does exactly what we would build, has 4 ratings. Two codebases and a review queue, forever.                |
+| **Serwist's `defaultCache` unmodified**       | It caches authenticated admin HTML, RSC payloads and `/api/admin/*` JSON for 24 hours in an origin-scoped cache. §3.1.                                                                           |
+| **Offline editing / an outbox**               | Background Sync does not exist on iOS, so it can only flush when the app is next opened (§3.2). Cache API cannot replay POSTs or Server Actions at all. Vercel's own answer is retry, not cache. |
+| **A drag-and-drop layout canvas at 375 px**   | Everyone who built one retreated from it. HTML5 drag-and-drop is `n` on Firefox Android 153 and Samsung Internet 30. **SC 2.5.7** would require a no-drag equivalent anyway.                     |
+| **`beforeinstallprompt`**                     | `false` on Firefox, Safari, iOS Safari. Next's own docs advise against it.                                                                                                                       |
+| **`orientation: "portrait"` in the manifest** | Locks an installed app to one orientation, engaging **SC 1.3.4 (AA)**.                                                                                                                           |
+| **`user-scalable=no` to stop iOS input zoom** | Fails **SC 1.4.4**, and iOS 10+ ignores `user-scalable`, `maximum-scale` and `minimum-scale` by default anyway — so it damages accessibility without even working.                               |
+| **iOS splash screens in v1**                  | One image per device size class, hand-generated, and whether iOS 26 still needs them is **UNVERIFIED**.                                                                                          |
 
 ---
 
@@ -390,13 +390,13 @@ point at and what almost everyone drops in unmodified. Read directly from the
 `@serwist/next@9.5.12` tarball (`dist/index.worker.mjs`), the production rules
 include:
 
-| Rule | Matcher                                                            | Strategy         | Cache name           | maxAge   |
-| ---- | ------------------------------------------------------------------ | ---------------- | -------------------- | -------- |
-| 13   | **`/api/auth/*`**                                                  | **NetworkOnly**  | —                    | —        |
-| 14   | same-origin GET `/api/*`                                           | NetworkFirst     | `apis`               | **24 h** |
-| 15   | `RSC: 1` + `Next-Router-Prefetch: 1`, same-origin, not `/api/`     | NetworkFirst     | `pages-rsc-prefetch` | **24 h** |
-| 16   | `RSC: 1`, same-origin, not `/api/`                                 | NetworkFirst     | `pages-rsc`          | **24 h** |
-| 17   | `Content-Type: text/html`, same-origin, not `/api/`                | NetworkFirst     | `pages`              | **24 h** |
+| Rule | Matcher                                                        | Strategy        | Cache name           | maxAge   |
+| ---- | -------------------------------------------------------------- | --------------- | -------------------- | -------- |
+| 13   | **`/api/auth/*`**                                              | **NetworkOnly** | —                    | —        |
+| 14   | same-origin GET `/api/*`                                       | NetworkFirst    | `apis`               | **24 h** |
+| 15   | `RSC: 1` + `Next-Router-Prefetch: 1`, same-origin, not `/api/` | NetworkFirst    | `pages-rsc-prefetch` | **24 h** |
+| 16   | `RSC: 1`, same-origin, not `/api/`                             | NetworkFirst    | `pages-rsc`          | **24 h** |
+| 17   | `Content-Type: text/html`, same-origin, not `/api/`            | NetworkFirst    | `pages`              | **24 h** |
 
 Rule 13 shows the authors knew this class of problem exists — they carved out
 `/api/auth/*` specifically. **Rules 14 to 17 have no auth exclusion at all.**
@@ -419,13 +419,13 @@ So with `defaultCache` in place:
    cache.
 2. **A service worker answers before the network, so `middleware.ts` never
    runs.** Our redirect-to-login lives in middleware, on the server. A response
-   served from Cache Storage never reaches it. *(Inference from how service
-   worker `fetch` interception works — not a vendor statement.)*
+   served from Cache Storage never reaches it. _(Inference from how service
+   worker `fetch` interception works — not a vendor statement.)_
 3. **HTTP cache headers do not constrain Cache Storage.** The Cache API is a
    programmatic store, not an HTTP cache; it holds whatever the service worker
    puts into it regardless of `Cache-Control: no-store`. Our `next.config.ts`
    comment already says the admin "must never be cached by a CDN" — a service
-   worker would be a cache we install *inside the device*, past every header we
+   worker would be a cache we install _inside the device_, past every header we
    set. (Background:
    <https://web.dev/articles/service-worker-caching-and-http-caching>)
 4. **Logging out does not clear it.** `POST /api/auth/logout` calls
@@ -464,11 +464,12 @@ new Serwist({
   runtimeCaching: [
     // FIRST, before anything else. Anything private must never fall through
     // to defaultCache's rules 14–17.
-    { matcher: ({ url, sameOrigin }) => sameOrigin && PRIVATE.test(url.pathname),
-      handler: new NetworkOnly() },
+    {
+      matcher: ({ url, sameOrigin }) => sameOrigin && PRIVATE.test(url.pathname),
+      handler: new NetworkOnly(),
+    },
     // Belt and braces: non-GET is never cacheable anyway, but be explicit.
-    { matcher: ({ request }) => request.method !== 'GET',
-      handler: new NetworkOnly() },
+    { matcher: ({ request }) => request.method !== 'GET', handler: new NetworkOnly() },
     ...defaultCache,
   ],
 });
@@ -508,17 +509,21 @@ build and DevTools → Application → Cache Storage: after visiting the admin, 
 
 - **Set `Cache-Control: private, no-store` on `/admin/:path*` and
   `/api/admin/:path*`** in `next.config.ts`. It does not restrain the service
-  worker (point 3 above), but it is correct for every *other* cache between us
+  worker (point 3 above), but it is correct for every _other_ cache between us
   and the user, and the config currently only sets `X-Robots-Tag` there.
 
 - **Add the service-worker headers from Next's guide**, which we do not have:
 
   ```js
-  { source: '/sw.js', headers: [
+  // next.config.ts — one more entry in headers()
+  const serviceWorkerHeaders = {
+    source: '/sw.js',
+    headers: [
       { key: 'Content-Type', value: 'application/javascript; charset=utf-8' },
       { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
       { key: 'Content-Security-Policy', value: "default-src 'self'; script-src 'self'" },
-  ]}
+    ],
+  };
   ```
 
   and register with `updateViaCache: 'none'`. Without both, an HTTP-cached
@@ -542,10 +547,10 @@ a cached response.
 
 ### 3.2 Background Sync does not exist on iOS — so do not promise it
 
-| API                  | Chrome | Chrome Android | Firefox   | Safari    | **iOS Safari** |
-| -------------------- | ------ | -------------- | --------- | --------- | -------------- |
-| `SyncManager`        | 49     | yes            | **false** | **false** | **false**      |
-| `PeriodicSyncManager` | 80    | yes            | false     | false     | false          |
+| API                   | Chrome | Chrome Android | Firefox   | Safari    | **iOS Safari** |
+| --------------------- | ------ | -------------- | --------- | --------- | -------------- |
+| `SyncManager`         | 49     | yes            | **false** | **false** | **false**      |
+| `PeriodicSyncManager` | 80     | yes            | false     | false     | false          |
 
 caniuse `background-sync`: `safari 26.5 = n`, `ios_saf 26.5 = n`. MDN calls it
 _"Limited availability — This feature is not Baseline because it does not work
@@ -574,17 +579,17 @@ is a lie unless the app stays open. We cannot use it verbatim.
 The same web.dev guidance still applies where it is about clarity rather than
 capability: _"When explaining UI components or the state of the app, avoid tech
 jargon. The word 'offline' often isn't clear enough."_ Use action-based
-language; use several cues together (colour *and* label *and* icon), not one;
+language; use several cues together (colour _and_ label _and_ icon), not one;
 communicate sync status; do not block the user from continuing to work.
 
 Applied to us:
 
-| Instead of                         | Say                                                                       |
-| ---------------------------------- | -------------------------------------------------------------------------- |
-| "You are offline"                  | "Can't reach your site right now — changes aren't saved yet"                |
-| "Will sync in the background"      | "Saved on this phone. It will go up next time you open this app"            |
-| "Syncing…"                         | "3 changes waiting. **Send now**" — with a button that actually tries       |
-| A silent spinner                   | A named device, a visible count, and a manual retry                         |
+| Instead of                    | Say                                                                   |
+| ----------------------------- | --------------------------------------------------------------------- |
+| "You are offline"             | "Can't reach your site right now — changes aren't saved yet"          |
+| "Will sync in the background" | "Saved on this phone. It will go up next time you open this app"      |
+| "Syncing…"                    | "3 changes waiting. **Send now**" — with a button that actually tries |
+| A silent spinner              | A named device, a visible count, and a manual retry                   |
 
 Three further honesty requirements if we ever do store anything locally:
 
@@ -608,16 +613,16 @@ Three further honesty requirements if we ever do store anything locally:
 
 ### 4.1 Who actually gets a notification
 
-| Owner's device                                | Gets push? | Conditions                                                                                            |
-| --------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------- |
-| Android — Chrome, Edge, Samsung Internet      | **Yes**    | Installing is not required, but it protects the permission from Chrome's auto-revocation                |
-| Android / desktop — Firefox                   | **Yes**    | caniuse note 2: _"Requires full browser to be running to receive messages"_                             |
-| Desktop — Chrome, Edge                        | **Yes**    | as above                                                                                                |
-| macOS — Safari 16+                            | **Yes**    | caniuse note 6: _"Supported in Safari, not WKWebView nor SFSafariViewController"_                       |
-| **iPhone / iPad — installed to Home Screen**  | **Yes**    | **iOS 16.4+ only**; permission must come from a direct user gesture                                     |
-| **iPhone / iPad — site open in a browser tab**| **No**     | caniuse `push-api` note 7: _"Requires website to first be added to the Home Screen."_                   |
-| **iOS below 16.4**                            | **No**     | `PushManager` and `Notification` both land at 16.4                                                      |
-| Any in-app browser (Instagram, LinkedIn)      | **No**     | WKWebView / SFSafariViewController cannot subscribe                                                     |
+| Owner's device                                 | Gets push? | Conditions                                                                               |
+| ---------------------------------------------- | ---------- | ---------------------------------------------------------------------------------------- |
+| Android — Chrome, Edge, Samsung Internet       | **Yes**    | Installing is not required, but it protects the permission from Chrome's auto-revocation |
+| Android / desktop — Firefox                    | **Yes**    | caniuse note 2: _"Requires full browser to be running to receive messages"_              |
+| Desktop — Chrome, Edge                         | **Yes**    | as above                                                                                 |
+| macOS — Safari 16+                             | **Yes**    | caniuse note 6: _"Supported in Safari, not WKWebView nor SFSafariViewController"_        |
+| **iPhone / iPad — installed to Home Screen**   | **Yes**    | **iOS 16.4+ only**; permission must come from a direct user gesture                      |
+| **iPhone / iPad — site open in a browser tab** | **No**     | caniuse `push-api` note 7: _"Requires website to first be added to the Home Screen."_    |
+| **iOS below 16.4**                             | **No**     | `PushManager` and `Notification` both land at 16.4                                       |
+| Any in-app browser (Instagram, LinkedIn)       | **No**     | WKWebView / SFSafariViewController cannot subscribe                                      |
 
 **The sentence to put in the admin, not just in this document: an iPhone owner
 who has not added the admin to their Home Screen will receive nothing at all.**
@@ -626,15 +631,15 @@ comes before phase 5, and the reason the install nudge exists.
 
 ### 4.2 What iOS drops on the floor
 
-| Notification option    | Chrome | Chrome Android | Firefox   | **Safari / iOS** |
-| ---------------------- | ------ | -------------- | --------- | ---------------- |
-| `body`                 | 33     | 42             | 26        | 11 / 16.4        |
-| `data`                 | 44     | yes            | 34        | 16 / 16.4        |
-| `actions` (buttons)    | 48     | yes            | 152       | **false**        |
-| `badge`                | 53     | yes            | false     | **false**        |
-| `image`                | 56     | yes            | false     | **false**        |
-| `vibrate`              | 45     | **false**      | false     | **false**        |
-| `requireInteraction`   | 47     | yes            | false     | false            |
+| Notification option  | Chrome | Chrome Android | Firefox | **Safari / iOS** |
+| -------------------- | ------ | -------------- | ------- | ---------------- |
+| `body`               | 33     | 42             | 26      | 11 / 16.4        |
+| `data`               | 44     | yes            | 34      | 16 / 16.4        |
+| `actions` (buttons)  | 48     | yes            | 152     | **false**        |
+| `badge`              | 53     | yes            | false   | **false**        |
+| `image`              | 56     | yes            | false   | **false**        |
+| `vibrate`            | 45     | **false**      | false   | **false**        |
+| `requireInteraction` | 47     | yes            | false   | false            |
 
 So the notification must carry its whole meaning in **title and body**, and the
 tap must land somewhere useful via `notificationclick`. No action buttons ("Reply"
@@ -677,14 +682,14 @@ server, and `webpush.sendNotification()` talks directly to whichever push
 service the endpoint names — FCM for Chrome, Mozilla autopush for Firefox,
 `web.push.apple.com` for Safari and iOS.
 
-| Fact                                       | Detail                                                                                                          |
-| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
-| `web-push`                                 | **3.6.7**, published **2024-01-16**. Not deprecated. <https://github.com/web-push-libs/web-push>                 |
-| Runtime                                    | Node only (uses node `crypto` / `https`). Fine in our route handlers and Server Actions, which default to Node.  |
-| Edge runtime                               | Will not run. PushForge and `@mmmike/web-push` exist; **both UNVERIFIED for maintenance status and version**.    |
-| Payload size                               | 2–4096 octets. The 4096 APNs figure is consistent across sources but **Apple's own doc was not fetched**.        |
-| Serverless sending                         | One outbound POST per subscription. For 1–3 owner devices this is trivial.                                        |
-| Vercel limits on outbound push requests    | **Not verified. No evidence of any limit was found.**                                                            |
+| Fact                                    | Detail                                                                                                          |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `web-push`                              | **3.6.7**, published **2024-01-16**. Not deprecated. <https://github.com/web-push-libs/web-push>                |
+| Runtime                                 | Node only (uses node `crypto` / `https`). Fine in our route handlers and Server Actions, which default to Node. |
+| Edge runtime                            | Will not run. PushForge and `@mmmike/web-push` exist; **both UNVERIFIED for maintenance status and version**.   |
+| Payload size                            | 2–4096 octets. The 4096 APNs figure is consistent across sources but **Apple's own doc was not fetched**.       |
+| Serverless sending                      | One outbound POST per subscription. For 1–3 owner devices this is trivial.                                      |
+| Vercel limits on outbound push requests | **Not verified. No evidence of any limit was found.**                                                           |
 
 **The localhost trap, verbatim from the `web-push` README:**
 
@@ -801,13 +806,13 @@ to breach, without telling them.**
 
 ### Who this actually catches
 
-| User                                                | On a plain reading of the terms                                            |
-| --------------------------------------------------- | ---------------------------------------------------------------------------- |
-| Student portfolio, no services offered, no donations| Fine on Hobby                                                                |
-| Photographer or designer advertising services       | Commercial → Pro                                                             |
-| Anyone with a "Buy me a coffee" or donate link      | **Explicitly** commercial by the quoted callout                              |
-| Anyone who paid someone to set the site up          | Caught by "including a paid employee or consultant writing the code"         |
-| Writer with a portfolio and no commerce             | Fine on Hobby                                                                |
+| User                                                 | On a plain reading of the terms                                      |
+| ---------------------------------------------------- | -------------------------------------------------------------------- |
+| Student portfolio, no services offered, no donations | Fine on Hobby                                                        |
+| Photographer or designer advertising services        | Commercial → Pro                                                     |
+| Anyone with a "Buy me a coffee" or donate link       | **Explicitly** commercial by the quoted callout                      |
+| Anyone who paid someone to set the site up           | Caught by "including a paid employee or consultant writing the code" |
+| Writer with a portfolio and no commerce              | Fine on Hobby                                                        |
 
 That fourth row deserves attention. The clause reaches "anyone involved in any
 part of the production of the project" — which on its face includes paying a
@@ -816,12 +821,12 @@ non-technical users this project targets.
 
 ### Options
 
-| # | Option                                                       | What changes                                                                                                 | Cost to the user            | Cost to us                                |
-| - | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ | --------------------------- | ------------------------------------------ |
-| A | Keep Vercel first, add a plain-language warning              | One sentence beside the Deploy button naming the restriction and linking the terms                            | £0, or Pro at $20/mo        | ~1 hour of docs                            |
-| B | Give Docker/VPS equal billing as the default for pros        | README leads with two paths; `docker compose up` is presented as the one with no terms attached               | ~$5/mo VPS, needs a server  | Docs rewrite; the Docker path already works |
-| C | Recommend a different host without this clause               | A second one-click path                                                                                       | varies                      | Research first — see below                 |
-| D | Say nothing                                                  | Status quo                                                                                                    | A ToS breach they never knew about | Reputational, and it is the kind of thing found in public |
+| #   | Option                                                | What changes                                                                                    | Cost to the user                   | Cost to us                                                |
+| --- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------------------- | --------------------------------------------------------- |
+| A   | Keep Vercel first, add a plain-language warning       | One sentence beside the Deploy button naming the restriction and linking the terms              | £0, or Pro at $20/mo               | ~1 hour of docs                                           |
+| B   | Give Docker/VPS equal billing as the default for pros | README leads with two paths; `docker compose up` is presented as the one with no terms attached | ~$5/mo VPS, needs a server         | Docs rewrite; the Docker path already works               |
+| C   | Recommend a different host without this clause        | A second one-click path                                                                         | varies                             | Research first — see below                                |
+| D   | Say nothing                                           | Status quo                                                                                      | A ToS breach they never knew about | Reputational, and it is the kind of thing found in public |
 
 **Option C carries a research prerequisite.** The README currently says "works
 on Vercel/Netlify". **Netlify's 2026 terms were not examined in this research
@@ -835,15 +840,15 @@ Fly.
 default.**
 
 The Deploy button is genuinely the best onboarding in this category and it is
-*correct* for the student and hobbyist audience, who are a real and large part
-of our users. Keep it. But stop presenting it as *the* path:
+_correct_ for the student and hobbyist audience, who are a real and large part
+of our users. Keep it. But stop presenting it as _the_ path:
 
 1. Put one sentence beside the button: Vercel's free Hobby tier is for
    non-commercial personal use, which by their terms includes asking for
    donations — link <https://vercel.com/docs/limits/fair-use-guidelines>.
 2. Give the Docker path equal billing rather than second billing. It exists, it
    is verified, and it is the answer with no terms attached — which for a
-   freelancer-facing product is the *compliant* default, not merely the
+   freelancer-facing product is the _compliant_ default, not merely the
    self-reliant one.
 3. Do not claim Vercel forbids portfolios. They do not say that.
 4. Do not claim enforcement is unlikely. We do not know.
@@ -857,11 +862,11 @@ this document that is a liability rather than a feature.
 
 ### Service-worker library
 
-| Package                    | Latest     | Published      | Verdict                                                                                              |
-| -------------------------- | ---------- | -------------- | ------------------------------------------------------------------------------------------------------ |
-| `next-pwa` (shadowwalker)  | 5.6.0      | **2022-08-23** | **Do not use.** ~4 years without a release, 123 open issues, 15 open PRs. Never formally deprecated on npm, which is why blog posts still recommend it. |
-| `@ducanh2912/next-pwa`     | 10.2.9     | 2024-09-18     | **Do not use.** Its own README: _"consider migrating to `@serwist/next`."_                            |
-| **`@serwist/next`**        | **9.5.12** | **2026-07-22** | **The only maintained option.** MIT, `next: ">=14.0.0"`, Node ≥18, Turbopack example exists.          |
+| Package                   | Latest     | Published      | Verdict                                                                                                                                                 |
+| ------------------------- | ---------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `next-pwa` (shadowwalker) | 5.6.0      | **2022-08-23** | **Do not use.** ~4 years without a release, 123 open issues, 15 open PRs. Never formally deprecated on npm, which is why blog posts still recommend it. |
+| `@ducanh2912/next-pwa`    | 10.2.9     | 2024-09-18     | **Do not use.** Its own README: _"consider migrating to `@serwist/next`."_                                                                              |
+| **`@serwist/next`**       | **9.5.12** | **2026-07-22** | **The only maintained option.** MIT, `next: ">=14.0.0"`, Node ≥18, Turbopack example exists.                                                            |
 
 Next.js's own docs name it: _"For full service-worker-based offline caching, one
 option is Serwist, which provides Next.js integration examples for both Turbopack
@@ -906,7 +911,7 @@ never gives up on its own."_
 available offline. Without the flag the hook always returns `false`, and it
 returns `false` during SSR and before hydration.
 
-**Is it worth using?** Not yet in production, but its *model* is exactly right
+**Is it worth using?** Not yet in production, but its _model_ is exactly right
 for us — and that is the more important signal. Vercel's own answer for a
 server-rendered app is connectivity awareness plus automatic retry, explicitly
 not offline caching. For a CMS admin whose real failure is "I lost my save in a
@@ -928,9 +933,9 @@ leaves experimental, delete ours and switch. Track it as a one-line entry in
 
 ## 7. Accessibility fixes
 
-All normative text is quoted from W3C's *Understanding WCAG 2.2* documents at
+All normative text is quoted from W3C's _Understanding WCAG 2.2_ documents at
 <https://www.w3.org/WAI/WCAG22/Understanding/>. Note that there is no separate
-mobile standard: *Guidance on Applying WCAG 2.2 to Mobile Applications* is a
+mobile standard: _Guidance on Applying WCAG 2.2 to Mobile Applications_ is a
 **W3C Group Draft Note (06 May 2025)**, informative only, and 2.5.1, 2.5.4,
 2.5.7 and 2.5.8 are **not yet included** in it — guidance for them _"will be
 added at a later stage"_ (<https://www.w3.org/TR/wcag2mobile-22/>). WCAG 2.2
@@ -938,12 +943,12 @@ itself is the authority.
 
 ### What we measured, and what it fails
 
-| # | Finding                                             | Criterion                                | Level  | Threshold            | Fix                                                                              |
-| - | --------------------------------------------------- | ---------------------------------------- | ------ | -------------------- | ---------------------------------------------------------------------------------- |
-| 1 | **6 interactive elements below 24 px**              | **SC 2.5.8 Target Size (Minimum)**       | **AA** | **24 × 24 CSS px**   | Resize to ≥24×24, or satisfy the spacing exception below. This is a live AA failure. |
-| 2 | **17 interactive elements below 44 px**             | SC 2.5.5 Target Size (Enhanced)          | AAA    | 44 × 44 CSS px       | Not required for AA conformance — but see the platform guidance below.             |
-| 3 | **`h1` overflows its own box to 406 px at 375 px**  | **SC 1.4.10 Reflow**                     | **AA** | **320 CSS px**       | Remove `whitespace-nowrap`, or make the element non-content.                        |
-| 4 | Same element, clipped by `overflow-hidden`          | **SC 1.4.4 Resize Text** (failure **F69**) | **AA** | 200% without loss    | Clipping/truncating text on resize is a documented failure technique.               |
+| #   | Finding                                            | Criterion                                  | Level  | Threshold          | Fix                                                                                  |
+| --- | -------------------------------------------------- | ------------------------------------------ | ------ | ------------------ | ------------------------------------------------------------------------------------ |
+| 1   | **6 interactive elements below 24 px**             | **SC 2.5.8 Target Size (Minimum)**         | **AA** | **24 × 24 CSS px** | Resize to ≥24×24, or satisfy the spacing exception below. This is a live AA failure. |
+| 2   | **17 interactive elements below 44 px**            | SC 2.5.5 Target Size (Enhanced)            | AAA    | 44 × 44 CSS px     | Not required for AA conformance — but see the platform guidance below.               |
+| 3   | **`h1` overflows its own box to 406 px at 375 px** | **SC 1.4.10 Reflow**                       | **AA** | **320 CSS px**     | Remove `whitespace-nowrap`, or make the element non-content.                         |
+| 4   | Same element, clipped by `overflow-hidden`         | **SC 1.4.4 Resize Text** (failure **F69**) | **AA** | 200% without loss  | Clipping/truncating text on resize is a documented failure technique.                |
 
 **On finding 1 — the exception people get wrong.** SC 2.5.8 has five exceptions:
 Spacing, Equivalent, Inline, User Agent Control, Essential. The spacing one is
@@ -983,17 +988,17 @@ time, because decorative clipped text is then not content.
 
 ### Criteria to build the mobile admin against
 
-| Criterion                            | Level | Threshold / requirement                                                                                                    | Where it bites us                                                     |
-| ------------------------------------ | ----- | ---------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| **1.4.10 Reflow**                    | AA    | No two-dimensional scrolling at **320 CSS px** wide (or 256 px high). "320 CSS pixels is equivalent to a starting viewport width of 1280 CSS pixels wide at 400% zoom." | Every admin table, sheet and panel                                     |
-| **1.4.4 Resize Text**                | AA    | **200%** without loss of content or functionality. Failures **F69** (clipping), **F80** (form controls don't resize), **F94** (viewport units to size text) | The footer h1; any `vw`-sized text                                      |
-| **2.5.8 Target Size (Minimum)**      | AA    | **24 × 24 CSS px**, or the 24 px-circle spacing exception                                                                     | 6 controls today                                                        |
-| **2.5.5 Target Size (Enhanced)**     | AAA   | 44 × 44 CSS px                                                                                                               | 17 controls today; adopt as an internal target                          |
-| **1.3.4 Orientation**                | AA    | _"Content does not restrict its view and operation to a single display orientation… unless… essential"_                       | **Do not set `orientation` in the manifest.** Setting it engages this.  |
-| **2.5.7 Dragging Movements**         | AA    | _"All functionality that uses a dragging movement… can be achieved by a single pointer without dragging"_                     | Any drag-to-reorder needs move-up/move-down buttons                     |
-| **2.5.1 Pointer Gestures**           | **A** | No path-based or multipoint gesture without a single-pointer equivalent                                                       | Swipe-to-delete rows; pinch-to-zoom previews                            |
-| **1.4.12 Text Spacing**              | AA    | Must survive **user-applied** overrides: line height ≥ **1.5×**, paragraph spacing ≥ **2×**, letter spacing ≥ **0.12×**, word spacing ≥ **0.16×** font size | Tight `leading-[0.8]` / `leading-[1.18]` blocks — note this is about surviving *their* overrides, not about our values |
-| 2.5.4 Motion Actuation               | A     | **Normative text UNVERIFIED — not fetched.** Only relevant if shake/tilt is ever added                                        | —                                                                        |
+| Criterion                        | Level | Threshold / requirement                                                                                                                                                 | Where it bites us                                                                                                      |
+| -------------------------------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| **1.4.10 Reflow**                | AA    | No two-dimensional scrolling at **320 CSS px** wide (or 256 px high). "320 CSS pixels is equivalent to a starting viewport width of 1280 CSS pixels wide at 400% zoom." | Every admin table, sheet and panel                                                                                     |
+| **1.4.4 Resize Text**            | AA    | **200%** without loss of content or functionality. Failures **F69** (clipping), **F80** (form controls don't resize), **F94** (viewport units to size text)             | The footer h1; any `vw`-sized text                                                                                     |
+| **2.5.8 Target Size (Minimum)**  | AA    | **24 × 24 CSS px**, or the 24 px-circle spacing exception                                                                                                               | 6 controls today                                                                                                       |
+| **2.5.5 Target Size (Enhanced)** | AAA   | 44 × 44 CSS px                                                                                                                                                          | 17 controls today; adopt as an internal target                                                                         |
+| **1.3.4 Orientation**            | AA    | _"Content does not restrict its view and operation to a single display orientation… unless… essential"_                                                                 | **Do not set `orientation` in the manifest.** Setting it engages this.                                                 |
+| **2.5.7 Dragging Movements**     | AA    | _"All functionality that uses a dragging movement… can be achieved by a single pointer without dragging"_                                                               | Any drag-to-reorder needs move-up/move-down buttons                                                                    |
+| **2.5.1 Pointer Gestures**       | **A** | No path-based or multipoint gesture without a single-pointer equivalent                                                                                                 | Swipe-to-delete rows; pinch-to-zoom previews                                                                           |
+| **1.4.12 Text Spacing**          | AA    | Must survive **user-applied** overrides: line height ≥ **1.5×**, paragraph spacing ≥ **2×**, letter spacing ≥ **0.12×**, word spacing ≥ **0.16×** font size             | Tight `leading-[0.8]` / `leading-[1.18]` blocks — note this is about surviving _their_ overrides, not about our values |
+| 2.5.4 Motion Actuation           | A     | **Normative text UNVERIFIED — not fetched.** Only relevant if shake/tilt is ever added                                                                                  | —                                                                                                                      |
 
 ### Two mechanical rules with no criterion number
 
@@ -1022,12 +1027,12 @@ time, because decorative clipped text is then not content.
 Carried from the dossier, filtered to the ones that actually block a decision
 here. Everything below is **UNVERIFIED** and must not be stated as fact.
 
-| # | Question                                                                                                    | Blocks               | How to close it                         |
-| - | ------------------------------------------------------------------------------------------------------------ | -------------------- | ----------------------------------------- |
-| 1 | Does iOS 26+ still require a `display: standalone\|fullscreen` manifest for Web Push, given "zero requirements for installability"? | Phase 5 design       | Device test. Shipping `standalone` is safe meanwhile. |
-| 2 | Is `share_target` offered to installed web apps in the iOS share sheet? No caniuse entry exists.             | A future high-value feature | Device test                        |
-| 3 | Does Serwist match runtime-caching routes first-match-wins, and is the matcher callback property `sameOrigin`? | §3.1 layer 1 correctness | Serwist docs + a production build with DevTools |
-| 4 | How do `deploymentId` / `experimental.useSkewCookie` interact with a CacheFirst `/_next/static` rule?        | Phase 6 only         | Read Next docs before caching build output |
-| 5 | Netlify's (and Render's, Fly's, Railway's) 2026 commercial-use terms                                         | **§5 option C**      | Read their terms                          |
-| 6 | Maintenance status and current versions of PushForge and `@mmmike/web-push`                                  | Only if we ever need Edge push | npm                             |
-| 7 | Does iOS 26 generate splash screens from the manifest, or is `apple-touch-startup-image` still required?     | A v2 polish item     | Device test                               |
+| #   | Question                                                                                                                            | Blocks                         | How to close it                                       |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ | ----------------------------------------------------- |
+| 1   | Does iOS 26+ still require a `display: standalone\|fullscreen` manifest for Web Push, given "zero requirements for installability"? | Phase 5 design                 | Device test. Shipping `standalone` is safe meanwhile. |
+| 2   | Is `share_target` offered to installed web apps in the iOS share sheet? No caniuse entry exists.                                    | A future high-value feature    | Device test                                           |
+| 3   | Does Serwist match runtime-caching routes first-match-wins, and is the matcher callback property `sameOrigin`?                      | §3.1 layer 1 correctness       | Serwist docs + a production build with DevTools       |
+| 4   | How do `deploymentId` / `experimental.useSkewCookie` interact with a CacheFirst `/_next/static` rule?                               | Phase 6 only                   | Read Next docs before caching build output            |
+| 5   | Netlify's (and Render's, Fly's, Railway's) 2026 commercial-use terms                                                                | **§5 option C**                | Read their terms                                      |
+| 6   | Maintenance status and current versions of PushForge and `@mmmike/web-push`                                                         | Only if we ever need Edge push | npm                                                   |
+| 7   | Does iOS 26 generate splash screens from the manifest, or is `apple-touch-startup-image` still required?                            | A v2 polish item               | Device test                                           |
