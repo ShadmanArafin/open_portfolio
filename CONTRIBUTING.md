@@ -3,6 +3,11 @@
 Thanks for considering it. This project is pre-1.0 and moving quickly, so
 opening an issue before a large pull request will save you time.
 
+**Read [docs/HANDOVER.md](docs/HANDOVER.md) first.** It is the current state
+of the project checked against the code — what works and how it was verified,
+what is not built, the traps that have already cost time, and the decisions that
+should not be silently reversed.
+
 ## Getting set up
 
 You need Node 20 or newer. There are **no credentials, accounts or API keys

@@ -1296,6 +1296,17 @@ These are decisions, not oversights, and the reasoning is in each phase block:
   second consumer reveals. Build Turnstile next, then extract the registry from
   the two of them.
 
+### Open decisions — the maintainer's, not an engineer's
+
+These are not blocked on work. They are choices about the product.
+
+| Decision                                | State                                                                                                                                                         |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Make the repository public**          | Audited and clean. Five shipped features are broken until it happens, and three discovery channels count months from that day. See `research/GOING-PUBLIC.md` |
+| **Tag a first release**                 | Three features read GitHub Releases and find nothing. Do it after verifying uploads                                                                           |
+| **Vercel Hobby's non-commercial terms** | Now quoted and dated in the README, without interpretation. Nothing further is needed unless you want to change the primary recommendation                    |
+| **Feedback route**                      | Settled: GitHub device flow. Needs one OAuth App created once, and `OPB_GITHUB_CLIENT_ID` set. Until then the admin falls back to opening a pre-filled tab    |
+
 ### Verifying your work
 
 Claims in this repository are expected to be backed by something you ran. The

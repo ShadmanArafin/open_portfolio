@@ -223,8 +223,16 @@ discover them after typing in a portfolio:
 | 0.9           | Blog, newsletter capture, six themes, full profession presets                    |
 | 1.0           | Stable                                                                           |
 
-Detailed status for every phase, including what is verified and what is not, is
-in **[docs/PLAN.md](docs/PLAN.md)**.
+What changed in each release, and who asked for it, is in
+**[CHANGELOG.md](CHANGELOG.md)**. Detailed status for every phase, including
+what is verified and what is not, is in **[docs/PLAN.md](docs/PLAN.md)**. If you
+are picking this project up to work on it, start with
+**[docs/HANDOVER.md](docs/HANDOVER.md)**.
+
+**Ask for something.** Open **Help & feedback** in your own admin: it checks
+whether somebody already reported it — or whether it is already fixed in a
+newer version — fills in your version and setup, and sends it under your own
+GitHub account so you are credited when it lands.
 
 ## Contributing
 
