@@ -884,7 +884,7 @@ Counting across the 24 sites above:
 
 ---
 
-# 2. HERO COPY PATTERNS — 25 verbatim headlines
+# 2. HERO COPY PATTERNS — 39 verbatim headlines
 
 ## 2.1 The corpus (all verbatim, all fetched 2026-08-11/12)
 
@@ -2310,7 +2310,7 @@ returned **zero snapshots ever**. Their transparency lives on **plausible.io/abo
 
 ---
 
-# ⭐⭐ PART B — THE ZERO-SOCIAL-PROOF PLAYBOOK (five verified early snapshots)
+# ⭐⭐ 5 (PART B). THE ZERO-SOCIAL-PROOF PLAYBOOK — five verified early snapshots
 
 **This is the most directly applicable material in the entire research file.** Five archived
 homepages, from before any of these projects had social proof, retrieved via
