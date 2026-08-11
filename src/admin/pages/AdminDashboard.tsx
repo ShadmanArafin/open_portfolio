@@ -44,11 +44,20 @@ function formatBytes(bytes: number): string {
  * traffic, sources and conversions are not knowable from the browser.
  */
 export const AdminDashboard: React.FC = () => {
-  const { data, draftData, hasUnpublishedChanges, pendingChangeSummary, countMediaUsage } =
-    useCMS();
+  const {
+    data,
+    draftData,
+    hasUnpublishedChanges,
+    pendingChangeSummary,
+    countMediaUsage,
+    emailConfigured,
+  } = useCMS();
 
   // Checks run against published content — that is what visitors get.
-  const report = useMemo(() => analyseContent(data, countMediaUsage), [data, countMediaUsage]);
+  const report = useMemo(
+    () => analyseContent(data, countMediaUsage, { emailConfigured }),
+    [data, countMediaUsage, emailConfigured]
+  );
 
   const scoreTone: 'green' | 'yellow' | 'red' =
     report.score >= 90 ? 'green' : report.score >= 65 ? 'yellow' : 'red';

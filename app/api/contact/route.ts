@@ -2,7 +2,9 @@ import { NextResponse } from 'next/server';
 import { getStorageAdapter } from '@/core/storage/registry';
 import { assertSameOrigin } from '@/core/auth/guard';
 import { clientKey, rateLimit } from '@/core/auth/ratelimit';
-import type { CMSState, ContactMessage } from '@/cms/types/cms';
+import { sendMail } from '@/core/email/send';
+import { enquiryNotification } from '@/core/email/templates';
+import type { ContactMessage } from '@/cms/types/cms';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,12 +14,7 @@ export const dynamic = 'force-dynamic';
  * This fixes a bug that made the form decorative: it used to write the message
  * into the *sender's* own browser storage and show them a success toast, so no
  * enquiry ever reached the site owner. Messages now land on the server, where
- * the owner's inbox can actually read them.
- *
- * Email notification comes with the integrations work. The ordering is
- * deliberate and not negotiable: the message is stored first and notified
- * second, so a misconfigured mail provider loses a notification rather than
- * losing somebody's enquiry.
+ * the owner's inbox can actually read them, and the owner is emailed about it.
  */
 
 const MAX = { name: 200, email: 320, company: 200, projectType: 100, message: 5000 };
@@ -93,18 +90,40 @@ export async function POST(req: Request) {
   };
 
   const adapter = getStorageAdapter();
-  const published = await adapter.readSnapshot('published');
-  if (!published) {
-    // Nothing published yet means nowhere to file this. Better to say so than
-    // to accept the message and drop it.
+  const owner = await adapter.readOwner();
+  if (!owner) {
+    // Nowhere to file this and nobody to tell. Saying so beats accepting the
+    // message and dropping it.
     return NextResponse.json(
       { ok: false, error: 'This site is not finished being set up yet.' },
       { status: 503 }
     );
   }
 
-  const updated: CMSState = { ...published, messages: [entry, ...(published.messages ?? [])] };
-  await adapter.writeSnapshot('published', updated);
+  await adapter.messages.append(entry);
+
+  // Stored first, notified second, and deliberately in that order: a
+  // misconfigured mail server must lose a notification rather than somebody's
+  // enquiry. The visitor is told it worked either way, because for them it did.
+  const published = await adapter.readSnapshot('published');
+  const siteName = published?.settings?.fullName || published?.seo?.siteTitle || 'your site';
+  const siteUrl = process.env.OPB_SITE_URL?.replace(/\/$/, '') ?? '';
+
+  const mail = enquiryNotification({
+    siteName,
+    name: entry.name,
+    email: entry.email,
+    company: entry.company,
+    projectType: entry.projectType,
+    message: entry.message,
+    inboxUrl: `${siteUrl}/admin/messages`,
+  });
+
+  const sent = await sendMail({ to: owner.email, replyTo: entry.email, ...mail });
+  await adapter.messages.update(
+    entry.id,
+    sent.ok ? { notifiedAt: new Date().toISOString() } : { notifyError: sent.detail }
+  );
 
   return NextResponse.json({ ok: true });
 }

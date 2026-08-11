@@ -65,7 +65,8 @@ export interface HealthReport {
 
 export function analyseContent(
   state: CMSState,
-  countMediaUsage: (id: string) => number
+  countMediaUsage: (id: string) => number,
+  options: { emailConfigured?: boolean } = {}
 ): HealthReport {
   const issues: ContentIssue[] = [];
   let total = 0;
@@ -262,6 +263,32 @@ export function analyseContent(
     detail: 'Someone contacted you and has not had a reply.',
     to: '/admin/messages',
     action: 'Open inbox',
+  }));
+
+  const failedNotifications = (state.messages ?? []).filter((m) => m.notifyError).length;
+
+  // Distinct from the check below: this one is about the owner never having
+  // set up mail at all, which is expected on a fresh install and only a
+  // warning. A configured server that is failing to deliver is not expected,
+  // and enquiries pile up unseen if nothing says so.
+  check(options.emailConfigured !== false, () => ({
+    id: 'email-not-configured',
+    severity: 'warning',
+    title: 'Nothing tells you when an enquiry arrives',
+    detail:
+      'Messages reach your inbox here, but no email is sent, so you only see them by ' +
+      'signing in. Set OPB_SMTP_HOST and the related variables to change that.',
+    to: '/admin/messages',
+    action: 'See enquiries',
+  }));
+
+  check(failedNotifications === 0, () => ({
+    id: 'email-failing',
+    severity: 'blocking',
+    title: `${failedNotifications} enquir${failedNotifications === 1 ? 'y' : 'ies'} could not be emailed to you`,
+    detail: 'The enquiries are safe and listed in your inbox, but the notification failed.',
+    to: '/admin/messages',
+    action: 'See why',
   }));
 
   check(Boolean(state.settings?.resumeUrl?.trim()), () => ({

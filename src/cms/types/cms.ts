@@ -332,6 +332,10 @@ export interface ContactMessage {
   message: string;
   receivedAt: string;
   status: 'unread' | 'read' | 'archived' | 'spam';
+  /** Set when a notification was accepted by the mail server. */
+  notifiedAt?: string;
+  /** Why no notification was sent. Shown in the inbox. */
+  notifyError?: string;
 }
 
 /**

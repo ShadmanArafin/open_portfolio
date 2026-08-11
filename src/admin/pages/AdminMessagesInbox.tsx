@@ -7,6 +7,7 @@ import { Card } from '@astryxdesign/core/Card';
 import { Button } from '@astryxdesign/core/Button';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { Badge } from '@astryxdesign/core/Badge';
+import { Banner } from '@astryxdesign/core/Banner';
 import { Text } from '@astryxdesign/core/Text';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Divider } from '@astryxdesign/core/Divider';
@@ -107,6 +108,14 @@ export const AdminMessagesInbox: React.FC = () => {
                     />
                   </HStack>
                 </HStack>
+
+                {selectedMessage.notifyError && (
+                  <Banner
+                    status="error"
+                    title="This enquiry could not be emailed to you"
+                    description={selectedMessage.notifyError}
+                  />
+                )}
 
                 <Divider />
 
