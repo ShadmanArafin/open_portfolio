@@ -19,7 +19,8 @@ export async function rateLimit(
   limit: number,
   windowSeconds: number
 ): Promise<RateLimitResult> {
-  const count = await getStorageAdapter().kv.incr('ratelimit', key, windowSeconds);
+  const adapter = await getStorageAdapter();
+  const count = await adapter.kv.incr('ratelimit', key, windowSeconds);
   return {
     allowed: count <= limit,
     remaining: Math.max(0, limit - count),

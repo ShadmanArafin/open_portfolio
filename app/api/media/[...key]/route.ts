@@ -39,7 +39,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ key: string[] 
 
   // Ask the adapter first: a hosted backend answers with its own URL and the
   // browser never comes back here.
-  const remote = await getStorageAdapter().media.resolveUrl(relative);
+  const remote = await (await getStorageAdapter()).media.resolveUrl(relative);
   if (remote && /^https?:\/\//i.test(remote)) {
     return NextResponse.redirect(remote);
   }

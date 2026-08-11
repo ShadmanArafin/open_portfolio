@@ -40,7 +40,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const adapter = getStorageAdapter();
+  const adapter = await getStorageAdapter();
   const owner = await adapter.readOwner();
   if (!owner) {
     return NextResponse.json({ ok: false, error: 'This site has no owner.' }, { status: 400 });

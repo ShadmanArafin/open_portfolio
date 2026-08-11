@@ -58,7 +58,14 @@ export function resolveTransport(env: NodeJS.ProcessEnv = process.env): Resolved
 
 let cached: { key: string; transporter: Transporter } | null = null;
 
-/** Built once per configuration, so a connection pool is reused. */
+/**
+ * Built once per configuration, so a burst of enquiries does not rebuild it.
+ *
+ * Not a connection pool: nodemailer only pools with `pool: true`, and without
+ * it this caches the wrapper and opens a connection per message. That is the
+ * right trade on a portfolio — messages arrive minutes apart, and a pool holds
+ * sockets open on hosts that freeze between requests.
+ */
 export function getTransporter(config: SmtpConfig): Transporter {
   const key = JSON.stringify(config);
   if (cached?.key === key) return cached.transporter;
@@ -68,6 +75,13 @@ export function getTransporter(config: SmtpConfig): Transporter {
     port: config.port,
     secure: config.secure,
     auth: config.user ? { user: config.user, pass: config.password ?? '' } : undefined,
+    // Credentials never go over a cleartext connection. `secure` is false on
+    // everything but port 465, and nodemailer will happily fall back to a
+    // plain session — including the AUTH command carrying the password — if
+    // the server does not advertise STARTTLS. Requiring it turns "the server
+    // did not offer encryption" into a failed send the owner can see, rather
+    // than a mail password on the wire nobody finds out about.
+    requireTLS: Boolean(config.user),
     // An SMTP handshake against a wrong host hangs far longer than a person
     // will wait on a contact form.
     connectionTimeout: 10_000,

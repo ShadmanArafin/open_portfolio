@@ -24,7 +24,7 @@ export async function GET() {
     return NextResponse.json({ ok: false, error: 'Not signed in.' }, { status });
   }
 
-  const messages = await getStorageAdapter().messages.list();
+  const messages = await (await getStorageAdapter()).messages.list();
   return NextResponse.json({
     ok: true,
     messages,

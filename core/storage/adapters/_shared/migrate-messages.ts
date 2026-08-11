@@ -4,10 +4,12 @@ import type { CMSState, ContactMessage } from '@/cms/types/cms';
 /**
  * Moves enquiries out of the content snapshot and into the messages surface.
  *
- * Runs from `provision()`, which already happens on boot and is already
- * required to be idempotent. Guarded on the destination being empty, and every
- * backend's `append` ignores a duplicate id, so several instances booting at
- * once cannot produce duplicates between them.
+ * Runs from `provision()`, which the registry performs once per process in
+ * front of the first use of the backend — so an instance that was claimed
+ * before this upgrade migrates on its next cold start rather than never.
+ * Guarded on the destination being empty, and every backend's `append` ignores
+ * a duplicate id, so several instances starting at once cannot produce
+ * duplicates between them.
  */
 export interface MigrationDeps {
   readSnapshot: (channel: 'published' | 'draft') => Promise<CMSState | null>;

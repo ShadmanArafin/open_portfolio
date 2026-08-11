@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getStorageAdapter } from '@/core/storage/registry';
 import { assertSameOrigin } from '@/core/auth/guard';
 import { clientKey, rateLimit } from '@/core/auth/ratelimit';
-import { sendMail } from '@/core/email/send';
+import { MAX_EMAIL_LENGTH, sendMail } from '@/core/email/send';
 import { enquiryNotification } from '@/core/email/templates';
 import type { ContactMessage } from '@/cms/types/cms';
 
@@ -17,7 +17,13 @@ export const dynamic = 'force-dynamic';
  * the owner's inbox can actually read them, and the owner is emailed about it.
  */
 
-const MAX = { name: 200, email: 320, company: 200, projectType: 100, message: 5000 };
+const MAX = {
+  name: 200,
+  email: MAX_EMAIL_LENGTH,
+  company: 200,
+  projectType: 100,
+  message: 5000,
+};
 
 function clean(value: unknown, limit: number): string {
   if (typeof value !== 'string') return '';
@@ -89,7 +95,7 @@ export async function POST(req: Request) {
     status: 'unread',
   };
 
-  const adapter = getStorageAdapter();
+  const adapter = await getStorageAdapter();
   const owner = await adapter.readOwner();
   if (!owner) {
     // Nowhere to file this and nobody to tell. Saying so beats accepting the
@@ -120,10 +126,18 @@ export async function POST(req: Request) {
   });
 
   const sent = await sendMail({ to: owner.email, replyTo: entry.email, ...mail });
-  await adapter.messages.update(
-    entry.id,
-    sent.ok ? { notifiedAt: new Date().toISOString() } : { notifyError: sent.detail }
-  );
+
+  // Three outcomes, not two. "No mail server is configured" is the default
+  // install, not a fault: recording it as `notifyError` would put a red failure
+  // banner on every enquiry and trip the blocking "could not be emailed"
+  // dashboard check on a site that is working exactly as shipped. The
+  // dashboard already says the quieter thing about unconfigured mail
+  // separately, so there is nothing to record here.
+  if (sent.ok) {
+    await adapter.messages.update(entry.id, { notifiedAt: new Date().toISOString() });
+  } else if (sent.reason !== 'not-configured') {
+    await adapter.messages.update(entry.id, { notifyError: sent.detail });
+  }
 
   return NextResponse.json({ ok: true });
 }

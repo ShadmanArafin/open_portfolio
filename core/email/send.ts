@@ -11,6 +11,14 @@ import { getTransporter, resolveTransport } from './transport';
  * remember to catch.
  */
 
+/**
+ * The longest an email address can be: RFC 5321's 64-character local part, an
+ * `@`, and a 255-character domain. Lives here so every endpoint that takes an
+ * address from a stranger bounds it the same way — an unbounded one becomes an
+ * unbounded row in whatever it is written to.
+ */
+export const MAX_EMAIL_LENGTH = 320;
+
 export interface MailInput {
   to: string;
   subject: string;

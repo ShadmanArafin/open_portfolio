@@ -66,6 +66,6 @@ export type InstanceState = 'unclaimed' | 'claimed';
 
 /** Whether anybody has taken ownership of this deployment yet. */
 export async function getInstanceState(): Promise<InstanceState> {
-  const owner = await getStorageAdapter().readOwner();
+  const owner = await (await getStorageAdapter()).readOwner();
   return owner ? 'claimed' : 'unclaimed';
 }

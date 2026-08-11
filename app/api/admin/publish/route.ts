@@ -3,6 +3,7 @@ import { revalidatePath } from 'next/cache';
 import { getStorageAdapter } from '@/core/storage/registry';
 import { requireOwner, UnauthorizedError } from '@/core/auth/guard';
 import { clientKey, rateLimit } from '@/core/auth/ratelimit';
+import { withoutEnquiries } from '@/core/content/sanitise';
 import type { CMSState } from '@/cms/types/cms';
 
 export const dynamic = 'force-dynamic';
@@ -53,14 +54,15 @@ export async function POST(req: Request) {
     );
   }
 
-  const content = body.content;
-
   // Enquiries live on their own surface now. Publishing must not carry them:
   // the editor's copy is a stale read, and writing it back would resurrect
-  // deleted enquiries and lose any that arrived while the tab was open.
-  const merged: CMSState = { ...content, messages: [] };
+  // deleted enquiries and lose any that arrived while the tab was open. It
+  // would also publish them — this snapshot ends up in the HTML of every public
+  // page — which is why the version snapshots inside it are stripped here too
+  // rather than trusted to have arrived clean.
+  const merged = withoutEnquiries(body.content);
 
-  const adapter = getStorageAdapter();
+  const adapter = await getStorageAdapter();
   await adapter.writeSnapshot('published', merged);
 
   // Drop the cached renders so the change is live immediately rather than

@@ -57,7 +57,7 @@ function shouldUseSecureCookie(): boolean {
 
 export async function createSession(email: string, epoch: number): Promise<void> {
   const token = randomBytes(32).toString('base64url');
-  const adapter = getStorageAdapter();
+  const adapter = await getStorageAdapter();
 
   await adapter.kv.set<SessionRecord>(
     'session',
@@ -80,7 +80,7 @@ export async function readSession(): Promise<SessionRecord | null> {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!token) return null;
 
-  const adapter = getStorageAdapter();
+  const adapter = await getStorageAdapter();
   const record = await adapter.kv.get<SessionRecord>('session', hashToken(token));
   if (!record) return null;
 
@@ -103,14 +103,14 @@ export async function destroySession(): Promise<void> {
   const store = await cookies();
   const token = store.get(SESSION_COOKIE)?.value;
   if (token) {
-    await getStorageAdapter().kv.del('session', hashToken(token));
+    await (await getStorageAdapter()).kv.del('session', hashToken(token));
   }
   store.delete(SESSION_COOKIE);
 }
 
 /** Signs out every device by moving the owner's epoch past all existing sessions. */
 export async function revokeAllSessions(): Promise<void> {
-  const adapter = getStorageAdapter();
+  const adapter = await getStorageAdapter();
   const owner = await adapter.readOwner();
   if (!owner) return;
   await adapter.writeOwner({ ...owner, sessionEpoch: owner.sessionEpoch + 1 });

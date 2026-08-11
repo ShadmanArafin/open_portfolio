@@ -21,7 +21,7 @@ export function hashResetToken(token: string): string {
 
 /** Returns the token to email, or null when there is nobody to email it to. */
 export async function issueResetToken(email: string): Promise<string | null> {
-  const adapter = getStorageAdapter();
+  const adapter = await getStorageAdapter();
   const owner = await adapter.readOwner();
   if (!owner || owner.email.toLowerCase() !== email.trim().toLowerCase()) return null;
 
@@ -37,7 +37,7 @@ export async function issueResetToken(email: string): Promise<string | null> {
 
 /** Returns the owner's email and burns the token, or null if it is not valid. */
 export async function consumeResetToken(token: string): Promise<string | null> {
-  const adapter = getStorageAdapter();
+  const adapter = await getStorageAdapter();
   const key = `reset:${hashResetToken(token)}`;
   const stored = await adapter.kv.get<{ email: string }>('otp', key);
   if (!stored) return null;

@@ -271,6 +271,10 @@ export function analyseContent(
   // set up mail at all, which is expected on a fresh install and only a
   // warning. A configured server that is failing to deliver is not expected,
   // and enquiries pile up unseen if nothing says so.
+  //
+  // Undefined means the server has not answered yet, and passes: a check that
+  // fails on "not known" accuses a correctly configured site every time the
+  // dashboard is opened, for as long as the fetch takes.
   check(options.emailConfigured !== false, () => ({
     id: 'email-not-configured',
     severity: 'warning',

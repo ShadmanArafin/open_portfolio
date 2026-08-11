@@ -73,11 +73,7 @@ function inferAdapterId(): AdapterId {
   return 'local';
 }
 
-let cached: StorageAdapter | null = null;
-
-export function getStorageAdapter(): StorageAdapter {
-  if (cached) return cached;
-
+function selectAdapter(): StorageAdapter {
   const id = (process.env.OPB_ADAPTER as AdapterId | undefined) ?? inferAdapterId();
   const factory = REGISTERED[id];
 
@@ -102,11 +98,54 @@ export function getStorageAdapter(): StorageAdapter {
     );
   }
 
-  cached = adapter;
   return adapter;
 }
 
-/** Test seam: forces the next call to re-resolve. */
+let ready: Promise<StorageAdapter> | null = null;
+
+/**
+ * The adapter, provisioned and ready to use.
+ *
+ * Provisioning used to run from the claim flow alone, which is gated on there
+ * being no owner yet — so on every instance that was already claimed, meaning
+ * every real upgrade, it never ran again. New tables were never created and
+ * enquiries left in an old snapshot were never migrated out of it before the
+ * next publish overwrote them.
+ *
+ * So it happens here instead: lazily, once per process, in front of the first
+ * use of the backend. Every consumer goes through this one function, so there
+ * is no path to an unprovisioned adapter. The promise is memoised rather than
+ * the act of provisioning, which is what makes concurrent callers on a cold
+ * start share one attempt instead of racing several — and what makes the
+ * caller *wait* for it, rather than reaching a table that is still being
+ * created.
+ *
+ * `provision()` is idempotent and cheap on an already-provisioned store, so
+ * paying it once per cold start costs a round trip and buys the guarantee.
+ */
+export function getStorageAdapter(): Promise<StorageAdapter> {
+  if (ready) return ready;
+
+  const attempt = (async () => {
+    const adapter = selectAdapter();
+    await adapter.provision();
+    return adapter;
+  })();
+
+  ready = attempt;
+
+  // A backend that was asleep or briefly unreachable must not poison the
+  // process for as long as it lives. Forgetting a failed attempt lets the next
+  // request try again; the identity check means a retry already under way is
+  // not discarded by a straggler from the failed one.
+  attempt.catch(() => {
+    if (ready === attempt) ready = null;
+  });
+
+  return attempt;
+}
+
+/** Test seam: forces the next call to re-resolve and re-provision. */
 export function resetStorageAdapter(): void {
-  cached = null;
+  ready = null;
 }

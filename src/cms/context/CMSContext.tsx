@@ -33,8 +33,13 @@ interface CMSContextType {
 
   updateMessageStatus: (id: string, status: ContactMessage['status']) => Promise<void>;
   deleteMessage: (id: string) => Promise<void>;
-  /** Whether this instance can send mail. Read by the dashboard's health checks. */
-  emailConfigured: boolean;
+  /**
+   * Whether this instance can send mail. Read by the dashboard's health checks.
+   * Undefined until the server has said, so a correctly configured site does
+   * not flash "nothing tells you when an enquiry arrives" while the fetch is
+   * still in flight.
+   */
+  emailConfigured: boolean | undefined;
 
   uploadMedia: (file: File, meta?: { altText?: string }) => Promise<MediaItem | null>;
   deleteMediaItem: (id: string) => Promise<void>;
@@ -83,7 +88,7 @@ export const CMSProvider: React.FC<CMSProviderProps> = ({ children, initialData 
   const [authStatus, setAuthStatus] = useState<boolean>(() => cmsService.isAuthenticated());
   const [storageError, setStorageError] = useState<string | null>(null);
   const [authReady, setAuthReady] = useState(false);
-  const [emailConfigured, setEmailConfigured] = useState(false);
+  const [emailConfigured, setEmailConfigured] = useState<boolean | undefined>(undefined);
 
   // Storage is browser-only, so the server cannot read it. Load it on mount and
   // swap: the HTML ships with the server's content, then the editor's own

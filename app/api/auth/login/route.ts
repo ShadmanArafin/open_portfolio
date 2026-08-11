@@ -29,7 +29,7 @@ export async function POST(req: Request) {
   const email = (body?.email ?? '').trim().toLowerCase();
   const passphrase = body?.passphrase ?? '';
 
-  const owner = await getStorageAdapter().readOwner();
+  const owner = await (await getStorageAdapter()).readOwner();
 
   // One message for every kind of failure, and the passphrase is verified even
   // when there is no owner, so neither the wording nor the response time

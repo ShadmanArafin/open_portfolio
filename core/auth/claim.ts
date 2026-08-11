@@ -27,7 +27,7 @@ export interface ClaimEligibility {
 }
 
 export async function getClaimEligibility(): Promise<ClaimEligibility> {
-  if (await getStorageAdapter().readOwner()) {
+  if (await (await getStorageAdapter()).readOwner()) {
     return { allowed: false, requiresToken: false, reason: 'This site already has an owner.' };
   }
 
@@ -67,7 +67,7 @@ export interface ClaimInput {
 export async function claimInstance(
   input: ClaimInput
 ): Promise<{ ok: true } | { ok: false; error: string }> {
-  const adapter = getStorageAdapter();
+  const adapter = await getStorageAdapter();
 
   const eligibility = await getClaimEligibility();
   if (!eligibility.allowed) {
@@ -95,7 +95,10 @@ export async function claimInstance(
     return { ok: false, error: 'This site was claimed a moment ago by someone else.' };
   }
 
-  await adapter.provision();
+  // No `provision()` here any more. It used to live in this one place, which
+  // meant it only ever ran on a site being claimed for the first time — never
+  // on an upgrade. The registry now does it in front of the first use of the
+  // backend, including the `getStorageAdapter()` above.
   await adapter.writeOwner({
     email,
     passphraseHash: await hashPassphrase(input.passphrase),

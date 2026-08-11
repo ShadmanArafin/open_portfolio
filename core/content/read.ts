@@ -18,7 +18,7 @@ import { getStorageAdapter } from '@/core/storage/registry';
  */
 export const getPublishedContent = cache(async (): Promise<CMSState> => {
   try {
-    const stored = await getStorageAdapter().readSnapshot('published');
+    const stored = await (await getStorageAdapter()).readSnapshot('published');
     if (stored) return stored;
   } catch (err) {
     console.error('[content] Could not read published content; serving the seed.', err);

@@ -60,7 +60,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: 'No file was sent.' }, { status: 400 });
   }
 
-  const adapter = getStorageAdapter();
+  const adapter = await getStorageAdapter();
   const maxBytes = Math.min(adapter.capabilities.maxUploadBytes, HARD_MAX_BYTES);
 
   let validated;
@@ -111,7 +111,7 @@ export async function DELETE(req: Request) {
   }
 
   try {
-    await getStorageAdapter().media.remove(key);
+    await (await getStorageAdapter()).media.remove(key);
   } catch (err) {
     console.error('[media] Delete failed.', err);
     return NextResponse.json(

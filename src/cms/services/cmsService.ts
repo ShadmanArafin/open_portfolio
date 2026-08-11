@@ -328,13 +328,17 @@ export class CMSService {
     nextPublished.status = 'published';
     nextPublished.lastPublishedAt = now;
 
-    // A snapshot holds content only. Excluding history and activity keeps
-    // each version small — the previous implementation nested every prior
-    // snapshot inside the next one, roughly doubling stored size on every
-    // publish.
+    // A snapshot holds content only. Excluding history and activity keeps each
+    // version small — the previous implementation nested every prior snapshot
+    // inside the next one, roughly doubling stored size on every publish. The
+    // inbox goes too, and for a graver reason: the server's enquiries are read
+    // into `messages`, versions ride inside the published document, and that
+    // document is serialised into the HTML of every public page. A version
+    // holding the inbox publishes other people's names and addresses.
     const snapshot = clone(nextPublished);
     snapshot.versions = [];
     snapshot.activityLogs = [];
+    snapshot.messages = [];
 
     const version: ContentVersion = {
       id: `v-${Date.now()}`,
@@ -442,9 +446,13 @@ export class CMSService {
 
     const restored = this.migrate(clone(target.snapshot) as CMSState);
 
-    // History and activity are not content — carry them forward rather than
-    // rolling them back with the page copy.
+    // History, activity and the inbox are not content — carry them forward
+    // rather than rolling them back with the page copy. The inbox especially:
+    // it belongs to the server, and rolling it back would resurrect enquiries
+    // that were deleted and hide any that arrived since the snapshot, until
+    // the next reload quietly disagreed with the screen.
     restored.versions = this.draftState.versions;
+    restored.messages = this.draftState.messages;
     restored.activityLogs = [
       {
         id: `act-${Date.now()}`,
@@ -466,8 +474,14 @@ export class CMSService {
 
   // --- CONTACT MESSAGES ---
 
-  /** Whether this instance can send mail. Answered by the server. */
-  public emailConfigured = false;
+  /**
+   * Whether this instance can send mail. Answered by the server.
+   *
+   * Undefined until it has answered, and deliberately not `false`: "we have not
+   * asked yet" and "there is no mail server" are different states, and the
+   * dashboard warns about the second one.
+   */
+  public emailConfigured: boolean | undefined = undefined;
 
   /**
    * Replaces the in-memory inbox with what the server holds.

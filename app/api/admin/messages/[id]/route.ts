@@ -33,7 +33,7 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   }
 
   const { id } = await ctx.params;
-  await getStorageAdapter().messages.update(id, { status });
+  await (await getStorageAdapter()).messages.update(id, { status });
   return NextResponse.json({ ok: true });
 }
 
@@ -42,6 +42,6 @@ export async function DELETE(_req: Request, ctx: { params: Promise<{ id: string 
   if (rejected) return rejected;
 
   const { id } = await ctx.params;
-  await getStorageAdapter().messages.remove(id);
+  await (await getStorageAdapter()).messages.remove(id);
   return NextResponse.json({ ok: true });
 }
