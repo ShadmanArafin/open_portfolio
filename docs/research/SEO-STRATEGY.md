@@ -95,9 +95,24 @@ The temptation is to write one page that says "free open-source self-hosted no-c
 
 These are not SEO footnotes. Two of them are gates on whole distribution channels and one is a launch-blocking framing decision.
 
-### 3.1 There is no Dockerfile in this repository, and that disqualifies us from the largest self-hosting list on GitHub
+### 3.1 The Docker path — closed, and now open
 
-**Verified in the repo today: no `Dockerfile`, no `docker-compose.yml`, no `.dockerignore` anywhere.** Docker appears in `docs/PLAN.md` only as _local development and test_ infrastructure — a `postgres:16` container, `axllent/mailpit`, and emulators for the unwritten adapters. Meanwhile the `README` backend table already advertises Docker as a supported use case for the local-filesystem backend. We are promising the deployment story without shipping the file that makes it true.
+**Resolved while this document was being written.** The finding was correct when
+the research ran: there was no `Dockerfile`, no `docker-compose.yml` and no
+`.dockerignore`, while the README's backend table already advertised Docker as a
+supported use case — promising the deployment story without shipping the file
+that makes it true.
+
+A `Dockerfile`, `docker-compose.yml` and `.dockerignore` now exist and are
+verified end to end: the image builds at 302MB, runs non-root, passes its own
+health check, and — the part that matters for the claim — the container was
+destroyed and recreated against the same volume, after which the owner and all
+content were still there. `output: 'standalone'` was enabled, and the local
+storage adapter gained `OPB_DATA_DIR`, without which a rebuild would have
+silently deleted the owner's site because it wrote to `process.cwd()`.
+
+The rest of this section stands: the eligibility rules, the tag trap and the
+submission target are unchanged, and the four returns still apply.
 
 [awesome-selfhosted](https://github.com/awesome-selfhosted/awesome-selfhosted) has **312,028 stars**. Its [CONTRIBUTING.md](https://github.com/awesome-selfhosted/awesome-selfhosted-data/blob/master/CONTRIBUTING.md) excludes, verbatim, _"Software that depends on a specific cloud provider"_.
 
@@ -488,7 +503,7 @@ Ordered so that time-gated items start their clocks first, the single most winna
 
 | Do                                                                                                                | Why now                                                                                                                                                                                           |
 | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Ship a `Dockerfile` and `docker-compose.yml` with a documented one-command self-host path                         | Gates awesome-selfhosted, selfh.st, r/selfhosted and the credibility of the HN framing. It is also a live query (`self hosted website builder docker`)                                            |
+| ~~Ship a `Dockerfile` and `docker-compose.yml`~~ — **done**, verified by destroying and recreating the container  | Gates awesome-selfhosted, selfh.st, r/selfhosted and the credibility of the HN framing. It is also a live query (`self hosted website builder docker`)                                            |
 | **Make the repository public and cut a tagged release**                                                           | Starts the awesome-selfhosted four-month clock (eligible ~December 2026) and the sindresorhus 30-day clock. Nothing else in the plan is time-gated like this, and it costs nothing to start early |
 | Write the canonical description string; set About, 20 topics, social preview; add "why this exists" to the README | The About field _is_ our Google snippet. Topic-page arbitrage is available immediately at 626/313/79 repos                                                                                        |
 | Submit to OpenAlternative and AlternativeTo (**pay the $5 priority review**)                                      | OpenAlternative is the highest single-submission ROI and feeds a 6,561-star list. AlternativeTo's free queue is months                                                                            |
@@ -530,3 +545,35 @@ Instrument from week 1 — Search Console (submit the sitemap there as well as i
 2. Did any of the four alternative pages get an impression on its qualified query? Even a handful validates that the demand autocomplete implied is real.
 3. Did any third-party listicle, directory or awesome list add us? Off-site placement is what compounds, and per §9 it is also what drives AI citation.
 4. Did the Show HN clear 50 points? Below that, the framing is still wrong and should be retried with a different mechanism, not a different product description.
+
+---
+
+## Verified independently: Cal.com went closed source
+
+Confirmed on 2026-08-12, because this claim is load-bearing for positioning and
+would be embarrassing to get wrong in public.
+
+On **15 April 2026** Cal.com moved its commercial codebase to a private
+repository and launched **Cal.diy** as a stripped-down MIT-licensed community
+version. The stated reason was AI-driven security risk — that modern coding
+models can scan a public codebase for vulnerabilities and produce working
+exploits quickly. The decision was widely criticised, with a common reading
+being that the security argument was cover for a commercial one.
+
+Sources:
+[Cal.com's own post](https://cal.com/blog/cal-diy-open-source-to-closed-source) ·
+[Slashdot](https://yro.slashdot.org/story/26/04/15/1913213/calcom-is-going-closed-source-because-of-ai) ·
+[It's FOSS](https://itsfoss.com/news/cal-com-goes-proprietary/) ·
+[AlternativeTo](https://alternativeto.net/news/2026/4/cal-com-is-going-closed-source-with-a-major-shift-in-its-license-strategy/)
+
+**What it means for us.** Cal.com stays a good structural model for a comparison
+page and stops being citable as an open-source success story. More usefully, it
+is a recent, verifiable instance of the precise fear this product's audience
+has: the thing you built on changes its terms after you have committed to it.
+That argument is far stronger made with a date and a link than made in the
+abstract — and it should be made without gloating, because the same could be
+said of us one day and the only real answer is the licence and the exit path.
+
+**Use it carefully.** Cal.com's users were not abandoned — existing customers
+were unaffected and an MIT version still exists. Overstating it would be both
+unfair and easy to disprove.
