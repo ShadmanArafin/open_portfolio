@@ -29,8 +29,11 @@
 | 8 — Adapters + integrations | **Partially done** | SMTP, notification, reset done. **5 backends, registry, vault, OTP missing** |
 | 9 — Blog, themes, presets   | **Barely started** | Only profession vocabulary packs                                             |
 
-**Where to start:** finish Phase 2 — the ~17 primitives — then Phase 5's blocks.
-The publish-time contrast gate that used to head this list is done.
+**Where to start:** Phase 5's block system. Phase 2 is effectively finished —
+tokens, the publish-time contrast gate and the primitives are all done, and what
+is left of it (Tailwind 4, server-rendered fonts) is independent of the blocks.
+The primitives exist and have no consumer yet, which is the argument for
+building blocks next rather than anything else.
 
 This supersedes an earlier note here that said to start with blocks on the
 grounds that the primitives "need blocks to have somewhere to live". That has it
@@ -76,7 +79,7 @@ development.
 | Phase 5 blocks, pages, `draftMode()` preview  | Nothing external needed                                                     |
 | Phase 7 shadcn admin, MediaPicker, builder    | Nothing external needed                                                     |
 | Phase 9 blog, newsletter capture, themes      | Nothing external needed                                                     |
-| Postgres / Supabase / Neon **database** half  | `postgres:16` — already wired; with Mailpit takes the suite from 115 to 177 |
+| Postgres / Supabase / Neon **database** half  | `postgres:16` — already wired; with Mailpit takes the suite from 130 to 192 |
 | Supabase **Storage** half                     | `supabase start` runs the real `storage-api` container                      |
 | Email send path                               | `axllent/mailpit` — already wired                                           |
 | PocketBase, Appwrite adapters                 | Both ship official Docker images                                            |
@@ -364,12 +367,38 @@ _Risk: theme hydration mismatch → keep the blocking script verbatim, `suppress
 >
 > **Remaining:**
 >
-> - The ~17 primitives (`Band`, `Measure`, `Grid`, `Heading`, `Prose`, `Card`,
->   `Media`, `Button`, ...) that blocks may compose from. These need Phase 5's
->   block system to have somewhere to live.
+> - ~~The ~17 primitives~~ **Done — 13 of them, plus the layout token half they
+>   needed.** `core/primitives/` ships `Band`, `Measure`, `Stack`, `Grid`,
+>   `Heading`, `Text`, `Eyebrow`, `Prose`, `Card`, `Divider`, `Media`, `Button`,
+>   `Metric` and `Pill`, with `BlockFrame` and the heading-level context.
+>
+>   Building them surfaced something the plan had not accounted for: **there
+>   were no non-colour tokens at all.** `tokens.ts` generated colour and nothing
+>   else, so a primitive had no `--space-*`, `--measure`, `--radius-*` or type
+>   scale to read. `core/theme/layout-tokens.ts` adds them, emitted once on
+>   `:root` rather than duplicated into both mode blocks, since none of them
+>   change between light and dark.
+>
+>   Every type step is a `clamp()`, so there is no way to produce a 72px
+>   headline on a 390px screen. `Grid` uses
+>   `auto-fit minmax(min(--card-min-N, 100%), 1fr)` and takes no breakpoint
+>   props, so `columns: 4` is a maximum rather than a promise and cannot
+>   overflow. `Heading` takes its _level_ from position and its _size_ from the
+>   author, so reordering blocks cannot produce h1 → h3 → h2. `Media` requires
+>   an alt decision — a `decorative` flag, not an optional field.
+>
+>   23 tests cover the invariants rather than the rendering: every surface pairs
+>   a background with a foreground, every frame value resolves through a token
+>   and never a literal, every enum member has a style, and the type scale
+>   ascends without inverting at its small end.
+>
+>   Not built: `Overlay`, `Icon`, `Anchor`, `Metric`'s trend variant. They have
+>   no consumer until blocks exist, and a primitive with no consumer is a guess.
+>
 > - An ESLint rule banning colour/size utilities and arbitrary values inside
 >   `core/blocks/**` and `themes/**`. Without it the block/theme contract leaks.
->   Neither directory exists yet, so the rule has nothing to guard.
+>   `core/blocks/` still does not exist, so the rule has nothing to guard — write
+>   it in the same change as the first block, not before and not after.
 > - ~~The publish-time gate~~ **Done.** `core/theme/audit.ts` checks nine
 >   foreground/background pairs in both modes; `contentHealth` reports it as
 >   blocking, and `POST /api/admin/publish` refuses with 422 — enforcement at
@@ -741,8 +770,8 @@ The numbers you should see, as of this writing:
 | `lint`                    | **0 errors**, 64 warnings — the warnings are baseline |
 | `format:check`            | clean                                                 |
 | `check-no-personal-data`  | clean, listed by git                                  |
-| `test` with no containers | 115 passed, 7 skipped                                 |
-| `test` with both          | **177 passed, 2 skipped**                             |
+| `test` with no containers | 130 passed, 7 skipped                                 |
+| `test` with both          | **192 passed, 2 skipped**                             |
 
 The 2 remaining skips are the Supabase and Neon conformance runs, which need
 real cloud credentials. Everything else runs locally.

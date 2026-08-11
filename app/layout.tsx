@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { buildMetadata } from '@/core/content/metadata';
 import { getPublishedContent } from '@/core/content/read';
 import { buildThemeStylesheet } from '@/core/theme/tokens';
+import { buildLayoutStylesheet } from '@/core/theme/layout-tokens';
 import { THEME_STORAGE_KEY } from '@/context/themeConstants';
 
 /*
@@ -55,7 +56,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // here rather than written from an effect, so the first paint is already the
   // site's own colours instead of the built-in ones.
   const content = await getPublishedContent();
-  const themeTokens = buildThemeStylesheet(content.appearance);
+  // Colour changes per mode; spacing, radius and type do not, so the layout
+  // half is emitted once on :root rather than duplicated into both blocks.
+  const themeTokens = buildLayoutStylesheet() + buildThemeStylesheet(content.appearance);
 
   return (
     // suppressHydrationWarning: the script above mutates <html> before React
