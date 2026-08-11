@@ -1,6 +1,15 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  // `./index.html` was the Vite entry point and no longer exists; `./app` and
+  // `./core` did not exist when this was written. The effect was that any
+  // utility used *only* outside `src/` was never generated — the site body's
+  // `selection:bg-accent/20` among them. Silent, because a class that compiles
+  // to nothing looks exactly like a class that had no effect.
+  content: [
+    './app/**/*.{js,ts,jsx,tsx}',
+    './core/**/*.{js,ts,jsx,tsx}',
+    './src/**/*.{js,ts,jsx,tsx}',
+  ],
   darkMode: 'class',
   theme: {
     extend: {

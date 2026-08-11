@@ -4,8 +4,8 @@ import { getStorageAdapter } from '@/core/storage/registry';
 import { requireOwner, UnauthorizedError } from '@/core/auth/guard';
 import { clientKey, rateLimit } from '@/core/auth/ratelimit';
 import { withoutEnquiries } from '@/core/content/sanitise';
-import type { CMSState } from '@/cms/types/cms';
 import { auditContrast, describeFailure } from '@/core/theme/audit';
+import { looksLikeContent } from '@/core/content/validate';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,18 +21,6 @@ export const dynamic = 'force-dynamic';
  * a layout — a route handler is a public HTTP endpoint no matter what rendered
  * the button that calls it.
  */
-
-/** Cheap structural check. Enough to reject nonsense without a schema library. */
-function looksLikeContent(value: unknown): value is CMSState {
-  if (!value || typeof value !== 'object') return false;
-  const v = value as Partial<CMSState>;
-  return (
-    typeof v.settings === 'object' &&
-    typeof v.seo === 'object' &&
-    Array.isArray(v.projects) &&
-    Array.isArray(v.sections)
-  );
-}
 
 export async function POST(req: Request) {
   try {

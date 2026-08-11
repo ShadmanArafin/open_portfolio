@@ -79,9 +79,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           rel="stylesheet"
         />
       </head>
-      <body className="bg-bg text-text-primary antialiased selection:bg-accent/20 selection:text-accent font-sans">
-        {children}
-      </body>
+      {/* No `selection:` utilities here. `accent` resolves to a bare `var()`,
+          which Tailwind cannot apply an opacity modifier to, so
+          `selection:bg-accent/20` compiled to nothing. Selection colours come
+          from the real `::selection` rule in index.css, which uses the
+          `--selection-bg` token and has been doing the job all along. */}
+      <body className="bg-bg text-text-primary antialiased font-sans">{children}</body>
     </html>
   );
 }

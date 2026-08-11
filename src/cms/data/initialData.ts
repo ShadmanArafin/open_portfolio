@@ -1,3 +1,4 @@
+import type { PageRecord } from '@/core/pages/schema';
 import {
   CMSState,
   ExperienceItem,
@@ -176,6 +177,82 @@ const initialNavLinks: NavLinkItem[] = [
 
 /** Seeded assets have no real upload date — use the install date. */
 const seedDate = new Date().toISOString().slice(0, 10);
+
+/**
+ * One page, built from blocks, shipped as a draft.
+ *
+ * A draft on purpose. Nothing should appear on a stranger's live site that they
+ * did not choose to publish — but an empty Pages screen teaches nobody what a
+ * page is, and every install deserves one worked example to open, rearrange and
+ * publish or delete.
+ *
+ * It also means the block renderer and the page route are exercised by real
+ * seeded content on every fresh install, rather than only by tests.
+ */
+const initialPages: PageRecord[] = [
+  {
+    id: 'page_example',
+    slug: 'example',
+    title: 'An example page',
+    status: 'draft',
+    seo: {
+      description: 'A starting point. Rearrange it, rename it, or delete it.',
+    },
+    nav: { show: false, order: 10 },
+    updatedAt: '2026-01-01T00:00:00.000Z',
+    revision: 1,
+    blocks: [
+      {
+        id: 'block_example_hero',
+        type: 'hero',
+        v: 1,
+        frame: { spacing: 'loose' },
+        props: {
+          eyebrow: 'Example',
+          headline: 'This page is made of blocks.',
+          subhead:
+            'Every part of it is a block you can move, edit or remove. Nothing here is special — make your own and delete this one.',
+          cta: [{ label: 'Get in touch', href: '/contact' }],
+        },
+      },
+      {
+        id: 'block_example_text',
+        type: 'richText',
+        v: 1,
+        props: {
+          heading: 'How pages work',
+          paragraphs: [
+            'A page is an address and a stack of blocks. The blocks decide what is on it; the theme decides what it looks like. That separation is why switching theme never breaks a page.',
+            'Blocks cannot set their own colours, spacing or type sizes. It sounds restrictive and it is the reason a page you build at midnight still looks composed in the morning.',
+          ],
+        },
+      },
+      {
+        id: 'block_example_cards',
+        type: 'cards',
+        v: 1,
+        props: {
+          heading: 'Three things worth knowing',
+          columns: 3,
+          items: [
+            {
+              title: 'Drafts stay private',
+              body: 'A page is only visible to the internet once you publish it. Until then, only you can see it, through Preview.',
+            },
+            {
+              title: 'Addresses are checked',
+              body: 'If you pick a web address the site already uses, it says so rather than letting you make a page that never opens.',
+            },
+            {
+              title: 'Nothing is lost',
+              body: 'A block this version cannot read is kept exactly as it was rather than thrown away.',
+            },
+          ],
+        },
+      },
+    ],
+  },
+];
 
 export const INITIAL_CMS_STATE: CMSState = {
   status: 'published',
@@ -432,6 +509,7 @@ export const INITIAL_CMS_STATE: CMSState = {
     },
   ],
 
+  pages: initialPages,
   projects: initialProjects,
   caseStudies: initialCaseStudies,
   brands: initialBrands,

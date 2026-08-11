@@ -4,7 +4,6 @@ import {
   Band,
   Button,
   Card,
-  Deeper,
   Eyebrow,
   Grid,
   Heading,
@@ -15,6 +14,7 @@ import {
   Stack,
   Text,
 } from '../primitives';
+import { deeper } from '../primitives/heading-level';
 import type { BlockDefinition } from './schema';
 
 /**
@@ -82,11 +82,13 @@ const hero: BlockDefinition<HeroProps> = {
           : null,
     },
   ],
-  Render: ({ props, frame }) => (
+  Render: ({ props, frame, headingLevel }) => (
     <Band frame={frame}>
       <Stack gap={5}>
         {props.eyebrow && <Eyebrow>{props.eyebrow}</Eyebrow>}
-        <Heading size="display">{props.headline}</Heading>
+        <Heading level={headingLevel} size="display">
+          {props.headline}
+        </Heading>
         {props.subhead && (
           <Measure>
             <Text size="lg">{props.subhead}</Text>
@@ -124,10 +126,10 @@ const richText: BlockDefinition<RichTextProps> = {
   group: 'identity',
   schema: richTextProps,
   defaults: () => ({ paragraphs: ['Write something here.'] }),
-  Render: ({ props, frame }) => (
+  Render: ({ props, frame, headingLevel }) => (
     <Band frame={frame}>
       <Stack gap={5}>
-        {props.heading && <Heading>{props.heading}</Heading>}
+        {props.heading && <Heading level={headingLevel}>{props.heading}</Heading>}
         <Prose>
           {props.paragraphs.map((paragraph, i) => (
             <p key={i} style={{ margin: 0 }}>
@@ -227,10 +229,10 @@ const gallery: BlockDefinition<GalleryProps> = {
       },
     },
   ],
-  Render: ({ props, frame }) => (
+  Render: ({ props, frame, headingLevel }) => (
     <Band frame={frame}>
       <Stack gap={6}>
-        {props.heading && <Heading>{props.heading}</Heading>}
+        {props.heading && <Heading level={headingLevel}>{props.heading}</Heading>}
         <Grid columns={props.columns ?? 3}>
           {props.items.map((item, i) => (
             <Stack key={`${item.src}-${i}`} gap={2}>
@@ -264,10 +266,10 @@ const stats: BlockDefinition<StatsProps> = {
   group: 'credentials',
   schema: statsProps,
   defaults: () => ({ items: [{ value: '0', label: 'Something worth counting' }] }),
-  Render: ({ props, frame }) => (
+  Render: ({ props, frame, headingLevel }) => (
     <Band frame={frame}>
       <Stack gap={6}>
-        {props.heading && <Heading>{props.heading}</Heading>}
+        {props.heading && <Heading level={headingLevel}>{props.heading}</Heading>}
         <Grid columns={props.items.length >= 4 ? 4 : 3} gap={5}>
           {props.items.map((item) => (
             <Metric key={item.label} value={item.value} label={item.label} />
@@ -299,10 +301,12 @@ const ctaBanner: BlockDefinition<CtaBannerProps> = {
     cta: [{ label: 'Get in touch', href: '/contact' }],
   }),
   frameDefaults: { surface: 'raised', align: 'center' },
-  Render: ({ props, frame }) => (
+  Render: ({ props, frame, headingLevel }) => (
     <Band frame={frame}>
       <Stack gap={5}>
-        <Heading size="xl">{props.headline}</Heading>
+        <Heading level={headingLevel} size="xl">
+          {props.headline}
+        </Heading>
         {props.description && (
           <Measure center>
             <Text>{props.description}</Text>
@@ -352,16 +356,16 @@ const cards: BlockDefinition<CardsProps> = {
   group: 'credentials',
   schema: cardsProps,
   defaults: () => ({ items: [{ title: 'Something you do' }] }),
-  Render: ({ props, frame }) => (
+  Render: ({ props, frame, headingLevel }) => (
     <Band frame={frame}>
       <Stack gap={6}>
-        {props.heading && <Heading>{props.heading}</Heading>}
+        {props.heading && <Heading level={headingLevel}>{props.heading}</Heading>}
         <Grid columns={props.columns ?? 3}>
           {props.items.map((item) => (
             <Card key={item.title}>
-              <Deeper>
-                <Heading size="sm">{item.title}</Heading>
-              </Deeper>
+              <Heading level={deeper(headingLevel)} size="sm">
+                {item.title}
+              </Heading>
               {item.body && <Text size="sm">{item.body}</Text>}
               {item.href && (
                 <Button href={item.href} variant="secondary">

@@ -3,6 +3,7 @@ import { cache } from 'react';
 import type { CMSState } from '@/cms/types/cms';
 import { INITIAL_CMS_STATE } from '@/cms/data/initialData';
 import { getStorageAdapter } from '@/core/storage/registry';
+import type { Channel } from '@/core/storage/contract';
 
 /**
  * The single server-side read of published content.
@@ -24,6 +25,26 @@ export const getPublishedContent = cache(async (): Promise<CMSState> => {
     console.error('[content] Could not read published content; serving the seed.', err);
   }
   return INITIAL_CMS_STATE;
+});
+
+/**
+ * Content for a channel, with the draft falling back to what is live.
+ *
+ * The fallback is the point. A site that has never saved a draft has no draft
+ * snapshot, and previewing it should show the site as it stands rather than an
+ * empty one — "preview" means "what it would look like", and with no unsaved
+ * changes the honest answer is the published site.
+ */
+export const getContentForChannel = cache(async (channel: Channel): Promise<CMSState> => {
+  if (channel === 'published') return getPublishedContent();
+
+  try {
+    const stored = await (await getStorageAdapter()).readSnapshot('draft');
+    if (stored) return stored;
+  } catch (err) {
+    console.error('[content] Could not read the draft; falling back to what is published.', err);
+  }
+  return getPublishedContent();
 });
 
 /** Published projects in display order. */

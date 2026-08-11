@@ -5,6 +5,7 @@ import {
   getPublishedProjects,
 } from '@/core/content/read';
 import { resolveSiteUrl } from '@/core/content/metadata';
+import { getIndexablePages } from '@/core/pages/read';
 
 /**
  * A sitemap needs absolute URLs, so it can only be generated once the site
@@ -25,13 +26,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: path === '' ? 1 : 0.7,
   }));
 
-  const [projects, caseStudies] = await Promise.all([
+  const [projects, caseStudies, pages] = await Promise.all([
     getPublishedProjects(),
     getPublishedCaseStudies(),
+    // Published and not marked noindex. A page the owner deliberately kept out
+    // of search results must not be advertised in the sitemap either.
+    getIndexablePages(),
   ]);
 
   return [
     ...staticRoutes,
+    ...pages.map((page) => ({
+      url: `${siteUrl}/${page.slug}`,
+      lastModified: page.updatedAt ? new Date(page.updatedAt) : lastModified,
+      priority: 0.6,
+    })),
     ...projects.map((p) => ({ url: `${siteUrl}/work/${p.slug}`, lastModified, priority: 0.8 })),
     ...caseStudies.map((c) => ({
       url: `${siteUrl}/case-studies/${c.slug}`,

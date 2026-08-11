@@ -1,3 +1,5 @@
+import type { PageRecord } from '@/core/pages/schema';
+
 export type PublishStatus = 'draft' | 'published' | 'archived';
 
 export interface MicrocopySettings {
@@ -434,6 +436,14 @@ export interface CMSState {
   appearance: AppearanceSettings;
   seo: SEOSettings;
   sections: SectionConfig[];
+  /**
+   * Standalone pages built from blocks.
+   *
+   * Optional because content written before the page system existed simply has
+   * none, and a stored snapshot must keep loading after an upgrade. Readers go
+   * through `core/pages/read`, which defaults it to an empty list.
+   */
+  pages?: PageRecord[];
   projects: ProjectItem[];
   caseStudies: CaseStudyItem[];
   brands: BrandItem[];

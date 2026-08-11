@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type React from 'react';
 import type { BlockFrame } from '../primitives/frame';
+import type { HeadingLevel } from '../primitives/heading-level';
 
 /**
  * The block envelope, and the contract a block definition satisfies.
@@ -74,6 +75,16 @@ export interface BlockRenderProps<P> {
   props: P;
   frame: Partial<BlockFrame> | undefined;
   block: Block<P>;
+  /**
+   * The level this block's own title should use, worked out by the renderer
+   * from the block's position on the page. Item titles inside the block go one
+   * deeper — `deeper(headingLevel)`.
+   *
+   * Passed rather than read from context: context needs a Client Component, and
+   * making every block ship JavaScript to answer a question that is settled
+   * before rendering begins is the wrong trade twice over.
+   */
+  headingLevel: HeadingLevel;
 }
 
 /**

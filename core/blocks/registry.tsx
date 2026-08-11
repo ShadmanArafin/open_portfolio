@@ -1,7 +1,7 @@
 import React from 'react';
-import { HeadingLevel } from '../primitives';
 import { BLOCK_DEFINITIONS } from './definitions';
 import { parseBlocks, type ParseContext } from './parse';
+import { clampLevel, type HeadingLevel } from '../primitives/heading-level';
 import type { BlockDefinition, ParsedBlock } from './schema';
 
 /**
@@ -42,7 +42,7 @@ export function parsePage(raw: unknown): ParsedBlock[] {
  * "this block could not be read" tells them about our problem; the editor is
  * where that belongs, and `ParsedBlock` carries the reason for it.
  */
-function RenderOne({ entry }: { entry: ParsedBlock }) {
+function RenderOne({ entry, headingLevel }: { entry: ParsedBlock; headingLevel: HeadingLevel }) {
   if (entry.kind === 'unknown') return null;
 
   const { block } = entry;
@@ -55,6 +55,7 @@ function RenderOne({ entry }: { entry: ParsedBlock }) {
     props: unknown;
     frame: typeof block.frame;
     block: typeof block;
+    headingLevel: HeadingLevel;
   }>;
 
   return (
@@ -62,6 +63,7 @@ function RenderOne({ entry }: { entry: ParsedBlock }) {
       props={block.props}
       frame={{ ...definition.frameDefaults, ...block.frame }}
       block={block}
+      headingLevel={headingLevel}
     />
   );
 }
@@ -82,11 +84,12 @@ export function BlockList({ blocks }: { blocks: ParsedBlock[] }) {
     <>
       {blocks.map((entry) => {
         const id = entry.kind === 'block' ? entry.block.id : entry.id;
-        const level = id === firstRenderableId ? 1 : 2;
         return (
-          <HeadingLevel key={id} level={level}>
-            <RenderOne entry={entry} />
-          </HeadingLevel>
+          <RenderOne
+            key={id}
+            entry={entry}
+            headingLevel={clampLevel(id === firstRenderableId ? 1 : 2)}
+          />
         );
       })}
     </>

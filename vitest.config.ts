@@ -17,7 +17,8 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
-    include: ['**/__tests__/**/*.test.ts'],
+    // `.tsx` too: block rendering is checked by rendering it, which needs JSX.
+    include: ['**/__tests__/**/*.test.ts', '**/__tests__/**/*.test.tsx'],
     coverage: {
       provider: 'v8',
       include: ['core/**'],

@@ -1,4 +1,5 @@
-import { getPublishedContent } from '@/core/content/read';
+import { getContentForChannel } from '@/core/content/read';
+import { currentChannel } from '@/core/pages/read';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { SideSectionIndicator } from '@/components/common/SideSectionIndicator';
@@ -13,7 +14,10 @@ import { SiteProviders } from './providers';
 export const revalidate = 60;
 
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
-  const content = await getPublishedContent();
+  // Channel-aware so preview shows the draft's chrome too — a renamed site or
+  // a reordered menu is exactly the kind of change worth previewing, and a
+  // preview that only swaps the page body misrepresents the result.
+  const content = await getContentForChannel(await currentChannel());
 
   return (
     <SiteProviders initialData={content}>

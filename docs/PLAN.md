@@ -23,17 +23,18 @@
 | 2 — Tokens + primitives     | **Partially done** | Tokens, publish gate done. Primitives and Tailwind 4 remain                  |
 | 3 — Storage contract        | **Done, verified** | Contract, local adapter, registry, server read                               |
 | 4 — Auth                    | **Done, verified** | Passphrase + sessions. **Passkeys/OTP not built**                            |
-| 5 — Write path              | **Partially done** | Publish, contact, block system done. **Pages and preview missing**           |
+| 5 — Write path              | **Partially done** | Publish, contact, blocks, pages, preview done. **Per-record writes missing** |
 | 6 — Hosted adapters         | **Done, verified** | Supabase, Neon, Postgres. **Uploads unverified**                             |
 | 7 — shadcn admin            | **Not started**    | Admin still Astryx + React Router                                            |
 | 8 — Adapters + integrations | **Partially done** | SMTP, notification, reset done. **5 backends, registry, vault, OTP missing** |
 | 9 — Blog, themes, presets   | **Barely started** | Only profession vocabulary packs                                             |
 
-**Where to start:** pages and routing. The block system exists and renders, but
-nothing routes to it — there is no `Page` record and no `[[...slug]]` route, so
-no block appears on a real site yet. That is the shortest path from "the
-machinery works" to "a user can see it", and Phase 7's builder needs a page to
-build into.
+**Where to start:** Phase 7's admin. The public half is now complete — a page
+built from blocks renders at its own address, joins the sitemap and the
+navigation, and previews before it is published. What is missing is the half a
+user touches: there is no screen for creating a page, adding a block or picking
+an image. Everything below Phase 7 is now waiting on it rather than the other
+way round.
 
 This supersedes an earlier note here that said to start with blocks on the
 grounds that the primitives "need blocks to have somewhere to live". That has it
@@ -79,7 +80,7 @@ development.
 | Phase 5 blocks, pages, `draftMode()` preview  | Nothing external needed                                                     |
 | Phase 7 shadcn admin, MediaPicker, builder    | Nothing external needed                                                     |
 | Phase 9 blog, newsletter capture, themes      | Nothing external needed                                                     |
-| Postgres / Supabase / Neon **database** half  | `postgres:16` — already wired; with Mailpit takes the suite from 153 to 215 |
+| Postgres / Supabase / Neon **database** half  | `postgres:16` — already wired; with Mailpit takes the suite from 224 to 286 |
 | Supabase **Storage** half                     | `supabase start` runs the real `storage-api` container                      |
 | Email send path                               | `axllent/mailpit` — already wired                                           |
 | PocketBase, Appwrite adapters                 | Both ship official Docker images                                            |
@@ -532,15 +533,51 @@ Passkey + OTP + sessions + claim + CSRF + rate limiting + CSP/headers. `requireO
 > the whole interaction — so "not finished yet" belongs in a content check,
 > where the answer is advice, not in the schema, where it is refusal.
 >
+> **Pages and routing now exist too.** `core/pages/` owns the record, the slug
+> rules and the channel-aware read; `app/(site)/[...slug]` serves them. A page is
+> an address, a title, an ordered list of blocks and its own SEO — and it joins
+> the sitemap, the navigation and preview without any further wiring.
+>
+> Two deviations from the plan, both deliberate:
+>
+> - **`[...slug]`, not `[[...slug]]`.** An optional catch-all also matches `/`,
+>   which collides with the home route and is a build error. Home stays a real
+>   route until the theme's sections become blocks.
+> - **Slugs are checked against the routes that exist.** Static routes beat a
+>   catch-all, so a page whose slug is `work` would save, appear in the admin and
+>   never once load. `checkSlug` refuses it and suggests `my-work` instead. A
+>   test walks the route directories and fails if the reserved list drifts — so
+>   adding `app/(site)/blog` in Phase 9 without reserving `blog` breaks the build
+>   rather than shadowing somebody's page a release later.
+>
+> **Preview is real.** `draftMode()` plus a draft channel: `/api/preview` is
+> owner-gated (a preview token in a URL ends up in a browser history and cannot
+> be revoked), `/api/admin/draft` writes the draft snapshot, and the previewed
+> page carries a banner that says so and offers the way out. Previewing a site
+> with no draft falls back to what is live, because with no unsaved changes that
+> is the honest answer. The draft save deliberately skips the contrast gate that
+> publishing runs — a work in progress may be unreadable; a published site may
+> not.
+>
+> **The route-guard test landed here too**, ahead of schedule, because this slice
+> added endpoints. It walks `app/api/**` on the syntax tree and fails the build
+> on any exported handler that does not reach `requireOwner()`, with an
+> allowlist that demands a written reason and rejects stale entries. Verified by
+> adding an unguarded route and watching it fail. Its first run reported two
+> _correctly_ guarded routes as unguarded — both extract the check into a local
+> helper — so it now follows one level of local indirection: a test that fails
+> correct code teaches people to write worse code to appease it.
+>
 > **Remaining in this phase:**
 >
-> - Arbitrary pages and the `[[...slug]]` catch-all route. The renderer exists;
->   nothing routes to it yet, so no block is on a real page.
-> - `draftMode()` preview. The admin still iframes `?preview=true`.
 > - Per-record writes with revision checks. Publishing is whole-document.
 > - The kitchen-sink CI matrix. It needs more than one theme and an axe run, so
->   it belongs with Phase 9's themes rather than here.
+>   it belongs with Phase 9's themes rather than here. The render tests in
+>   `core/blocks/__tests__/render.test.tsx` are its seed.
 > - The remaining ~22 block types.
+> - Authoring. Until Phase 7 there is no UI to create a page, so the seeded
+>   example page is the only one — shipped as a draft, so nothing appears on a
+>   stranger's live site that they did not publish.
 >
 > **Also not done:** the `work` merge (`projects` + `caseStudies`) and the
 > `timeline` merge (`experience` + `education`) that the locked decisions chose.
@@ -802,8 +839,8 @@ The numbers you should see, as of this writing:
 | `lint`                    | **0 errors**, 64 warnings — the warnings are baseline |
 | `format:check`            | clean                                                 |
 | `check-no-personal-data`  | clean, listed by git                                  |
-| `test` with no containers | 153 passed, 7 skipped                                 |
-| `test` with both          | **215 passed, 2 skipped**                             |
+| `test` with no containers | 224 passed, 7 skipped                                 |
+| `test` with both          | **286 passed, 2 skipped**                             |
 
 The 2 remaining skips are the Supabase and Neon conformance runs, which need
 real cloud credentials. Everything else runs locally.

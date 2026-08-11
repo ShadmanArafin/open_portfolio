@@ -115,6 +115,20 @@ export function generateLayoutTokens(inputs: Partial<LayoutInputs> = {}): Record
     '--card-min-3': '17rem',
     '--card-min-4': '13rem',
 
+    // Hairlines. A token rather than a literal so a theme can go borderless,
+    // or heavier, without every primitive having to agree to it separately.
+    '--hairline': '1px',
+
+    /**
+     * Minimum height of anything you tap.
+     *
+     * Floored at 44px whatever the density, because WCAG 2.5.5 and every mobile
+     * platform guideline land in the same place and a "compact" theme has no
+     * business making buttons hard to hit. Density may make things roomier; it
+     * may not make them unusable.
+     */
+    '--control-height': `${Math.max(44, round(step * 11))}px`,
+
     '--radius-sm': `${round(r * 0.5)}px`,
     '--radius-md': `${r}px`,
     '--radius-lg': `${round(r * 1.5)}px`,

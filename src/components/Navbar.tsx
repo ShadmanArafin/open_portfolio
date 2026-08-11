@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Container } from './common/Container';
 import { cn } from '../utils/cn';
 import { useCMS } from '../cms/context/CMSContext';
+import { mergeNavLinks } from '@/core/pages/nav';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -33,9 +34,9 @@ export const Navbar: React.FC = () => {
     setMobileMenuOpen(false);
   }, [pathname]);
 
-  const navLinks = [...(data.navLinks ?? [])]
-    .filter((link) => link.visible !== false)
-    .sort((a, b) => a.sortOrder - b.sortOrder);
+  // Pages the owner marked "show in navigation" appear here alongside the
+  // links set in Settings, so building a page is enough to make it reachable.
+  const navLinks = mergeNavLinks(data.navLinks, data.pages);
 
   // The wordmark is the owner's name from Settings. The narrow variant drops to
   // the first word so a long name doesn't collide with the nav on small phones.

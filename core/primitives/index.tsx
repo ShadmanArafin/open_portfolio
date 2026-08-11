@@ -1,6 +1,6 @@
 import React from 'react';
 import { resolveFrame, SPACING_STYLE, SURFACE_STYLE, WIDTH_STYLE, type BlockFrame } from './frame';
-import { Deeper, useHeadingLevel } from './heading-level';
+import { clampLevel, type HeadingLevel as Level } from './heading-level';
 
 /**
  * The closed set of primitives every block composes from.
@@ -42,7 +42,7 @@ export function Band({
 }) {
   const f = resolveFrame(frame);
   const surface = SURFACE_STYLE[f.surface];
-  const borderStyle = '1px solid var(--border-color)';
+  const borderStyle = 'var(--hairline) solid var(--border-color)';
 
   return (
     <section
@@ -136,7 +136,7 @@ export function Grid({
         gridTemplateColumns: `repeat(auto-fit, minmax(min(var(--card-min-${columns}), 100%), 1fr))`,
       }}
     >
-      <Deeper>{children}</Deeper>
+      {children}
     </div>
   );
 }
@@ -159,16 +159,22 @@ const HEADING_SIZE = {
  * navigating by heading must not be at the mercy of a visual choice.
  */
 export function Heading({
+  level = 2,
   size = 'lg',
   children,
   id,
 }: {
+  /**
+   * Comes from the renderer, not from the block. Defaulting to 2 rather than 1
+   * because a stray `h1` is the one mistake with no visible symptom and a real
+   * cost — two of them on a page is a document with no title.
+   */
+  level?: Level | number;
   size?: keyof typeof HEADING_SIZE;
   children: React.ReactNode;
   id?: string;
 }) {
-  const level = useHeadingLevel();
-  const Tag = `h${level}` as 'h1';
+  const Tag = `h${clampLevel(level)}` as 'h1';
 
   return (
     <Tag
@@ -263,7 +269,7 @@ export function Card({ children }: { children: React.ReactNode }) {
     <div
       style={{
         background: 'var(--surface-primary)',
-        border: '1px solid var(--border-color)',
+        border: 'var(--hairline) solid var(--border-color)',
         borderRadius: 'var(--radius-md)',
         padding: 'var(--space-6)',
         display: 'grid',
@@ -278,7 +284,9 @@ export function Card({ children }: { children: React.ReactNode }) {
 /* ------------------------------------------------------------------ Divider */
 
 export function Divider() {
-  return <hr style={{ border: 0, borderTop: '1px solid var(--border-color)', margin: 0 }} />;
+  return (
+    <hr style={{ border: 0, borderTop: 'var(--hairline) solid var(--border-color)', margin: 0 }} />
+  );
 }
 
 /* ------------------------------------------------------------------- Media */
@@ -305,6 +313,26 @@ export function Media({
   fit?: 'cover' | 'contain';
   priority?: boolean;
 }) {
+  // Nothing chosen yet. An <img src=""> makes the browser re-request the
+  // current page as the image — a real network hit and a console warning — so
+  // an empty slot renders as a slot. It also gives the builder something with
+  // the right shape to drag around before the picture exists, which is how
+  // people actually lay a page out.
+  if (!src) {
+    return (
+      <div
+        role="presentation"
+        style={{
+          width: '100%',
+          aspectRatio: ratio,
+          borderRadius: 'var(--radius-md)',
+          background: 'var(--surface-secondary)',
+          border: 'var(--hairline) dashed var(--border-color)',
+        }}
+      />
+    );
+  }
+
   // A plain <img> rather than next/image, for now. Media URLs come from
   // whichever storage adapter is configured — a same-origin /api/media path on
   // one, a Supabase or Blob host on another — and next/image needs every one of
@@ -352,7 +380,7 @@ export function Button({
     display: 'inline-flex',
     alignItems: 'center',
     gap: 'var(--space-2)',
-    minHeight: '2.75rem',
+    minHeight: 'var(--control-height)',
     paddingInline: 'var(--space-6)',
     borderRadius: 'var(--radius-full)',
     fontFamily: 'var(--font-body)',
@@ -363,7 +391,7 @@ export function Button({
     transition: 'opacity var(--motion-fast) var(--ease-standard)',
     background: variant === 'primary' ? 'var(--btn-primary-bg)' : 'transparent',
     color: variant === 'primary' ? 'var(--btn-primary-text)' : 'var(--btn-secondary-text)',
-    border: variant === 'primary' ? 'none' : '1px solid var(--btn-secondary-border)',
+    border: variant === 'primary' ? 'none' : 'var(--hairline) solid var(--btn-secondary-border)',
   };
 
   // A real anchor when it navigates, a real button when it acts. Never a div:
@@ -422,7 +450,7 @@ export function Pill({ children }: { children: React.ReactNode }) {
         paddingInline: 'var(--space-3)',
         paddingBlock: 'var(--space-1)',
         borderRadius: 'var(--radius-full)',
-        border: '1px solid var(--badge-border)',
+        border: 'var(--hairline) solid var(--badge-border)',
         background: 'var(--badge-bg)',
         fontFamily: 'var(--font-mono)',
         fontSize: 'var(--text-2xs)',
