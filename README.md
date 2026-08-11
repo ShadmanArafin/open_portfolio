@@ -102,6 +102,9 @@ like: that is exactly what updating does, and your content is untouched.
 
 ## Run it locally
 
+**Requirements:** Node.js 20 or newer, and npm. Nothing else — no database is
+needed to try it, and no account anywhere.
+
 Node 20.9 or newer. No account, no API key, nothing to sign up for.
 
 ```bash
@@ -133,24 +136,55 @@ Every step is skippable. None of it is permanent.
 
 ## Features
 
-- **Everything on the page is editable.** Work, case studies, clients,
-  experience, education, process, capabilities, testimonials, navigation,
-  footer, microcopy, typography, colours and SEO all live in a content store
-  rather than in the code.
+### Build
+
+- **A visual page builder.** Add blocks, drag them into order, hide them, edit
+  every field. Seven block types so far: hero, text, image, gallery, numbers,
+  cards and a call to action. Reordering is buttons in an outline rather than
+  dragging a canvas, so it works with a keyboard and on a phone.
+- **Any number of pages**, each at its own address, each with its own title and
+  description for search results. If you pick an address the site already uses,
+  it says so and suggests one that works instead of quietly 404ing later.
+- **Your home page too**, built the same way. Until you publish one, the theme's
+  own layout keeps rendering, so nothing changes until you decide it should.
+- **A media library.** Pick a picture you have already uploaded rather than
+  uploading it twice — and write its description at the moment you choose it,
+  which is the only point anybody actually does.
+- **Advice while you type.** A headline that will wrap to four lines on a phone,
+  a gallery of one, an image with no alt text, one card stranded on the last
+  row. Advice, never a refusal.
+
+### Publish
+
 - **Draft and publish.** Edits save as you type into a draft. The live site keeps
-  showing the published version until you publish, and a docked preview shows
-  the draft on desktop, tablet and mobile frames.
-- **Real SEO.** Every page is server-rendered with its own title, description,
-  Open Graph and Twitter tags. `sitemap.xml` and `robots.txt` are generated from
-  your content.
+  showing the published version until you publish.
+- **Preview before anyone else sees it**, at the page's real address, with a
+  banner so you never mistake a draft for the live site.
 - **Version history.** Every publish snapshots the content and any version can be
   restored. Capped at 20 so storage stays flat.
-- **A dashboard that tells you what is missing.** Sixteen checks over the
-  published content — work still in draft, missing images, a meta description
-  outside the length search engines show, unanswered enquiries — each linking to
-  the screen that fixes it.
+- **Colour contrast is checked before publishing.** A palette nobody could read
+  is refused, not warned about.
+- **A dashboard that tells you what is missing** — sixteen checks over the
+  published content, each linking to the screen that fixes it.
+
+### Run
+
+- **Real SEO.** Every page is server-rendered with its own title, description,
+  Open Graph and Twitter tags. `sitemap.xml` and `robots.txt` come from your
+  content.
+- **A contact form that works.** Messages land in an inbox inside the admin, and
+  email you when they arrive.
+- **Connect services from the admin.** A mail server, without an environment
+  variable or a redeploy — press Test and it tells you what is wrong in words
+  you can act on. Passwords are encrypted and never sent back to the browser.
+- **Ask for things without leaving the admin.** Report a bug or request a
+  feature: it checks whether somebody already said it — or whether it is already
+  fixed in a newer version — attaches your version and setup, and files it under
+  your own GitHub account so you are credited when it lands.
 - **Your data, your database.** Pick a backend or let the deploy button provide
   one. Export everything as a single JSON file at any time.
+- **Updates never touch your content.** It lives in your database; an update
+  only changes code. See [docs/UPDATING.md](docs/UPDATING.md).
 
 ## Choose a backend
 
@@ -216,8 +250,8 @@ discover them after typing in a portfolio:
 | 0.2           | Next.js App Router, server rendering, SEO, Open Graph, sitemap, real 404         |
 | 0.3           | Server-side auth, publishing that reaches visitors, a contact form that delivers |
 | 0.4           | Pluggable storage with a conformance suite every backend must pass               |
-| **0.5 (now)** | Design tokens, block and page builder, media picker, integrations, Docker        |
-| 0.6           | Home page built from blocks, more block types, second theme                      |
+| **0.5 (now)** | Page builder, home page from blocks, media picker, services, Docker              |
+| 0.6           | A second theme and a way to switch. More block types                             |
 | 0.7           | Mobile admin, installable app, notifications                                     |
 | 0.8           | Remaining backends, passkeys and one-time codes                                  |
 | 0.9           | Blog, newsletter capture, six themes, full profession presets                    |

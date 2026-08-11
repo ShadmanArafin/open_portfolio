@@ -90,11 +90,28 @@ export const CMSProvider: React.FC<CMSProviderProps> = ({ children, initialData 
   const [authReady, setAuthReady] = useState(false);
   const [emailConfigured, setEmailConfigured] = useState<boolean | undefined>(undefined);
 
-  // Storage is browser-only, so the server cannot read it. Load it on mount and
-  // swap: the HTML ships with the server's content, then the editor's own
-  // stored content takes over. This bridge disappears once content lives in a
-  // backend the server can query.
+  /*
+   * The editor's local store, loaded on mount — **only where it belongs.**
+   *
+   * This used to run everywhere, and on the public site it was a live bug: the
+   * server sent the owner's real content, then this replaced it a moment later
+   * with whatever was in the *visitor's* browser. For a first-time visitor that
+   * store is empty, so it seeds from the built-in demo content — meaning every
+   * stranger saw the correct site flash and then turn into "Your Name".
+   *
+   * The comment that used to sit here said the bridge "disappears once content
+   * lives in a backend the server can query". That happened in Phase 3. The
+   * bridge did not disappear with it.
+   *
+   * `initialData` is the signal: the site layout passes the server's content,
+   * the admin passes nothing because its local draft is the whole point. So a
+   * provider that was handed authoritative content keeps it.
+   */
+  const serverProvided = initialData !== undefined;
+
   useEffect(() => {
+    if (serverProvided) return;
+
     let cancelled = false;
     void cmsService.init().then(async () => {
       if (cancelled) return;
@@ -113,6 +130,10 @@ export const CMSProvider: React.FC<CMSProviderProps> = ({ children, initialData 
   }, []);
 
   useEffect(() => {
+    // Same reasoning: on the public site there is nothing to subscribe to, and
+    // subscribing would let a stale local write overwrite the served content.
+    if (serverProvided) return;
+
     const unsubscribe = cmsService.subscribe(() => {
       setPublishedData(cmsService.getPublishedData());
       setDraftData(cmsService.getDraftData());
