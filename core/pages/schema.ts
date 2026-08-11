@@ -44,6 +44,18 @@ export const RESERVED_TOP_LEVEL: readonly string[] = [
   'sitemap.xml',
 ];
 
+/**
+ * The home page's slug.
+ *
+ * An empty string, because the home page has no address of its own — it *is*
+ * the address. Giving it a real slug like `home` would put the same content at
+ * two URLs, which is the one thing a site's front door must not do.
+ *
+ * It is the only page allowed an empty slug, and the only page the catch-all
+ * route must never serve.
+ */
+export const HOME_SLUG = '';
+
 export const MAX_SLUG_SEGMENTS = 3;
 export const MAX_SLUG_LENGTH = 120;
 
@@ -57,7 +69,15 @@ export const pageSeoSchema = z.object({
 
 export const pageSchema = z.object({
   id: z.string().min(1),
-  slug: z.string().min(1),
+  /**
+   * Empty means the home page, and nothing else.
+   *
+   * This was `min(1)` until the home page needed a record, at which point every
+   * home page was silently dropped on read: the schema rejected it, `getPages`
+   * skipped it, and the site fell back to the old layout with no error
+   * anywhere. `id` still carries the real "is this a record at all" check.
+   */
+  slug: z.string(),
   title: z.string(),
   /**
    * Raw block envelopes. Deliberately not validated here: the block parser owns
@@ -125,8 +145,11 @@ export interface SlugProblem {
  */
 export function checkSlug(
   slug: string,
-  options: { existingSlugs?: readonly string[] } = {}
+  options: { existingSlugs?: readonly string[]; isHome?: boolean } = {}
 ): SlugProblem | null {
+  // The home page's address is not editable, so there is nothing to check.
+  if (options.isHome) return null;
+
   if (!slug) {
     return { blocking: true, message: 'This page needs a web address.' };
   }
@@ -183,6 +206,31 @@ export function createPage(input: { title: string; slug?: string; id?: string })
     updatedAt: new Date().toISOString(),
     revision: 1,
   };
+}
+
+/**
+ * The home page, as a record like any other.
+ *
+ * Made lazily rather than seeded, so an existing site is untouched until
+ * somebody chooses to build their home page from blocks. Until then the theme's
+ * own sections keep rendering, which is what every install already has.
+ */
+export function createHomePage(): PageRecord {
+  return {
+    id: 'page_home',
+    slug: HOME_SLUG,
+    title: 'Home',
+    blocks: [],
+    status: 'draft',
+    seo: {},
+    nav: { show: false, order: -1 },
+    updatedAt: new Date().toISOString(),
+    revision: 1,
+  };
+}
+
+export function isHomePage(page: { slug: string }): boolean {
+  return page.slug === HOME_SLUG;
 }
 
 /** `about/team` -> `['about', 'team']`. The shape a catch-all route returns. */

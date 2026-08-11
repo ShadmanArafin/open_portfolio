@@ -15,7 +15,14 @@ import { AdminRecord, AdminRecordList } from '../components/AdminRecord';
 import { AstryxHeader, AstryxSection } from '../components/astryx/AstryxComponents';
 import { BlockFields } from '../components/BlockFields';
 import { Selector, TextArea, TextInput } from '../components/AdminFields';
-import { checkSlug, createPage, normaliseSlug, type PageRecord } from '@/core/pages/schema';
+import {
+  checkSlug,
+  createHomePage,
+  createPage,
+  isHomePage,
+  normaliseSlug,
+  type PageRecord,
+} from '@/core/pages/schema';
 import {
   getBlockDefinition,
   listBlockDefinitions,
@@ -66,7 +73,11 @@ export const AdminSitePages: React.FC = () => {
   const { draftData, updateDraft, uploadMedia } = useCMS();
   const [openPageId, setOpenPageId] = useState<string | null>(null);
 
-  const pages = draftData.pages ?? [];
+  const stored = draftData.pages ?? [];
+  // Home first, always. It is the page every visitor sees and the one somebody
+  // opening this screen is most likely looking for.
+  const pages = [...stored].sort((a, b) => Number(isHomePage(b)) - Number(isHomePage(a)));
+  const hasHome = stored.some(isHomePage);
   const definitions = useMemo(() => listBlockDefinitions(), []);
 
   const mutatePage = (id: string, mutate: (page: PageRecord) => void) => {
@@ -77,6 +88,13 @@ export const AdminSitePages: React.FC = () => {
       page.updatedAt = new Date().toISOString();
       page.revision += 1;
     });
+  };
+
+  const buildHomeFromBlocks = () => {
+    updateDraft((draft) => {
+      draft.pages = [createHomePage(), ...(draft.pages ?? [])];
+    });
+    setOpenPageId('page_home');
   };
 
   const addPage = () => {
@@ -103,8 +121,21 @@ export const AdminSitePages: React.FC = () => {
         title="Pages"
         subtitle="Pages you build from blocks, each at its own web address. Your home page and the Work, Case studies and Contact sections live under Homepage."
       >
-        <Button variant="primary" label="Add page" onClick={addPage} />
+        <HStack gap={2}>
+          {!hasHome && (
+            <Button variant="secondary" label="Build my home page" onClick={buildHomeFromBlocks} />
+          )}
+          <Button variant="primary" label="Add page" onClick={addPage} />
+        </HStack>
       </AstryxHeader>
+
+      {!hasHome && (
+        <Banner
+          status="info"
+          title="Your home page is not built from blocks yet"
+          description="It is still the layout under Homepage. Build it here and it takes over as soon as you publish — until then nothing about your site changes."
+        />
+      )}
 
       {pages.length === 0 ? (
         <EmptyState
@@ -118,19 +149,28 @@ export const AdminSitePages: React.FC = () => {
             <AdminRecord
               key={page.id}
               value={page.id}
-              title={page.title || 'Untitled page'}
-              summary={`/${page.slug} · ${page.blocks.length} block${page.blocks.length === 1 ? '' : 's'}`}
+              title={isHomePage(page) ? 'Home page' : page.title || 'Untitled page'}
+              summary={
+                isHomePage(page)
+                  ? `/ · ${page.blocks.length} block${page.blocks.length === 1 ? '' : 's'}${page.blocks.length === 0 ? ' — still showing the old layout' : ''}`
+                  : `/${page.slug} · ${page.blocks.length} block${page.blocks.length === 1 ? '' : 's'}`
+              }
               badge={page.status === 'published' ? 'Live' : 'Draft'}
               badgeVariant={page.status === 'published' ? 'green' : 'amber'}
               defaultIsOpen={page.id === openPageId}
-              onMoveUp={() => reorderPages(updateDraft, index, -1)}
-              onMoveDown={() => reorderPages(updateDraft, index, 1)}
-              canMoveUp={index > 0}
-              canMoveDown={index < pages.length - 1}
-              onRemove={() =>
-                updateDraft((draft) => {
-                  draft.pages = (draft.pages ?? []).filter((p) => p.id !== page.id);
-                })
+              onMoveUp={isHomePage(page) ? undefined : () => reorderPages(updateDraft, index, -1)}
+              onMoveDown={isHomePage(page) ? undefined : () => reorderPages(updateDraft, index, 1)}
+              canMoveUp={!isHomePage(page) && index > 1}
+              canMoveDown={!isHomePage(page) && index < pages.length - 1}
+              // No delete for the home page. Removing it would silently revert
+              // the site to a layout the owner may not remember choosing.
+              onRemove={
+                isHomePage(page)
+                  ? undefined
+                  : () =>
+                      updateDraft((draft) => {
+                        draft.pages = (draft.pages ?? []).filter((p) => p.id !== page.id);
+                      })
               }
               removeLabel="Delete page"
             >
@@ -169,7 +209,10 @@ const PageEditor: React.FC<{
   onChange: (mutate: (page: PageRecord) => void) => void;
   onUpload: (file: File) => Promise<string | null>;
 }> = ({ page, otherSlugs, definitions, onChange, onUpload }) => {
-  const slugProblem = checkSlug(page.slug, { existingSlugs: otherSlugs });
+  const slugProblem = checkSlug(page.slug, {
+    existingSlugs: otherSlugs,
+    isHome: isHomePage(page),
+  });
   const parsed = useMemo(() => parsePage(page.blocks), [page.blocks]);
 
   const addBlock = (type: string) => {
@@ -199,13 +242,23 @@ const PageEditor: React.FC<{
             description="Used as the page's main heading in search results and browser tabs."
           />
 
-          <TextInput
-            label="Web address"
-            value={page.slug}
-            onChange={(value) => onChange((draft) => void (draft.slug = normaliseSlug(value)))}
-            description={`This page will be at /${page.slug}`}
-          />
-          {slugProblem && <Banner status="warning" title={slugProblem.message} />}
+          {isHomePage(page) ? (
+            <Banner
+              status="info"
+              title="This is your home page"
+              description="It lives at / and its address cannot be changed. Publish it and it replaces the layout under Homepage."
+            />
+          ) : (
+            <>
+              <TextInput
+                label="Web address"
+                value={page.slug}
+                onChange={(value) => onChange((draft) => void (draft.slug = normaliseSlug(value)))}
+                description={`This page will be at /${page.slug}`}
+              />
+              {slugProblem && <Banner status="warning" title={slugProblem.message} />}
+            </>
+          )}
 
           <Selector
             label="Visibility"
@@ -219,12 +272,14 @@ const PageEditor: React.FC<{
             }
           />
 
-          <Switch
-            label="Show in the site menu"
-            value={page.nav.show}
-            onChange={(checked) => onChange((draft) => void (draft.nav.show = checked))}
-            description="Adds a link to this page in the navigation, alongside the ones in Settings."
-          />
+          {!isHomePage(page) && (
+            <Switch
+              label="Show in the site menu"
+              value={page.nav.show}
+              onChange={(checked) => onChange((draft) => void (draft.nav.show = checked))}
+              description="Adds a link to this page in the navigation, alongside the ones in Settings."
+            />
+          )}
           {page.nav.show && (
             <TextInput
               label="Menu label"
@@ -241,7 +296,11 @@ const PageEditor: React.FC<{
               size="sm"
               label="Preview this page"
               onClick={() => {
-                window.open(`/api/preview?path=/${page.slug}`, '_blank', 'noopener');
+                window.open(
+                  `/api/preview?path=/${isHomePage(page) ? '' : page.slug}`,
+                  '_blank',
+                  'noopener'
+                );
               }}
             />
           </HStack>

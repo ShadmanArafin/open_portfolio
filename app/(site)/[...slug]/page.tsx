@@ -4,7 +4,7 @@ import { buildMetadata } from '@/core/content/metadata';
 import { BlockList } from '@/core/blocks/registry';
 import { currentChannel, getRoutablePages, resolvePage } from '@/core/pages/read';
 import { segmentsToSlug } from '@/core/pages/schema';
-import { PreviewBanner } from './preview-banner';
+import { PreviewBanner } from '../preview-banner';
 
 /**
  * Every page the owner builds, at whatever address they chose.
@@ -21,7 +21,10 @@ import { PreviewBanner } from './preview-banner';
 export async function generateStaticParams() {
   try {
     const pages = await getRoutablePages('published');
-    return pages.map((page) => ({ slug: page.slug.split('/') }));
+    // The home page is served by `app/(site)/page.tsx`. Its slug is empty, so
+    // `''.split('/')` would produce `['']` and prerender a second route at `/`
+    // that collides with the real one.
+    return pages.filter((page) => page.slug !== '').map((page) => ({ slug: page.slug.split('/') }));
   } catch {
     // A paused free-tier database must never be the reason a deploy goes red.
     // Returning nothing yields a fully dynamic site, which still works.

@@ -2,10 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import {
+  HOME_SLUG,
   MAX_SLUG_SEGMENTS,
   RESERVED_TOP_LEVEL,
   checkSlug,
+  createHomePage,
   createPage,
+  isHomePage,
   normaliseSlug,
   pageSchema,
   segmentsToSlug,
@@ -154,5 +157,27 @@ describe('reserved slugs match the real routes', () => {
 
   it('finds routes at all', () => {
     expect(routeSegments(APP_ROOT).length).toBeGreaterThan(3);
+  });
+});
+
+describe('the home page record', () => {
+  it('has no address, and that is allowed only for it', () => {
+    const home = createHomePage();
+    expect(home.slug).toBe(HOME_SLUG);
+    expect(isHomePage(home)).toBe(true);
+
+    // An empty slug is refused for every other page...
+    expect(checkSlug('')?.blocking).toBe(true);
+    // ...and accepted for this one, which has no address to validate.
+    expect(checkSlug('', { isHome: true })).toBeNull();
+  });
+
+  it('starts as a draft, so building it does not replace a live site', () => {
+    expect(createHomePage().status).toBe('draft');
+    expect(createHomePage().blocks).toEqual([]);
+  });
+
+  it('validates as a page like any other', () => {
+    expect(pageSchema.safeParse({ ...createHomePage(), slug: 'x' }).success).toBe(true);
   });
 });

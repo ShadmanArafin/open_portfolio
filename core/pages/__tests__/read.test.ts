@@ -20,8 +20,15 @@ vi.mock('@/core/storage/registry', () => ({
   }),
 }));
 
-const { currentChannel, getIndexablePages, getPages, getRoutablePages, resolvePage } =
-  await import('../read');
+const {
+  currentChannel,
+  getIndexablePages,
+  getNavPages,
+  getPages,
+  getRoutablePages,
+  resolveHomePage,
+  resolvePage,
+} = await import('../read');
 
 function withPages(pages: unknown[]): CMSState {
   return { ...INITIAL_CMS_STATE, pages: pages as PageRecord[] };
@@ -141,5 +148,76 @@ describe('getIndexablePages', () => {
     );
 
     expect((await getIndexablePages()).map((p) => p.slug)).toEqual(['listed']);
+  });
+});
+
+describe('the home page', () => {
+  const homePage = (blocks: unknown[], status: 'draft' | 'published' = 'published') => ({
+    ...page({ slug: '' }),
+    id: 'page_home',
+    title: 'Home',
+    status,
+    blocks,
+  });
+
+  it('falls through to the theme while nobody has built one', async () => {
+    // The property that makes this safe to ship: an install that has never
+    // opened the Pages screen must keep exactly the site it had.
+    snapshots.set('published', withPages([]));
+    await expect(resolveHomePage('published')).resolves.toBeNull();
+  });
+
+  it('falls through when a home page exists but is empty', async () => {
+    // Somebody pressed "Build my home page" and wandered off. Coming back to a
+    // blank front page would be worse than the layout they started with.
+    snapshots.set('published', withPages([homePage([])]));
+    await expect(resolveHomePage('published')).resolves.toBeNull();
+  });
+
+  it('takes over once it has a block on it', async () => {
+    snapshots.set(
+      'published',
+      withPages([homePage([{ id: 'a', type: 'hero', v: 1, props: { headline: 'Hello' } }])])
+    );
+
+    const resolved = await resolveHomePage('published');
+    expect(resolved?.blocks).toHaveLength(1);
+  });
+
+  it('stays private while it is a draft', async () => {
+    const blocks = [{ id: 'a', type: 'hero', v: 1, props: { headline: 'Not yet' } }];
+    const content = withPages([homePage(blocks, 'draft')]);
+    snapshots.set('published', content);
+    snapshots.set('draft', content);
+
+    // A draft home page must not replace a live front page.
+    await expect(resolveHomePage('published')).resolves.toBeNull();
+    await expect(resolveHomePage('draft')).resolves.not.toBeNull();
+  });
+
+  it('is not listed in the sitemap', async () => {
+    // `/` is already there as a static route. Two spellings of the front door
+    // is how a site tells a crawler its home page is duplicate content.
+    snapshots.set(
+      'published',
+      withPages([
+        homePage([{ id: 'a', type: 'hero', v: 1, props: { headline: 'Hi' } }]),
+        page({ slug: 'about', status: 'published' }),
+      ])
+    );
+
+    expect((await getIndexablePages()).map((p) => p.slug)).toEqual(['about']);
+  });
+
+  it('never appears as a navigation link', async () => {
+    snapshots.set(
+      'published',
+      withPages([
+        { ...homePage([]), nav: { show: true, order: 0 } },
+        page({ slug: 'about', status: 'published', nav: { show: true, order: 1 } }),
+      ])
+    );
+
+    expect((await getNavPages('published')).map((p) => p.slug)).toEqual(['about']);
   });
 });

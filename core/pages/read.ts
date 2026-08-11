@@ -5,7 +5,7 @@ import type { Channel } from '@/core/storage/contract';
 import { getContentForChannel } from '@/core/content/read';
 import { parsePage } from '@/core/blocks/registry';
 import type { ParsedBlock } from '@/core/blocks/schema';
-import { pageSchema, type PageRecord } from './schema';
+import { HOME_SLUG, isHomePage, pageSchema, type PageRecord } from './schema';
 
 /**
  * Reading pages, for both the public site and the preview.
@@ -81,16 +81,34 @@ export async function resolvePage(slug: string, channel: Channel): Promise<Resol
   return { page, blocks: parsePage(page.blocks) };
 }
 
-/** Published, indexable pages, for the sitemap. */
+/**
+ * Published, indexable pages, for the sitemap.
+ *
+ * The home page is excluded: `/` is already in the sitemap as a static route,
+ * and listing it twice under two spellings is how a site tells a crawler its
+ * front door is duplicate content.
+ */
 export async function getIndexablePages(): Promise<PageRecord[]> {
   const pages = await getRoutablePages('published');
-  return pages.filter((page) => !page.seo.noindex);
+  return pages.filter((page) => !page.seo.noindex && !isHomePage(page));
+}
+
+/**
+ * The home page, when its owner has built one and put something on it.
+ *
+ * Returns null while it is empty, so the theme's own sections keep rendering —
+ * an install that has never opened this screen must not suddenly serve a blank
+ * front page.
+ */
+export async function resolveHomePage(channel: Channel): Promise<ResolvedPage | null> {
+  const resolved = await resolvePage(HOME_SLUG, channel);
+  return resolved && resolved.blocks.length > 0 ? resolved : null;
 }
 
 /** Pages the owner asked to appear in site navigation, in their chosen order. */
 export async function getNavPages(channel: Channel): Promise<PageRecord[]> {
   const pages = await getRoutablePages(channel);
   return pages
-    .filter((page) => page.nav.show)
+    .filter((page) => page.nav.show && !isHomePage(page))
     .sort((a, b) => a.nav.order - b.nav.order || a.title.localeCompare(b.title));
 }
