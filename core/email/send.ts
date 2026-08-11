@@ -1,5 +1,5 @@
 import 'server-only';
-import { getTransporter, resolveTransport } from './transport';
+import { getTransporter, resolveTransportWithStored } from './transport';
 
 /**
  * The only place this codebase sends mail.
@@ -32,7 +32,7 @@ export type SendResult =
   { ok: true } | { ok: false; reason: 'not-configured' | 'failed'; detail: string };
 
 export async function sendMail(input: MailInput): Promise<SendResult> {
-  const transport = resolveTransport();
+  const transport = await resolveTransportWithStored();
   if (transport.kind === 'none') {
     return { ok: false, reason: 'not-configured', detail: transport.reason };
   }

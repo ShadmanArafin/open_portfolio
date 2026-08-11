@@ -35,6 +35,9 @@ const AdminDashboard = lazy(() =>
 const AdminAnalytics = lazy(() =>
   import('@/admin/pages/AdminAnalytics').then((m) => ({ default: m.AdminAnalytics }))
 );
+const AdminIntegrations = lazy(() =>
+  import('@/admin/pages/AdminIntegrations').then((m) => ({ default: m.AdminIntegrations }))
+);
 const AdminSitePages = lazy(() =>
   import('@/admin/pages/AdminSitePages').then((m) => ({ default: m.AdminSitePages }))
 );
@@ -138,6 +141,7 @@ export default function AdminApp() {
                   <Route path="appearance" element={<AdminSettings />} />
                   <Route path="seo" element={<AdminSettings />} />
                   <Route path="settings" element={<AdminSettings />} />
+                  <Route path="services" element={<AdminIntegrations />} />
                   <Route path="history" element={<AdminVersionHistory />} />
                 </Route>
                 <Route path="*" element={<Navigate to="/" replace />} />

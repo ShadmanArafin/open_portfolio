@@ -68,6 +68,10 @@ export async function provisionSchema(sql: Sql): Promise<void> {
     ALTER TABLE opb_content ADD COLUMN IF NOT EXISTS revision integer NOT NULL DEFAULT 0
   `;
 
+  // Config entries never expire, so the column has to allow it. Also an
+  // alteration rather than a changed CREATE, for installs that already exist.
+  await sql`ALTER TABLE opb_kv ALTER COLUMN expires_at DROP NOT NULL`;
+
   await sql`
     CREATE TABLE IF NOT EXISTS opb_owner (
       id               boolean PRIMARY KEY DEFAULT true,
@@ -246,16 +250,20 @@ export function makeKvAdapter(getConnection: () => Sql): KvAdapter {
       // Expiry is filtered in the query rather than after it, so a stale row
       // that has not been swept yet can never be returned as live.
       const rows = await sql<{ value: T }[]>`
-        SELECT value FROM opb_kv WHERE ns = ${ns} AND key = ${key} AND expires_at > now()
+        SELECT value FROM opb_kv
+         WHERE ns = ${ns} AND key = ${key}
+           AND (expires_at IS NULL OR expires_at > now())
       `;
       return rows[0]?.value ?? null;
     },
 
-    async set<T>(ns: KvNamespace, key: string, value: T, ttlSeconds: number): Promise<void> {
+    async set<T>(ns: KvNamespace, key: string, value: T, ttlSeconds?: number): Promise<void> {
       const sql = getConnection();
+      // NULL expiry means "keep until deleted" — what `config` needs.
+      const expiresAt = ttlSeconds === undefined ? null : new Date(Date.now() + ttlSeconds * 1000);
       await sql`
         INSERT INTO opb_kv (ns, key, value, expires_at)
-        VALUES (${ns}, ${key}, ${sql.json(value as never)}, now() + ${`${ttlSeconds} seconds`}::interval)
+        VALUES (${ns}, ${key}, ${sql.json(value as never)}, ${expiresAt})
         ON CONFLICT (ns, key) DO UPDATE SET value = EXCLUDED.value, expires_at = EXCLUDED.expires_at
       `;
     },
@@ -276,12 +284,12 @@ export function makeKvAdapter(getConnection: () => Sql): KvAdapter {
         VALUES (${ns}, ${key}, '1'::jsonb, now() + ${`${ttlSeconds} seconds`}::interval)
         ON CONFLICT (ns, key) DO UPDATE SET
           value = CASE
-            WHEN opb_kv.expires_at > now()
+            WHEN opb_kv.expires_at IS NULL OR opb_kv.expires_at > now()
               THEN ((opb_kv.value)::text::numeric + 1)::text::jsonb
             ELSE '1'::jsonb
           END,
           expires_at = CASE
-            WHEN opb_kv.expires_at > now() THEN opb_kv.expires_at
+            WHEN opb_kv.expires_at IS NULL OR opb_kv.expires_at > now() THEN opb_kv.expires_at
             ELSE now() + ${`${ttlSeconds} seconds`}::interval
           END
         RETURNING (value)::text::numeric AS value

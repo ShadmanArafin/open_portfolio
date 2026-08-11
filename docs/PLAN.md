@@ -16,24 +16,24 @@
 
 ## Status at a glance
 
-| Phase                       | State              | What it means                                                                |
-| --------------------------- | ------------------ | ---------------------------------------------------------------------------- |
-| 0 — Repo publishable        | **Done, verified** | MIT, no personal data, CI, guards                                            |
-| 1 — Next.js + SEO           | **Done, verified** | Server-rendered, real metadata, sitemap, 404                                 |
-| 2 — Tokens + primitives     | **Partially done** | Tokens, gate, primitives done. Tailwind 4 remains                            |
-| 3 — Storage contract        | **Done, verified** | Contract, local adapter, registry, server read                               |
-| 4 — Auth                    | **Done, verified** | Passphrase + sessions. **Passkeys/OTP not built**                            |
-| 5 — Write path              | **Done**           | Publish, contact, blocks, pages, preview, revisions                          |
-| 6 — Hosted adapters         | **Done, verified** | Supabase, Neon, Postgres. **Uploads unverified**                             |
-| 7 — Admin (Astryx)          | **In progress**    | Page builder and media picker work. **Settings merge, block home remain**    |
-| 8 — Adapters + integrations | **Partially done** | SMTP, notification, reset done. **5 backends, registry, vault, OTP missing** |
-| 9 — Blog, themes, presets   | **Barely started** | Only profession vocabulary packs                                             |
+| Phase                       | State              | What it means                                                             |
+| --------------------------- | ------------------ | ------------------------------------------------------------------------- |
+| 0 — Repo publishable        | **Done, verified** | MIT, no personal data, CI, guards                                         |
+| 1 — Next.js + SEO           | **Done, verified** | Server-rendered, real metadata, sitemap, 404                              |
+| 2 — Tokens + primitives     | **Partially done** | Tokens, gate, primitives done. Tailwind 4 remains                         |
+| 3 — Storage contract        | **Done, verified** | Contract, local adapter, registry, server read                            |
+| 4 — Auth                    | **Done, verified** | Passphrase + sessions. **Passkeys/OTP not built**                         |
+| 5 — Write path              | **Done**           | Publish, contact, blocks, pages, preview, revisions                       |
+| 6 — Hosted adapters         | **Done, verified** | Supabase, Neon, Postgres. **Uploads unverified**                          |
+| 7 — Admin (Astryx)          | **In progress**    | Page builder and media picker work. **Settings merge, block home remain** |
+| 8 — Adapters + integrations | **Partially done** | Registry, vault, SMTP-from-admin done. **5 backends, OTP missing**        |
+| 9 — Blog, themes, presets   | **Barely started** | Only profession vocabulary packs                                          |
 
-**Where to start:** Phase 8. A person can now sign in, build a page from
-blocks, choose images from their library, preview the result and publish it —
-the loop is closed and verified in a browser, end to end. What is left is
-breadth rather than depth: more backends, the integrations registry, and the
-blog. Nothing above them is blocking any more.
+**Where to start:** the remaining five storage adapters, then Phase 9. A person
+can now sign in, build a page from blocks, choose images from their library,
+connect a mail server without touching a config file, test it, preview the
+result and publish it — all verified in a browser, end to end. What is left is
+breadth: more backends, more integrations, and the blog.
 
 This supersedes an earlier note here that said to start with blocks on the
 grounds that the primitives "need blocks to have somewhere to live". That has it
@@ -79,7 +79,7 @@ development.
 | Phase 5 blocks, pages, `draftMode()` preview  | Nothing external needed                                                     |
 | Phase 7 admin: MediaPicker, builder polish    | Nothing external needed                                                     |
 | Phase 9 blog, newsletter capture, themes      | Nothing external needed                                                     |
-| Postgres / Supabase / Neon **database** half  | `postgres:16` — already wired; with Mailpit takes the suite from 294 to 368 |
+| Postgres / Supabase / Neon **database** half  | `postgres:16` — already wired; with Mailpit takes the suite from 310 to 388 |
 | Supabase **Storage** half                     | `supabase start` runs the real `storage-api` container                      |
 | Email send path                               | `axllent/mailpit` — already wired                                           |
 | PocketBase, Appwrite adapters                 | Both ship official Docker images                                            |
@@ -739,7 +739,7 @@ Supabase (built-in auth, presigned storage) and Neon+Vercel Blob (SQL, **no** bu
 
 ### Phase 8 — Remaining 5 adapters + integrations (3 weeks)
 
-> ### PARTIALLY DONE — SMTP, notification and reset shipped; adapters, registry, vault and OTP do not exist
+> ### PARTIALLY DONE — registry, vault and SMTP-from-the-admin shipped; five adapters and OTP do not exist
 >
 > **Done and verified, against Mailpit:** an SMTP transport
 > (`core/email/transport.ts`, `core/email/send.ts`) that reports a refused
@@ -785,6 +785,54 @@ Supabase (built-in auth, presigned storage) and Neon+Vercel Blob (SQL, **no** bu
 
 Cloudflare D1+R2, Firebase, Appwrite, PocketBase, Convex — each a PR with green conformance + docs page + `.env.example` block. Integration registry: one `IntegrationDefinition` per service (metadata, free-tier limits with a verified-on date, plain-English setup guide, zod schema, mandatory `test()` with non-technical remediation copy, CSP contribution, degradation mode) rendered by **one** generic admin screen. Secrets AES-256-GCM server-side, `import 'server-only'`, CI greps `.next/static/**` for secret values.
 _Honest scoping:_ Vercel Marketplace can only auto-provision Marketplace-native products (Supabase, Neon, Upstash, Blob, Resend). Firebase, Appwrite, PocketBase and Cloudflare use the manual path — so adapter choice happens _after_ deploy for those, and the deploy form asks for **at most two fields** (`OWNER_EMAIL`, `SITE_NAME`). Behance's public API is retired and LinkedIn has no profile API — those imports are file-upload/paste flows, not connections.
+
+> **The integrations registry and the vault are built**, and SMTP is now
+> configurable entirely from `/admin/services` — no environment variable, no
+> config file, no redeploy. Verified in a browser end to end: enter a mail
+> server, press Test, get "Connected and signed in", save it, and a real contact
+> form submission is delivered through it.
+>
+> **The registry is data, not screens.** One `IntegrationDefinition` per service
+> and one generic admin screen, so the twenty-fifth integration is a file and no
+> React at all. Four of its fields exist specifically because the audience has no
+> developer: `freeTier` carries a `verifiedOn` date, because a free-tier claim
+> with no date on it is a rumour; `setup` is numbered plain-English steps rather
+> than a link; `degradation` says what breaks without it; and `test()` is
+> mandatory, because "saved" is not "works" and finding out which at the moment a
+> stranger sends you a message is too late. SMTP's test translates every
+> `ECONNREFUSED` into something the owner can act on.
+>
+> **The vault** encrypts secrets with AES-256-GCM under a key derived from the
+> server secret, stores them in a `config` namespace that no content export
+> touches, and never sends them back to the browser — the admin learns that a
+> password is set and its last four characters, nothing more. Environment
+> variables still win over stored settings, and the screen says so rather than
+> offering fields that would be silently ignored.
+>
+> The `kv` contract gained an optional TTL for this: config is settings, not
+> state, and giving it a very long expiry instead would mean somebody's mail
+> server quietly stopping on a date nobody chose.
+>
+> **Three bugs found by using the screen rather than testing it:**
+>
+> - **Chrome autofilled the owner's own admin passphrase into the SMTP password
+>   field**, because it had a saved login for this origin. Saving there would
+>   have stored the site's passphrase as somebody else's mail credential.
+>   Suppressed with `autocomplete="new-password"` — set on the DOM, because
+>   Astryx inputs accept `React.HTMLAttributes`, which has no `autoComplete`.
+> - **The first version of that fix marked nothing at all**, because the inputs
+>   do not exist until a service is expanded and the effect ran before they were
+>   there. It is a `MutationObserver` now. Visible only by reading the
+>   attributes in a live browser.
+> - **A brand-new integration could not be saved**, because a toggle nobody
+>   touched sends nothing and the schema requires a boolean. The form now sends
+>   every declared field in its declared shape.
+>
+> **Remaining:** the five adapters (Cloudflare D1+R2, Firebase, Appwrite,
+> PocketBase, Convex), more integration definitions, and email OTP. The five
+> adapters each need a local emulator to prove against — and this project has
+> already learned twice that a file-backed implementation passing a suite says
+> nothing about the real one, so they should not ship unverified.
 
 ### Phase 9 — Blog, newsletter capture, themes 2–6, presets, launch (4–5 weeks)
 
@@ -908,8 +956,8 @@ The numbers you should see, as of this writing:
 | `lint`                    | **0 errors**, 64 warnings — the warnings are baseline |
 | `format:check`            | clean                                                 |
 | `check-no-personal-data`  | clean, listed by git                                  |
-| `test` with no containers | 294 passed, 7 skipped                                 |
-| `test` with both          | **368 passed, 2 skipped**                             |
+| `test` with no containers | 310 passed, 7 skipped                                 |
+| `test` with both          | **388 passed, 2 skipped**                             |
 
 The 2 remaining skips are the Supabase and Neon conformance runs, which need
 real cloud credentials. Everything else runs locally.

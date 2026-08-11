@@ -284,6 +284,40 @@ export function runConformanceSuite(
       });
     });
 
+    describe('config that outlives its process', () => {
+      it('keeps a value with no expiry, and still forgets one with a short one', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        // Integration settings are not short-lived state. Storing them with a
+        // very long TTL instead would mean somebody's mail server quietly stops
+        // working on a date nobody chose.
+        await adapter.kv.set('config', 'smtp', { host: 'mail.example.com' });
+        expect(await adapter.kv.get('config', 'smtp')).toEqual({ host: 'mail.example.com' });
+
+        await adapter.kv.set('otp', 'code', 'temporary', 1);
+        await new Promise((resolve) => setTimeout(resolve, 1100));
+        expect(await adapter.kv.get('otp', 'code')).toBeNull();
+
+        // And the permanent one survived a sweep triggered by the write above.
+        expect(await adapter.kv.get('config', 'smtp')).toEqual({ host: 'mail.example.com' });
+      });
+
+      it('overwrites and deletes config like any other entry', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        await adapter.kv.set('config', 'smtp', { host: 'one' });
+        await adapter.kv.set('config', 'smtp', { host: 'two' });
+        expect(await adapter.kv.get('config', 'smtp')).toEqual({ host: 'two' });
+
+        await adapter.kv.del('config', 'smtp');
+        expect(await adapter.kv.get('config', 'smtp')).toBeNull();
+      });
+    });
+
     // Skipped when there is no object store attached — see ConformanceOptions.
     const describeMedia = options.skipMedia ? skip : describe;
 

@@ -222,7 +222,13 @@ const OWNER_FILE = path.join(STATE_DIR, 'owner.json');
 
 interface KvEntry<T> {
   value: T;
-  expiresAt: number;
+  /** Null means it never expires. */
+  expiresAt: number | null;
+}
+
+function isLive(entry: KvEntry<unknown> | undefined): boolean {
+  if (!entry) return false;
+  return entry.expiresAt === null || entry.expiresAt > Date.now();
 }
 
 function kvPath(ns: string): string {
@@ -242,20 +248,25 @@ async function writeKv(ns: string, data: Record<string, KvEntry<unknown>>): Prom
   // Expired entries are dropped on every write, so the file cannot grow without
   // bound from rate-limit counters that are never read again.
   const now = Date.now();
-  const live = Object.fromEntries(Object.entries(data).filter(([, e]) => e.expiresAt > now));
+  const live = Object.fromEntries(
+    Object.entries(data).filter(([, e]) => e.expiresAt === null || e.expiresAt > now)
+  );
   await writeFile(kvPath(ns), JSON.stringify(live), 'utf8');
 }
 
 const kv: KvAdapter = {
   async get<T>(ns: KvNamespace, key: string): Promise<T | null> {
     const entry = (await readKv(ns))[key];
-    if (!entry || entry.expiresAt <= Date.now()) return null;
+    if (!isLive(entry)) return null;
     return entry.value as T;
   },
 
-  async set<T>(ns: KvNamespace, key: string, value: T, ttlSeconds: number) {
+  async set<T>(ns: KvNamespace, key: string, value: T, ttlSeconds?: number) {
     const data = await readKv(ns);
-    data[key] = { value, expiresAt: Date.now() + ttlSeconds * 1000 };
+    data[key] = {
+      value,
+      expiresAt: ttlSeconds === undefined ? null : Date.now() + ttlSeconds * 1000,
+    };
     await writeKv(ns, data);
   },
 
@@ -268,14 +279,13 @@ const kv: KvAdapter = {
   async incr(ns: KvNamespace, key: string, ttlSeconds: number) {
     const data = await readKv(ns);
     const entry = data[key];
-    const current = entry && entry.expiresAt > Date.now() ? (entry.value as number) : 0;
+    const current = isLive(entry) ? (entry.value as number) : 0;
     const next = current + 1;
     data[key] = {
       value: next,
       // Keep the original window: refreshing the TTL on every attempt would let
       // a steady stream of requests hold a counter open indefinitely.
-      expiresAt:
-        entry && entry.expiresAt > Date.now() ? entry.expiresAt : Date.now() + ttlSeconds * 1000,
+      expiresAt: isLive(entry) ? entry.expiresAt : Date.now() + ttlSeconds * 1000,
     };
     await writeKv(ns, data);
     return next;

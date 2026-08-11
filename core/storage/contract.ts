@@ -131,11 +131,26 @@ export interface HealthReport {
  * export, and a backup restored onto another machine must not carry live
  * sessions with it.
  */
-export type KvNamespace = 'session' | 'otp' | 'ratelimit';
+/**
+ * `config` is the odd one out: it never expires and it holds secrets.
+ *
+ * It lives here rather than in the content snapshot for the same reason
+ * sessions do — a content export must not carry somebody's SMTP password, and a
+ * backup restored onto another machine must not bring live credentials with it.
+ */
+export type KvNamespace = 'session' | 'otp' | 'ratelimit' | 'config';
 
 export interface KvAdapter {
   get<T>(ns: KvNamespace, key: string): Promise<T | null>;
-  set<T>(ns: KvNamespace, key: string, value: T, ttlSeconds: number): Promise<void>;
+  /**
+   * Stores a value, optionally with an expiry.
+   *
+   * Omitting `ttlSeconds` means "keep until deleted". That is what the `config`
+   * namespace needs: integration settings are not short-lived state, and giving
+   * them a very long TTL instead would mean somebody's mail server quietly
+   * stops working on a date nobody chose.
+   */
+  set<T>(ns: KvNamespace, key: string, value: T, ttlSeconds?: number): Promise<void>;
   del(ns: KvNamespace, key: string): Promise<void>;
   /** Returns the new count. Used for rate limiting. */
   incr(ns: KvNamespace, key: string, ttlSeconds: number): Promise<number>;

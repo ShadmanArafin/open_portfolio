@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getStorageAdapter } from '@/core/storage/registry';
 import { requireOwner, UnauthorizedError } from '@/core/auth/guard';
-import { resolveTransport } from '@/core/email/transport';
+import { resolveTransportWithStored } from '@/core/email/transport';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,6 +28,6 @@ export async function GET() {
   return NextResponse.json({
     ok: true,
     messages,
-    emailConfigured: resolveTransport().kind !== 'none',
+    emailConfigured: (await resolveTransportWithStored()).kind !== 'none',
   });
 }

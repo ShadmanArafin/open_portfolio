@@ -97,3 +97,37 @@ export function getTransporter(config: SmtpConfig): Transporter {
 export function resetTransport(): void {
   cached = null;
 }
+
+/**
+ * The transport, including whatever was configured in the admin.
+ *
+ * Environment first, exactly as the note above promised: a variable set by
+ * whoever deployed the site is a deliberate act, and an admin screen that
+ * silently overrode it would be a setting that does nothing.
+ *
+ * Async because reading stored settings means touching the backend, which is
+ * why the pure `resolveTransport` stays — it is the part worth testing without
+ * a database, and it is what tells the admin whether env has already decided.
+ */
+export async function resolveTransportWithStored(
+  env: NodeJS.ProcessEnv = process.env
+): Promise<ResolvedTransport> {
+  const fromEnv = resolveTransport(env);
+  if (fromEnv.kind === 'smtp') return fromEnv;
+
+  const { readConfig } = await import('@/core/integrations/vault');
+  const stored = (await readConfig('smtp', ['password'])) as Partial<SmtpConfig> | null;
+  if (!stored?.host) return fromEnv;
+
+  return {
+    kind: 'smtp',
+    config: {
+      host: stored.host,
+      port: Number(stored.port) || 587,
+      secure: Boolean(stored.secure),
+      user: stored.user || undefined,
+      password: stored.password || undefined,
+      from: stored.from || `no-reply@${stored.host}`,
+    },
+  };
+}

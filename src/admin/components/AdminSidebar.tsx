@@ -27,6 +27,7 @@ import {
   UserRound,
   FolderOpen,
   Settings2,
+  Plug,
 } from 'lucide-react';
 import { SideNav, SideNavHeading, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 import { Text } from '@astryxdesign/core/Text';
@@ -181,6 +182,7 @@ export const AdminSidebar: React.FC = () => {
             { label: 'Appearance', path: '/appearance', icon: Palette },
             { label: 'SEO', path: '/seo', icon: Search },
             { label: 'General & backup', path: '/settings', icon: Sliders },
+            { label: 'Services', path: '/services', icon: Plug },
           ],
         },
         { label: 'Version history', path: '/history', icon: HistoryIcon },
