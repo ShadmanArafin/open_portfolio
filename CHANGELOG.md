@@ -14,6 +14,8 @@ portfolio online and run it without opening a file.
 
 ### You can now
 
+- **Install the editor on your phone.** Add it to your home screen and it opens
+  like an app.
 - **Publish writing.** Essays, notes, posts — you choose what the section is
   called, whether dates appear at all, and whether your best piece stays pinned
   at the top or the newest comes first. RSS either way.
@@ -73,8 +75,8 @@ a portfolio:
 - **Themes change colour, type and spacing — not layout.** Six of them, but
   they do not rearrange the page. Different structures come with more block
   types.
-- **Nothing on mobile beyond the site being responsive.** No app to install, no
-  notifications.
+- **The admin is not laid out for a phone yet**, though it installs and works.
+  Notifications are not built.
 - **Sign-in is an email and a passphrase.** No passkeys, no one-time codes.
 - **Your home page's old layout** is still edited on a separate screen from
   pages, until you rebuild it from blocks.

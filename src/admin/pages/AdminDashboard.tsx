@@ -1,5 +1,6 @@
 'use client';
 
+import { InstallPrompt } from '../components/InstallPrompt';
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { VStack, HStack } from '@astryxdesign/core/Layout';
@@ -109,6 +110,8 @@ export const AdminDashboard: React.FC = () => {
           href="/homepage"
         />
       </AstryxHeader>
+
+      <InstallPrompt />
 
       <Grid columns={{ minWidth: 240, repeat: 'fit' }} gap={4}>
         <Card padding={4}>
