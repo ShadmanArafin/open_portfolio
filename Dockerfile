@@ -30,6 +30,12 @@ COPY . .
 # not have to discover that the build phones home and opt out afterwards.
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Demo builds must carry the flag through the build, not only the run: the demo
+# adapter reads a cookie, and that is what stops every page being prerendered
+# once and served identically to everybody.
+ARG OPB_DEMO_MODE
+ENV OPB_DEMO_MODE=$OPB_DEMO_MODE
+
 RUN npm run build
 
 # --------------------------------------------------------------------- runner

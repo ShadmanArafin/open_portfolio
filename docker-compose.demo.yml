@@ -1,0 +1,27 @@
+# The public demo, in one command.
+#
+#     docker compose -f docker-compose.demo.yml up
+#
+# Every visitor gets their own sandbox, in memory, thrown away after an hour.
+# There is no database because there is nothing worth keeping, and no volume
+# because nothing is written to disk.
+#
+# `OPB_DEMO_MODE` is set at BUILD time as well as run time, and that is not
+# incidental: the demo adapter reads a cookie, which is what makes every page
+# render per-visitor instead of being prerendered once at build. Set it only at
+# run time and every visitor is served the same baked-in page and none of their
+# edits appear.
+
+services:
+  demo:
+    build:
+      context: .
+      args:
+        OPB_DEMO_MODE: '1'
+    ports:
+      - '3000:3000'
+    environment:
+      OPB_DEMO_MODE: '1'
+    # Nothing to persist, and nothing to clean up. If it falls over, the worst
+    # anybody loses is a sandbox that was going to be discarded anyway.
+    restart: unless-stopped

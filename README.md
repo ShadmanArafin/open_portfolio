@@ -83,6 +83,20 @@ in the ordinary way.
 We have not checked whether Netlify's free tier carries an equivalent clause, so
 do not read its presence here as an endorsement of it for commercial sites.
 
+## Try it without installing anything
+
+```bash
+docker compose -f docker-compose.demo.yml up
+```
+
+Every visitor gets their own copy of the site, in memory, thrown away after an
+hour — so the editor is fully usable and there is nothing to vandalise. Sign in
+with the details printed on the page.
+
+Uploading, sending email and saving service passwords are switched off, because
+a public sandbox that can do any of those becomes somebody else's file host or
+spam relay within a day of being noticed.
+
 ## Run it on your own server
 
 One command, on any machine with Docker. No account anywhere, no platform that

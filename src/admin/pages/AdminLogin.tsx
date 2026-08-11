@@ -1,5 +1,6 @@
 'use client';
 
+import { DEMO_EMAIL, DEMO_PASSPHRASE, isDemoMode } from '@/core/demo/config';
 import React, { useState } from 'react';
 import { TextInput } from '../components/AdminFields';
 import { useNavigate } from 'react-router-dom';
@@ -54,7 +55,9 @@ export const AdminLogin: React.FC = () => {
                       days when the passcode was compiled into the public
                       bundle. There is no such file and no such passcode now:
                       the owner sets these when they claim the site. */}
-                  Use the email and passphrase you chose when you set this site up.
+                  {isDemoMode()
+                    ? `Demo — sign in with ${DEMO_EMAIL} and ${DEMO_PASSPHRASE}.`
+                    : 'Use the email and passphrase you chose when you set this site up.'}
                 </Text>
               </VStack>
 

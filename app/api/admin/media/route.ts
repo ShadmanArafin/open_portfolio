@@ -1,3 +1,4 @@
+import { demoRestrictionMessage, isDemoMode } from '@/core/demo/config';
 import { NextResponse } from 'next/server';
 import { getStorageAdapter } from '@/core/storage/registry';
 import { assertSameOrigin, requireOwner, UnauthorizedError } from '@/core/auth/guard';
@@ -42,6 +43,15 @@ async function guard(): Promise<NextResponse | null> {
 }
 
 export async function POST(req: Request) {
+  // Switched off in the demo. Enforced here rather than hidden in the UI: a
+  // disabled button is a suggestion, and this endpoint is reachable without it.
+  if (isDemoMode()) {
+    return NextResponse.json(
+      { ok: false, error: demoRestrictionMessage('uploads') },
+      { status: 403 }
+    );
+  }
+
   const rejected = await guard();
   if (rejected) return rejected;
 

@@ -18,6 +18,9 @@ portfolio online and run it without opening a file.
   Minimal. Each changes the palette, the typeface, the spacing and the corner
   radius together, in both light and dark. Change anything on top and your
   choice wins over the theme.
+- **Try it before installing it.** `OPB_DEMO_MODE=1` gives every visitor their
+  own copy of the site, in memory, discarded after an hour — a fully usable
+  editor with nothing shared to vandalise.
 - **Build pages visually.** Add blocks, reorder them, hide them, edit every
   field, set each page's own title and description for search results, preview
   before publishing. Seven block types: hero, text, image, gallery, numbers,

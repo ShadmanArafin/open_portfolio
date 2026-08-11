@@ -4,6 +4,7 @@ import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { SideSectionIndicator } from '@/components/common/SideSectionIndicator';
 import { SiteProviders } from './providers';
+import { DemoBanner } from './demo-banner';
 
 /**
  * Content lives in storage and can change without a rebuild, so pages cannot be
@@ -30,6 +31,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         >
           Skip to content
         </a>
+        <DemoBanner />
         <Navbar />
         <SideSectionIndicator />
         <main id="main" className="flex-grow">

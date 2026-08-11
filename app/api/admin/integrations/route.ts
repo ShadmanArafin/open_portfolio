@@ -1,3 +1,4 @@
+import { demoRestrictionMessage, isDemoMode } from '@/core/demo/config';
 import { NextResponse } from 'next/server';
 import { requireOwner, UnauthorizedError } from '@/core/auth/guard';
 import { clientKey, rateLimit } from '@/core/auth/ratelimit';
@@ -88,6 +89,15 @@ export async function GET() {
 }
 
 export async function PUT(req: Request) {
+  // Switched off in the demo. Enforced here rather than hidden in the UI: a
+  // disabled button is a suggestion, and this endpoint is reachable without it.
+  if (isDemoMode()) {
+    return NextResponse.json(
+      { ok: false, error: demoRestrictionMessage('integrations') },
+      { status: 403 }
+    );
+  }
+
   const rejected = await guard();
   if (rejected) return rejected;
 

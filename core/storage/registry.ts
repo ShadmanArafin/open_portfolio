@@ -1,3 +1,5 @@
+import { isDemoMode } from '@/core/demo/config';
+import { demoAdapter } from './adapters/demo';
 import 'server-only';
 import { AdapterConfigError, type AdapterId, type StorageAdapter } from './contract';
 import { localAdapter } from './adapters/local';
@@ -74,6 +76,16 @@ function inferAdapterId(): AdapterId {
 }
 
 function selectAdapter(): StorageAdapter {
+  /*
+   * Demo mode wins over everything, including an explicitly named backend.
+   *
+   * Deliberately not a value of `OPB_ADAPTER`: a demo deployment usually has a
+   * real `DATABASE_URL` sitting in its environment from the deploy template,
+   * and the failure mode of getting this precedence wrong is a public sandbox
+   * writing strangers' vandalism into a real database.
+   */
+  if (isDemoMode()) return demoAdapter;
+
   const id = (process.env.OPB_ADAPTER as AdapterId | undefined) ?? inferAdapterId();
   const factory = REGISTERED[id];
 

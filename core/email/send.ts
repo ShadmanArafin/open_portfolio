@@ -1,5 +1,6 @@
 import 'server-only';
 import { getTransporter, resolveTransportWithStored } from './transport';
+import { isDemoMode } from '@/core/demo/config';
 
 /**
  * The only place this codebase sends mail.
@@ -32,6 +33,17 @@ export type SendResult =
   { ok: true } | { ok: false; reason: 'not-configured' | 'failed'; detail: string };
 
 export async function sendMail(input: MailInput): Promise<SendResult> {
+  // Never from a demo. A public contact form that sends mail from a real
+  // domain is a spam relay within a day of being noticed, and it is the easiest
+  // of the demo restrictions to forget because nothing visibly breaks.
+  if (isDemoMode()) {
+    return {
+      ok: false,
+      reason: 'not-configured',
+      detail: 'Sending email is switched off in the demo.',
+    };
+  }
+
   const transport = await resolveTransportWithStored();
   if (transport.kind === 'none') {
     return { ok: false, reason: 'not-configured', detail: transport.reason };
