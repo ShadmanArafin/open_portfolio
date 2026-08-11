@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCMS } from '../../cms/context/CMSContext';
 import { PROFESSIONS, type ProfessionId } from '../../cms/data/professions';
+import { dismissWelcome } from '../welcomeDismissed';
 
 /**
  * The first thing a new owner sees.
@@ -100,6 +101,11 @@ export const AdminWelcome: React.FC = () => {
 
     const ok = await publishDraft();
     setSaving(false);
+
+    // Completing the wizard counts as dismissing it, whether or not the publish
+    // succeeded. A failed publish already reports itself below; trapping them
+    // here on top of that would be punishing the wrong person.
+    dismissWelcome();
 
     if (!ok) {
       setError('Your answers are saved, but publishing them failed. Try Publish from the top bar.');
@@ -290,7 +296,13 @@ export const AdminWelcome: React.FC = () => {
       <div className="mt-10 flex items-center justify-between gap-4">
         <button
           type="button"
-          onClick={() => navigate('/')}
+          onClick={() => {
+            // Record the choice before leaving. Without this the layout guard
+            // sees the still-placeholder name and sends them right back here,
+            // which is what made this button inert.
+            dismissWelcome();
+            navigate('/');
+          }}
           className="font-body text-sm text-text-muted underline-offset-4 hover:underline"
         >
           Skip and explore the editor

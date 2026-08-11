@@ -15,6 +15,7 @@ import { AstryxCommandPalette } from '../components/astryx/AstryxCommandPalette'
 import { LiveDevicePreview } from '../components/LiveDevicePreview';
 import { AdminSurface } from '../components/AdminSurface';
 import { useCMS } from '../../cms/context/CMSContext';
+import { isWelcomeDismissed } from '../welcomeDismissed';
 import { useTheme } from '../../context/ThemeContext';
 
 export const AdminLayout: React.FC = () => {
@@ -58,7 +59,7 @@ export const AdminLayout: React.FC = () => {
   // Detecting it from the content itself means no extra flag to store, and no
   // way for the two to disagree — and once the name is changed, by the wizard
   // or by hand, this never fires again.
-  const looksUnconfigured = draftData.settings.fullName === 'Your Name';
+  const looksUnconfigured = draftData.settings.fullName === 'Your Name' && !isWelcomeDismissed();
   if (looksUnconfigured && !location.pathname.endsWith('/welcome')) {
     return <Navigate to="/welcome" replace />;
   }

@@ -29,9 +29,18 @@
 | 8 — Adapters + integrations | **Partially done** | SMTP, notification, reset done. **5 backends, registry, vault, OTP missing** |
 | 9 — Blog, themes, presets   | **Barely started** | Only profession vocabulary packs                                             |
 
-**Where to start:** Phase 5's block system. The design tokens it and the themes
-both sit on now exist, so neither has to be built twice — and the primitives
-that are still missing from Phase 2 need blocks to have somewhere to live.
+**Where to start:** finish Phase 2 — the ~17 primitives — then Phase 5's blocks.
+
+This supersedes an earlier note here that said to start with blocks on the
+grounds that the primitives "need blocks to have somewhere to live". That has it
+backwards: primitives are what blocks compose _from_. Build blocks first and
+they get written against raw Tailwind, then rewritten once the primitives land —
+exactly the build-it-twice this plan warns about elsewhere. The existing
+sections in `src/components` are a perfectly good proving ground for `Band`,
+`Grid`, `Prose` and the rest, and they need the tokens that now exist.
+
+The publish-time contrast gate is smaller still and `checkContrast` is ready, so
+it is a reasonable warm-up.
 
 **What works today:** a stranger can deploy this, claim it, answer four
 questions and have a live portfolio they can edit without touching code. An
@@ -41,11 +50,13 @@ enquiry now emails them, and a forgotten passphrase is recoverable.
 admin is the old component kit, and email covers only transactional SMTP —
 no alternate providers, no integrations registry or secrets vault, no OTP.
 
-**Known bug, unfixed and pre-existing:** `/admin/welcome`'s Skip link is inert.
-It navigates without setting `fullName`, so `AdminLayout`'s guard bounces
-straight back to it. That is the first screen every new deployer meets. Found
-twice during the email work — once blind, once root-caused — and left alone
-both times because it was outside the branch.
+**Fixed:** `/admin/welcome`'s Skip link used to be inert — it navigated without
+setting `fullName`, so `AdminLayout`'s guard bounced straight back to it, on the
+first screen every new deployer meets. Skipping and finishing now both record
+the choice in `localStorage` (`src/admin/welcomeDismissed.ts`), and the guard
+honours it. Inferring "never set up" from the content is right for deciding
+whether to _offer_ the wizard and wrong for deciding whether to _force_ it.
+Verified in a browser against a clean instance.
 
 ---
 
@@ -58,21 +69,21 @@ development.
 
 ### What Docker covers
 
-| Remaining work                                | Local equivalent                                                    |
-| --------------------------------------------- | ------------------------------------------------------------------- |
-| Phase 2 primitives, ESLint bans, publish gate | Nothing external needed                                             |
-| Phase 5 blocks, pages, `draftMode()` preview  | Nothing external needed                                             |
-| Phase 7 shadcn admin, MediaPicker, builder    | Nothing external needed                                             |
-| Phase 9 blog, newsletter capture, themes      | Nothing external needed                                             |
-| Postgres / Supabase / Neon **database** half  | `postgres:16` — already wired, takes the suite from 98 to 160 tests |
-| Supabase **Storage** half                     | `supabase start` runs the real `storage-api` container              |
-| Email send path                               | `axllent/mailpit` — already wired                                   |
-| PocketBase, Appwrite adapters                 | Both ship official Docker images                                    |
-| Cloudflare D1 + R2 adapter                    | `wrangler dev --local` (Miniflare) emulates both                    |
-| Firebase adapter                              | The Firebase Emulator Suite                                         |
-| Convex adapter                                | `convex dev` runs a local backend                                   |
-| Turnstile (spam)                              | Cloudflare publishes always-pass and always-fail test keys          |
-| Umami (analytics)                             | Self-hosts in Docker                                                |
+| Remaining work                                | Local equivalent                                                            |
+| --------------------------------------------- | --------------------------------------------------------------------------- |
+| Phase 2 primitives, ESLint bans, publish gate | Nothing external needed                                                     |
+| Phase 5 blocks, pages, `draftMode()` preview  | Nothing external needed                                                     |
+| Phase 7 shadcn admin, MediaPicker, builder    | Nothing external needed                                                     |
+| Phase 9 blog, newsletter capture, themes      | Nothing external needed                                                     |
+| Postgres / Supabase / Neon **database** half  | `postgres:16` — already wired; with Mailpit takes the suite from 106 to 168 |
+| Supabase **Storage** half                     | `supabase start` runs the real `storage-api` container                      |
+| Email send path                               | `axllent/mailpit` — already wired                                           |
+| PocketBase, Appwrite adapters                 | Both ship official Docker images                                            |
+| Cloudflare D1 + R2 adapter                    | `wrangler dev --local` (Miniflare) emulates both                            |
+| Firebase adapter                              | The Firebase Emulator Suite                                                 |
+| Convex adapter                                | `convex dev` runs a local backend                                           |
+| Turnstile (spam)                              | Cloudflare publishes always-pass and always-fail test keys                  |
+| Umami (analytics)                             | Self-hosts in Docker                                                        |
 
 **All five missing storage adapters can be written and conformance-tested
 without a single account.** That was not obvious and it changes the ordering:
@@ -169,6 +180,17 @@ Four things, and only four:
 
 ### The load-bearing idea: two read paths
 
+> **STATUS — only one of the two paths exists.** The public snapshot path is
+> built and proven. The authoring path is not: the contract has no per-record
+> content surface at all — no `list`/`get`/`put`/`remove`/`bulkPut`, no
+> `getSingleton`/`putSingleton`. Content is read and written as one whole
+> document. (`media` and `messages` have their own list/put/remove, but those
+> are separate surfaces, not this one.)
+>
+> That is fine for a portfolio and **not** fine for what Phase 9 needs: a
+> 400-post blog cannot live in one JSON document, and per-record autosave has
+> nothing to save into. Build this before the blog, not after.
+
 - **Authoring path — normalised records.** Admin reads/writes one record at a time with pagination and optimistic concurrency (`revision`). Makes a 400-post blog and per-record autosave possible.
 - **Public path — one denormalised snapshot.** Publish rebuilds a single JSON blob under one key. Every public render is **one** adapter read, identical on all 8 backends, trivially cacheable. Snapshot excludes full post bodies (posts paginate separately) so it stays bounded.
 
@@ -180,6 +202,7 @@ Key departures from today's `ContentStore`:
 - **Adapters declare `capabilities`** (`durable`, `auth`, `fileStorage`, `fullTextSearch`, `realtime`, `transactions`, `listQueries`). Admin screens **hide** unsupported features rather than breaking.
 - **Adapter config lives in env vars only, never in the database** — config is what tells you how to reach the database. Resolves the chicken-and-egg completely.
 - Surfaces: `readSnapshot/writeSnapshot`, `list/get/put/remove/bulkPut`, `getSingleton/putSingleton`, `media`, `kv` (sessions/OTP/rate-limits/locks — deliberately _not_ content, so auth state is never exportable), optional `auth`, optional `transaction`.
+  **As built, the contract has:** `readSnapshot/writeSnapshot`, `readOwner/writeOwner`, `media`, `messages`, `kv`, `health`, `provision`. The per-record and singleton surfaces were never written; `auth` and `transaction` were not needed, because sessions are minted in one place for every backend.
 
 **Eight public adapter IDs, three engines.** Supabase/Neon/Cloudflare/PocketBase share `_shared/sql` (Drizzle, 3 dialects); Cloudflare-R2/Supabase-Storage/Appwrite share `_shared/s3`; Firebase, Convex and Local are bespoke. Each still exports its own id, display name, docs URL and capabilities, so the user-facing promise holds without eight divergent codebases.
 
@@ -196,6 +219,22 @@ Adapter auth is an identity **verifier**, never the session mechanism — so all
 - **Claim flow:** `OPB_SETUP_TOKEN` (auto-generated by the Deploy template) → else a 15-minute boot window with a one-time code written to the platform's function log (visible only to the deployer). Claim is atomic under a `kv` lock re-checking `owners.count === 0`. After claim, `/setup` is permanently 404.
 
 ### Five mechanisms so an unprotected `/admin` is impossible
+
+> **STATUS — two of these five exist. Measured, not assumed.**
+>
+> | #   | Mechanism                                      | Built?                                                                                                                                |
+> | --- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+> | 1   | `app/admin/(protected)/` route group           | **No.** The admin is one client-side catch-all; there is no server route group to guard by existence                                  |
+> | 2   | Every handler calls `requireOwner()`           | **Yes** — all three of `api/admin/{media,messages,publish}`. `api/media/[...key]` is deliberately open: it is the public image server |
+> | 3   | CI AST guard (`tests/guarded-actions.test.ts`) | **No**                                                                                                                                |
+> | 4   | `instrumentation.ts` boot assertion            | **No**                                                                                                                                |
+> | 5   | Middleware redirect + `noindex`                | **Yes**                                                                                                                               |
+>
+> **Mechanism 3 is the one to build next.** Mechanism 2 currently holds by
+> diligence rather than by construction — nothing stops the next admin route
+> shipping unguarded, which is precisely the failure the AST guard exists to
+> make impossible. When it is written, `app/api/media/[...key]` belongs on its
+> allowlist.
 
 1. `app/admin/(protected)/layout.tsx` calls `await requireOwner()` — a new page inside the group is guarded by existence.
 2. **Every** server action and route handler calls `requireOwner()` independently. Server Actions are publicly-callable HTTP endpoints; layout guards do not protect them. _This is the most common App Router security mistake._
@@ -583,7 +622,7 @@ Tiptap blog (structured JSON so posts render through token primitives in all 6 t
 
 ## Verification
 
-- **Conformance:** `npm run test:adapters` green for all 8 (local in every CI run; hosted ones nightly with test credentials).
+- **Conformance:** green for all 8. _As built:_ there is no `test:adapters` script — the suite runs under `npm run test`, and the hosted adapters skip unless credentials are present.
 - **Kitchen sink:** every block × variant × 6 themes × light/dark × 390/768/1440 — axe-core zero serious/critical, zero horizontal overflow, visual snapshots.
 - **Auth:** route-manifest test asserts every `/admin/*` and `/api/admin/*` rejects unauthenticated requests; claim flow tested against 5 named squatter scenarios; OTP expiry/single-use/lockout/concurrent-claim race.
 - **Data safety:** export→import round-trip including the legacy golden-file bundle; migration importer `--dry-run` diff on the owner's real export before the real run.
@@ -681,7 +720,7 @@ The numbers you should see, as of this writing:
 | `lint`                    | **0 errors**, 64 warnings — the warnings are baseline |
 | `format:check`            | clean                                                 |
 | `check-no-personal-data`  | clean, listed by git                                  |
-| `test` with no containers | 98 passed, 7 skipped                                  |
+| `test` with no containers | 106 passed, 7 skipped                                 |
 | `test` with both          | **168 passed, 2 skipped**                             |
 
 The 2 remaining skips are the Supabase and Neon conformance runs, which need
@@ -802,12 +841,6 @@ it. Use a worktree or wait.
 
 Nothing here is a blocker; all of it is real and none of it is fixed.
 
-**Bug — `/admin/welcome`'s Skip link is inert.** It navigates without setting
-`fullName`, so `AdminLayout`'s guard bounces straight back to it. This is the
-first screen every new deployer meets, so it is the highest-value item on this
-list. Found twice, root-caused the second time, never fixed because it was
-outside the branch that found it.
-
 **Cosmetic — the `unread-messages` health check pluralises wrongly**, producing
 "2 enquiry enquiries unread".
 
@@ -878,6 +911,20 @@ These are decisions, not oversights, and the reasoning is in each phase block:
 - **`work`/`timeline` collection merges not done.** Still four collections.
 - **Content core still lives in `src/cms/`,** not `core/content/`.
 - **Tailwind 4 deferred** — no longer blocked, just not done.
+- **Folder layout differs from the plan above.** There is no top-level
+  `/adapters`, `/themes`, `/integrations` or `/presets`. Storage lives in
+  `core/storage/adapters/`, and the theme and integration directories do not
+  exist yet, so the ESLint boundary rules the plan specifies have nothing to
+  guard.
+- **No `demo-idb` adapter.** The client-only demo mode behind
+  `NEXT_PUBLIC_OPB_DEMO=1` was specified and never built. Nothing depends on it.
+- **The conformance suite is `core/storage/conformance.ts`,** not
+  `/adapters/_conformance/suite.ts`, and it is 21 assertions rather than the
+  ~60 the plan estimated — because the surfaces it has to cover are narrower
+  than the contract that was designed.
+- **`messages` is an addition, not a deviation.** The contract grew a surface
+  the original did not have, for the reason recorded in Phase 5: an inbox and a
+  content document have different writers and different failure modes.
 - **The integrations registry was deferred behind its first integration.** SMTP
   was built concretely first, on the reasoning that an abstraction over
   twenty-five services designed from zero examples is wrong in ways only a
