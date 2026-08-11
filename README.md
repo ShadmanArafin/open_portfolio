@@ -24,10 +24,9 @@ to keep one: students, designers, developers, photographers, writers.
 
 > [!WARNING]
 > **Status: alpha (0.5).** The site, the editor and publishing all work, and the
-> admin has real server-side authentication. But there is no email yet, no blog,
-> and only one visual theme. Read
-> [What does not work yet](#what-does-not-work-yet) before using this for
-> anything you depend on.
+> admin has real server-side authentication. But there is no blog and only one
+> visual theme. Read [What does not work yet](#what-does-not-work-yet) before
+> using this for anything you depend on.
 
 ## Deploy your own
 
@@ -120,9 +119,11 @@ auth state never travels inside a content export.
 Being direct about this, because the gaps are structural and you should not
 discover them after typing in a portfolio:
 
-- **No email.** Enquiries reach your inbox inside the admin, but nothing is
-  emailed to you, and there is no OTP or password reset. If you forget your
-  passphrase, delete `.opb/state/owner.json` and claim the site again.
+- **Email is optional; without it there is no notification and no reset.**
+  Enquiries always reach your inbox inside the admin. Configure SMTP (see
+  [.env.example](.env.example)) and the owner is also emailed when one
+  arrives, and a forgotten passphrase can be reset from `/admin/login` instead
+  of deleting the owner record. There is still no OTP.
 - **Uploads have not been run against the hosted object stores.** Uploading now
   goes through the server into whichever backend is configured, and is verified
   end to end on the local filesystem backend. The same code path drives Supabase

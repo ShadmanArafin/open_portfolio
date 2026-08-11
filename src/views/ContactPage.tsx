@@ -103,9 +103,11 @@ export const ContactPage: React.FC = () => {
 
     setIsSubmitting(true);
 
-    // The server receives the enquiry and it appears in /admin/messages. There
-    // is no mail delivery yet, so the confirmation below deliberately tells the
-    // sender to email directly if it's urgent.
+    // The server stores the enquiry and emails the owner about it — best
+    // effort, and a failed notification doesn't undo the save (see
+    // app/api/contact/route.ts). If the save itself fails there is nothing to
+    // notify about, so the confirmation below deliberately tells the sender to
+    // email directly instead.
     trackEvent('Contact submitted');
     const stored = await postContactMessage({
       name: formData.name.trim(),

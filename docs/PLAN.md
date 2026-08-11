@@ -13,18 +13,18 @@
 
 ## Status at a glance
 
-| Phase                       | State              | What it means                                          |
-| --------------------------- | ------------------ | ------------------------------------------------------ |
-| 0 — Repo publishable        | **Done, verified** | MIT, no personal data, CI, guards                      |
-| 1 — Next.js + SEO           | **Done, verified** | Server-rendered, real metadata, sitemap, 404           |
-| 2 — Tokens + primitives     | **Partially done** | Tokens done and server-rendered. Primitives remain     |
-| 3 — Storage contract        | **Done, verified** | Contract, local adapter, registry, server read         |
-| 4 — Auth                    | **Done, verified** | Passphrase + sessions. **Passkeys/OTP not built**      |
-| 5 — Write path              | **Partially done** | Publish and contact work. **Blocks and pages missing** |
-| 6 — Hosted adapters         | **Done, verified** | Supabase, Neon, Postgres. **Uploads unverified**       |
-| 7 — shadcn admin            | **Not started**    | Admin still Astryx + React Router                      |
-| 8 — Adapters + integrations | **Not started**    | 5 backends, ~25 integrations, all email                |
-| 9 — Blog, themes, presets   | **Barely started** | Only profession vocabulary packs                       |
+| Phase                       | State              | What it means                                                                |
+| --------------------------- | ------------------ | ---------------------------------------------------------------------------- |
+| 0 — Repo publishable        | **Done, verified** | MIT, no personal data, CI, guards                                            |
+| 1 — Next.js + SEO           | **Done, verified** | Server-rendered, real metadata, sitemap, 404                                 |
+| 2 — Tokens + primitives     | **Partially done** | Tokens done and server-rendered. Primitives remain                           |
+| 3 — Storage contract        | **Done, verified** | Contract, local adapter, registry, server read                               |
+| 4 — Auth                    | **Done, verified** | Passphrase + sessions. **Passkeys/OTP not built**                            |
+| 5 — Write path              | **Partially done** | Publish and contact work. **Blocks and pages missing**                       |
+| 6 — Hosted adapters         | **Done, verified** | Supabase, Neon, Postgres. **Uploads unverified**                             |
+| 7 — shadcn admin            | **Not started**    | Admin still Astryx + React Router                                            |
+| 8 — Adapters + integrations | **Partially done** | SMTP, notification, reset done. **5 backends, registry, vault, OTP missing** |
+| 9 — Blog, themes, presets   | **Barely started** | Only profession vocabulary packs                                             |
 
 **Where to start:** Phase 5's block system. The design tokens it and the themes
 both sit on now exist, so neither has to be built twice — and the primitives
@@ -33,8 +33,9 @@ that are still missing from Phase 2 need blocks to have somewhere to live.
 **What works today:** a stranger can deploy this, claim it, answer four
 questions and have a live portfolio they can edit without touching code.
 
-**What does not:** no email of any kind, no blog, no themes beyond the one, no
-block builder, and the admin is the old component kit.
+**What does not:** no blog, no themes beyond the one, no block builder, the
+admin is the old component kit, and email covers only transactional SMTP —
+no alternate providers, no integrations registry or secrets vault, no OTP.
 
 ---
 
@@ -428,7 +429,23 @@ Supabase (built-in auth, presigned storage) and Neon+Vercel Blob (SQL, **no** bu
 
 ### Phase 8 — Remaining 5 adapters + integrations (3 weeks)
 
-> ### NOT STARTED
+> ### PARTIALLY DONE — SMTP, notification and reset shipped; adapters, registry, vault and OTP do not exist
+>
+> **Done and verified, against Mailpit:** an SMTP transport
+> (`core/email/transport.ts`, `core/email/send.ts`) that reports a refused
+> connection as a value rather than throwing, so a mail failure can never be
+> mistaken for a lost enquiry. The contact form emails the owner when a message
+> arrives — stored first, notified second, deliberately in that order
+> (`app/api/contact/route.ts`). Passphrase reset by email (`core/auth/reset.ts`,
+> `app/api/auth/reset/{request,confirm}/route.ts`,
+> `src/admin/pages/AdminResetPassphrase.tsx`) closes the recovery path earlier
+> phases left open — delete `.opb/state/owner.json` and claim the site again.
+> The reset link's origin comes from `OPB_SITE_URL` only, never the `Host`
+> header the claim flow was once tricked by; only `sha256(token)` is stored, in
+> the existing `otp` kv namespace; the token is burned before the passphrase
+> changes so a replay cannot land between the two; and confirming bumps
+> `sessionEpoch`, so a forced reset signs out every session the attacker (or
+> the owner, on another device) already held.
 >
 > **Adapters missing:** Firebase, Convex, Cloudflare D1+R2, PocketBase,
 > Appwrite. Each is now genuinely one file — the contract, the shared SQL engine
@@ -442,11 +459,13 @@ Supabase (built-in auth, presigned storage) and Neon+Vercel Blob (SQL, **no** bu
 > no GitHub or Dribbble import, no Cloudinary, no Sentry.
 > **Build the `IntegrationDefinition` registry and one generic admin screen
 > before writing any individual integration**, or you will end up with 25
-> bespoke screens.
+> bespoke screens. That registry is also where a secrets vault belongs —
+> encrypted-at-rest storage for API keys does not exist yet, which blocks every
+> integration that needs one.
 >
-> **Email is entirely absent.** Resend, Brevo and SMTP are all unbuilt, which is
-> why the contact form stores an enquiry but does not notify anyone, and why
-> there is no OTP.
+> **Still absent: Resend and Brevo as alternative mail providers** — SMTP is the
+> only transport built — **and OTP**, a one-time-code sign-in factor distinct
+> from passphrase reset.
 >
 > **Honest scoping note:** Vercel's `stores` deploy parameter can only
 > auto-provision Marketplace-native products. Firebase, Appwrite, PocketBase and

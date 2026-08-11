@@ -23,6 +23,9 @@ import { CMSProvider } from '@/cms/context/CMSContext';
 const AdminLogin = lazy(() =>
   import('@/admin/pages/AdminLogin').then((m) => ({ default: m.AdminLogin }))
 );
+const AdminResetPassphrase = lazy(() =>
+  import('@/admin/pages/AdminResetPassphrase').then((m) => ({ default: m.AdminResetPassphrase }))
+);
 const AdminLayout = lazy(() =>
   import('@/admin/layouts/AdminLayout').then((m) => ({ default: m.AdminLayout }))
 );
@@ -103,6 +106,10 @@ export default function AdminApp() {
             >
               <Routes>
                 <Route path="/login" element={<AdminLogin />} />
+                {/* Not nested under AdminLayout: a signed-out visitor with a
+                    forgotten passphrase is, by definition, not authenticated,
+                    and AdminLayout would bounce them straight to /login. */}
+                <Route path="/reset" element={<AdminResetPassphrase />} />
                 <Route path="/" element={<AdminLayout />}>
                   <Route index element={<AdminDashboard />} />
                   <Route path="welcome" element={<AdminWelcome />} />

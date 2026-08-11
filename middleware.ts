@@ -18,8 +18,13 @@ export function middleware(req: NextRequest) {
 
   if (pathname.startsWith('/admin')) {
     const isLoginPage = pathname === '/admin/login';
+    // A mailed reset link is opened cold — no session cookie exists yet — so
+    // it needs the same exemption as the login page itself. Losing this would
+    // not just be inconvenient: the redirect below rewrites the whole URL,
+    // which drops the `?token=` query string the link depends on entirely.
+    const isResetPage = pathname === '/admin/reset';
 
-    if (!hasSessionCookie && !isLoginPage) {
+    if (!hasSessionCookie && !isLoginPage && !isResetPage) {
       const url = req.nextUrl.clone();
       url.pathname = '/admin/login';
       // Where to return to once they are signed in.

@@ -89,6 +89,25 @@ export const AdminLogin: React.FC = () => {
               />
 
               <Center>
+                {/* A plain <a>, not router-aware — Astryx's Link has no
+                    LinkProvider wired to react-router here. An unqualified
+                    href="/reset" would leave the basename="/admin" router
+                    entirely and 404 at the site root's /reset. The onClick
+                    keeps it a real, fully-qualified link (right-click, new
+                    tab, no-JS all still work) while giving it a client-side
+                    transition on an ordinary click. */}
+                <Link
+                  href="/admin/reset"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate('/reset');
+                  }}
+                >
+                  Forgot your passphrase?
+                </Link>
+              </Center>
+
+              <Center>
                 <Link href="/">Back to the site</Link>
               </Center>
             </VStack>

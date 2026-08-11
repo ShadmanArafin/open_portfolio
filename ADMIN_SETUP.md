@@ -32,9 +32,15 @@ On a public host you must set `OPB_SETUP_TOKEN` to any long random string before
 deploying. The claim form asks for it, which is what stops a stranger who finds
 your URL first from taking ownership. `npm run dev` does not need it.
 
-**If you forget your passphrase** there is no reset yet. Delete the owner record
-and claim the site again — `.opb/state/owner.json` on the local backend, or the
-`opb_owner` row on a database backend. Your content is untouched.
+**If you forget your passphrase**, click **Forgot your passphrase?** on the
+sign-in screen and enter your email. If SMTP is configured (see
+[.env.example](.env.example)), a link is emailed to the owner's address —
+it works once, expires after 30 minutes, and signs out every other session the
+moment it's used.
+
+Without SMTP configured there is no reset yet: delete the owner record and
+claim the site again — `.opb/state/owner.json` on the local backend, or the
+`opb_owner` row on a database backend. Your content is untouched either way.
 
 ## 2. How editing works
 
