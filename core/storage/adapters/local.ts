@@ -2,7 +2,7 @@ import 'server-only';
 import { mkdir, readFile, readdir, rename, stat, unlink, writeFile } from 'node:fs/promises';
 import { randomBytes } from 'node:crypto';
 import path from 'node:path';
-import type { CMSState } from '@/cms/types/cms';
+import type { CMSState, ContactMessage } from '@/cms/types/cms';
 import type {
   Channel,
   HealthReport,
@@ -10,6 +10,7 @@ import type {
   KvNamespace,
   MediaAdapter,
   MediaRecord,
+  MessagesAdapter,
   OwnerRecord,
   StorageAdapter,
 } from '../contract';
@@ -31,12 +32,22 @@ import type {
 const ROOT = path.join(process.cwd(), '.opb');
 const CONTENT_DIR = path.join(ROOT, 'content');
 const MEDIA_DIR = path.join(ROOT, 'media');
+const MESSAGES_DIR = path.join(ROOT, 'messages');
 
 /** Rejects `..` and absolute paths so a crafted key cannot escape the folder. */
 function safeMediaPath(key: string): string {
   const resolved = path.resolve(MEDIA_DIR, key);
   if (resolved !== MEDIA_DIR && !resolved.startsWith(MEDIA_DIR + path.sep)) {
     throw new Error(`Refusing to touch a media path outside the store: ${key}`);
+  }
+  return resolved;
+}
+
+/** Rejects any id that would place the file outside the messages folder. */
+function messagePath(id: string): string {
+  const resolved = path.resolve(MESSAGES_DIR, `${id}.json`);
+  if (!resolved.startsWith(MESSAGES_DIR + path.sep)) {
+    throw new Error(`Refusing to touch a message path outside the store: ${id}`);
   }
   return resolved;
 }
@@ -219,6 +230,63 @@ const kv: KvAdapter = {
   },
 };
 
+/**
+ * One file per enquiry.
+ *
+ * Every append writes a distinct path, so concurrent arrivals cannot collide —
+ * which is the whole reason this is not a lock around a shared document.
+ */
+const messages: MessagesAdapter = {
+  async append(message) {
+    await mkdir(MESSAGES_DIR, { recursive: true });
+    await atomicWrite(messagePath(message.id), JSON.stringify(message, null, 2));
+  },
+
+  async list(options) {
+    let names: string[];
+    try {
+      names = await readdir(MESSAGES_DIR);
+    } catch {
+      return [];
+    }
+
+    const loaded = await Promise.all(
+      names
+        .filter((name) => name.endsWith('.json'))
+        .map(async (name) => {
+          try {
+            return JSON.parse(await readFile(path.join(MESSAGES_DIR, name), 'utf8'));
+          } catch {
+            return null;
+          }
+        })
+    );
+
+    const all = (loaded.filter(Boolean) as ContactMessage[]).sort((a, b) =>
+      b.receivedAt.localeCompare(a.receivedAt)
+    );
+    return options?.limit ? all.slice(0, options.limit) : all;
+  },
+
+  async update(id, patch) {
+    let existing: ContactMessage;
+    try {
+      existing = JSON.parse(await readFile(messagePath(id), 'utf8')) as ContactMessage;
+    } catch {
+      return; // Gone already is the caller's intent satisfied.
+    }
+    await atomicWrite(messagePath(id), JSON.stringify({ ...existing, ...patch, id }, null, 2));
+  },
+
+  async remove(id) {
+    try {
+      await unlink(messagePath(id));
+    } catch {
+      // Already absent.
+    }
+  },
+};
+
 export const localAdapter: StorageAdapter = {
   id: 'local',
   displayName: 'Local filesystem',
@@ -258,6 +326,7 @@ export const localAdapter: StorageAdapter = {
     await mkdir(CONTENT_DIR, { recursive: true });
     await mkdir(MEDIA_DIR, { recursive: true });
     await mkdir(STATE_DIR, { recursive: true });
+    await mkdir(MESSAGES_DIR, { recursive: true });
   },
 
   async readOwner(): Promise<OwnerRecord | null> {
@@ -291,4 +360,5 @@ export const localAdapter: StorageAdapter = {
   },
 
   media,
+  messages,
 };

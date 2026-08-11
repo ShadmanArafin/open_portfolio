@@ -1,4 +1,4 @@
-import type { CMSState } from '@/cms/types/cms';
+import type { CMSState, ContactMessage } from '@/cms/types/cms';
 import type { StorageAdapter } from './contract';
 
 /**
@@ -73,6 +73,16 @@ export interface ConformanceOptions {
    * nothing.
    */
   skipMedia?: boolean;
+  /**
+   * Skips the messages tests.
+   *
+   * For an adapter that satisfies `StorageAdapter` structurally but does not
+   * carry a real inbox yet — the SQL-backed adapters between the task that
+   * widens the contract and the one that wires `messages` into the shared
+   * engine. Without this, their placeholder throwing turns "not built yet"
+   * into a spurious failure instead of an honest, temporary gap.
+   */
+  skipMessages?: boolean;
 }
 
 export function runConformanceSuite(
@@ -174,6 +184,8 @@ export function runConformanceSuite(
 
     // Skipped when there is no object store attached — see ConformanceOptions.
     const describeMedia = options.skipMedia ? skip : describe;
+    // Skipped where the inbox is not implemented yet — see ConformanceOptions.
+    const describeMessages = options.skipMessages ? skip : describe;
 
     describeMedia('media', () => {
       it('stores, resolves and removes an asset', async () => {
@@ -224,6 +236,118 @@ export function runConformanceSuite(
         const keys = listed.map((m) => m.key).sort();
         expect(keys.includes('one.png')).toBe(true);
         expect(keys.includes('two.png')).toBe(true);
+      });
+    });
+
+    describeMessages('messages', () => {
+      const enquiry = (id: string, receivedAt: string): ContactMessage => ({
+        id,
+        name: `Sender ${id}`,
+        email: `${id}@example.com`,
+        company: '',
+        projectType: '',
+        message: 'Hello.',
+        receivedAt,
+        status: 'unread',
+      });
+
+      it('is empty on a fresh instance', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+        expect((await adapter.messages.list()).length).toBe(0);
+      });
+
+      it('round-trips an enquiry', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        await adapter.messages.append(enquiry('a', '2026-01-01T00:00:00.000Z'));
+        const listed = await adapter.messages.list();
+        expect(listed.length).toBe(1);
+        expect(listed[0].email).toBe('a@example.com');
+        expect(listed[0].status).toBe('unread');
+      });
+
+      it('lists newest first', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        await adapter.messages.append(enquiry('older', '2026-01-01T00:00:00.000Z'));
+        await adapter.messages.append(enquiry('newer', '2026-06-01T00:00:00.000Z'));
+
+        const listed = await adapter.messages.list();
+        expect(listed[0].id).toBe('newer');
+        expect(listed[1].id).toBe('older');
+      });
+
+      it('honours a limit', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        for (let i = 0; i < 5; i++) {
+          await adapter.messages.append(enquiry(`m${i}`, `2026-01-0${i + 1}T00:00:00.000Z`));
+        }
+        expect((await adapter.messages.list({ limit: 2 })).length).toBe(2);
+      });
+
+      it('loses nothing when fifty arrive at once', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        // The reason this surface exists. Appending to the content snapshot was
+        // a read-modify-write, so two simultaneous enquiries kept one. An inbox
+        // may not do that, however acceptable it is for a content document.
+        await Promise.all(
+          Array.from({ length: 50 }, (_, i) =>
+            adapter.messages.append(enquiry(`c${i}`, '2026-01-01T00:00:00.000Z'))
+          )
+        );
+
+        expect((await adapter.messages.list()).length).toBe(50);
+      });
+
+      it('patches a status without touching the rest', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        await adapter.messages.append(enquiry('a', '2026-01-01T00:00:00.000Z'));
+        await adapter.messages.update('a', { status: 'read' });
+
+        const listed = await adapter.messages.list();
+        expect(listed[0].status).toBe('read');
+        expect(listed[0].email).toBe('a@example.com');
+      });
+
+      it('ignores a patch for something that is not there', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        await adapter.messages.append(enquiry('real', '2026-01-01T00:00:00.000Z'));
+        await adapter.messages.update('never-existed', { status: 'read' });
+
+        // The point is that a patch for a missing id is a no-op rather than an
+        // error, *and* that it does not create a row out of a partial.
+        const listed = await adapter.messages.list();
+        expect(listed.length).toBe(1);
+        expect(listed[0].id).toBe('real');
+      });
+
+      it('removes one, and removing it twice is not an error', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        await adapter.messages.append(enquiry('a', '2026-01-01T00:00:00.000Z'));
+        await adapter.messages.remove('a');
+        await adapter.messages.remove('a');
+        expect((await adapter.messages.list()).length).toBe(0);
       });
     });
 

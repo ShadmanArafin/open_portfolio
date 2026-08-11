@@ -1,5 +1,5 @@
 import 'server-only';
-import type { CMSState } from '@/cms/types/cms';
+import type { CMSState, ContactMessage } from '@/cms/types/cms';
 
 /**
  * The storage contract every backend implements.
@@ -69,6 +69,28 @@ export interface MediaAdapter {
   list(): Promise<MediaRecord[]>;
 }
 
+export interface MessageListOptions {
+  /** Newest first, so a limit returns the most recent. */
+  limit?: number;
+}
+
+/**
+ * The contact inbox.
+ *
+ * Separate from the content snapshot because it has a different writer and a
+ * different failure mode. Content is written by one person deliberately;
+ * enquiries arrive from strangers concurrently. Appending them to a document
+ * meant read-modify-write, and two simultaneous submissions kept one — which
+ * `writeSnapshot` is allowed to do and an inbox is not.
+ */
+export interface MessagesAdapter {
+  append(message: ContactMessage): Promise<void>;
+  list(options?: MessageListOptions): Promise<ContactMessage[]>;
+  /** Shallow merge. Unknown ids are ignored rather than an error. */
+  update(id: string, patch: Partial<ContactMessage>): Promise<void>;
+  remove(id: string): Promise<void>;
+}
+
 export interface HealthReport {
   ok: boolean;
   detail: string;
@@ -132,6 +154,7 @@ export interface StorageAdapter {
   writeSnapshot(channel: Channel, state: CMSState): Promise<void>;
 
   readonly media: MediaAdapter;
+  readonly messages: MessagesAdapter;
 }
 
 /** Thrown when a backend is named but not usable, with a message for a human. */
