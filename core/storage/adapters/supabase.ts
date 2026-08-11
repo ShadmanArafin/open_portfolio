@@ -1,5 +1,5 @@
 import 'server-only';
-import type { MediaAdapter, MediaRecord, StorageAdapter } from '../contract';
+import type { MediaAdapter, MediaRecord, MessagesAdapter, StorageAdapter } from '../contract';
 import { AdapterConfigError } from '../contract';
 import {
   getSql,
@@ -150,6 +150,29 @@ async function ensureBucket(): Promise<void> {
   }
 }
 
+/**
+ * Placeholder so the widened `StorageAdapter` contract still typechecks.
+ *
+ * The next task replaces this outright with `makeMessagesAdapter` from the
+ * shared SQL engine — a one-property swap, not a build on top of this. Throws
+ * rather than returning an empty inbox, so a caller that reaches this before
+ * then gets a clear signal instead of a silently empty result.
+ */
+const messages: MessagesAdapter = {
+  append: async () => {
+    throw new Error('messages.append is not implemented for the Supabase adapter yet.');
+  },
+  list: async () => {
+    throw new Error('messages.list is not implemented for the Supabase adapter yet.');
+  },
+  update: async () => {
+    throw new Error('messages.update is not implemented for the Supabase adapter yet.');
+  },
+  remove: async () => {
+    throw new Error('messages.remove is not implemented for the Supabase adapter yet.');
+  },
+};
+
 export const supabaseAdapter: StorageAdapter = {
   id: 'supabase',
   displayName: 'Supabase',
@@ -183,4 +206,5 @@ export const supabaseAdapter: StorageAdapter = {
 
   kv: makeKvAdapter(sql),
   media,
+  messages,
 };

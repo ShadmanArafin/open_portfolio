@@ -1,6 +1,6 @@
 import 'server-only';
 import { del, head, list, put } from '@vercel/blob';
-import type { MediaAdapter, StorageAdapter } from '../contract';
+import type { MediaAdapter, MessagesAdapter, StorageAdapter } from '../contract';
 import { AdapterConfigError } from '../contract';
 import {
   getSql,
@@ -103,6 +103,29 @@ const media: MediaAdapter = {
   },
 };
 
+/**
+ * Placeholder so the widened `StorageAdapter` contract still typechecks.
+ *
+ * The next task replaces this outright with `makeMessagesAdapter` from the
+ * shared SQL engine — a one-property swap, not a build on top of this. Throws
+ * rather than returning an empty inbox, so a caller that reaches this before
+ * then gets a clear signal instead of a silently empty result.
+ */
+const messages: MessagesAdapter = {
+  append: async () => {
+    throw new Error('messages.append is not implemented for the Neon adapter yet.');
+  },
+  list: async () => {
+    throw new Error('messages.list is not implemented for the Neon adapter yet.');
+  },
+  update: async () => {
+    throw new Error('messages.update is not implemented for the Neon adapter yet.');
+  },
+  remove: async () => {
+    throw new Error('messages.remove is not implemented for the Neon adapter yet.');
+  },
+};
+
 export const neonAdapter: StorageAdapter = {
   id: 'neon',
   displayName: 'Neon Postgres + Vercel Blob',
@@ -135,4 +158,5 @@ export const neonAdapter: StorageAdapter = {
 
   kv: makeKvAdapter(sql),
   media,
+  messages,
 };
