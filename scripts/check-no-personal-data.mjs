@@ -11,6 +11,7 @@
  */
 
 import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { join, relative, extname, basename } from 'node:path';
 
 const ROOT = process.cwd();
@@ -49,7 +50,22 @@ const FORBIDDEN_FILES = [
   /dr[_-]?wash/i,
 ];
 
-const SKIP_DIRS = new Set(['node_modules', '.git', 'dist', 'build', 'coverage', '.vite', '.next']);
+/**
+ * Only consulted by the no-git fallback below. `.opb` and `.remember` hold the
+ * running instance's own content and a local agent log — neither is part of the
+ * repository, and both would otherwise be full of false positives.
+ */
+const SKIP_DIRS = new Set([
+  'node_modules',
+  '.git',
+  'dist',
+  'build',
+  'coverage',
+  '.vite',
+  '.next',
+  '.opb',
+  '.remember',
+]);
 
 /** Binary and lockfile types we do not scan for text. */
 const SKIP_TEXT_SCAN = new Set([
@@ -92,52 +108,94 @@ const ALLOWED = new Map([
 
 const violations = [];
 
-function walk(dir) {
-  for (const entry of readdirSync(dir)) {
-    const full = join(dir, entry);
-    const rel = relative(ROOT, full).replace(/\\/g, '/');
-
-    if (statSync(full).isDirectory()) {
-      if (!SKIP_DIRS.has(entry)) walk(full);
-      continue;
-    }
-
-    if (ALLOWED.has(rel)) continue;
-
-    const name = basename(full);
-    for (const pattern of FORBIDDEN_FILES) {
-      if (pattern.test(name)) {
-        violations.push(`${rel}: filename matches ${pattern}`);
+/**
+ * The files that could actually end up in the repository.
+ *
+ * `--cached` is everything tracked; `--others --exclude-standard` adds files
+ * that are untracked but not ignored — the résumé somebody dropped into
+ * `public/` and has not committed yet, which is precisely the mistake worth
+ * catching before it is made.
+ *
+ * Ignored files are deliberately excluded. `.env.local` holds the maintainer's
+ * own address and `.opb/` holds their own content; neither can ever be
+ * redistributed, and flagging them taught contributors to run this check and
+ * ignore what it said.
+ *
+ * Falls back to walking the directory when git is unavailable — a tarball, or a
+ * CI image without git — because a check that silently passes is worse than one
+ * that is occasionally noisy.
+ */
+function listCandidateFiles() {
+  try {
+    const out = execFileSync(
+      'git',
+      ['ls-files', '-z', '--cached', '--others', '--exclude-standard'],
+      {
+        cwd: ROOT,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore'],
       }
-    }
+    );
+    const files = out.split('\0').filter(Boolean);
+    if (files.length > 0) return { files, source: 'git' };
+  } catch {
+    // Not a git checkout, or git is not installed.
+  }
 
-    if (SKIP_TEXT_SCAN.has(extname(full).toLowerCase())) continue;
-
-    let content;
-    try {
-      content = readFileSync(full, 'utf8');
-    } catch {
-      continue; // unreadable or genuinely binary
-    }
-
-    const lower = content.toLowerCase();
-
-    for (const needle of FORBIDDEN_TEXT) {
-      if (lower.includes(needle)) {
-        violations.push(`${rel}: contains "${needle}"`);
+  const files = [];
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir)) {
+      const full = join(dir, entry);
+      if (statSync(full).isDirectory()) {
+        if (!SKIP_DIRS.has(entry)) walk(full);
+        continue;
       }
+      files.push(relative(ROOT, full).replace(/\\/g, '/'));
     }
+  };
+  walk(ROOT);
+  return { files, source: 'filesystem' };
+}
 
-    for (const word of FORBIDDEN_WORDS) {
-      const re = new RegExp(`\\b${word}\\b`, 'i');
-      if (re.test(content)) {
-        violations.push(`${rel}: contains the name "${word}"`);
-      }
+function inspect(rel) {
+  if (ALLOWED.has(rel)) return;
+
+  const full = join(ROOT, rel);
+  const name = basename(rel);
+
+  for (const pattern of FORBIDDEN_FILES) {
+    if (pattern.test(name)) {
+      violations.push(`${rel}: filename matches ${pattern}`);
+    }
+  }
+
+  if (SKIP_TEXT_SCAN.has(extname(rel).toLowerCase())) return;
+
+  let content;
+  try {
+    content = readFileSync(full, 'utf8');
+  } catch {
+    return; // unreadable, genuinely binary, or deleted since git listed it
+  }
+
+  const lower = content.toLowerCase();
+
+  for (const needle of FORBIDDEN_TEXT) {
+    if (lower.includes(needle)) {
+      violations.push(`${rel}: contains "${needle}"`);
+    }
+  }
+
+  for (const word of FORBIDDEN_WORDS) {
+    const re = new RegExp(`\\b${word}\\b`, 'i');
+    if (re.test(content)) {
+      violations.push(`${rel}: contains the name "${word}"`);
     }
   }
 }
 
-walk(ROOT);
+const { files, source } = listCandidateFiles();
+for (const rel of files) inspect(rel);
 
 if (violations.length > 0) {
   console.error('\nPersonal or client-owned content found:\n');
@@ -145,9 +203,12 @@ if (violations.length > 0) {
   console.error(
     '\nThis repository is redistributed under MIT to anyone who forks it.\n' +
       'Demo content must be fictional, yours, or CC0 — see public/demo/LICENSE.md.\n' +
-      'If a match is a false positive, add an exception in scripts/check-no-personal-data.mjs.\n'
+      'If the file is only ever local, add it to .gitignore. If a match is a\n' +
+      'genuine false positive, add an exception in scripts/check-no-personal-data.mjs.\n'
   );
   process.exit(1);
 }
 
-console.log('No personal or client-owned content found.');
+console.log(
+  `No personal or client-owned content found (${files.length} files, listed by ${source}).`
+);
