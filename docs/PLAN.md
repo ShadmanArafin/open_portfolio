@@ -13,21 +13,22 @@
 
 ## Status at a glance
 
-| Phase                       | State              | What it means                                            |
-| --------------------------- | ------------------ | -------------------------------------------------------- |
-| 0 — Repo publishable        | **Done, verified** | MIT, no personal data, CI, guards                        |
-| 1 — Next.js + SEO           | **Done, verified** | Server-rendered, real metadata, sitemap, 404             |
-| 2 — Tokens + primitives     | **Barely started** | Only contrast checking exists. **Blocks Phases 7 and 9** |
-| 3 — Storage contract        | **Done, verified** | Contract, local adapter, registry, server read           |
-| 4 — Auth                    | **Done, verified** | Passphrase + sessions. **Passkeys/OTP not built**        |
-| 5 — Write path              | **Partially done** | Publish and contact work. **Blocks and pages missing**   |
-| 6 — Hosted adapters         | **Done, verified** | Supabase, Neon, Postgres. **Uploads unverified**         |
-| 7 — shadcn admin            | **Not started**    | Admin still Astryx + React Router                        |
-| 8 — Adapters + integrations | **Not started**    | 5 backends, ~25 integrations, all email                  |
-| 9 — Blog, themes, presets   | **Barely started** | Only profession vocabulary packs                         |
+| Phase                       | State              | What it means                                          |
+| --------------------------- | ------------------ | ------------------------------------------------------ |
+| 0 — Repo publishable        | **Done, verified** | MIT, no personal data, CI, guards                      |
+| 1 — Next.js + SEO           | **Done, verified** | Server-rendered, real metadata, sitemap, 404           |
+| 2 — Tokens + primitives     | **Partially done** | Tokens done and server-rendered. Primitives remain     |
+| 3 — Storage contract        | **Done, verified** | Contract, local adapter, registry, server read         |
+| 4 — Auth                    | **Done, verified** | Passphrase + sessions. **Passkeys/OTP not built**      |
+| 5 — Write path              | **Partially done** | Publish and contact work. **Blocks and pages missing** |
+| 6 — Hosted adapters         | **Done, verified** | Supabase, Neon, Postgres. **Uploads unverified**       |
+| 7 — shadcn admin            | **Not started**    | Admin still Astryx + React Router                      |
+| 8 — Adapters + integrations | **Not started**    | 5 backends, ~25 integrations, all email                |
+| 9 — Blog, themes, presets   | **Barely started** | Only profession vocabulary packs                       |
 
-**Where to start:** Phase 2 (design tokens). Themes and the block builder both
-sit on it, and building either first means building it twice.
+**Where to start:** Phase 5's block system. The design tokens it and the themes
+both sit on now exist, so neither has to be built twice — and the primitives
+that are still missing from Phase 2 need blocks to have somewhere to live.
 
 **What works today:** a stranger can deploy this, claim it, answer four
 questions and have a live portfolio they can edit without touching code.
@@ -218,26 +219,55 @@ _Risk: theme hydration mismatch → keep the blocking script verbatim, `suppress
 
 ### Phase 2 — Content core + tokens + primitives (2 weeks)
 
-> ### BARELY STARTED — this is the main blocker for Phases 7 and 9
+> ### TOKENS DONE — primitives and the publish gate remain
 >
-> **Done:** `core/theme/contrast.ts` — WCAG contrast, derived readable
-> foregrounds, nearest-passing-shade suggestions. 12 tests. Nothing consumes it
-> yet.
+> **Done:**
 >
-> **Remaining — build this next:**
+> - `core/theme/contrast.ts` — WCAG contrast, derived readable foregrounds,
+>   nearest-passing-shade suggestions.
+> - `core/theme/tokens.ts` — 39 semantic tokens per mode, generated from the six
+>   colours the appearance editor already collects. Every on-colour comes from
+>   `readableForeground`, and anything that would fail 4.5:1 against its own
+>   background is walked toward the readable extreme until it passes, so a neon
+>   accent yields a usable site rather than an unreadable one.
+> - Server-rendered into a `<style>` in `app/layout.tsx`. The palette is correct
+>   at first paint; the `useEffect` that wrote six variables to
+>   `documentElement` — and flashed the built-in colours on every load — now
+>   runs only inside the draft preview, where the server genuinely does not know
+>   the colours yet.
+> - The hand-picked palettes are gone from `src/styles/index.css`. One source of
+>   truth for every colour.
 >
-> - `core/theme/tokens.ts`: the ~95 semantic tokens generated from ~10
->   author-facing inputs. Use `readableForeground` for every on-colour.
+> **Verified:** 26 token tests, including seven hostile colour pairs (neon green
+> on black, yellow on white, mid grey on mid grey) that must still produce
+> readable body text and a legible label on an accent fill. The generated dark
+> palette lands on the hand-picked one it replaced — `--text-primary` `#f5f5f2`,
+> `--border-color-hover` `#2a2a2a` against the previous `#2b2b2b` — and a test
+> pins that so a change to the mixing cannot quietly redesign the site.
+>
+> **Two bugs found by writing the tests, both mine:** the contrast walk took its
+> direction from a luminance threshold while the foreground came from a contrast
+> comparison, and the two disagree in the mid-tones, so a mid-grey background
+> produced secondary text that failed at every step. And recession was expressed
+> as a negative mix amount, which clamps to zero — the footer and every sunken
+> surface came out exactly equal to the background. Sinking is now an absolute
+> step toward black, which is the only form that reads as depth in both themes.
+>
+> **Remaining:**
+>
 > - The ~17 primitives (`Band`, `Measure`, `Grid`, `Heading`, `Prose`, `Card`,
->   `Media`, `Button`, ...) that blocks may compose from.
+>   `Media`, `Button`, ...) that blocks may compose from. These need Phase 5's
+>   block system to have somewhere to live.
 > - An ESLint rule banning colour/size utilities and arbitrary values inside
 >   `core/blocks/**` and `themes/**`. Without it the block/theme contract leaks.
-> - Server-render tokens into a scoped `<style>`. Today `CMSContext` writes six
->   CSS variables in a `useEffect`, which flashes the default palette on load.
+>   Neither directory exists yet, so the rule has nothing to guard.
 > - The publish-time gate: block publishing when body text fails 4.5:1.
+>   `checkContrast` is ready; it needs wiring into `contentHealth.ts`.
+> - Fonts are still applied client-side by `loadGoogleFonts`, so the family name
+>   is right only after hydration. Server-rendering them means getting the font
+>   catalogue onto the server without dragging `react-icons` with it.
 > - **Tailwind 4 — PR #7 is open and deliberately held.** It replaces the JS
->   config with CSS-first `@theme`. Do the tokens first, or theming breaks in a
->   way that is invisible until someone changes a colour.
+>   config with CSS-first `@theme`. The tokens now exist, so this is unblocked.
 >
 > The content core (schema, dates, health, listOps) was **not** moved into
 > `core/` — it still lives under `src/cms/`. It works; tidy it when convenient.
@@ -255,8 +285,10 @@ _Risk: theme hydration mismatch → keep the blocking script verbatim, `suppress
 > server, `<title>` included.
 >
 > **Deviations:** the `idb:` scheme and `src/cms/utils/mediaUrls.ts` still exist,
-> because the admin continues to use IndexedDB for drafts and media. The bundle
-> migration script the plan describes was never needed and does not exist.
+> because the admin continues to use IndexedDB for drafts — and, for content
+> uploaded before uploads moved server-side, for media too. New uploads no
+> longer use it. The bundle migration script the plan describes was never needed
+> and does not exist.
 >
 > **Fixed on the way:** probing for the pre-rename database _created_ an empty
 > one named after the original owner on every fresh install.
@@ -319,9 +351,21 @@ Passkey + OTP + sessions + claim + CSRF + rate limiting + CSP/headers. `requireO
 > All four collections still exist separately, so the 301 redirects the plan
 > mentions are not needed yet.
 >
-> Drafts still live in the browser's IndexedDB; only _published_ content is
-> server-side. Two people editing from two browsers would not see each other's
-> drafts.
+> Drafts still live in the browser's IndexedDB; only _published_ content and
+> uploaded media are server-side. Two people editing from two browsers would not
+> see each other's drafts.
+>
+> **Fixed on the way: uploaded images never reached visitors.** `uploadMedia`
+> wrote the bytes to the editor's own IndexedDB and put an `idb:<id>` reference
+> in the content. Publishing sent that reference to the server, where it means
+> nothing, so `resolveAssetUrl` fell through to its 1x1 transparent GIF —
+> silently, with no broken-image icon and no console error, and only for other
+> people. The owner's browser still had the blob, so the site looked right to
+> the one person who would have noticed. Uploads now go through
+> `POST /api/admin/media` into the configured storage adapter, and content
+> records `/api/media/<key>`, which stays correct across a change of backend.
+> Bytes are accepted on their leading bytes rather than their filename, so an
+> HTML page named `.pdf` and an SVG carrying `onload` are both refused.
 
 Per-record writes with revision checks; publish (validate → version → bulkPut → `writeSnapshot` → `revalidateTag`); `draftMode()` preview replacing the `?preview=true` iframe. Block schema + registry + validation + migration harness + renderer with the first 6 blocks and the kitchen-sink matrix **from day one**. Catch-all `[[...slug]]` routing. Keep `MAX_VERSIONS = 20` and the snapshot-excludes-history decision ([cmsService.ts:284-298](src/cms/services/cmsService.ts#L284-L298)) — both were right.
 
@@ -339,9 +383,13 @@ Per-record writes with revision checks; publish (validate → version → bulkPu
 > and the rule that auth state never appears inside a content export. The whole
 > app — claim, sign in, publish, serve — was run against Postgres end to end.
 >
-> **GAP:** file uploads to **Supabase Storage and Vercel Blob are unverified
-> against the live services.** The database half of both adapters is proven; the
-> object-store half is written but never exercised. Test this before
+> **GAP:** file uploads to **Supabase Storage and Vercel Blob have still not
+> been run against the live services.** The database half of both adapters is
+> proven. The object-store half is now genuinely reachable — the admin uploads
+> through `POST /api/admin/media` into whichever adapter is configured, verified
+> end to end on the local backend — but nobody has yet pointed it at a real
+> Supabase project or Blob store. Set the credentials, run
+> `npx vitest run core/storage`, and upload one image through the admin before
 > recommending either for production use.
 >
 > **Fixed on the way:** two genuine concurrency bugs in the local adapter, both

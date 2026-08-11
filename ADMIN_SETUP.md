@@ -13,7 +13,10 @@ npm run dev
 ```
 
 - Public site: http://localhost:3000/
-- Admin panel: http://localhost:3000/admin/login
+- Admin panel: http://localhost:3000/admin
+
+Nothing to sign up for and no keys to find. With no database configured, content is stored on
+disk under `.opb/` — delete that folder to start over from a fresh install.
 
 ### Signing in
 
@@ -48,19 +51,33 @@ any of them into your draft.
 
 ## 3. Where content lives
 
-Content is stored in **your browser's IndexedDB**, on this computer, in this browser profile.
+Two places, and the split is the thing worth understanding.
+
+**Published content is on the server**, in whichever backend you configured — the local
+filesystem, Supabase, Neon, or any Postgres. Clicking **Publish Live** writes a snapshot there
+and clears the cached pages, so what visitors see changes within seconds. This is what makes the
+button mean what it says.
+
+**Your draft is in this browser**, in IndexedDB, in this browser profile. Nothing you have typed
+but not published exists anywhere else yet.
 
 That means:
 
-- Changes appear instantly for you, with no rebuild and no deploy.
-- **Nobody else sees them.** A visitor to the deployed site sees whatever was in the code at
-  build time.
-- Clearing site data for this origin deletes your content.
+- Published changes are live for everyone, with no rebuild and no deploy.
+- **Unpublished drafts are not.** Editing from a second computer starts from the published
+  version, not from the draft you left open elsewhere.
+- Clearing site data for this origin discards your unpublished draft. Published content is
+  unaffected.
 
-**So export regularly.** `/admin/settings` → **Export Content** downloads one `.json` file
-containing all text and every uploaded image. That file is your backup, the way to move content
-to another computer, and the seed for the hosted backend later. **Import Bundle** restores it;
-**Reset to Defaults** returns everything to the content shipped in `src/data/`.
+**Uploads go straight to the server**, not into the draft. An image is stored in your backend
+the moment you add it and referenced as `/api/media/<key>`, which is why it appears for visitors
+once the content around it is published. Files are accepted on their contents rather than their
+name, so an HTML page renamed `.pdf` is refused, and SVG is refused outright — a browser runs
+any script inside an SVG as though you had written it yourself.
+
+`/admin/settings` → **Export Content** downloads one `.json` file containing all text and every
+uploaded image, which is your backup and the way to move everything to another install.
+**Import Bundle** restores it.
 
 ---
 
@@ -68,31 +85,51 @@ to another computer, and the seed for the hosted backend later. **Import Bundle*
 
 | Screen                 | What it controls                                                                                                                   |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Homepage Builder       | Order and visibility of homepage bands; their headings and buttons. Also the headers for the Work, Case Studies and Contact pages. |
-| Selected Work          | Projects: copy, images, metadata, live URL. Drives the homepage cards, `/work` and `/work/:slug`.                                  |
-| Case Studies           | The long-form stories, including research, wireframes, decisions and outcomes.                                                     |
-| Brands & Clients       | Logo strip on the homepage.                                                                                                        |
+| Dashboard              | What is still unfinished, each item linking to the screen that fixes it.                                                           |
+| Analytics              | Enquiry counts from your own database, plus audience figures once a provider is connected.                                         |
+| Homepage               | Order and visibility of homepage bands; their headings and buttons. Also the headers for the Work, Case Studies and Contact pages. |
+| Selected work          | Projects: copy, images, metadata, live URL. Drives the homepage cards, `/work` and `/work/:slug`.                                  |
+| Case studies           | The long-form stories, including research, wireframes, decisions and outcomes.                                                     |
+| Brands                 | Logo strip on the homepage.                                                                                                        |
 | Experience / Education | The two timelines.                                                                                                                 |
-| Process Steps          | The numbered "How I work" list.                                                                                                    |
+| Process steps          | The numbered "How I work" list.                                                                                                    |
 | Capabilities           | Skill groups.                                                                                                                      |
 | Recommendations        | Testimonials.                                                                                                                      |
-| Visual Explorations    | The image gallery on the About page.                                                                                               |
-| Media Library          | Every uploaded image and PDF. Uploading a PDF also sets it as the downloadable résumé.                                             |
-| Contact Messages       | Enquiries submitted through the contact form.                                                                                      |
+| Visual explorations    | The image gallery on the About page.                                                                                               |
+| Media library          | Every uploaded image and PDF. Uploading a PDF also sets it as the downloadable résumé.                                             |
+| Messages               | Enquiries submitted through the contact form.                                                                                      |
 | Navigation             | Links in the header. Warns if a link points at a page that doesn't exist.                                                          |
-| Footer & Social        | Copyright line, oversized footer word, social cards.                                                                               |
+| Footer & social        | Copyright line, oversized footer word, social cards.                                                                               |
 | Microcopy              | Every short string — buttons, labels, confirmations. Searchable.                                                                   |
-| Appearance             | Accent and background colours per theme, and the Google Fonts.                                                                     |
+| Appearance             | Six colours — accent, background and stroke, per theme — and the Google Fonts. See section 5.                                      |
 | SEO                    | Page title, meta description, share image.                                                                                         |
-| Settings & Backup      | Your name and contact details, the About story, and export/import/reset.                                                           |
+| General & backup       | Your name and contact details, the About story, and export/import/reset.                                                           |
+| Version history        | The last 20 published snapshots, any of which can be restored into your draft.                                                     |
 
-`src/data/` is **seed content only** — read once on a browser's first visit to populate the CMS.
-Editing those files will not change a browser that already has stored content; use the admin, or
-Reset to Defaults.
+`src/data/` is **seed content only** — the demo projects and clients a fresh install starts with,
+so the site is never an empty shell. Editing those files will not change an install that already
+has content; use the admin, or Reset to Defaults.
 
 ---
 
-## 5. Design system
+## 5. Colours, and why you only pick six
+
+The Appearance screen asks for an accent, a background and a stroke colour, for each of the two
+themes. Everything else the site paints — card surfaces, secondary and muted text, hover states,
+badge fills, the label colour on an accent-filled button — is generated from those six by
+`core/theme/tokens.ts`, and rendered into the page on the server so the first paint is already
+your palette rather than the built-in one.
+
+Two rules hold for every generated value, and they are why the screen is small:
+
+- **Foregrounds are derived, never asked for.** Pick a yellow accent and the text on your
+  buttons goes dark; pick navy and it goes light. Nobody has to think about it.
+- **Text is clamped to stay readable.** Anything that would fail WCAG's 4.5:1 against the
+  surface it sits on is walked toward black or white until it passes. A colour you love but
+  cannot read is the one mistake a person is least likely to catch in their own site, because
+  they chose it precisely because they like looking at it.
+
+## 6. Design system
 
 The admin is built on **Astryx** (`@astryxdesign/core`) with the **neutral**
 theme — real components, not a lookalike. Colours, type scale, spacing, radii,
@@ -135,44 +172,55 @@ reaches the public site. The draft preview runs in an iframe — a separate
 document — so it always shows the site's own typography and brand colour, not
 the editor's.
 
----
-
-## 6. Going online (not set up yet)
-
-Two things are still needed before edits are visible to visitors:
-
-1. **A backend.** Content persistence sits behind one interface, `ContentStore`
-   (`src/cms/services/storage/types.ts`). The current implementation is
-   IndexedDB (`localStore.ts`). Adding a hosted implementation — Postgres for
-   the content tree, object storage for media, and real authentication —
-   replaces that one file; nothing above it changes. Seed it by importing your
-   exported bundle.
-
-2. **A host with an SPA rewrite.** This is a client-routed single-page app.
-   Without a `/*` → `/index.html` rewrite, `/work/:slug` and `/admin` return
-   404 when refreshed. Both `vercel.json` and `public/_redirects` are already
-   in the repository, so Vercel, Netlify and Cloudflare Pages are covered.
-
-Until then, treat `/admin` as a local tool.
+The admin is being rebuilt on shadcn/ui; see Phase 7 in [docs/PLAN.md](docs/PLAN.md).
 
 ---
 
-## 7. Production build
+## 7. Going online
+
+Push to any host that runs Node. The public site is server-rendered, so there is no SPA rewrite
+to configure and no `/*` → `/index.html` rule to remember — a request for `/work/some-slug`
+is a real request the server answers.
+
+What you do need:
+
+1. **`OPB_SETUP_TOKEN`**, any long random string, set before you deploy. Without it the claim
+   form is closed in production — the site serves, but nobody can take ownership of it,
+   including you. That is deliberate: an open claim form on a public URL is a race the owner
+   can lose, and the only alternative evidence available is the `Host` header, which the caller
+   chooses.
+2. **A backend, unless you control the disk.** The local filesystem adapter is the default and
+   is correct for a VPS, Docker or a Raspberry Pi. It refuses to run on Vercel, Netlify and
+   Cloudflare, where the disk is discarded between deploys and your content would silently
+   disappear. On those, add Supabase or Neon + Blob; the app uses whichever service's
+   environment variables are present, so provisioning is the only step.
+
+See [.env.example](.env.example) for every variable, and the
+[Deploy your own](README.md#deploy-your-own) button for the one-click path.
+
+## 8. Production build
 
 ```bash
-npm run build     # type-checks, then bundles to dist/
+npm run build     # type-checks and builds
 npm run start     # serve the built output locally
 ```
 
-The admin is lazy-loaded into separate chunks, so visitors to the public pages never download it.
+Linting and tests are separate, and worth running before you push:
+
+```bash
+npm run lint && npm run format:check && npm run test
+```
+
+Testing a production build over plain HTTP on your own machine also needs
+`OPB_ALLOW_INSECURE_COOKIES=1`, because the session cookie is otherwise marked `Secure` and the
+browser will not send it back. Never set that on a public site.
 
 ## Analytics
 
-The admin has an **Analytics** page, but the audience half of it is empty until a
-provider is connected. That is not a missing feature — a static site cannot count
-its own visitors. Nothing runs on a server, so a page view has nowhere to be
-recorded that you could read back later; IndexedDB only holds what happened in
-_your_ browser.
+The admin has an **Analytics** page. The enquiry half is exact — those numbers come from the
+contact form straight into your own database. The audience half is empty until you connect a
+provider, because counting visitors means recording something on every page view, and this
+project deliberately records nothing about your visitors unless you ask it to.
 
 The site is already instrumented. These fire on the public site the moment a
 provider is configured, and are never sent from `/admin` or the draft preview:
@@ -206,7 +254,3 @@ Self-hosted installs also need `NEXT_PUBLIC_ANALYTICS_SRC` pointing at your scri
 Optionally create a read-only share link in the provider and set
 `NEXT_PUBLIC_ANALYTICS_SHARE_URL` — the Analytics page embeds it, so the charts appear
 in the admin instead of on the provider's site.
-
-**Enquiry numbers do not need any of this.** They come from the contact form
-straight into this database, so they are exact whether or not a provider is
-connected.

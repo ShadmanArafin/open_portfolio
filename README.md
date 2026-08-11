@@ -123,10 +123,11 @@ discover them after typing in a portfolio:
 - **No email.** Enquiries reach your inbox inside the admin, but nothing is
   emailed to you, and there is no OTP or password reset. If you forget your
   passphrase, delete `.opb/state/owner.json` and claim the site again.
-- **File uploads on hosted backends are unverified.** The database half of
-  Supabase and Neon is tested end to end against a real Postgres. Uploading
-  images goes to Supabase Storage or Vercel Blob, and neither has been exercised
-  against the live service yet.
+- **Uploads have not been run against the hosted object stores.** Uploading now
+  goes through the server into whichever backend is configured, and is verified
+  end to end on the local filesystem backend. The same code path drives Supabase
+  Storage and Vercel Blob, and the storage conformance suite covers both, but
+  neither has yet been run against the live service with real credentials.
 - **No blog, no page builder, one theme.** All planned; none built.
 - **The admin is the old component kit.** It works, but it is being rebuilt on
   shadcn/ui.
