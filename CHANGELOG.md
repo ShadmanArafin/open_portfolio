@@ -14,6 +14,10 @@ portfolio online and run it without opening a file.
 
 ### You can now
 
+- **Choose from six themes.** Editorial, Terminal, Gallery, Warm, Bold and
+  Minimal. Each changes the palette, the typeface, the spacing and the corner
+  radius together, in both light and dark. Change anything on top and your
+  choice wins over the theme.
 - **Build pages visually.** Add blocks, reorder them, hide them, edit every
   field, set each page's own title and description for search results, preview
   before publishing. Seven block types: hero, text, image, gallery, numbers,
@@ -60,7 +64,9 @@ a portfolio:
 
 - **Uploads have not been run against Vercel Blob or Supabase Storage with real
   credentials.** They work on the local filesystem and share the same code path.
-- **One theme, and no way to swap it.** The machinery for more is built.
+- **Themes change colour, type and spacing — not layout.** Six of them, but
+  they do not rearrange the page. Different structures come with more block
+  types.
 - **No blog.**
 - **Nothing on mobile beyond the site being responsive.** No app to install, no
   notifications.

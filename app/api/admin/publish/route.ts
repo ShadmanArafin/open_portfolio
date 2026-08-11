@@ -5,6 +5,7 @@ import { requireOwner, UnauthorizedError } from '@/core/auth/guard';
 import { clientKey, rateLimit } from '@/core/auth/ratelimit';
 import { withoutEnquiries } from '@/core/content/sanitise';
 import { auditContrast, describeFailure } from '@/core/theme/audit';
+import { flattenAppearance } from '@/core/theme/resolve';
 import { looksLikeContent } from '@/core/content/validate';
 import { RevisionConflictError } from '@/core/storage/contract';
 
@@ -56,7 +57,9 @@ export async function POST(req: Request) {
   // "blocking" that are judgement calls — an unpublished draft project is the
   // owner's business — and refusing every one of them would make publishing
   // feel broken rather than careful.
-  const contrast = auditContrast(body.content.appearance);
+  // Flattened first: with a theme selected, the stored appearance is mostly
+  // empty overrides, and auditing those would check colours nobody will see.
+  const contrast = auditContrast(flattenAppearance(body.content.appearance));
   if (!contrast.passes) {
     return NextResponse.json(
       {

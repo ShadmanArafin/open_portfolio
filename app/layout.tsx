@@ -3,6 +3,8 @@ import { buildMetadata } from '@/core/content/metadata';
 import { getPublishedContent } from '@/core/content/read';
 import { buildThemeStylesheet } from '@/core/theme/tokens';
 import { buildLayoutStylesheet } from '@/core/theme/layout-tokens';
+import { flattenAppearance, resolveAppearance } from '@/core/theme/resolve';
+import { fontHref } from '@/core/theme/presets';
 import { THEME_STORAGE_KEY } from '@/context/themeConstants';
 
 /*
@@ -58,7 +60,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const content = await getPublishedContent();
   // Colour changes per mode; spacing, radius and type do not, so the layout
   // half is emitted once on :root rather than duplicated into both blocks.
-  const themeTokens = buildLayoutStylesheet() + buildThemeStylesheet(content.appearance);
+  // The chosen theme supplies anything the owner has not overridden, and its
+  // layout half — density, radius, type scale — is what makes two themes feel
+  // different rather than merely differently coloured.
+  const appearance = resolveAppearance(content.appearance);
+  const themeTokens =
+    buildLayoutStylesheet(appearance.layout) +
+    buildThemeStylesheet(flattenAppearance(content.appearance));
+
+  // Only the families this theme actually uses. Loading every font any theme
+  // might want is a download every visitor pays for and nobody sees.
+  const fonts = fontHref(appearance.preset);
 
   return (
     // suppressHydrationWarning: the script above mutates <html> before React
@@ -70,14 +82,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             reaches this string verbatim. Covered by a test in
             core/theme/__tests__/tokens.test.ts. */}
         <style dangerouslySetInnerHTML={{ __html: themeTokens }} />
-        {/* Default pairing. The appearance editor swaps these at runtime;
-            self-hosting them via next/font comes with the token rework. */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Instrument+Serif:wght@400&family=Geist+Mono:wght@400;500&display=swap"
-          rel="stylesheet"
-        />
+        {fonts && (
+          <>
+            <link rel="preconnect" href="https://fonts.googleapis.com" />
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+            <link href={fonts} rel="stylesheet" />
+          </>
+        )}
       </head>
       {/* No `selection:` utilities here. `accent` resolves to a bare `var()`,
           which Tailwind cannot apply an opacity modifier to, so

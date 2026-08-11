@@ -146,6 +146,10 @@ Every step is skippable. None of it is permanent.
 
 ### Build
 
+- **Six themes.** Editorial, Terminal, Gallery, Warm, Bold and Minimal — each
+  changes colour, typeface, spacing and corner radius together, and every one is
+  checked against the same contrast rules that block publishing. Pick one and
+  change anything you like on top; your changes always win.
 - **A visual page builder.** Add blocks, drag them into order, hide them, edit
   every field. Seven block types so far: hero, text, image, gallery, numbers,
   cards and a call to action. Reordering is buttons in an outline rather than
@@ -232,8 +236,10 @@ discover them after typing in a portfolio:
   set each page's own SEO, preview before publishing. The home page itself is
   still the theme's fixed sections, edited under Homepage. That is the largest
   remaining gap in the builder.
-- **One theme, and no way to swap it.** The token layer that makes themes
-  possible is built and enforced; the second theme is not.
+- **Six themes, but they are colour, type and spacing only.** Each one changes
+  the palette, the typeface, how tight the layout is and how round the corners
+  are — not the arrangement of the page. Different structures come with more
+  block types.
 - **No blog.** Planned, not started.
 - **Nothing on mobile beyond the site being responsive.** No app to install, no
   notifications, no admin laid out for a phone.
@@ -259,7 +265,7 @@ discover them after typing in a portfolio:
 | 0.3           | Server-side auth, publishing that reaches visitors, a contact form that delivers |
 | 0.4           | Pluggable storage with a conformance suite every backend must pass               |
 | **0.5 (now)** | Page builder, home page from blocks, media picker, services, Docker              |
-| 0.6           | A second theme and a way to switch. More block types                             |
+| 0.6           | More block types, richer themes, a live demo                                     |
 | 0.7           | Mobile admin, installable app, notifications                                     |
 | 0.8           | Remaining backends, passkeys and one-time codes                                  |
 | 0.9           | Blog, newsletter capture, six themes, full profession presets                    |

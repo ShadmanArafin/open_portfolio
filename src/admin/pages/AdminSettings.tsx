@@ -1,5 +1,7 @@
 'use client';
 
+import { Badge } from '@astryxdesign/core/Badge';
+import { DEFAULT_THEME_ID, THEME_PRESETS } from '@/core/theme/presets';
 import React, { useMemo, useRef, useState } from 'react';
 import { Selector, TextArea, TextInput } from '../components/AdminFields';
 import { VStack, HStack } from '@astryxdesign/core/Layout';
@@ -621,8 +623,92 @@ const AppearancePanel: React.FC = () => {
       (draft.appearance as any)[field] = val;
     });
 
+  /**
+   * Choosing a theme clears the colours and fonts, deliberately.
+   *
+   * They are overrides, and leaving them behind is how "switch theme" becomes a
+   * button that appears to do nothing: the new theme is selected, every value it
+   * wanted is shadowed by the old one, and the site looks identical. Clearing
+   * them is what makes switching switch.
+   */
+  const chooseTheme = (themeId: string) =>
+    updateDraft((draft) => {
+      draft.appearance.themeId = themeId;
+      draft.appearance.accentDark = '';
+      draft.appearance.accentLight = '';
+      draft.appearance.backgroundDark = '';
+      draft.appearance.backgroundLight = '';
+      draft.appearance.strokeDark = '';
+      draft.appearance.strokeLight = '';
+      draft.appearance.displayFontFamily = '';
+      draft.appearance.bodyFontFamily = '';
+      draft.appearance.monoFontFamily = '';
+    });
+
+  const currentTheme = appearance?.themeId ?? DEFAULT_THEME_ID;
+
   return (
     <>
+      <AstryxCard variant="default" density="balanced" className="space-y-6">
+        <SectionTitle icon={Palette} text="Theme" />
+        <Text type="supporting" display="block">
+          A starting point for colours, spacing and type. Pick one and then change anything you like
+          below — your changes always win over the theme.
+        </Text>
+
+        <Grid columns={{ minWidth: 240, repeat: 'fit' }} gap={3}>
+          {THEME_PRESETS.map((preset) => {
+            const selected = preset.id === currentTheme;
+            return (
+              <button
+                key={preset.id}
+                type="button"
+                onClick={() => chooseTheme(preset.id)}
+                aria-pressed={selected}
+                style={{
+                  textAlign: 'left',
+                  padding: '0.9rem',
+                  borderRadius: 'var(--radius-element)',
+                  cursor: 'pointer',
+                  border: selected
+                    ? '2px solid var(--color-content-accent)'
+                    : '1px solid var(--color-border-subtle)',
+                  background: 'var(--color-background-default)',
+                }}
+              >
+                <VStack gap={2}>
+                  {/* The swatch is the honest preview: these are the actual
+                      values the theme will render with. */}
+                  <HStack gap={1}>
+                    {[
+                      preset.colours.backgroundLight,
+                      preset.colours.accentLight,
+                      preset.colours.backgroundDark,
+                      preset.colours.accentDark,
+                    ].map((colour, i) => (
+                      <span
+                        key={i}
+                        aria-hidden
+                        style={{
+                          width: 26,
+                          height: 26,
+                          borderRadius: 4,
+                          background: colour,
+                          border: '1px solid var(--color-border-subtle)',
+                        }}
+                      />
+                    ))}
+                  </HStack>
+                  <Text weight="medium">{preset.name}</Text>
+                  <Text type="supporting">{preset.description}</Text>
+                  {selected && <Badge variant="green" label="In use" />}
+                </VStack>
+              </button>
+            );
+          })}
+        </Grid>
+      </AstryxCard>
+
       <AstryxCard variant="default" density="balanced" className="space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <SectionTitle icon={Palette} text="Colour tokens" />

@@ -383,6 +383,15 @@ export interface NavLinkItem {
 }
 
 export interface AppearanceSettings {
+  /**
+   * Which theme this site uses. Absent means the default.
+   *
+   * A reference rather than a copy, so a theme improved upstream reaches
+   * existing sites. Every field below is an *override* of it: non-empty wins,
+   * empty means "whatever the theme says". Choosing a theme in the admin clears
+   * the overrides, which is what makes switching actually switch.
+   */
+  themeId?: string;
   accentDark: string;
   accentLight: string;
   backgroundDark: string;

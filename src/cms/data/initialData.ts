@@ -335,15 +335,23 @@ export const INITIAL_CMS_STATE: CMSState = {
   },
 
   appearance: {
-    accentDark: '#35F2B3',
-    accentLight: '#00B97D',
-    backgroundDark: '#0D0F0F',
-    backgroundLight: '#F3F3EF',
-    strokeDark: '#1B1B1B',
-    strokeLight: '#DADADA',
-    displayFontFamily: 'Instrument Serif',
-    bodyFontFamily: 'Geist',
-    monoFontFamily: 'Geist Mono',
+    // Empty on purpose. Every one of these is an *override* of the chosen
+    // theme, and an empty value means "whatever the theme says" — so a theme
+    // improved upstream reaches this site instead of being permanently
+    // shadowed by a copy taken the day it was installed.
+    //
+    // The `editorial` theme carries exactly the values that used to live here,
+    // so nothing about a new install looks different.
+    themeId: 'editorial',
+    accentDark: '',
+    accentLight: '',
+    backgroundDark: '',
+    backgroundLight: '',
+    strokeDark: '',
+    strokeLight: '',
+    displayFontFamily: '',
+    bodyFontFamily: '',
+    monoFontFamily: '',
     giantFooterText: 'PORTFOLIO',
   },
 
