@@ -324,6 +324,28 @@ export function runConformanceSuite(
         expect(listed[0].email).toBe('a@example.com');
       });
 
+      it('keeps both patches when two updates race on the same id', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        await adapter.messages.append(enquiry('racer', '2026-01-01T00:00:00.000Z'));
+
+        // Different fields, so a correct merge keeps both. A read that happens
+        // outside the per-id serialisation lets both calls read the same
+        // pre-patch row, and whichever writes last silently discards the
+        // other's patch rather than merging with it.
+        await Promise.all([
+          adapter.messages.update('racer', { status: 'read' }),
+          adapter.messages.update('racer', { company: 'Northwind' }),
+        ]);
+
+        const listed = await adapter.messages.list();
+        expect(listed.length).toBe(1);
+        expect(listed[0].status).toBe('read');
+        expect(listed[0].company).toBe('Northwind');
+      });
+
       it('ignores a patch for something that is not there', async () => {
         await reset();
         const adapter = await getAdapter();

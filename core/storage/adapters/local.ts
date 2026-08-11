@@ -111,16 +111,43 @@ const media: MediaAdapter = {
 };
 
 /**
- * Serialises writes per target path.
+ * Serialises operations per target path.
  *
  * Renaming onto the same destination from two places at once is fine on Linux
  * and fails with EPERM on Windows, where the destination is briefly locked. So
- * rather than racing and hoping, writes to a given file queue behind each
- * other. The observable behaviour is unchanged — last writer still wins — but
- * it wins by arriving last rather than by winning a coin toss, and no caller
- * ever sees an error for having written at an inconvenient moment.
+ * rather than racing and hoping, operations against a given file queue behind
+ * each other. The observable behaviour for a plain write is unchanged — last
+ * writer still wins — but it wins by arriving last rather than by winning a
+ * coin toss, and no caller ever sees an error for having written at an
+ * inconvenient moment.
+ *
+ * `messages.update` shares this same queue for its read-merge-write, not only
+ * `atomicWrite`'s plain write. A read that happens before a caller ever
+ * reaches this queue is invisible to it — which is exactly what let two
+ * concurrent updates on the same id both read the same pre-patch row and have
+ * whichever wrote last silently discard the other's patch instead of merging
+ * with it.
  */
 const writeQueues = new Map<string, Promise<void>>();
+
+/** Runs `fn` after every operation already queued for `target` has settled. */
+function runQueued<T>(target: string, fn: () => Promise<T>): Promise<T> {
+  const previous = writeQueues.get(target) ?? Promise.resolve();
+  const run = previous.catch(() => {}).then(fn);
+  // Tracked as a void-returning settlement, so both a plain write and a
+  // read-merge-write can share one queue regardless of what they return.
+  const settled = run.then(
+    () => {},
+    () => {}
+  );
+
+  writeQueues.set(target, settled);
+  return run.finally(() => {
+    // Drop the entry once this is the last operation, so the map cannot grow
+    // without bound over the life of the process.
+    if (writeQueues.get(target) === settled) writeQueues.delete(target);
+  });
+}
 
 /**
  * Writes a file so a reader never sees a partial one.
@@ -129,32 +156,25 @@ const writeQueues = new Map<string, Promise<void>>();
  * the same temp file, the first rename consumes it, and the second fails with
  * ENOENT — a second publish arriving mid-flight would throw rather than simply
  * lose the race.
+ *
+ * Not queued itself — callers that need queuing go through `runQueued`, which
+ * `messages.update` also uses directly for its read, so the two cannot be
+ * composed without the outer call deadlocking on its own queue entry.
  */
-async function atomicWrite(target: string, contents: string): Promise<void> {
-  const previous = writeQueues.get(target) ?? Promise.resolve();
-
-  const run = previous
-    .catch(() => {})
-    .then(async () => {
-      const temp = `${target}.${process.pid}.${randomBytes(6).toString('hex')}.tmp`;
-      try {
-        await writeFile(temp, contents, 'utf8');
-        await rename(temp, target);
-      } catch (err) {
-        // Never leave a stray temp file behind on failure.
-        await unlink(temp).catch(() => {});
-        throw err;
-      }
-    });
-
-  writeQueues.set(target, run);
+async function writeAtomically(target: string, contents: string): Promise<void> {
+  const temp = `${target}.${process.pid}.${randomBytes(6).toString('hex')}.tmp`;
   try {
-    await run;
-  } finally {
-    // Drop the entry once this is the last write, so the map cannot grow
-    // without bound over the life of the process.
-    if (writeQueues.get(target) === run) writeQueues.delete(target);
+    await writeFile(temp, contents, 'utf8');
+    await rename(temp, target);
+  } catch (err) {
+    // Never leave a stray temp file behind on failure.
+    await unlink(temp).catch(() => {});
+    throw err;
   }
+}
+
+function atomicWrite(target: string, contents: string): Promise<void> {
+  return runQueued(target, () => writeAtomically(target, contents));
 }
 
 function channelPath(channel: Channel): string {
@@ -269,13 +289,21 @@ const messages: MessagesAdapter = {
   },
 
   async update(id, patch) {
-    let existing: ContactMessage;
-    try {
-      existing = JSON.parse(await readFile(messagePath(id), 'utf8')) as ContactMessage;
-    } catch {
-      return; // Gone already is the caller's intent satisfied.
-    }
-    await atomicWrite(messagePath(id), JSON.stringify({ ...existing, ...patch, id }, null, 2));
+    const target = messagePath(id);
+    // The read and the write happen inside the same queued operation, not a
+    // read followed by a separately-queued `atomicWrite`. Reading first and
+    // queuing the write after is what let two concurrent updates both read
+    // the row before either had written, so the later write silently threw
+    // away the earlier call's patch instead of merging with it.
+    await runQueued(target, async () => {
+      let existing: ContactMessage;
+      try {
+        existing = JSON.parse(await readFile(target, 'utf8')) as ContactMessage;
+      } catch {
+        return; // Gone already is the caller's intent satisfied.
+      }
+      await writeAtomically(target, JSON.stringify({ ...existing, ...patch, id }, null, 2));
+    });
   },
 
   async remove(id) {
