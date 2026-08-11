@@ -44,6 +44,37 @@ token are set for you and you never see either.
 > **Blob** from your project's Storage tab. The app uses whichever backend's
 > environment variables are present, so nothing else changes.
 
+### Before you use Vercel's free plan, read this
+
+Vercel's Hobby plan is **non-commercial only**, and their definition is broader
+than most people expect. From their
+[fair use guidelines](https://vercel.com/docs/limits/fair-use-guidelines)
+(checked 12 August 2026):
+
+> **Hobby teams** are restricted to non-commercial personal use only. All
+> commercial usage of the platform requires either a Pro or Enterprise plan.
+>
+> Commercial usage is defined as any Deployment that is used for the purpose of
+> financial gain of **anyone** involved in **any part of the production** of the
+> project […] Examples of this include, but are not limited to […] **Advertising
+> the sale of a product or service** […]
+>
+> Asking for Donations fall under commercial usage.
+
+A portfolio that exists to get you hired, or that lists services you charge for,
+may well fall inside that. A student's coursework portfolio almost certainly
+does not. We are not going to tell you which side of the line your site is on —
+that is Vercel's call, not ours, and their page says to
+[ask their support team](https://vercel.com/help#issues) if you are unsure.
+
+What we will say plainly: **if your portfolio advertises work you are paid for,
+budget for Vercel Pro or use one of the options below instead.** Running it on
+your own server has no such restriction, and neither does any host you pay for
+in the ordinary way.
+
+We have not checked whether Netlify's free tier carries an equivalent clause, so
+do not read its presence here as an endorsement of it for commercial sites.
+
 ## Run it on your own server
 
 One command, on any machine with Docker. No account anywhere, no platform that
