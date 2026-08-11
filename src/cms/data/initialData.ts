@@ -274,7 +274,11 @@ export const INITIAL_CMS_STATE: CMSState = {
     resumeFilename: '',
     availabilityStatus: 'Available for select projects',
     availableDotEnabled: true,
-    copyrightText: `© ${new Date().getFullYear()} Your Name`,
+    // Empty on purpose: the footer works this out from your name and the
+    // current year. A literal here is a copy that goes stale the moment
+    // somebody changes their name in Settings, and nothing connects the two
+    // screens in the user's mind.
+    copyrightText: '',
     timezone: 'UTC',
     siteUrl: '',
     aboutHeading: 'Learning, making, and improving along the way.',
@@ -345,7 +349,9 @@ export const INITIAL_CMS_STATE: CMSState = {
 
   seo: {
     siteTitle: 'Your Name — Your Role',
-    titleTemplate: '%s — Your Name',
+    // Also empty, for the same reason: the page title falls back to
+    // "Page — Site title", which tracks whatever the site is called.
+    titleTemplate: '',
     metaDescription:
       'Placeholder description. Write one or two sentences describing who you are and what you do — search engines and link previews show roughly 150 characters.',
     canonicalUrl: '',

@@ -62,7 +62,10 @@ export const AdminWelcome: React.FC = () => {
         draft.settings.fullName = fullName.trim();
         draft.appearance.giantFooterText = fullName.trim().split(/\s+/)[0].toUpperCase();
         draft.seo.author = fullName.trim();
-        draft.settings.copyrightText = `© ${new Date().getFullYear()} ${fullName.trim()}`;
+        // `copyrightText` and `titleTemplate` are deliberately not written
+        // here. Both are derived from the name when left empty, so writing
+        // them now would freeze today's answer and quietly contradict Settings
+        // the first time somebody changes their name.
       }
       if (role.trim()) draft.settings.role = role.trim();
       if (location.trim()) draft.settings.location = location.trim();
@@ -72,7 +75,6 @@ export const AdminWelcome: React.FC = () => {
         const name = fullName.trim() || draft.settings.fullName;
         const job = role.trim() || draft.settings.role;
         draft.seo.siteTitle = `${name} — ${job}`;
-        draft.seo.titleTemplate = `%s — ${name}`;
       }
 
       // The preset renames the built-in sections rather than restructuring

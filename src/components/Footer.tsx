@@ -1,5 +1,6 @@
 'use client';
 
+import { isShippedCopyright } from '@/core/content/identity';
 import React, { useState } from 'react';
 import { trackEvent } from '../utils/analytics';
 import { Mail, Copy, Check, Download, ArrowUpRight } from 'lucide-react';
@@ -235,8 +236,10 @@ export const Footer: React.FC = () => {
         {/* FOOTER LOWER META AREA */}
         <div className="flex items-center justify-center py-6 border-t border-border text-xs text-text-muted font-body font-normal text-center w-full">
           <span>
-            {data.settings.copyrightText ||
-              `Handmade with care ✦ © ${new Date().getFullYear()} ${data.settings.fullName}`}
+            {isShippedCopyright(data.settings.copyrightText)
+              ? `Handmade with care ✦ © ${new Date().getFullYear()} ${data.settings.fullName}`
+              : data.settings.copyrightText ||
+                `Handmade with care ✦ © ${new Date().getFullYear()} ${data.settings.fullName}`}
           </span>
         </div>
       </Container>

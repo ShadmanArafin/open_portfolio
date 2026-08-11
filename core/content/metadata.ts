@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import type { CMSState, SEOSettings } from '@/cms/types/cms';
 import { getPublishedContent } from './read';
+import { isShippedTitleTemplate } from './identity';
 
 /**
  * Turn the SEO settings the admin already edits into real document metadata.
@@ -11,11 +12,28 @@ import { getPublishedContent } from './read';
  * actually do something.
  */
 
-/** Applies the `%s` template, unless the page *is* the site's front door. */
+/**
+ * Applies the `%s` template, unless the page *is* the site's front door.
+ *
+ * With no template set, the title becomes "Page — Site title" rather than the
+ * page title alone: dropping the site's name from every tab and every search
+ * result is a real loss, and it is what the previous fallback of `'%s'` did.
+ *
+ * Deriving it also means it cannot go stale. The template used to be written
+ * once by the first-run wizard as `%s — <name>`, so anybody who later changed
+ * their name in Settings kept the old one in every page title, on every search
+ * result, indefinitely.
+ */
 function applyTitleTemplate(seo: SEOSettings, pageTitle?: string): string {
-  if (!pageTitle) return seo.siteTitle || 'Portfolio';
-  const template = seo.titleTemplate?.includes('%s') ? seo.titleTemplate : '%s';
-  return template.replace('%s', pageTitle);
+  const siteTitle = seo.siteTitle?.trim();
+  if (!pageTitle) return siteTitle || 'Portfolio';
+
+  // A template we shipped with a placeholder name in it counts as unset, so
+  // existing installs pick up the derived title rather than keeping "Your Name"
+  // in every tab. See `identity.ts`.
+  const template = isShippedTitleTemplate(seo.titleTemplate) ? '' : seo.titleTemplate;
+  if (template?.includes('%s')) return template.replace('%s', pageTitle);
+  return siteTitle ? `${pageTitle} — ${siteTitle}` : pageTitle;
 }
 
 /**
