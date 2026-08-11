@@ -25,15 +25,15 @@
 | 4 — Auth                    | **Done, verified** | Passphrase + sessions. **Passkeys/OTP not built**                            |
 | 5 — Write path              | **Done**           | Publish, contact, blocks, pages, preview, revisions                          |
 | 6 — Hosted adapters         | **Done, verified** | Supabase, Neon, Postgres. **Uploads unverified**                             |
-| 7 — Admin (Astryx)          | **In progress**    | Page builder works end to end. **MediaPicker, settings merge remain**        |
+| 7 — Admin (Astryx)          | **In progress**    | Page builder and media picker work. **Settings merge, block home remain**    |
 | 8 — Adapters + integrations | **Partially done** | SMTP, notification, reset done. **5 backends, registry, vault, OTP missing** |
 | 9 — Blog, themes, presets   | **Barely started** | Only profession vocabulary packs                                             |
 
-**Where to start:** the media picker, then Phase 8's adapters. A person can now
-sign in, build a page from blocks, preview it and publish it — the loop is
-closed and verified in a browser. The next thing they hit is images: a field can
-upload a new file but cannot reuse one already in the library, which is the
-first place the builder still asks somebody to do bookkeeping by hand.
+**Where to start:** Phase 8. A person can now sign in, build a page from
+blocks, choose images from their library, preview the result and publish it —
+the loop is closed and verified in a browser, end to end. What is left is
+breadth rather than depth: more backends, the integrations registry, and the
+blog. Nothing above them is blocking any more.
 
 This supersedes an earlier note here that said to start with blocks on the
 grounds that the primitives "need blocks to have somewhere to live". That has it
@@ -112,8 +112,8 @@ Four things, and only four:
    `checkContrast` is ready; then Tailwind 4 (PR #7), now unblocked.
 2. ~~**Phase 5 blocks and pages**~~ — done. Blocks, pages, routing, preview and
    revisions all shipped; the record-per-row storage split moved to Phase 9.
-3. **Phase 7 `MediaPicker`** — the last thing between the builder and being
-   genuinely no-code. The shadcn rebuild is cancelled; see Phase 7.
+3. ~~**Phase 7 `MediaPicker`**~~ — done. The shadcn rebuild is cancelled; see
+   Phase 7 for why, and for what is left in it.
 4. **Phase 8 adapters** — five files, each against its own local emulator.
 5. **Phase 8 integrations registry + vault** — now with two real consumers
    (SMTP and Turnstile) to design the abstraction against, rather than none.
@@ -708,13 +708,24 @@ Supabase (built-in auth, presigned storage) and Neon+Vercel Blob (SQL, **no** bu
 >   the fallback. It now posts to `/api/admin/draft` with the revision it last
 >   saw.
 >
+> **`<MediaPicker>` is built.** Every image field now opens the library rather
+> than the operating system's file dialog — a file dialog can only ever add
+> another copy of a picture that is already there, which was the last piece of
+> bookkeeping the builder still asked a non-technical person to do by hand.
+>
+> **It asks for alt text at the moment of choosing**, with the picture on
+> screen, and writes the description and the image together in one action.
+> Every accessibility guide says to write alt text and almost nobody does,
+> because the box is always somewhere other than where the picture is picked.
+> It is still skippable on purpose: a hard requirement there is answered with a
+> space bar, and " " is worse than nothing because it silences the warning too.
+>
 > **Still to do in this phase:**
 >
-> - A real `<MediaPicker>`. Image fields upload a new file; there is no way to
->   pick one already in the library.
 > - Progressive disclosure on record editors, and collapse the five duplicate
 >   settings routes into `settings/[panel]`.
 > - A Home page built from blocks. The theme's fixed sections still own `/`.
+> - The other record editors still use the pre-picker image field.
 >
 > **The one thing built here:** `src/admin/pages/AdminWelcome.tsx`, the first-run
 > wizard, deliberately written in plain Tailwind so it survives the component

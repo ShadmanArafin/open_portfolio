@@ -26,7 +26,16 @@ export type BlockField =
   | (FieldBase & { kind: 'paragraphs' })
   | (FieldBase & { kind: 'choice'; options: { value: string | number; label: string }[] })
   | (FieldBase & { kind: 'toggle' })
-  | (FieldBase & { kind: 'media' })
+  | (FieldBase & {
+      kind: 'media';
+      /**
+       * Where this picture's description lives, so the picker can write both at
+       * once. Named explicitly rather than inferred from the path: a convention
+       * like "the sibling called alt" is invisible and breaks silently the first
+       * time a block spells it differently.
+       */
+      altPath?: string;
+    })
   | (FieldBase & {
       kind: 'list';
       /** Singular noun for the add button and each row: "image", "card". */

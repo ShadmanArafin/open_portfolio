@@ -28,6 +28,16 @@ interface AdminImageFieldProps {
   fit?: 'contain' | 'cover';
   /** Omit to render a read-only preview. */
   onFile?: (file: File) => void | Promise<void>;
+  /**
+   * Opens a chooser instead of the operating system's file dialog.
+   *
+   * Takes precedence over `onFile`. A file dialog can only ever add another
+   * copy of a picture that is already in the library, so anywhere a library
+   * exists this is the better control — and the two must not both be wired at
+   * once, or the button does two things depending on which prop was passed
+   * last.
+   */
+  onChoose?: () => void;
   buttonLabel?: string;
 }
 
@@ -45,6 +55,7 @@ export const AdminImageField: React.FC<AdminImageFieldProps> = ({
   size = 'thumb',
   fit = 'contain',
   onFile,
+  onChoose,
   buttonLabel = 'Replace',
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -76,27 +87,37 @@ export const AdminImageField: React.FC<AdminImageFieldProps> = ({
         />
       </div>
 
-      {onFile && (
-        <>
-          <Button
-            label={buttonLabel}
-            variant="secondary"
-            size="sm"
-            icon={<Upload aria-hidden />}
-            onClick={() => inputRef.current?.click()}
-          />
-          <input
-            ref={inputRef}
-            type="file"
-            accept="image/*"
-            hidden
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) void onFile(file);
-              e.target.value = '';
-            }}
-          />
-        </>
+      {onChoose ? (
+        <Button
+          label={buttonLabel}
+          variant="secondary"
+          size="sm"
+          icon={<Upload aria-hidden />}
+          onClick={onChoose}
+        />
+      ) : (
+        onFile && (
+          <>
+            <Button
+              label={buttonLabel}
+              variant="secondary"
+              size="sm"
+              icon={<Upload aria-hidden />}
+              onClick={() => inputRef.current?.click()}
+            />
+            <input
+              ref={inputRef}
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) void onFile(file);
+                e.target.value = '';
+              }}
+            />
+          </>
+        )
       )}
     </VStack>
   );

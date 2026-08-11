@@ -52,7 +52,12 @@ const mediaSchema = z.object({
 
 /** A picture and the decision about its alt text, described once. */
 const mediaFields = (prefix: string): BlockField[] => [
-  { kind: 'media', path: prefix ? `${prefix}.src` : 'src', label: 'Image' },
+  {
+    kind: 'media',
+    path: prefix ? `${prefix}.src` : 'src',
+    altPath: prefix ? `${prefix}.alt` : 'alt',
+    label: 'Image',
+  },
   {
     kind: 'text',
     path: prefix ? `${prefix}.alt` : 'alt',

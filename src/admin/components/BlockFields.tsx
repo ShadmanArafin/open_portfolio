@@ -1,12 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@astryxdesign/core/Button';
 import { Switch } from '@astryxdesign/core/Switch';
 import { Text } from '@astryxdesign/core/Text';
 import { HStack, VStack } from '@astryxdesign/core/Layout';
 import { getPath, setPath, type BlockField } from '@/core/blocks/fields';
 import { AdminImageField } from './AdminImageField';
+import { MediaPicker } from './MediaPicker';
 import { Selector, TextArea, TextInput } from './AdminFields';
 
 /**
@@ -89,31 +90,22 @@ const OneField: React.FC<{
 
     case 'media':
       return (
-        <VStack gap={1}>
-          <Text type="label" as="label" display="block">
-            {field.label}
-          </Text>
-          <AdminImageField
-            src={String(value ?? '')}
-            alt=""
-            size="thumb"
-            fit="cover"
-            buttonLabel={value ? 'Replace' : 'Choose an image'}
-            onFile={
-              onUpload
-                ? async (file) => {
-                    const url = await onUpload(file);
-                    if (url) write(url);
-                  }
-                : undefined
-            }
-          />
-          {field.help && (
-            <Text type="supporting" display="block">
-              {field.help}
-            </Text>
-          )}
-        </VStack>
+        <MediaField
+          field={field}
+          value={String(value ?? '')}
+          altValue={
+            field.altPath ? String(getPath(props, altFullPath(prefix, field.altPath)) ?? '') : ''
+          }
+          onPick={(choice) => {
+            let next = setPath(props, path, choice.url);
+            // Both halves at once. The description was written about this
+            // picture, a moment ago, with it on screen — carrying it back to a
+            // separate field the person has to find is how alt text goes unwritten.
+            if (field.altPath)
+              next = setPath(next, altFullPath(prefix, field.altPath), choice.altText);
+            onChange(next);
+          }}
+        />
       );
 
     case 'choice':
@@ -171,6 +163,55 @@ const OneField: React.FC<{
         />
       );
   }
+};
+
+/** A media field's alt path is written relative to the same parent it is. */
+function altFullPath(prefix: string, altPath: string): string {
+  return prefix ? `${prefix}.${altPath}` : altPath;
+}
+
+/**
+ * An image slot: what is there now, and a way to change it.
+ *
+ * Opening a picker rather than a file dialog is the whole point. A file dialog
+ * can only ever add another copy of a picture that is already in the library.
+ */
+const MediaField: React.FC<{
+  field: Extract<BlockField, { kind: 'media' }>;
+  value: string;
+  altValue: string;
+  onPick: (choice: { url: string; altText: string }) => void;
+}> = ({ field, value, altValue, onPick }) => {
+  const [picking, setPicking] = useState(false);
+
+  return (
+    <VStack gap={1}>
+      <Text type="label" display="block">
+        {field.label}
+      </Text>
+      <AdminImageField
+        src={value}
+        alt={altValue}
+        size="thumb"
+        fit="cover"
+        buttonLabel={value ? 'Change image' : 'Choose an image'}
+        onChoose={() => setPicking(true)}
+      />
+      {field.help && (
+        <Text type="supporting" display="block">
+          {field.help}
+        </Text>
+      )}
+      {picking && (
+        <MediaPicker
+          isOpen
+          initialAlt={altValue}
+          onClose={() => setPicking(false)}
+          onChoose={onPick}
+        />
+      )}
+    </VStack>
+  );
 };
 
 /**
