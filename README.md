@@ -160,6 +160,10 @@ Every step is skippable. None of it is permanent.
 
 ### Build
 
+- **Writing.** Essays, notes, posts — called whatever fits what you do, built
+  from the same blocks as your pages, with RSS. Ordered the way you choose
+  rather than newest-first, so your best piece stays at the top instead of
+  sinking under last week's note. Scheduling works with nothing running.
 - **Six themes.** Editorial, Terminal, Gallery, Warm, Bold and Minimal — each
   changes colour, typeface, spacing and corner radius together, and every one is
   checked against the same contrast rules that block publishing. Pick one and
@@ -254,7 +258,6 @@ discover them after typing in a portfolio:
   the palette, the typeface, how tight the layout is and how round the corners
   are — not the arrangement of the page. Different structures come with more
   block types.
-- **No blog.** Planned, not started.
 - **Nothing on mobile beyond the site being responsive.** No app to install, no
   notifications, no admin laid out for a phone.
 - **Sign-in is an email and a passphrase.** No passkeys, no one-time codes.

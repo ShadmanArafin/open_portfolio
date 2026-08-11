@@ -29,6 +29,7 @@ import {
   Settings2,
   Plug,
   LifeBuoy,
+  PenLine,
 } from 'lucide-react';
 import { SideNav, SideNavHeading, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 import { Text } from '@astryxdesign/core/Text';
@@ -81,6 +82,7 @@ export const AdminSidebar: React.FC = () => {
         { label: 'Analytics', path: '/analytics', icon: BarChart3 },
         { label: 'Homepage', path: '/homepage', icon: FileText },
         { label: 'Pages', path: '/pages', icon: FileText },
+        { label: 'Writing', path: '/writing', icon: PenLine },
       ],
     },
     {

@@ -1,4 +1,5 @@
 import { getContentForChannel } from '@/core/content/read';
+import { publicView } from '@/core/content/sanitise';
 import { currentChannel } from '@/core/pages/read';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
@@ -21,7 +22,9 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
   const content = await getContentForChannel(await currentChannel());
 
   return (
-    <SiteProviders initialData={content}>
+    // Cut down to what is already visible. The whole document used to be
+    // serialised into every public page, drafts included.
+    <SiteProviders initialData={publicView(content)}>
       <div className="min-h-screen flex flex-col justify-between relative">
         {/* First focusable element on the page: keyboard users should not have
             to tab through the whole navigation to reach the content. */}

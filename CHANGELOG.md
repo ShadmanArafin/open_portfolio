@@ -14,6 +14,9 @@ portfolio online and run it without opening a file.
 
 ### You can now
 
+- **Publish writing.** Essays, notes, posts — you choose what the section is
+  called, whether dates appear at all, and whether your best piece stays pinned
+  at the top or the newest comes first. RSS either way.
 - **Choose from six themes.** Editorial, Terminal, Gallery, Warm, Bold and
   Minimal. Each changes the palette, the typeface, the spacing and the corner
   radius together, in both light and dark. Change anything on top and your
@@ -70,7 +73,6 @@ a portfolio:
 - **Themes change colour, type and spacing — not layout.** Six of them, but
   they do not rearrange the page. Different structures come with more block
   types.
-- **No blog.**
 - **Nothing on mobile beyond the site being responsive.** No app to install, no
   notifications.
 - **Sign-in is an email and a passphrase.** No passkeys, no one-time codes.

@@ -6,6 +6,7 @@ import {
 } from '@/core/content/read';
 import { resolveSiteUrl } from '@/core/content/metadata';
 import { getIndexablePages } from '@/core/pages/read';
+import { getPublicWriting, getWritingSettings } from '@/core/writing/read';
 
 /**
  * A sitemap needs absolute URLs, so it can only be generated once the site
@@ -26,16 +27,32 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: path === '' ? 1 : 0.7,
   }));
 
-  const [projects, caseStudies, pages] = await Promise.all([
+  const [projects, caseStudies, pages, writingSettings, writing] = await Promise.all([
     getPublishedProjects(),
     getPublishedCaseStudies(),
     // Published and not marked noindex. A page the owner deliberately kept out
     // of search results must not be advertised in the sitemap either.
     getIndexablePages(),
+    getWritingSettings('published'),
+    getPublicWriting('published'),
   ]);
+
+  const writingRoutes = writingSettings.enabled
+    ? [
+        { url: `${siteUrl}/writing`, lastModified, priority: 0.7 },
+        ...writing
+          .filter((entry) => !entry.seo.noindex)
+          .map((entry) => ({
+            url: `${siteUrl}/writing/${entry.slug}`,
+            lastModified: new Date(entry.publishedAt ?? entry.updatedAt),
+            priority: 0.6,
+          })),
+      ]
+    : [];
 
   return [
     ...staticRoutes,
+    ...writingRoutes,
     ...pages.map((page) => ({
       url: `${siteUrl}/${page.slug}`,
       lastModified: page.updatedAt ? new Date(page.updatedAt) : lastModified,

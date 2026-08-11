@@ -26,3 +26,39 @@ export function withoutEnquiries(state: CMSState): CMSState {
     })),
   };
 }
+
+/**
+ * What a visitor is allowed to receive.
+ *
+ * The site layout hands the whole content document to the client so the navbar,
+ * footer and themed sections can render — and the whole document was being
+ * serialised into the HTML of every public page. That included **drafts**:
+ * unpublished pages and unfinished writing, with their titles, summaries and
+ * full block content, readable by anyone who pressed view-source.
+ *
+ * Nothing rendered them, which is exactly why it went unnoticed. The page
+ * looked correct.
+ *
+ * So the public view is cut down to what is already visible. Version history
+ * and activity logs go too — they carry old copies of content that may since
+ * have been deliberately removed, which is a subtler version of the same leak.
+ */
+export function publicView(state: CMSState): CMSState {
+  const isLiveWriting = (entry: { status?: string; scheduledFor?: string }): boolean => {
+    if (entry.status === 'published') return true;
+    if (entry.status !== 'scheduled' || !entry.scheduledFor) return false;
+    const due = Date.parse(entry.scheduledFor);
+    return Number.isFinite(due) && due <= Date.now();
+  };
+
+  return {
+    ...state,
+    pages: (state.pages ?? []).filter((page) => page.status === 'published'),
+    writing: (state.writing ?? []).filter(isLiveWriting),
+    projects: (state.projects ?? []).filter((p) => p.status === 'published'),
+    caseStudies: (state.caseStudies ?? []).filter((c) => c.status === 'published'),
+    messages: [],
+    versions: [],
+    activityLogs: [],
+  };
+}

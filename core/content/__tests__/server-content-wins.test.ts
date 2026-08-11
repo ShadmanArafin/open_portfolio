@@ -36,7 +36,9 @@ describe('the public site keeps what the server sent', () => {
   it('reads that content on the server, not in the browser', () => {
     const layout = read('app', '(site)', 'layout.tsx');
     expect(layout).toContain('getContentForChannel');
-    expect(layout).toContain('initialData={content}');
+    // Wrapped in `publicView`, not passed raw. The whole document used to be
+    // serialised into every public page, drafts included.
+    expect(layout).toContain('initialData={publicView(content)}');
   });
 
   it('guards the local-store load on having been given server content', () => {

@@ -1,4 +1,5 @@
 import type { PageRecord } from '@/core/pages/schema';
+import type { WritingEntry, WritingSettings } from '@/core/writing/schema';
 
 export type PublishStatus = 'draft' | 'published' | 'archived';
 
@@ -453,6 +454,14 @@ export interface CMSState {
    * through `core/pages/read`, which defaults it to an empty list.
    */
   pages?: PageRecord[];
+  /**
+   * Essays, notes, posts — whatever the owner calls them.
+   *
+   * Optional for the same reason `pages` is: content written before this
+   * existed has none, and a stored snapshot must keep loading after an upgrade.
+   */
+  writing?: WritingEntry[];
+  writingSettings?: WritingSettings;
   projects: ProjectItem[];
   caseStudies: CaseStudyItem[];
   brands: BrandItem[];

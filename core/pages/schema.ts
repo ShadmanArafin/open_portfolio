@@ -34,6 +34,7 @@ export const RESERVED_TOP_LEVEL: readonly string[] = [
   'contact',
   'setup',
   'work',
+  'writing',
   // Framework and platform paths that never reach our router.
   '_next',
   '_vercel',
