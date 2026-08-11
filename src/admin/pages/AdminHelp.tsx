@@ -14,6 +14,7 @@ import { AdminRecord, AdminRecordList } from '../components/AdminRecord';
 import { AstryxHeader, AstryxSection } from '../components/astryx/AstryxComponents';
 import { TextArea, TextInput } from '../components/AdminFields';
 import { recentErrors } from '../utils/errorLog';
+import type { RecentError } from '@/core/support/diagnostics';
 import { buildBody, buildIssueUrl, isReportReady, type Report } from '@/core/support/report';
 import { formatDiagnostics, type Diagnostics } from '@/core/support/diagnostics';
 import { UPSTREAM_URL } from '@/core/version';
@@ -193,6 +194,98 @@ const Duplicates: React.FC<{
   );
 };
 
+/**
+ * Send, or connect first, or fall back to opening a tab.
+ *
+ * Three states rather than one, because the honest answer differs. Connected:
+ * send it, never leave. Not connected but possible: offer the one-time sign-in,
+ * and say what it is for. No GitHub application in this build: keep the old
+ * open-a-tab route, which needs nothing and still works.
+ *
+ * The fallback is not dead weight — it is what a fork with its own repository
+ * gets, and what everybody gets if GitHub is unreachable.
+ */
+const SendControls: React.FC<{
+  report: Report;
+  github: { available: boolean; connected: boolean; login?: string } | null;
+  pairing: { userCode: string; verificationUri: string } | null;
+  sending: boolean;
+  sent?: { url: string; number: number };
+  error?: string;
+  onConnect: () => void;
+  onSend: () => void;
+  onOpenTab: () => void;
+  onClear: () => void;
+}> = ({ report, github, pairing, sending, sent, error, onConnect, onSend, onOpenTab, onClear }) => {
+  const ready = isReportReady(report);
+
+  if (sent) {
+    return (
+      <Banner status="success" title={`Sent — that is issue #${sent.number}`}>
+        <Link href={sent.url} target="_blank" rel="noreferrer noopener">
+          Follow it here
+        </Link>
+      </Banner>
+    );
+  }
+
+  if (pairing) {
+    return (
+      <Banner
+        status="info"
+        title={`Enter this code on GitHub: ${pairing.userCode}`}
+        description="A tab should have opened. If it did not, go to github.com/login/device and type the code in. This screen will notice on its own."
+      />
+    );
+  }
+
+  return (
+    <VStack gap={3}>
+      {error && <Banner status="warning" title={error} />}
+
+      {github?.connected ? (
+        <HStack gap={2} align="center">
+          <Button
+            variant="primary"
+            label={sending ? 'Sending…' : 'Send'}
+            isDisabled={!ready || sending}
+            onClick={onSend}
+          />
+          <Button variant="ghost" label="Clear" onClick={onClear} />
+          <Text type="supporting">{`Sending as ${github.login}`}</Text>
+        </HStack>
+      ) : github?.available ? (
+        <VStack gap={2}>
+          <Text type="supporting" display="block">
+            Connect your GitHub account once and everything after this happens here. It goes out
+            under your own name, so you get credited when it is fixed.
+          </Text>
+          <HStack gap={2}>
+            <Button variant="primary" label="Connect GitHub" onClick={onConnect} />
+            <Button
+              variant="secondary"
+              label="Open it in a tab instead"
+              isDisabled={!ready}
+              onClick={onOpenTab}
+            />
+            <Button variant="ghost" label="Clear" onClick={onClear} />
+          </HStack>
+        </VStack>
+      ) : (
+        <HStack gap={2}>
+          <Button
+            variant="primary"
+            label="Open it on GitHub"
+            isDisabled={!ready}
+            onClick={onOpenTab}
+          />
+          <Button variant="ghost" label="Clear" onClick={onClear} />
+        </HStack>
+      )}
+    </VStack>
+  );
+};
+
 export const AdminHelp: React.FC = () => {
   const [info, setInfo] = useState<SupportInfo | null>(null);
   const [includeDiagnostics, setIncludeDiagnostics] = useState(true);
@@ -206,17 +299,149 @@ export const AdminHelp: React.FC = () => {
   const [searchProblem, setSearchProblem] = useState<string | undefined>();
   const [searching, setSearching] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [github, setGithub] = useState<{
+    available: boolean;
+    connected: boolean;
+    login?: string;
+  } | null>(null);
+  const [pairing, setPairing] = useState<{ userCode: string; verificationUri: string } | null>(
+    null
+  );
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState<Record<string, { url: string; number: number }>>({});
+  const [sendError, setSendError] = useState<string | undefined>();
+
+  /*
+   * A snapshot, taken when the screen loads.
+   *
+   * This was `useMemo(() => recentErrors(), [info])`, which reads a mutable
+   * module-level buffer during render — impure, and the React Compiler refused
+   * to memoise the component because of it. State is also the more correct
+   * answer: the list shown in the preview is then exactly the list that gets
+   * sent, rather than whatever happened to be in the buffer at the moment the
+   * button was pressed.
+   */
+  const [errors, setErrors] = useState<RecentError[]>([]);
+
+  /*
+   * The browser half of the diagnostics, captured once after mount.
+   *
+   * `navigator` and `window.screen` are reads of the outside world, and doing
+   * them while rendering is impure — the React Compiler declines to memoise a
+   * component that does, and it is genuinely wrong besides: it would run again
+   * on every render to produce a value that never changes.
+   */
+  const [client, setClient] = useState<Diagnostics['client']>();
+
+  useEffect(() => {
+    setClient({
+      userAgent: navigator.userAgent,
+      screen: `${window.screen.width}×${window.screen.height}`,
+      language: navigator.language,
+    });
+  }, []);
+
+  const diagnostics = useMemo((): Diagnostics | undefined => {
+    if (!includeDiagnostics || !info) return undefined;
+    return {
+      server: info.server,
+      content: info.content,
+      client,
+      errors: includeErrors && errors.length ? errors : undefined,
+    };
+  }, [includeDiagnostics, includeErrors, info, client, errors]);
 
   useEffect(() => {
     void (async () => {
       const res = await fetch('/api/admin/support');
       const data = await res.json().catch(() => null);
       if (data?.ok) setInfo(data);
+      setErrors(recentErrors());
     })();
   }, []);
 
-  const errors = useMemo(() => recentErrors(), [info]);
+  useEffect(() => {
+    void (async () => {
+      const res = await fetch('/api/admin/support/connect');
+      const data = await res.json().catch(() => null);
+      if (data?.ok) setGithub(data);
+    })();
+  }, []);
 
+  /*
+   * Sign in once, then never leave the admin again.
+   *
+   * GitHub's device flow: it issues a short code, the person approves it
+   * anywhere — including on a phone, which is half the point — and this polls
+   * until it is done. No client secret is involved, so nothing here has to hold
+   * a credential that could act as the project.
+   */
+  const connectGithub = async () => {
+    setSendError(undefined);
+    const res = await fetch('/api/admin/support/connect', { method: 'POST' });
+    const started = await res.json().catch(() => null);
+    if (!started?.ok) {
+      setSendError(started?.error ?? 'Could not start the sign-in.');
+      return;
+    }
+
+    setPairing({ userCode: started.userCode, verificationUri: started.verificationUri });
+    window.open(started.verificationUri, '_blank', 'noopener,noreferrer');
+
+    const deadline = Date.now() + started.expiresIn * 1000;
+    let wait = started.interval * 1000;
+
+    while (Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, wait));
+      const poll = await fetch('/api/admin/support/connect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deviceCode: started.deviceCode }),
+      });
+      const result = await poll.json().catch(() => null);
+
+      if (result?.status === 'connected') {
+        setPairing(null);
+        setGithub({ available: true, connected: true, login: result.login });
+        return;
+      }
+      // GitHub answers `slow_down` rather than failing when polled too fast,
+      // and expects the longer interval to be honoured from then on.
+      if (result?.status === 'slow_down') wait = result.interval * 1000;
+      if (result?.status === 'failed') {
+        setPairing(null);
+        setSendError(result.error);
+        return;
+      }
+    }
+
+    setPairing(null);
+    setSendError('That sign-in expired. Try again.');
+  };
+
+  const send = async (report: Report) => {
+    setSending(true);
+    setSendError(undefined);
+    try {
+      const res = await fetch('/api/admin/support/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ report, diagnostics }),
+      });
+      const result = await res.json().catch(() => null);
+
+      if (result?.ok) {
+        setSent((current) => ({ ...current, [report.kind]: result }));
+        if (report.kind === 'bug') setBug(EMPTY_BUG);
+        else setFeature(EMPTY_FEATURE);
+        return;
+      }
+      if (result?.needsReconnect) setGithub({ available: true, connected: false });
+      setSendError(result?.error ?? 'Could not send that.');
+    } finally {
+      setSending(false);
+    }
+  };
   /*
    * Look for duplicates while somebody types, not after they have finished.
    *
@@ -253,20 +478,6 @@ export const AdminHelp: React.FC = () => {
       })();
     }, 500);
   };
-
-  const diagnostics = useMemo((): Diagnostics | undefined => {
-    if (!includeDiagnostics || !info) return undefined;
-    return {
-      server: info.server,
-      content: info.content,
-      client: {
-        userAgent: navigator.userAgent,
-        screen: `${window.screen.width}×${window.screen.height}`,
-        language: navigator.language,
-      },
-      errors: includeErrors && errors.length ? errors : undefined,
-    };
-  }, [includeDiagnostics, includeErrors, info, errors]);
 
   const open = (report: Report) => {
     window.open(buildIssueUrl(report, diagnostics), '_blank', 'noopener,noreferrer');
@@ -345,15 +556,18 @@ export const AdminHelp: React.FC = () => {
                 value={(bug as { steps: string }).steps}
                 onChange={(value) => setBug({ ...bug, steps: value } as Report)}
               />
-              <HStack gap={2}>
-                <Button
-                  variant="primary"
-                  label="Open it on GitHub"
-                  isDisabled={!isReportReady(bug)}
-                  onClick={() => open(bug)}
-                />
-                <Button variant="ghost" label="Clear" onClick={() => setBug(EMPTY_BUG)} />
-              </HStack>
+              <SendControls
+                report={bug}
+                github={github}
+                pairing={pairing}
+                sending={sending}
+                sent={sent.bug}
+                error={sendError}
+                onConnect={connectGithub}
+                onSend={() => send(bug)}
+                onOpenTab={() => open(bug)}
+                onClear={() => setBug(EMPTY_BUG)}
+              />
             </VStack>
           </AdminRecord>
 
@@ -399,15 +613,18 @@ export const AdminHelp: React.FC = () => {
                 value={(feature as { whoElse: string }).whoElse}
                 onChange={(value) => setFeature({ ...feature, whoElse: value } as Report)}
               />
-              <HStack gap={2}>
-                <Button
-                  variant="primary"
-                  label="Open it on GitHub"
-                  isDisabled={!isReportReady(feature)}
-                  onClick={() => open(feature)}
-                />
-                <Button variant="ghost" label="Clear" onClick={() => setFeature(EMPTY_FEATURE)} />
-              </HStack>
+              <SendControls
+                report={feature}
+                github={github}
+                pairing={pairing}
+                sending={sending}
+                sent={sent.feature}
+                error={sendError}
+                onConnect={connectGithub}
+                onSend={() => send(feature)}
+                onOpenTab={() => open(feature)}
+                onClear={() => setFeature(EMPTY_FEATURE)}
+              />
             </VStack>
           </AdminRecord>
         </AdminRecordList>
