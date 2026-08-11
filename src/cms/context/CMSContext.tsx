@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { CMSState, MediaItem } from '../types/cms';
+import { CMSState, ContactMessage, MediaItem } from '../types/cms';
 import { cmsService } from '../services/cmsService';
 import { loadGoogleFonts } from '../../utils/googleFonts';
 import { buildThemeStylesheet } from '@/core/theme/tokens';
@@ -31,9 +31,10 @@ interface CMSContextType {
   login: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
 
-  submitContactMessage: (msg: any) => Promise<boolean>;
-  updateMessageStatus: (id: string, status: any) => void;
-  deleteMessage: (id: string) => void;
+  updateMessageStatus: (id: string, status: ContactMessage['status']) => Promise<void>;
+  deleteMessage: (id: string) => Promise<void>;
+  /** Whether this instance can send mail. Read by the dashboard's health checks. */
+  emailConfigured: boolean;
 
   uploadMedia: (file: File, meta?: { altText?: string }) => Promise<MediaItem | null>;
   deleteMediaItem: (id: string) => Promise<void>;
@@ -82,6 +83,7 @@ export const CMSProvider: React.FC<CMSProviderProps> = ({ children, initialData 
   const [authStatus, setAuthStatus] = useState<boolean>(() => cmsService.isAuthenticated());
   const [storageError, setStorageError] = useState<string | null>(null);
   const [authReady, setAuthReady] = useState(false);
+  const [emailConfigured, setEmailConfigured] = useState(false);
 
   // Storage is browser-only, so the server cannot read it. Load it on mount and
   // swap: the HTML ships with the server's content, then the editor's own
@@ -117,6 +119,35 @@ export const CMSProvider: React.FC<CMSProviderProps> = ({ children, initialData 
       unsubscribeErrors();
     };
   }, []);
+
+  // Enquiries live on the server now. Fetch them once the admin is signed in,
+  // and put them where every existing consumer already looks.
+  useEffect(() => {
+    if (!authStatus) return;
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        const res = await fetch('/api/admin/messages');
+        if (!res.ok) return;
+        const body = (await res.json()) as {
+          ok: boolean;
+          messages: ContactMessage[];
+          emailConfigured: boolean;
+        };
+        if (!cancelled && body.ok) {
+          cmsService.setMessages(body.messages, body.emailConfigured);
+          setEmailConfigured(body.emailConfigured);
+        }
+      } catch {
+        // The inbox stays empty; the dashboard's storage check reports the fault.
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authStatus]);
 
   // Preview windows render the draft; everything else renders published content.
   const activeData = isPreviewMode ? draftData : publishedData;
@@ -174,27 +205,8 @@ export const CMSProvider: React.FC<CMSProviderProps> = ({ children, initialData 
     setAuthStatus(false);
   }, []);
 
-  /**
-   * Sends an enquiry to the server.
-   *
-   * It used to be written into the *sender's* own IndexedDB, which meant the
-   * site owner never received anything and the success message was a lie.
-   */
-  const submitContactMessage = useCallback(async (msg: any) => {
-    try {
-      const res = await fetch('/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(msg),
-      });
-      const data = (await res.json().catch(() => ({}))) as { ok?: boolean };
-      return Boolean(data.ok);
-    } catch {
-      return false;
-    }
-  }, []);
   const updateMessageStatus = useCallback(
-    (id: string, status: any) => cmsService.updateMessageStatus(id, status),
+    (id: string, status: ContactMessage['status']) => cmsService.updateMessageStatus(id, status),
     []
   );
   const deleteMessage = useCallback((id: string) => cmsService.deleteMessage(id), []);
@@ -238,9 +250,9 @@ export const CMSProvider: React.FC<CMSProviderProps> = ({ children, initialData 
         authReady,
         login,
         logout,
-        submitContactMessage,
         updateMessageStatus,
         deleteMessage,
+        emailConfigured,
         uploadMedia,
         deleteMediaItem,
         countMediaUsage,

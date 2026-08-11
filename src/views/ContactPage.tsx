@@ -21,11 +21,36 @@ import { cn } from '../utils/cn';
 import { useToast } from '../context/ToastContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCMS } from '../cms/context/CMSContext';
+import { ContactMessage } from '../cms/types/cms';
+
+/**
+ * Sends an enquiry to the server.
+ *
+ * A direct fetch, not a CMS context method: the message is never CMS content
+ * (it doesn't touch the draft/published document, isn't part of an export
+ * pull, and can't be undone by a restore), so routing it through the CMS
+ * context was indirection with no purpose.
+ */
+async function postContactMessage(
+  msg: Omit<ContactMessage, 'id' | 'receivedAt' | 'status'>
+): Promise<boolean> {
+  try {
+    const res = await fetch('/api/contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(msg),
+    });
+    const data = (await res.json().catch(() => ({}))) as { ok?: boolean };
+    return Boolean(data.ok);
+  } catch {
+    return false;
+  }
+}
 
 export const ContactPage: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const { showToast } = useToast();
-  const { data, submitContactMessage } = useCMS();
+  const { data } = useCMS();
   const settings = data.settings;
   const header = data.sections.find((s) => s.id === 'contact-page');
 
@@ -78,11 +103,11 @@ export const ContactPage: React.FC = () => {
 
     setIsSubmitting(true);
 
-    // Messages are stored locally and appear in /admin/messages. There is no
-    // mail delivery yet, so the confirmation below deliberately tells the
+    // The server receives the enquiry and it appears in /admin/messages. There
+    // is no mail delivery yet, so the confirmation below deliberately tells the
     // sender to email directly if it's urgent.
     trackEvent('Contact submitted');
-    const stored = await submitContactMessage({
+    const stored = await postContactMessage({
       name: formData.name.trim(),
       email: formData.email.trim(),
       company: formData.company.trim() || undefined,

@@ -328,14 +328,13 @@ export class CMSService {
     nextPublished.status = 'published';
     nextPublished.lastPublishedAt = now;
 
-    // A snapshot holds content only. Excluding history, activity and the
-    // message inbox keeps each version small — the previous implementation
-    // nested every prior snapshot inside the next one, roughly doubling
-    // stored size on every publish.
+    // A snapshot holds content only. Excluding history and activity keeps
+    // each version small — the previous implementation nested every prior
+    // snapshot inside the next one, roughly doubling stored size on every
+    // publish.
     const snapshot = clone(nextPublished);
     snapshot.versions = [];
     snapshot.activityLogs = [];
-    snapshot.messages = [];
 
     const version: ContentVersion = {
       id: `v-${Date.now()}`,
@@ -443,10 +442,9 @@ export class CMSService {
 
     const restored = this.migrate(clone(target.snapshot) as CMSState);
 
-    // History, activity and the inbox are not content — carry them forward
-    // rather than rolling them back with the page copy.
+    // History and activity are not content — carry them forward rather than
+    // rolling them back with the page copy.
     restored.versions = this.draftState.versions;
-    restored.messages = this.draftState.messages;
     restored.activityLogs = [
       {
         id: `act-${Date.now()}`,
@@ -468,68 +466,63 @@ export class CMSService {
 
   // --- CONTACT MESSAGES ---
 
-  /** Messages live outside the draft/publish cycle — they're inbox data, not content. */
-  private async persistBoth(): Promise<void> {
-    if (!this.store) return;
-    try {
-      await Promise.all([
-        this.store.savePublished(this.publishedState),
-        this.store.saveDraft(this.draftState),
-      ]);
-    } catch (err) {
-      this.emitError(err instanceof Error ? err.message : 'Failed to save.');
-    }
-  }
+  /** Whether this instance can send mail. Answered by the server. */
+  public emailConfigured = false;
 
-  public submitContactMessage(msg: Omit<ContactMessage, 'id' | 'receivedAt' | 'status'>): boolean {
-    const newMessage: ContactMessage = {
-      ...msg,
-      id: `msg-${Date.now()}`,
-      receivedAt: new Date().toISOString(),
-      status: 'unread',
-    };
-
+  /**
+   * Replaces the in-memory inbox with what the server holds.
+   *
+   * Enquiries are not part of the content document any more, but every screen
+   * that shows them still reads `state.messages` — the sidebar badge, the
+   * command palette, the analytics page, the dashboard's health checks. Putting
+   * the server's list back into that field keeps all of them working without a
+   * rewrite, and keeps `exportBundle` complete.
+   */
+  public setMessages(messages: ContactMessage[], emailConfigured: boolean): void {
+    this.emailConfigured = emailConfigured;
     const nextPublished = clone(this.publishedState);
     const nextDraft = clone(this.draftState);
-    nextPublished.messages.unshift(newMessage);
-    nextDraft.messages.unshift(newMessage);
+    nextPublished.messages = messages;
+    nextDraft.messages = messages;
     this.publishedState = nextPublished;
     this.draftState = nextDraft;
-
-    void this.persistBoth();
     this.notify();
-    return true;
   }
 
-  public updateMessageStatus(
+  public async updateMessageStatus(
     messageId: string,
-    status: 'unread' | 'read' | 'archived' | 'spam'
-  ): void {
+    status: ContactMessage['status']
+  ): Promise<void> {
+    await fetch(`/api/admin/messages/${encodeURIComponent(messageId)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    }).catch(() => undefined);
+
     const apply = (state: CMSState) => {
       const msg = state.messages.find((m) => m.id === messageId);
       if (msg) msg.status = status;
     };
-
     const nextPublished = clone(this.publishedState);
     const nextDraft = clone(this.draftState);
     apply(nextPublished);
     apply(nextDraft);
     this.publishedState = nextPublished;
     this.draftState = nextDraft;
-
-    void this.persistBoth();
     this.notify();
   }
 
-  public deleteMessage(messageId: string): void {
+  public async deleteMessage(messageId: string): Promise<void> {
+    await fetch(`/api/admin/messages/${encodeURIComponent(messageId)}`, {
+      method: 'DELETE',
+    }).catch(() => undefined);
+
     const nextPublished = clone(this.publishedState);
     const nextDraft = clone(this.draftState);
     nextPublished.messages = nextPublished.messages.filter((m) => m.id !== messageId);
     nextDraft.messages = nextDraft.messages.filter((m) => m.id !== messageId);
     this.publishedState = nextPublished;
     this.draftState = nextDraft;
-
-    void this.persistBoth();
     this.notify();
   }
 
