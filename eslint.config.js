@@ -57,6 +57,52 @@ export default tseslint.config(
     },
   },
 
+  /*
+   * The block/theme boundary.
+   *
+   * Blocks own semantics; themes own tokens. A block that names a colour, a
+   * pixel or a font has quietly taken a decision that belongs to the theme, and
+   * every theme after the first then has to work around it. One leaked hex is
+   * enough to break a block in every theme but the one it was written against,
+   * and it is invisible until somebody switches theme.
+   *
+   * Enforced here rather than by review because it erodes one convenient
+   * exception at a time.
+   */
+  {
+    files: ['core/blocks/**/*.{ts,tsx}', 'themes/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'Literal[value=/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/]',
+          message:
+            'Blocks and themes must not name colours. Use a primitive, or a token via var(--…).',
+        },
+        // Character classes rather than `\d`, `\b` and `\[` on purpose. These
+        // selectors are JavaScript strings, so a single backslash is consumed
+        // as an escape before ESLint ever sees the pattern — which silently
+        // turned `\d` into `d` and left three of these four rules matching
+        // nothing at all. Verified by writing a deliberate violation of each.
+        {
+          selector: 'Literal[value=/^-?[0-9]+([.][0-9]+)?(px|rem|em)$/]',
+          message:
+            'Blocks and themes must not name sizes. Use a spacing or type token via var(--…).',
+        },
+        {
+          selector:
+            "JSXAttribute[name.name='className'] Literal[value=/(bg|text|border|from|via|to)-(red|blue|green|zinc|neutral|slate|stone|emerald|amber|rose|violet|gray|grey)-[0-9]{2,3}/]",
+          message:
+            'Blocks and themes must not use palette utilities. Compose from primitives instead.',
+        },
+        {
+          selector: "JSXAttribute[name.name='className'] Literal[value=/-[[][^ ]+[\\]]/]",
+          message: 'Arbitrary Tailwind values are not allowed here — they bypass the token layer.',
+        },
+      ],
+    },
+  },
+
   // Config files run in Node, not the browser.
   {
     files: ['*.config.{js,ts}', 'scripts/**/*.{js,mjs,ts}'],

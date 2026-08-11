@@ -23,17 +23,17 @@
 | 2 — Tokens + primitives     | **Partially done** | Tokens, publish gate done. Primitives and Tailwind 4 remain                  |
 | 3 — Storage contract        | **Done, verified** | Contract, local adapter, registry, server read                               |
 | 4 — Auth                    | **Done, verified** | Passphrase + sessions. **Passkeys/OTP not built**                            |
-| 5 — Write path              | **Partially done** | Publish and contact work. **Blocks and pages missing**                       |
+| 5 — Write path              | **Partially done** | Publish, contact, block system done. **Pages and preview missing**           |
 | 6 — Hosted adapters         | **Done, verified** | Supabase, Neon, Postgres. **Uploads unverified**                             |
 | 7 — shadcn admin            | **Not started**    | Admin still Astryx + React Router                                            |
 | 8 — Adapters + integrations | **Partially done** | SMTP, notification, reset done. **5 backends, registry, vault, OTP missing** |
 | 9 — Blog, themes, presets   | **Barely started** | Only profession vocabulary packs                                             |
 
-**Where to start:** Phase 5's block system. Phase 2 is effectively finished —
-tokens, the publish-time contrast gate and the primitives are all done, and what
-is left of it (Tailwind 4, server-rendered fonts) is independent of the blocks.
-The primitives exist and have no consumer yet, which is the argument for
-building blocks next rather than anything else.
+**Where to start:** pages and routing. The block system exists and renders, but
+nothing routes to it — there is no `Page` record and no `[[...slug]]` route, so
+no block appears on a real site yet. That is the shortest path from "the
+machinery works" to "a user can see it", and Phase 7's builder needs a page to
+build into.
 
 This supersedes an earlier note here that said to start with blocks on the
 grounds that the primitives "need blocks to have somewhere to live". That has it
@@ -79,7 +79,7 @@ development.
 | Phase 5 blocks, pages, `draftMode()` preview  | Nothing external needed                                                     |
 | Phase 7 shadcn admin, MediaPicker, builder    | Nothing external needed                                                     |
 | Phase 9 blog, newsletter capture, themes      | Nothing external needed                                                     |
-| Postgres / Supabase / Neon **database** half  | `postgres:16` — already wired; with Mailpit takes the suite from 130 to 192 |
+| Postgres / Supabase / Neon **database** half  | `postgres:16` — already wired; with Mailpit takes the suite from 153 to 215 |
 | Supabase **Storage** half                     | `supabase start` runs the real `storage-api` container                      |
 | Email send path                               | `axllent/mailpit` — already wired                                           |
 | PocketBase, Appwrite adapters                 | Both ship official Docker images                                            |
@@ -501,14 +501,46 @@ Passkey + OTP + sessions + claim + CSRF + rate limiting + CSP/headers. `requireO
 > visitors. The contact form delivers to the server instead of into the
 > sender's own browser. Both verified end to end against Postgres.
 >
-> **Remaining — the largest single piece left in the project:**
+> **The block system now exists.** `core/blocks/` ships the versioned envelope,
+> a registry, defensive parsing, per-block-type migrations, the renderer, and
+> seven block types (hero, richText, image, gallery, stats, cards, ctaBanner)
+> composed only from primitives. The `frame` vocabulary landed with the
+> primitives in Phase 2.
 >
-> - The block schema, registry, validation, per-block migrations and renderer.
-> - The `frame` presentation vocabulary (enums only; no px, no colours).
-> - Arbitrary pages and the `[[...slug]]` catch-all route.
+> Three decisions in it are load-bearing:
+>
+> - **Nothing throws.** One malformed block costs that block, not the page. The
+>   old content system validated the whole document at once, so a single bad
+>   field blanked everything.
+> - **Unknown and future blocks are quarantined, not dropped** — round-tripped
+>   verbatim, so opening a page written by a newer build and saving it does not
+>   silently strip what this build could not read.
+> - **Versioning is per block type.** A hero change does not force every other
+>   block to bump, and migrations run forward only: a block from a newer version
+>   is quarantined rather than guessed at, because reading it optimistically is
+>   how a downgrade corrupts data.
+>
+> **The ESLint boundary rule is in place** and verified by writing a deliberate
+> violation of each of its four cases. Worth knowing: three of the four
+> originally matched nothing, because an ESLint selector is a JavaScript string
+> and `\d` was consumed as an escape before ESLint saw it. A rule that never
+> fires proves exactly as much as a test that never fails.
+>
+> **A test caught a real design flaw before anyone met it:** `image` and
+> `gallery` required a non-empty `src`, so adding either from the palette
+> quarantined it instantly. A block is added before it is filled in — that is
+> the whole interaction — so "not finished yet" belongs in a content check,
+> where the answer is advice, not in the schema, where it is refusal.
+>
+> **Remaining in this phase:**
+>
+> - Arbitrary pages and the `[[...slug]]` catch-all route. The renderer exists;
+>   nothing routes to it yet, so no block is on a real page.
 > - `draftMode()` preview. The admin still iframes `?preview=true`.
 > - Per-record writes with revision checks. Publishing is whole-document.
-> - The kitchen-sink CI matrix (every block x variant x theme x breakpoint).
+> - The kitchen-sink CI matrix. It needs more than one theme and an axe run, so
+>   it belongs with Phase 9's themes rather than here.
+> - The remaining ~22 block types.
 >
 > **Also not done:** the `work` merge (`projects` + `caseStudies`) and the
 > `timeline` merge (`experience` + `education`) that the locked decisions chose.
@@ -770,8 +802,8 @@ The numbers you should see, as of this writing:
 | `lint`                    | **0 errors**, 64 warnings — the warnings are baseline |
 | `format:check`            | clean                                                 |
 | `check-no-personal-data`  | clean, listed by git                                  |
-| `test` with no containers | 130 passed, 7 skipped                                 |
-| `test` with both          | **192 passed, 2 skipped**                             |
+| `test` with no containers | 153 passed, 7 skipped                                 |
+| `test` with both          | **215 passed, 2 skipped**                             |
 
 The 2 remaining skips are the Supabase and Neon conformance runs, which need
 real cloud credentials. Everything else runs locally.
