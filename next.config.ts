@@ -20,6 +20,19 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
 
+  /*
+   * A self-contained server bundle, for the Docker image.
+   *
+   * Without this, running outside Vercel means shipping the whole
+   * `node_modules` tree — hundreds of megabytes, most of it build tooling that
+   * never executes at runtime. `standalone` traces what the server actually
+   * imports and copies only that.
+   *
+   * It also makes "you are not locked to one host" a fact rather than a claim:
+   * the same commit runs on Vercel, on a VPS, and on a Raspberry Pi.
+   */
+  output: 'standalone',
+
   async headers() {
     return [
       { source: '/:path*', headers: securityHeaders },

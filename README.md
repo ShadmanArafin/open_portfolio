@@ -44,6 +44,31 @@ token are set for you and you never see either.
 > **Blob** from your project's Storage tab. The app uses whichever backend's
 > environment variables are present, so nothing else changes.
 
+## Run it on your own server
+
+One command, on any machine with Docker. No account anywhere, no platform that
+can change its terms, and nothing that phones home.
+
+```bash
+docker compose up
+```
+
+Open <http://localhost:3000> and follow the setup. That brings up the app and a
+Postgres database together; change `OPB_SETUP_TOKEN` and `OPB_SECRET_KEY` in
+`docker-compose.yml` first.
+
+Just the app, against a database you already have:
+
+```bash
+docker build -t open-portfolio-builder .
+docker run -p 3000:3000 -v opb-data:/data   -e OPB_POSTGRES_URL="postgres://…"   -e OPB_SETUP_TOKEN="a long phrase you invent"   -e OPB_SECRET_KEY="a different long phrase"   open-portfolio-builder
+```
+
+**The volume matters.** `/data` is where uploads and — if you are not using a
+database — your content live. Without it, replacing the container deletes your
+site. With it, you can throw the container away and rebuild it as often as you
+like: that is exactly what updating does, and your content is untouched.
+
 ## Run it locally
 
 Node 20.9 or newer. No account, no API key, nothing to sign up for.

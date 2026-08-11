@@ -3,8 +3,8 @@
 **Status:** design options, awaiting a decision. Nothing here is built yet — what
 is built today is the pre-filled-GitHub-URL version described at the end.
 
-The requirement: *"they will not need to visit GitHub — they will do everything
-from the admin."*
+The requirement: _"they will not need to visit GitHub — they will do everything
+from the admin."_
 
 That is achievable for both halves, but the two halves have different costs and
 one of them is a decision only the maintainer can make. This document lays out
@@ -176,13 +176,13 @@ GitHub to change their mind.
 
 ## What this needs from you
 
-| Decision | Options | Recommended |
-|---|---|---|
-| How reports are sent | Intake service / device flow / email | Intake service, with device flow offered |
+| Decision                       | Options                                        | Recommended                                |
+| ------------------------------ | ---------------------------------------------- | ------------------------------------------ |
+| How reports are sent           | Intake service / device flow / email           | Intake service, with device flow offered   |
 | Who the issue is attributed to | Bot with self-reported name / the real account | Real account when connected, bot otherwise |
-| Auto-update policy | All / patch-only / never | Patch-only by default |
-| Where the policy is stored | Repo variable / read from the site / fixed | Read from the site |
-| Making the repository public | Now / at launch | **Now — several things are blocked on it** |
+| Auto-update policy             | All / patch-only / never                       | Patch-only by default                      |
+| Where the policy is stored     | Repo variable / read from the site / fixed     | Read from the site                         |
+| Making the repository public   | Now / at launch                                | **Now — several things are blocked on it** |
 
 The last row is not really a decision about this feature. While the repository
 is private the Deploy button cannot clone it, releases cannot be listed, issue

@@ -31,7 +31,17 @@ import { migrateSnapshotMessages } from './_shared/migrate-messages';
  * content on their next deploy.
  */
 
-const ROOT = path.join(process.cwd(), '.opb');
+/**
+ * Where content, uploads and sessions are written.
+ *
+ * `OPB_DATA_DIR` exists for containers: the working directory inside an image
+ * is replaced every time it is rebuilt, so writing there means a deploy quietly
+ * deletes somebody's site. The volume has to be mounted somewhere that survives
+ * the container, and the app has to be told where that is.
+ */
+const ROOT = process.env.OPB_DATA_DIR
+  ? path.resolve(process.env.OPB_DATA_DIR)
+  : path.join(process.cwd(), '.opb');
 const CONTENT_DIR = path.join(ROOT, 'content');
 const MEDIA_DIR = path.join(ROOT, 'media');
 const MESSAGES_DIR = path.join(ROOT, 'messages');

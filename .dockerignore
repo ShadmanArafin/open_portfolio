@@ -1,0 +1,19 @@
+# Everything the build does not need. Keeping this tight is not tidiness: each
+# of these would otherwise be copied into the build context on every build, and
+# `.opb` in particular would bake one person's content into the image.
+.git
+.github
+node_modules
+.next
+.opb
+.playwright-mcp
+coverage
+dist
+docs
+*.md
+!README.md
+.env*
+!.env.example
+Dockerfile
+docker-compose.yml
+.dockerignore

@@ -1,0 +1,52 @@
+# A complete, working install in one command:
+#
+#     docker compose up
+#
+# Then open http://localhost:3000 and follow the setup. Nothing else to
+# configure, no account anywhere, and no part of it phones home.
+
+services:
+  app:
+    build: .
+    ports:
+      - '3000:3000'
+    environment:
+      # Postgres rather than the filesystem, because two containers sharing a
+      # JSON file is the one arrangement the local adapter cannot make safe.
+      OPB_POSTGRES_URL: postgres://opb:opb@db:5432/opb
+
+      # Change both of these. The first proves the site is yours on first run;
+      # the second encrypts service passwords stored from the admin.
+      OPB_SETUP_TOKEN: change-me-to-a-long-random-phrase
+      OPB_SECRET_KEY: change-me-to-a-different-long-random-phrase
+
+      # Uploads. Content is in Postgres; files are on disk.
+      OPB_DATA_DIR: /data
+    volumes:
+      - opb-data:/data
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: opb
+      POSTGRES_PASSWORD: opb
+      POSTGRES_DB: opb
+    volumes:
+      - opb-db:/var/lib/postgresql/data
+    # The app runs its own migrations on first request, but it cannot do that
+    # against a database still starting up — hence a real health check rather
+    # than `depends_on` alone, which only waits for the process to exist.
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U opb -d opb']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  opb-data:
+  opb-db:
