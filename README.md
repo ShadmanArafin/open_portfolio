@@ -164,6 +164,9 @@ Every step is skippable. None of it is permanent.
   from the same blocks as your pages, with RSS. Ordered the way you choose
   rather than newest-first, so your best piece stays at the top instead of
   sinking under last week's note. Scheduling works with nothing running.
+- **Seven starting points.** Design, Software, Photography, Writing, Research,
+  Student or something else — each one sets the wording, the theme and what your
+  writing section is called, and every part of it can be changed afterwards.
 - **Installable.** Add the editor to your phone's home screen and it opens like
   an app.
 - **Six themes.** Editorial, Terminal, Gallery, Warm, Bold and Minimal — each

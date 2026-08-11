@@ -14,6 +14,9 @@ portfolio online and run it without opening a file.
 
 ### You can now
 
+- **Start from what you do.** Seven starting points — Design, Software,
+  Photography, Writing, Research, Student, or something else — each setting the
+  wording, the theme and what your writing is called.
 - **Install the editor on your phone.** Add it to your home screen and it opens
   like an app.
 - **Publish writing.** Essays, notes, posts — you choose what the section is

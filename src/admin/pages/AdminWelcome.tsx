@@ -77,6 +77,30 @@ export const AdminWelcome: React.FC = () => {
         draft.seo.siteTitle = `${name} — ${job}`;
       }
 
+      /*
+       * A preset now sets three things: the section wording, the theme, and
+       * what this person calls their writing.
+       *
+       * The theme in particular is why this exists. "Every portfolio looks the
+       * same" is the strongest complaint in the market research, and starting
+       * every profession on the same theme is precisely how that happens. It
+       * is a starting point, changeable on the next screen — not a lock.
+       *
+       * It still renames rather than restructures, so nothing the user has
+       * already written can be lost by choosing one.
+       */
+      if (preset) {
+        draft.appearance.themeId = preset.themeId;
+        draft.writingSettings = {
+          ...(draft.writingSettings ?? {}),
+          label: preset.writingLabel,
+          slug: 'writing',
+          order: 'curated',
+          showDates: false,
+          enabled: draft.writingSettings?.enabled ?? false,
+        };
+      }
+
       // The preset renames the built-in sections rather than restructuring
       // anything, so nothing the user has already written can be lost by it.
       if (preset) {

@@ -13,7 +13,7 @@
  */
 
 export type ProfessionId =
-  'designer' | 'developer' | 'photographer' | 'writer' | 'student' | 'other';
+  'designer' | 'developer' | 'photographer' | 'writer' | 'academic' | 'student' | 'other';
 
 export interface ProfessionPack {
   id: ProfessionId;
@@ -24,6 +24,26 @@ export interface ProfessionPack {
   sectionLabels: Record<string, string>;
   /** Microcopy overrides, keyed exactly as in MicrocopySettings. */
   microcopy: Record<string, string>;
+
+  /**
+   * What this person calls their writing.
+   *
+   * A developer has a blog; an academic has publications; a photographer has a
+   * journal. Same collection, same editor — the word is the only thing that
+   * differs, and it is the word that decides whether the section feels like it
+   * belongs to them. See the Phase 9 decision in `docs/PLAN.md`.
+   */
+  writingLabel: string;
+
+  /**
+   * The theme this profession starts on.
+   *
+   * A suggestion, not a lock — it is applied at setup and can be changed on the
+   * next screen. It exists because "every portfolio looks the same" is the
+   * strongest complaint in the market research, and defaulting six professions
+   * to one theme is how that happens.
+   */
+  themeId: string;
 }
 
 export const PROFESSIONS: ProfessionPack[] = [
@@ -42,6 +62,8 @@ export const PROFESSIONS: ProfessionPack[] = [
       visualExplorationsTitle: 'VISUAL EXPLORATIONS',
       readCaseStudy: 'READ CASE STUDY',
     },
+    writingLabel: 'Writing',
+    themeId: 'editorial',
   },
   {
     id: 'developer',
@@ -59,6 +81,8 @@ export const PROFESSIONS: ProfessionPack[] = [
       readCaseStudy: 'READ THE WRITE-UP',
       viewAllProjects: 'VIEW ALL PROJECTS',
     },
+    writingLabel: 'Blog',
+    themeId: 'terminal',
   },
   {
     id: 'photographer',
@@ -76,6 +100,8 @@ export const PROFESSIONS: ProfessionPack[] = [
       readCaseStudy: 'BEHIND THE SHOOT',
       viewAllProjects: 'VIEW THE FULL PORTFOLIO',
     },
+    writingLabel: 'Journal',
+    themeId: 'gallery',
   },
   {
     id: 'writer',
@@ -93,6 +119,28 @@ export const PROFESSIONS: ProfessionPack[] = [
       readCaseStudy: 'READ IN FULL',
       viewAllProjects: 'VIEW ALL WRITING',
     },
+    writingLabel: 'Essays',
+    themeId: 'minimal',
+  },
+  {
+    id: 'academic',
+    name: 'Research',
+    example: 'Papers, teaching, a lab',
+    sectionLabels: {
+      work: 'Research',
+      'case-studies': 'Projects',
+      capabilities: 'Areas of interest',
+      brands: 'Affiliations',
+      experience: 'Appointments',
+      education: 'Education',
+    },
+    microcopy: {
+      selectedBrandsTitle: 'AFFILIATIONS',
+      visualExplorationsTitle: 'TALKS AND POSTERS',
+      readCaseStudy: 'READ THE PAPER',
+    },
+    writingLabel: 'Publications',
+    themeId: 'minimal',
   },
   {
     id: 'student',
@@ -110,6 +158,8 @@ export const PROFESSIONS: ProfessionPack[] = [
       readCaseStudy: 'SEE THE PROJECT',
       viewAllProjects: 'VIEW ALL PROJECTS',
     },
+    writingLabel: 'Notes',
+    themeId: 'warm',
   },
   {
     id: 'other',
@@ -126,5 +176,7 @@ export const PROFESSIONS: ProfessionPack[] = [
       visualExplorationsTitle: 'SELECTED WORK',
       readCaseStudy: 'READ MORE',
     },
+    writingLabel: 'Writing',
+    themeId: 'editorial',
   },
 ];
