@@ -68,10 +68,6 @@ export async function provisionSchema(sql: Sql): Promise<void> {
     ALTER TABLE opb_content ADD COLUMN IF NOT EXISTS revision integer NOT NULL DEFAULT 0
   `;
 
-  // Config entries never expire, so the column has to allow it. Also an
-  // alteration rather than a changed CREATE, for installs that already exist.
-  await sql`ALTER TABLE opb_kv ALTER COLUMN expires_at DROP NOT NULL`;
-
   await sql`
     CREATE TABLE IF NOT EXISTS opb_owner (
       id               boolean PRIMARY KEY DEFAULT true,
@@ -96,6 +92,18 @@ export async function provisionSchema(sql: Sql): Promise<void> {
   `;
 
   // Expired rows are swept lazily on write; this makes that sweep cheap.
+  // Config entries never expire, so the column has to allow NULL. An
+  // alteration rather than a changed CREATE, because an install that already
+  // has the table would never see a changed definition.
+  //
+  // Placed *after* the CREATE above, which is not a detail: the first version
+  // of this sat at the top of `provision`, passed locally against a database
+  // that already had the table, and failed every single test on a fresh CI
+  // container — where the ALTER runs before anything has been created. A
+  // migration that only works on a database which has already been migrated is
+  // not a migration.
+  await sql`ALTER TABLE opb_kv ALTER COLUMN expires_at DROP NOT NULL`;
+
   await sql`CREATE INDEX IF NOT EXISTS opb_kv_expires_at_idx ON opb_kv (expires_at)`;
 
   await sql`
