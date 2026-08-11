@@ -16,24 +16,33 @@
 
 ## Status at a glance
 
-| Phase                       | State              | What it means                                                             |
-| --------------------------- | ------------------ | ------------------------------------------------------------------------- |
-| 0 — Repo publishable        | **Done, verified** | MIT, no personal data, CI, guards                                         |
-| 1 — Next.js + SEO           | **Done, verified** | Server-rendered, real metadata, sitemap, 404                              |
-| 2 — Tokens + primitives     | **Partially done** | Tokens, gate, primitives done. Tailwind 4 remains                         |
-| 3 — Storage contract        | **Done, verified** | Contract, local adapter, registry, server read                            |
-| 4 — Auth                    | **Done, verified** | Passphrase + sessions. **Passkeys/OTP not built**                         |
-| 5 — Write path              | **Done**           | Publish, contact, blocks, pages, preview, revisions                       |
-| 6 — Hosted adapters         | **Done, verified** | Supabase, Neon, Postgres. **Uploads unverified**                          |
-| 7 — Admin (Astryx)          | **In progress**    | Page builder and media picker work. **Settings merge, block home remain** |
-| 8 — Adapters + integrations | **Partially done** | Registry, vault, SMTP-from-admin done. **5 backends, OTP missing**        |
-| 9 — Blog, themes, presets   | **Barely started** | Only profession vocabulary packs                                          |
+| Phase                       | State              | What it means                                                              |
+| --------------------------- | ------------------ | -------------------------------------------------------------------------- |
+| 0 — Repo publishable        | **Done, verified** | MIT, no personal data, CI, guards                                          |
+| 1 — Next.js + SEO           | **Done, verified** | Server-rendered, real metadata, sitemap, 404                               |
+| 2 — Tokens + primitives     | **Partially done** | Tokens, gate, primitives done. Tailwind 4 remains                          |
+| 3 — Storage contract        | **Done, verified** | Contract, local adapter, registry, server read                             |
+| 4 — Auth                    | **Done, verified** | Passphrase + sessions. **Passkeys/OTP not built**                          |
+| 5 — Write path              | **Done**           | Publish, contact, blocks, pages, preview, revisions                        |
+| 6 — Hosted adapters         | **Done, verified** | Supabase, Neon, Postgres. **Uploads unverified**                           |
+| 7 — Admin (Astryx)          | **In progress**    | Page builder and media picker work. **Settings merge, block home remain**  |
+| 8 — Adapters + integrations | **Partially done** | Registry, vault, SMTP-from-admin done. **5 backends, OTP missing**         |
+| 9 — Blog, themes, presets   | **Barely started** | Only profession vocabulary packs                                           |
+| Community + updates         | **Done**           | Reports, dedupe, update workflow, `UPDATING.md`. **Blocked: repo private** |
+| Self-hosting (Docker)       | **Done, verified** | `docker compose up`, volume survives container replacement                 |
+| 10 — Launch                 | **Researched**     | Four dossiers written. **Nothing built: no site, no demo, no PWA**         |
 
-**Where to start:** the remaining five storage adapters, then Phase 9. A person
-can now sign in, build a page from blocks, choose images from their library,
-connect a mail server without touching a config file, test it, preview the
-result and publish it — all verified in a browser, end to end. What is left is
-breadth: more backends, more integrations, and the blog.
+**Where to start:** make the repository public and tag `v0.5.0`. It takes
+minutes, has no dependencies, and is the only thing in this document on a clock
+— several discovery channels count months from the day of publication, and five
+shipped features are broken until then. After that, the demo, because everything
+in the launch plan points at it and it is the one asset that cannot be borrowed
+or written.
+
+The product itself is further along than the phase numbers suggest: a person can
+sign in, build a page from blocks, choose images from their library, connect a
+mail server without touching a config file, test it, preview the result and
+publish it — all verified in a browser, end to end.
 
 This supersedes an earlier note here that said to start with blocks on the
 grounds that the primitives "need blocks to have somewhere to live". That has it
@@ -834,6 +843,29 @@ _Honest scoping:_ Vercel Marketplace can only auto-provision Marketplace-native 
 > already learned twice that a file-backed implementation passing a suite says
 > nothing about the real one, so they should not ship unverified.
 
+### Self-hosting with Docker (added after the original plan)
+
+> ### DONE, VERIFIED
+>
+> There was no Dockerfile, which meant "self-hosted" in practice meant "hosted on
+> Vercel". `docker compose up` now brings up the app and Postgres together.
+>
+> `output: 'standalone'` ships what the server actually imports rather than a
+> `node_modules` tree full of build tooling — 302MB, non-root, with a health
+> check that asks the app over HTTP rather than only checking the process lives.
+>
+> **`OPB_DATA_DIR` is the load-bearing part.** The local adapter wrote to
+> `process.cwd()/.opb`, which inside an image is replaced on every rebuild — a
+> deploy would have silently deleted somebody's site.
+>
+> Verified by destroying the container and recreating it against the same
+> volume: a second claim was refused and the original owner could still sign in.
+> That is the "an update never touches your content" promise in its most literal
+> form.
+>
+> It also reopened a discovery channel: awesome-selfhosted (312k stars)
+> disqualifies software that depends on one cloud provider.
+
 ### Community and updates (added after the original plan)
 
 > ### BUILT — blocked on one setting
@@ -883,6 +915,53 @@ _Honest scoping:_ Vercel Marketplace can only auto-provision Marketplace-native 
 >
 > **Making the repository public is the only thing standing between this and
 > working.** Nothing else here needs changing.
+
+### Phase 10 — Launch: site, demo, mobile (added after the original plan)
+
+> ### RESEARCHED, NOTHING BUILT
+>
+> Four dossiers, ~7,500 lines and ~580 sources, in `docs/research/`. They exist
+> because the original plan ended at "1.0" and said nothing about how anybody
+> would find this. Read them before building any of it — several findings
+> invert the obvious approach.
+>
+> **The findings that change what we build, not just how we describe it:**
+>
+> - **The category name is not a query.** Nobody searches "open source portfolio
+>   builder". Two audiences use vocabularies that never meet, which is a
+>   positioning problem rather than a keyword problem.
+> - **Profession pages are blocked, not deferred.** Six vocabulary packs that
+>   rename section headings, against one theme, is Google's own doorway-page
+>   example. Phase 9's themes and presets gate them.
+> - **The industry is retreating from mobile editing.** Webflow retired its
+>   legacy Editor on 2026-08-04; Wix cannot edit Editor sites in its app; Adobe
+>   Portfolio says outright it does not support it. Nobody is competing here.
+> - **Vercel Hobby forbids commercial use**, reportedly including soliciting
+>   donations. A freelancer's portfolio is commercial use, and the README
+>   currently recommends Hobby as the primary path. **This needs a decision.**
+> - **Zero social proof is a solved problem.** Supabase shipped a homepage
+>   showing a 6-star repo; Dub's showed 3. Both reframed it as "watch this"
+>   rather than hiding it.
+>
+> **What this phase contains, in dependency order:**
+>
+> 1. **Go public and tag `v0.5.0`.** No dependencies, and the only item on a
+>    clock — see `GOING-PUBLIC.md`. Publishing and announcing are separate
+>    events; only the first is time-gated.
+> 2. **A live demo.** Both surfaces, seeded with realistic content, resetting on
+>    a schedule. "Demo" is a captured word — six of twenty-four projects use it
+>    to mean "talk to sales" — so the label matters as much as the thing.
+> 3. **The marketing site**, per `LANDING-PAGE.md`.
+> 4. **Mobile and PWA**, per `MOBILE-AND-PWA.md`. Two hazards there must not be
+>    got wrong: Serwist's default cache stores authenticated admin HTML for 24
+>    hours in an origin-scoped cache, and Background Sync does not exist on iOS.
+> 5. **Docs for non-technical people.** Ghost's persona-split navigation is the
+>    only real answer found to this.
+>
+> **Not on the critical path:** announcing. The launch is rarely the peak —
+> Excalidraw's first Show HN scored 30 points and it now has 129k stars — and a
+> submission that lands on an unfinished demo converts worse than the same
+> submission a month later.
 
 ### Phase 9 — Blog, newsletter capture, themes 2–6, presets, launch (4–5 weeks)
 
