@@ -9,7 +9,8 @@
 > The unannotated original is archived at [PLAN-ORIGINAL.md](PLAN-ORIGINAL.md)
 > if you want the reasoning as it stood before any code was written.
 >
-> Last updated: 2026-08-11 · Version 0.5.0 · CI green on `main`
+> Last updated: 2026-08-11 · Version 0.5.0 · CI green on `main`; email and the
+> durable inbox are on `feat/email-and-inbox`, reviewed and not yet merged.
 
 ## Status at a glance
 
@@ -31,11 +32,76 @@ both sit on now exist, so neither has to be built twice — and the primitives
 that are still missing from Phase 2 need blocks to have somewhere to live.
 
 **What works today:** a stranger can deploy this, claim it, answer four
-questions and have a live portfolio they can edit without touching code.
+questions and have a live portfolio they can edit without touching code. An
+enquiry now emails them, and a forgotten passphrase is recoverable.
 
 **What does not:** no blog, no themes beyond the one, no block builder, the
 admin is the old component kit, and email covers only transactional SMTP —
 no alternate providers, no integrations registry or secrets vault, no OTP.
+
+**Known bug, unfixed and pre-existing:** `/admin/welcome`'s Skip link is inert.
+It navigates without setting `fullName`, so `AdminLayout`'s guard bounces
+straight back to it. That is the first screen every new deployer meets. Found
+twice during the email work — once blind, once root-caused — and left alone
+both times because it was outside the branch.
+
+---
+
+## Finishing locally, before any cloud account
+
+Almost all of the remaining work can be built and genuinely verified on one
+machine with Docker. That is worth knowing before paying for anything: the list
+of things that truly need a hosted service is short, and none of them block
+development.
+
+### What Docker covers
+
+| Remaining work                                | Local equivalent                                                    |
+| --------------------------------------------- | ------------------------------------------------------------------- |
+| Phase 2 primitives, ESLint bans, publish gate | Nothing external needed                                             |
+| Phase 5 blocks, pages, `draftMode()` preview  | Nothing external needed                                             |
+| Phase 7 shadcn admin, MediaPicker, builder    | Nothing external needed                                             |
+| Phase 9 blog, newsletter capture, themes      | Nothing external needed                                             |
+| Postgres / Supabase / Neon **database** half  | `postgres:16` — already wired, takes the suite from 98 to 160 tests |
+| Supabase **Storage** half                     | `supabase start` runs the real `storage-api` container              |
+| Email send path                               | `axllent/mailpit` — already wired                                   |
+| PocketBase, Appwrite adapters                 | Both ship official Docker images                                    |
+| Cloudflare D1 + R2 adapter                    | `wrangler dev --local` (Miniflare) emulates both                    |
+| Firebase adapter                              | The Firebase Emulator Suite                                         |
+| Convex adapter                                | `convex dev` runs a local backend                                   |
+| Turnstile (spam)                              | Cloudflare publishes always-pass and always-fail test keys          |
+| Umami (analytics)                             | Self-hosts in Docker                                                |
+
+**All five missing storage adapters can be written and conformance-tested
+without a single account.** That was not obvious and it changes the ordering:
+Phase 8's adapters are no longer gated on anything.
+
+### What genuinely needs the cloud
+
+Four things, and only four:
+
+1. **Vercel Blob.** Proprietary, no emulator. It is also what the Deploy button
+   provisions, so it is the highest-priority cloud check.
+2. **Real SMTP deliverability.** Mailpit accepts everything; a real provider
+   enforces SPF, DKIM and rate limits.
+3. **The Deploy button itself** — Vercel Marketplace auto-provisioning, and the
+   claim flow on a genuinely public URL with `OPB_SETUP_TOKEN` set.
+4. **Deployed-URL measurements** — Lighthouse budgets, securityheaders.com and
+   Mozilla Observatory.
+
+### Suggested order
+
+1. **Phase 2 remainder** — the publish-time contrast gate is small and
+   `checkContrast` is ready; then Tailwind 4 (PR #7), now unblocked.
+2. **Phase 5 blocks and pages** — the largest single piece, and what Phases 7
+   and 9 both sit on. The primitives from Phase 2 land here.
+3. **Phase 7 admin on shadcn** — `MediaPicker` first; it unblocks every image
+   field.
+4. **Phase 8 adapters** — five files, each against its own local emulator.
+5. **Phase 8 integrations registry + vault** — now with two real consumers
+   (SMTP and Turnstile) to design the abstraction against, rather than none.
+6. **Phase 9** — blog, newsletter, themes, presets.
+7. **Only then:** one cloud pass covering all four items above at once.
 
 ---
 
@@ -312,6 +378,12 @@ _`generateStaticParams` must never fail the build_ — try/catch → `[]`, so a 
 > publishing without a session returns 401; a cross-site POST returns 403; a
 > second claim attempt is refused.
 >
+> **Passphrase reset by email now exists** (Phase 8), so a forgotten passphrase
+> is no longer "delete a row from your own database". Tokens reuse the `otp` kv
+> namespace; only the sha256 is stored, the token is burned before the
+> passphrase changes, and `sessionEpoch` is bumped so whoever forced the reset
+> does not keep a session they already held.
+>
 > **DEVIATION FROM A LOCKED DECISION:** the plan chose _passkey first, email OTP
 > as recovery_. Neither is implemented — authentication is passphrase-only.
 > This was a deliberate scope call rather than an oversight: passphrase auth
@@ -352,8 +424,17 @@ Passkey + OTP + sessions + claim + CSRF + rate limiting + CSP/headers. `requireO
 > All four collections still exist separately, so the 301 redirects the plan
 > mentions are not needed yet.
 >
-> Drafts still live in the browser's IndexedDB; only _published_ content and
-> uploaded media are server-side. Two people editing from two browsers would not
+> **The contact inbox left the content snapshot.** Enquiries were appended by
+> reading the published document, unshifting and writing it back, so two
+> arriving together lost one — and the conformance suite pinned that as correct,
+> which it is for a content document and is not for an inbox. They now have
+> their own `messages` surface on the contract: one file per enquiry on the
+> local adapter, one row on Postgres. Publishing strips them, including out of
+> nested version snapshots, because the published document is serialised into
+> the HTML of every public page.
+>
+> Drafts still live in the browser's IndexedDB; only _published_ content,
+> uploaded media and enquiries are server-side. Two people editing from two browsers would not
 > see each other's drafts.
 >
 > **Fixed on the way: uploaded images never reached visitors.** `uploadMedia`
