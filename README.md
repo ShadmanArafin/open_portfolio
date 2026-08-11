@@ -154,9 +154,17 @@ discover them after typing in a portfolio:
   end to end on the local filesystem backend. The same code path drives Supabase
   Storage and Vercel Blob, and the storage conformance suite covers both, but
   neither has yet been run against the live service with real credentials.
-- **No blog, no page builder, one theme.** All planned; none built.
-- **The admin is the old component kit.** It works, but it is being rebuilt on
-  shadcn/ui.
+- **Your home page is not built from blocks yet.** You can create any number of
+  pages and build them visually — add blocks, reorder them, edit every field,
+  set each page's own SEO, preview before publishing. The home page itself is
+  still the theme's fixed sections, edited under Homepage. That is the largest
+  remaining gap in the builder.
+- **One theme, and no way to swap it.** The token layer that makes themes
+  possible is built and enforced; the second theme is not.
+- **No blog.** Planned, not started.
+- **Nothing on mobile beyond the site being responsive.** No app to install, no
+  notifications, no admin laid out for a phone.
+- **Sign-in is an email and a passphrase.** No passkeys, no one-time codes.
 
 ## Tech stack
 
@@ -177,11 +185,11 @@ discover them after typing in a portfolio:
 | 0.2           | Next.js App Router, server rendering, SEO, Open Graph, sitemap, real 404         |
 | 0.3           | Server-side auth, publishing that reaches visitors, a contact form that delivers |
 | 0.4           | Pluggable storage with a conformance suite every backend must pass               |
-| **0.5 (now)** | One-click deploy, first-run wizard, profession vocabulary packs                  |
-| 0.6           | Design tokens, six themes, Tailwind 4                                            |
-| 0.7           | Admin rebuilt on shadcn/ui, media picker, block and page builder                 |
-| 0.8           | Remaining backends, integrations registry, email                                 |
-| 0.9           | Blog, newsletter capture, full profession presets                                |
+| **0.5 (now)** | Design tokens, block and page builder, media picker, integrations, Docker        |
+| 0.6           | Home page built from blocks, more block types, second theme                      |
+| 0.7           | Mobile admin, installable app, notifications                                     |
+| 0.8           | Remaining backends, passkeys and one-time codes                                  |
+| 0.9           | Blog, newsletter capture, six themes, full profession presets                    |
 | 1.0           | Stable                                                                           |
 
 Detailed status for every phase, including what is verified and what is not, is
