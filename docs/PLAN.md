@@ -20,7 +20,7 @@
 | --------------------------- | ------------------ | ---------------------------------------------------------------------------- |
 | 0 — Repo publishable        | **Done, verified** | MIT, no personal data, CI, guards                                            |
 | 1 — Next.js + SEO           | **Done, verified** | Server-rendered, real metadata, sitemap, 404                                 |
-| 2 — Tokens + primitives     | **Partially done** | Tokens done and server-rendered. Primitives remain                           |
+| 2 — Tokens + primitives     | **Partially done** | Tokens, publish gate done. Primitives and Tailwind 4 remain                  |
 | 3 — Storage contract        | **Done, verified** | Contract, local adapter, registry, server read                               |
 | 4 — Auth                    | **Done, verified** | Passphrase + sessions. **Passkeys/OTP not built**                            |
 | 5 — Write path              | **Partially done** | Publish and contact work. **Blocks and pages missing**                       |
@@ -30,6 +30,7 @@
 | 9 — Blog, themes, presets   | **Barely started** | Only profession vocabulary packs                                             |
 
 **Where to start:** finish Phase 2 — the ~17 primitives — then Phase 5's blocks.
+The publish-time contrast gate that used to head this list is done.
 
 This supersedes an earlier note here that said to start with blocks on the
 grounds that the primitives "need blocks to have somewhere to live". That has it
@@ -75,7 +76,7 @@ development.
 | Phase 5 blocks, pages, `draftMode()` preview  | Nothing external needed                                                     |
 | Phase 7 shadcn admin, MediaPicker, builder    | Nothing external needed                                                     |
 | Phase 9 blog, newsletter capture, themes      | Nothing external needed                                                     |
-| Postgres / Supabase / Neon **database** half  | `postgres:16` — already wired; with Mailpit takes the suite from 106 to 168 |
+| Postgres / Supabase / Neon **database** half  | `postgres:16` — already wired; with Mailpit takes the suite from 115 to 177 |
 | Supabase **Storage** half                     | `supabase start` runs the real `storage-api` container                      |
 | Email send path                               | `axllent/mailpit` — already wired                                           |
 | PocketBase, Appwrite adapters                 | Both ship official Docker images                                            |
@@ -369,8 +370,28 @@ _Risk: theme hydration mismatch → keep the blocking script verbatim, `suppress
 > - An ESLint rule banning colour/size utilities and arbitrary values inside
 >   `core/blocks/**` and `themes/**`. Without it the block/theme contract leaks.
 >   Neither directory exists yet, so the rule has nothing to guard.
-> - The publish-time gate: block publishing when body text fails 4.5:1.
->   `checkContrast` is ready; it needs wiring into `contentHealth.ts`.
+> - ~~The publish-time gate~~ **Done.** `core/theme/audit.ts` checks nine
+>   foreground/background pairs in both modes; `contentHealth` reports it as
+>   blocking, and `POST /api/admin/publish` refuses with 422 — enforcement at
+>   the boundary, because the dashboard is advice and a direct call to the
+>   endpoint must not be able to put unreadable text in front of visitors.
+>   Scoped to contrast alone: other "blocking" health issues are judgement
+>   calls, and refusing all of them would make publishing feel broken.
+>
+>   **Writing its tests found two real defects in the shipped palette.**
+>   `--text-muted` was enforced at 3:1, but it carries captions, dates and meta
+>   labels — small text, so 4.5:1 applies. It shipped at 4.22:1 in dark and
+>   3.24:1 in light. And `--link-color` reused the accent's 3:1 value, shipping
+>   links at 3.02:1 in light mode. Both now derive their own 4.5:1 value, which
+>   costs some of the visual step down from secondary text — the right trade,
+>   since a hierarchy nobody can read is not a hierarchy.
+>
+>   **And one defect in the audit itself:** it first held ordinary borders to
+>   3:1, which failed the default palette at 1.12:1 and would have blocked every
+>   new install from publishing. WCAG 1.4.11 covers components needed to
+>   identify a control or its state, not decorative hairlines between sections.
+>   Borders are no longer checked; the focus ring still is.
+>
 > - Fonts are still applied client-side by `loadGoogleFonts`, so the family name
 >   is right only after hydration. Server-rendering them means getting the font
 >   catalogue onto the server without dragging `react-icons` with it.
@@ -720,8 +741,8 @@ The numbers you should see, as of this writing:
 | `lint`                    | **0 errors**, 64 warnings — the warnings are baseline |
 | `format:check`            | clean                                                 |
 | `check-no-personal-data`  | clean, listed by git                                  |
-| `test` with no containers | 106 passed, 7 skipped                                 |
-| `test` with both          | **168 passed, 2 skipped**                             |
+| `test` with no containers | 115 passed, 7 skipped                                 |
+| `test` with both          | **177 passed, 2 skipped**                             |
 
 The 2 remaining skips are the Supabase and Neon conformance runs, which need
 real cloud credentials. Everything else runs locally.

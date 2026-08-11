@@ -1,4 +1,5 @@
 import { CMSState } from '../types/cms';
+import { auditContrast, describeFailure } from '@/core/theme/audit';
 
 /**
  * What the dashboard can honestly tell you.
@@ -293,6 +294,24 @@ export function analyseContent(
     detail: 'The enquiries are safe and listed in your inbox, but the notification failed.',
     to: '/admin/messages',
     action: 'See why',
+  }));
+
+  /* ------------------------------------------------------------ readability */
+
+  // Both modes, because a palette can be perfect in the one the owner uses and
+  // unreadable in the one they never open.
+  const contrast = auditContrast(state.appearance);
+  const worst = contrast.failures[0];
+  check(contrast.passes, () => ({
+    id: 'contrast',
+    severity: 'blocking',
+    title:
+      contrast.failures.length === 1
+        ? 'One colour pairing is too faint to read'
+        : `${contrast.failures.length} colour pairings are too faint to read`,
+    detail: worst ? describeFailure(worst) : '',
+    to: '/admin/appearance',
+    action: 'Adjust the colours',
   }));
 
   check(Boolean(state.settings?.resumeUrl?.trim()), () => ({

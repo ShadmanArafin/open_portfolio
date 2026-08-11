@@ -5,6 +5,7 @@ import { requireOwner, UnauthorizedError } from '@/core/auth/guard';
 import { clientKey, rateLimit } from '@/core/auth/ratelimit';
 import { withoutEnquiries } from '@/core/content/sanitise';
 import type { CMSState } from '@/cms/types/cms';
+import { auditContrast, describeFailure } from '@/core/theme/audit';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,6 +52,27 @@ export async function POST(req: Request) {
     return NextResponse.json(
       { ok: false, error: 'That does not look like site content.' },
       { status: 400 }
+    );
+  }
+
+  // Refuse a palette nobody could read. Enforced here rather than only in the
+  // dashboard because the dashboard is advice and this is the boundary: a
+  // client that skips the warning, or a direct call to this endpoint, must not
+  // be able to put unreadable text in front of visitors.
+  //
+  // Scoped to contrast on purpose. The health report marks other things
+  // "blocking" that are judgement calls — an unpublished draft project is the
+  // owner's business — and refusing every one of them would make publishing
+  // feel broken rather than careful.
+  const contrast = auditContrast(body.content.appearance);
+  if (!contrast.passes) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: describeFailure(contrast.failures[0]),
+        failures: contrast.failures,
+      },
+      { status: 422 }
     );
   }
 

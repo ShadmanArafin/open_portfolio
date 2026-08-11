@@ -143,14 +143,25 @@ export function generateTokens(mode: ThemeMode, inputs: Partial<ThemeInputs> = {
   const away = textPrimary;
 
   const textSecondary = enforceContrast(mix(textPrimary, bg, 0.38), bg);
-  const textMuted = enforceContrast(mix(textPrimary, bg, 0.55), bg, 'large');
+  // Body, not large. Muted text carries captions, dates and meta labels — all
+  // of it small — so WCAG's 4.5:1 applies. Holding it to 3:1 shipped a default
+  // palette whose muted text failed at 4.22:1 in dark and 3.24:1 in light.
+  // Enforcing it costs some of the visual step down from secondary text, which
+  // is the correct trade: a hierarchy nobody can read is not a hierarchy.
+  const textMuted = enforceContrast(mix(textPrimary, bg, 0.55), bg);
 
   const surface = mix(bg, away, 0.025);
   const surfaceSecondary = mix(bg, away, 0.055);
   const surfaceRaised = mix(bg, away, 0.08);
   const surfaceSunken = shade(bg, 5);
 
+  // 3:1 is right for the accent as a *surface* and as the focus ring — both are
+  // interface components under WCAG 1.4.11, not text.
   const accentOnBg = enforceContrast(accent, bg, 'large');
+  // Links are text, and small text at that, so they need their own 4.5:1
+  // derivation. Sharing the accent's value shipped links at 3.02:1 in light
+  // mode — readable to the person who chose the colour, not to everyone.
+  const linkOnBg = enforceContrast(accent, bg);
   const accentHover = mix(accent, away, 0.15);
   const textOnAccent = readableForeground(accent, INK);
 
@@ -198,7 +209,7 @@ export function generateTokens(mode: ThemeMode, inputs: Partial<ThemeInputs> = {
     '--focus-ring': toHex(accentOnBg),
     '--selection-bg': alpha(accent, 0.2),
     '--selection-text': toHex(accentOnBg),
-    '--link-color': toHex(accentOnBg),
+    '--link-color': toHex(linkOnBg),
 
     // Section bands. Small, deliberate steps rather than arbitrary hex values,
     // so a change of background carries the whole page with it.
