@@ -80,7 +80,7 @@ development.
 | Phase 5 blocks, pages, `draftMode()` preview  | Nothing external needed                                                     |
 | Phase 7 shadcn admin, MediaPicker, builder    | Nothing external needed                                                     |
 | Phase 9 blog, newsletter capture, themes      | Nothing external needed                                                     |
-| Postgres / Supabase / Neon **database** half  | `postgres:16` — already wired; with Mailpit takes the suite from 224 to 286 |
+| Postgres / Supabase / Neon **database** half  | `postgres:16` — already wired; with Mailpit takes the suite from 230 to 304 |
 | Supabase **Storage** half                     | `supabase start` runs the real `storage-api` container                      |
 | Email send path                               | `axllent/mailpit` — already wired                                           |
 | PocketBase, Appwrite adapters                 | Both ship official Docker images                                            |
@@ -568,9 +568,32 @@ Passkey + OTP + sessions + claim + CSRF + rate limiting + CSP/headers. `requireO
 > helper — so it now follows one level of local indirection: a test that fails
 > correct code teaches people to write worse code to appease it.
 >
+> **Revisions and conflict detection are in**, and this is where the plan was
+> deliberately narrowed. The plan asked for per-record writes; what shipped is
+> optimistic concurrency on the snapshot — `readSnapshotMeta` returns a revision,
+> `writeSnapshot` takes one and refuses if it has moved on, and both saving and
+> publishing return 409 with the *other* version attached rather than a bare
+> "someone else changed this".
+>
+> The reason for narrowing: the two problems per-record writes solve are lost
+> updates and documents too big to rewrite. The first is real today — a laptop
+> and a phone, two tabs, an afternoon gone silently. The second is not: a
+> portfolio has dozens of records. Splitting storage per record would mean
+> designing the record surface now and building Phase 7 against it, then
+> redesigning both when the blog arrives with the access patterns that actually
+> justify it. The record split moves to Phase 9, with the blog.
+>
+> **Two implementations of one contract is the only reason this was correct.**
+> The file-backed adapter passed every revision test while real Postgres failed
+> four: `INSERT … ON CONFLICT DO UPDATE … WHERE revision = expected` cannot
+> express a conditional update, because guarding the insert leaves no row to
+> conflict *with*, so the update branch never runs. It is now a CTE that either
+> updates a matching row or inserts when the caller expected nothing. The
+> conformance suite also caught the test shim silently dropping the argument —
+> which would have made the whole feature look like it worked.
+>
 > **Remaining in this phase:**
 >
-> - Per-record writes with revision checks. Publishing is whole-document.
 > - The kitchen-sink CI matrix. It needs more than one theme and an axe run, so
 >   it belongs with Phase 9's themes rather than here. The render tests in
 >   `core/blocks/__tests__/render.test.tsx` are its seed.
@@ -839,8 +862,8 @@ The numbers you should see, as of this writing:
 | `lint`                    | **0 errors**, 64 warnings — the warnings are baseline |
 | `format:check`            | clean                                                 |
 | `check-no-personal-data`  | clean, listed by git                                  |
-| `test` with no containers | 224 passed, 7 skipped                                 |
-| `test` with both          | **286 passed, 2 skipped**                             |
+| `test` with no containers | 230 passed, 7 skipped                                 |
+| `test` with both          | **304 passed, 2 skipped**                             |
 
 The 2 remaining skips are the Supabase and Neon conformance runs, which need
 real cloud credentials. Everything else runs locally.

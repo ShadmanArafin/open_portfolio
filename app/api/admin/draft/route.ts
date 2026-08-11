@@ -4,8 +4,7 @@ import { requireOwner, UnauthorizedError } from '@/core/auth/guard';
 import { clientKey, rateLimit } from '@/core/auth/ratelimit';
 import { withoutEnquiries } from '@/core/content/sanitise';
 import { looksLikeContent } from '@/core/content/validate';
-
-export const dynamic = 'force-dynamic';
+import { RevisionConflictError } from '@/core/storage/contract';
 
 /**
  * Saving work without showing it to anyone.
@@ -20,6 +19,28 @@ export const dynamic = 'force-dynamic';
  * anyway. The gate belongs at the moment content becomes public, and that is
  * where it stays.
  */
+
+export const dynamic = 'force-dynamic';
+
+/**
+ * What revision the draft is on, so an editor can save conditionally.
+ *
+ * Owner-only despite being a read: the revision alone says nothing, but this
+ * sits under `/api/admin` and a route that is public "because it only returns a
+ * number" is how the next one ends up public too.
+ */
+export async function GET() {
+  try {
+    await requireOwner();
+  } catch (err) {
+    const status = err instanceof UnauthorizedError ? 401 : 500;
+    return NextResponse.json({ ok: false, error: 'Not signed in.' }, { status });
+  }
+
+  const meta = await (await getStorageAdapter()).readSnapshotMeta('draft');
+  return NextResponse.json({ ok: true, revision: meta?.revision ?? 0 });
+}
+
 export async function POST(req: Request) {
   try {
     await requireOwner();
@@ -34,7 +55,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: 'Too many saves.' }, { status: 429 });
   }
 
-  const body = (await req.json().catch(() => null)) as { content?: unknown } | null;
+  const body = (await req.json().catch(() => null)) as {
+    content?: unknown;
+    expectedRevision?: number;
+  } | null;
   if (!looksLikeContent(body?.content)) {
     return NextResponse.json(
       { ok: false, error: 'That does not look like site content.' },
@@ -45,7 +69,26 @@ export async function POST(req: Request) {
   // Enquiries have their own surface and their own writer. A draft carrying a
   // stale copy of the inbox would resurrect deleted messages the moment it was
   // published.
-  await (await getStorageAdapter()).writeSnapshot('draft', withoutEnquiries(body.content));
+  const content = withoutEnquiries(body.content);
+  const adapter = await getStorageAdapter();
 
-  return NextResponse.json({ ok: true, savedAt: new Date().toISOString() });
+  try {
+    const revision = await adapter.writeSnapshot('draft', content, body.expectedRevision);
+    return NextResponse.json({ ok: true, revision, savedAt: new Date().toISOString() });
+  } catch (err) {
+    if (!(err instanceof RevisionConflictError)) throw err;
+
+    // The other side of the conflict comes back with the response. Telling
+    // somebody "this changed elsewhere" and then making them reload to find out
+    // what changed is how people give up and paste over it anyway.
+    const current = await adapter.readSnapshotMeta('draft');
+    return NextResponse.json(
+      {
+        ok: false,
+        error: err.message,
+        conflict: { expected: err.expected, current: err.current, content: current?.state ?? null },
+      },
+      { status: 409 }
+    );
+  }
 }

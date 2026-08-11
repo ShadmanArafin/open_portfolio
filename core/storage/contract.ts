@@ -91,6 +91,33 @@ export interface MessagesAdapter {
   remove(id: string): Promise<void>;
 }
 
+export interface SnapshotRead {
+  state: CMSState;
+  /**
+   * Incremented on every write. A writer passes back the revision it read; a
+   * mismatch means somebody else wrote in between.
+   *
+   * The alternative — last write wins — is silent, and silent is the problem:
+   * two browser tabs, or a phone and a laptop, and an afternoon's edits vanish
+   * with no error anywhere. A number that has to match is the cheapest thing
+   * that turns a lost update into a question the user can answer.
+   */
+  revision: number;
+}
+
+/** Thrown when a conditional write finds the stored revision has moved on. */
+export class RevisionConflictError extends Error {
+  constructor(
+    readonly expected: number,
+    readonly current: number
+  ) {
+    super(
+      `This was changed somewhere else while you were working (you had version ${expected}, the site is now on ${current}).`
+    );
+    this.name = 'RevisionConflictError';
+  }
+}
+
 export interface HealthReport {
   ok: boolean;
   detail: string;
@@ -151,7 +178,22 @@ export interface StorageAdapter {
   provision(): Promise<void>;
 
   readSnapshot(channel: Channel): Promise<CMSState | null>;
-  writeSnapshot(channel: Channel, state: CMSState): Promise<void>;
+
+  /**
+   * The snapshot together with its revision, for a caller that intends to write
+   * it back. Null when nothing has been stored yet.
+   */
+  readSnapshotMeta(channel: Channel): Promise<SnapshotRead | null>;
+
+  /**
+   * Writes a snapshot and returns its new revision.
+   *
+   * With `expectedRevision`, the write only lands if the stored revision still
+   * matches, and throws `RevisionConflictError` otherwise. Without it, the write
+   * is unconditional — correct for publishing, which is a deliberate act on
+   * content the user just looked at, and wrong for autosave.
+   */
+  writeSnapshot(channel: Channel, state: CMSState, expectedRevision?: number): Promise<number>;
 
   readonly media: MediaAdapter;
   readonly messages: MessagesAdapter;

@@ -4,6 +4,7 @@ import { randomBytes } from 'node:crypto';
 import path from 'node:path';
 import type { CMSState, ContactMessage } from '@/cms/types/cms';
 import type {
+  SnapshotRead,
   Channel,
   HealthReport,
   KvAdapter,
@@ -14,6 +15,7 @@ import type {
   OwnerRecord,
   StorageAdapter,
 } from '../contract';
+import { RevisionConflictError } from '../contract';
 import { migrateSnapshotMessages } from './_shared/migrate-messages';
 
 /**
@@ -176,6 +178,40 @@ async function writeAtomically(target: string, contents: string): Promise<void> 
 
 function atomicWrite(target: string, contents: string): Promise<void> {
   return runQueued(target, () => writeAtomically(target, contents));
+}
+
+/**
+ * On-disk shape of a snapshot.
+ *
+ * Files written before revisions existed are the bare `CMSState`, so a read has
+ * to recognise both. Treating an unwrapped file as revision 0 means the first
+ * conditional write against it succeeds and everything after is wrapped —
+ * upgrade with no migration step and no chance of a user losing a site because
+ * the format moved under them.
+ */
+interface StoredSnapshot {
+  revision: number;
+  state: CMSState;
+}
+
+function isWrapped(value: unknown): value is StoredSnapshot {
+  return (
+    !!value &&
+    typeof value === 'object' &&
+    typeof (value as StoredSnapshot).revision === 'number' &&
+    typeof (value as StoredSnapshot).state === 'object'
+  );
+}
+
+async function readStored(channel: Channel): Promise<StoredSnapshot | null> {
+  try {
+    const raw = JSON.parse(await readFile(channelPath(channel), 'utf8')) as unknown;
+    if (isWrapped(raw)) return raw;
+    return { revision: 0, state: raw as CMSState };
+  } catch {
+    // Nothing stored yet is the normal state of a fresh install, not a fault.
+    return null;
+  }
 }
 
 function channelPath(channel: Channel): string {
@@ -380,18 +416,34 @@ export const localAdapter: StorageAdapter = {
   kv,
 
   async readSnapshot(channel) {
-    try {
-      const raw = await readFile(channelPath(channel), 'utf8');
-      return JSON.parse(raw) as CMSState;
-    } catch {
-      // Nothing stored yet is the normal state of a fresh install, not a fault.
-      return null;
-    }
+    return (await readStored(channel))?.state ?? null;
   },
 
-  async writeSnapshot(channel, state) {
-    await mkdir(CONTENT_DIR, { recursive: true });
-    await atomicWrite(channelPath(channel), JSON.stringify(state, null, 2));
+  async readSnapshotMeta(channel) {
+    return readStored(channel);
+  },
+
+  async writeSnapshot(channel, state, expectedRevision) {
+    // The whole read-compare-write runs inside the per-path queue, so it is
+    // atomic against every other write in this process — which is all of them:
+    // `local` is one machine's disk by definition, and the registry refuses it
+    // anywhere that could run two copies.
+    return runQueued(channelPath(channel), async () => {
+      const current = await readStored(channel);
+      const currentRevision = current?.revision ?? 0;
+
+      if (expectedRevision !== undefined && expectedRevision !== currentRevision) {
+        throw new RevisionConflictError(expectedRevision, currentRevision);
+      }
+
+      const revision = currentRevision + 1;
+      await mkdir(CONTENT_DIR, { recursive: true });
+      await writeAtomically(
+        channelPath(channel),
+        JSON.stringify({ revision, state } satisfies StoredSnapshot, null, 2)
+      );
+      return revision;
+    });
   },
 
   media,

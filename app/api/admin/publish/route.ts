@@ -6,6 +6,7 @@ import { clientKey, rateLimit } from '@/core/auth/ratelimit';
 import { withoutEnquiries } from '@/core/content/sanitise';
 import { auditContrast, describeFailure } from '@/core/theme/audit';
 import { looksLikeContent } from '@/core/content/validate';
+import { RevisionConflictError } from '@/core/storage/contract';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,7 +36,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: 'Too many publishes.' }, { status: 429 });
   }
 
-  const body = (await req.json().catch(() => null)) as { content?: unknown } | null;
+  const body = (await req.json().catch(() => null)) as {
+    content?: unknown;
+    expectedRevision?: number;
+  } | null;
   if (!looksLikeContent(body?.content)) {
     return NextResponse.json(
       { ok: false, error: 'That does not look like site content.' },
@@ -73,11 +77,30 @@ export async function POST(req: Request) {
   const merged = withoutEnquiries(body.content);
 
   const adapter = await getStorageAdapter();
-  await adapter.writeSnapshot('published', merged);
+
+  let revision: number;
+  try {
+    // `expectedRevision` is optional here, unlike autosave. Publishing is a
+    // deliberate act on content the person is looking at, and an editor that
+    // knows what it last saw should say so — but a client that does not is
+    // making a considered choice to overwrite, not an accident.
+    revision = await adapter.writeSnapshot('published', merged, body.expectedRevision);
+  } catch (err) {
+    if (!(err instanceof RevisionConflictError)) throw err;
+    const current = await adapter.readSnapshotMeta('published');
+    return NextResponse.json(
+      {
+        ok: false,
+        error: err.message,
+        conflict: { expected: err.expected, current: err.current, content: current?.state ?? null },
+      },
+      { status: 409 }
+    );
+  }
 
   // Drop the cached renders so the change is live immediately rather than
   // whenever the revalidation window happens to lapse.
   revalidatePath('/', 'layout');
 
-  return NextResponse.json({ ok: true, publishedAt: new Date().toISOString() });
+  return NextResponse.json({ ok: true, revision, publishedAt: new Date().toISOString() });
 }

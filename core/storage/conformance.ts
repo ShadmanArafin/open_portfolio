@@ -1,4 +1,5 @@
 import type { CMSState, ContactMessage } from '@/cms/types/cms';
+import { RevisionConflictError } from './contract';
 import type { StorageAdapter } from './contract';
 
 /**
@@ -170,6 +171,117 @@ export function runConformanceSuite(
       const read = await adapter.readSnapshot('published');
       expect(read !== null).toBe(true);
       expect(writers.some((id) => read?.settings.fullName === `writer-${id}`)).toBe(true);
+    });
+
+    /*
+     * Revisions.
+     *
+     * Every adapter has to agree on this or the guarantee is worthless: an
+     * owner editing on a laptop and a phone must not be able to lose an
+     * afternoon's work silently, whichever backend they picked. Last-write-wins
+     * is the default behaviour of every store here, so the check has to be
+     * explicit in each of them.
+     */
+    describe('revisions', () => {
+      it('starts at nothing and counts up from the first write', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        expect(await adapter.readSnapshotMeta('published')).toBeNull();
+
+        const first = await adapter.writeSnapshot('published', makeTestContent('one'));
+        expect(first).toBe(1);
+
+        const meta = await adapter.readSnapshotMeta('published');
+        expect(meta?.revision).toBe(1);
+        expect(meta?.state.settings.fullName).toBe('one');
+
+        expect(await adapter.writeSnapshot('published', makeTestContent('two'))).toBe(2);
+      });
+
+      it('accepts a conditional write that still matches', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        await adapter.writeSnapshot('published', makeTestContent('one'));
+        const meta = await adapter.readSnapshotMeta('published');
+
+        const next = await adapter.writeSnapshot(
+          'published',
+          makeTestContent('two'),
+          meta!.revision
+        );
+        expect(next).toBe(2);
+        expect((await adapter.readSnapshot('published'))?.settings.fullName).toBe('two');
+      });
+
+      it('refuses a conditional write whose revision has moved on', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        await adapter.writeSnapshot('published', makeTestContent('one'));
+        const stale = (await adapter.readSnapshotMeta('published'))!.revision;
+
+        // Somebody else saves in between — the second tab, the other device.
+        await adapter.writeSnapshot('published', makeTestContent('two'));
+
+        let rejected: unknown = null;
+        try {
+          await adapter.writeSnapshot('published', makeTestContent('three'), stale);
+        } catch (err) {
+          rejected = err;
+        }
+        expect(rejected instanceof RevisionConflictError).toBe(true);
+
+        // And the rejected write left nothing behind.
+        expect((await adapter.readSnapshot('published'))?.settings.fullName).toBe('two');
+      });
+
+      it('treats an absent snapshot as revision 0', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        // The first save from a fresh install has nothing to compare against.
+        expect(await adapter.writeSnapshot('draft', makeTestContent('first'), 0)).toBe(1);
+      });
+
+      it('lets exactly one of two racing conditional writes win', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        await adapter.writeSnapshot('published', makeTestContent('base'));
+        const shared = (await adapter.readSnapshotMeta('published'))!.revision;
+
+        // Two tabs that both loaded the same version and both hit save. This is
+        // the situation the whole mechanism exists for, and "both succeeded" is
+        // the wrong answer even though nothing errored.
+        const results = await Promise.allSettled([
+          adapter.writeSnapshot('published', makeTestContent('tab-one'), shared),
+          adapter.writeSnapshot('published', makeTestContent('tab-two'), shared),
+        ]);
+
+        expect(results.filter((r) => r.status === 'fulfilled').length).toBe(1);
+        expect(results.filter((r) => r.status === 'rejected').length).toBe(1);
+        expect((await adapter.readSnapshotMeta('published'))?.revision).toBe(shared + 1);
+      });
+
+      it('keeps a revision per channel', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        await adapter.writeSnapshot('draft', makeTestContent('d1'));
+        await adapter.writeSnapshot('draft', makeTestContent('d2'));
+        await adapter.writeSnapshot('published', makeTestContent('p1'));
+
+        expect((await adapter.readSnapshotMeta('draft'))?.revision).toBe(2);
+        expect((await adapter.readSnapshotMeta('published'))?.revision).toBe(1);
+      });
     });
 
     // Skipped when there is no object store attached — see ConformanceOptions.

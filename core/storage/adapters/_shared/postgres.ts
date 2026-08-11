@@ -1,6 +1,7 @@
 import 'server-only';
 import postgres, { type Sql } from 'postgres';
 import type { CMSState, ContactMessage } from '@/cms/types/cms';
+import { RevisionConflictError } from '../../contract';
 import type {
   Channel,
   HealthReport,
@@ -8,6 +9,7 @@ import type {
   KvNamespace,
   MessagesAdapter,
   OwnerRecord,
+  SnapshotRead,
 } from '../../contract';
 
 /**
@@ -57,6 +59,13 @@ export async function provisionSchema(sql: Sql): Promise<void> {
       data        jsonb NOT NULL,
       updated_at  timestamptz NOT NULL DEFAULT now()
     )
+  `;
+
+  // Added after the table shipped, so it has to arrive as an alteration rather
+  // than in the CREATE above — an existing install already has the table and
+  // would never see a changed definition.
+  await sql`
+    ALTER TABLE opb_content ADD COLUMN IF NOT EXISTS revision integer NOT NULL DEFAULT 0
   `;
 
   await sql`
@@ -122,14 +131,85 @@ export async function readSnapshot(sql: Sql, channel: Channel): Promise<CMSState
   return rows[0]?.data ?? null;
 }
 
-export async function writeSnapshot(sql: Sql, channel: Channel, state: CMSState): Promise<void> {
-  // One statement, so a concurrent write cannot interleave and produce a
-  // document that is half one version and half another.
-  await sql`
-    INSERT INTO opb_content (channel, data, updated_at)
-    VALUES (${channel}, ${sql.json(state as never)}, now())
-    ON CONFLICT (channel) DO UPDATE SET data = EXCLUDED.data, updated_at = now()
+export async function readSnapshotMeta(sql: Sql, channel: Channel): Promise<SnapshotRead | null> {
+  const rows = await sql<{ data: CMSState; revision: number }[]>`
+    SELECT data, revision FROM opb_content WHERE channel = ${channel}
   `;
+  const row = rows[0];
+  return row ? { state: row.data, revision: row.revision } : null;
+}
+
+/** Postgres unique-violation. Two writers inserting the same channel at once. */
+const UNIQUE_VIOLATION = '23505';
+
+export async function writeSnapshot(
+  sql: Sql,
+  channel: Channel,
+  state: CMSState,
+  expectedRevision?: number
+): Promise<number> {
+  // One statement either way, so a concurrent write cannot interleave and
+  // produce a document that is half one version and half another.
+  if (expectedRevision === undefined) {
+    const rows = await sql<{ revision: number }[]>`
+      INSERT INTO opb_content (channel, data, revision, updated_at)
+      VALUES (${channel}, ${sql.json(state as never)}, 1, now())
+      ON CONFLICT (channel) DO UPDATE
+        SET data = EXCLUDED.data, revision = opb_content.revision + 1, updated_at = now()
+      RETURNING revision
+    `;
+    return rows[0].revision;
+  }
+
+  /*
+   * The conditional form, as one statement.
+   *
+   * The obvious `INSERT ... ON CONFLICT DO UPDATE ... WHERE revision = expected`
+   * cannot express this. Guarding the INSERT with `WHERE expected = 0` produces
+   * no row to conflict *with*, so the DO UPDATE branch never runs and every
+   * conditional write against an existing snapshot is reported as a conflict —
+   * which is exactly what real Postgres did, while the file-backed adapter
+   * passed the same tests. Two implementations of one contract is the only
+   * reason that was caught.
+   *
+   * So: update the row if its revision still matches, or insert only when the
+   * caller expected nothing to be there. Exactly one branch can produce a row.
+   */
+  let rows: { revision: number }[];
+  try {
+    rows = await sql<{ revision: number }[]>`
+    WITH updated AS (
+      UPDATE opb_content
+         SET data = ${sql.json(state as never)}, revision = revision + 1, updated_at = now()
+       WHERE channel = ${channel} AND revision = ${expectedRevision}
+      RETURNING revision
+    ), inserted AS (
+      INSERT INTO opb_content (channel, data, revision, updated_at)
+      SELECT ${channel}, ${sql.json(state as never)}, 1, now()
+       WHERE ${expectedRevision} = 0
+         AND NOT EXISTS (SELECT 1 FROM opb_content WHERE channel = ${channel})
+      RETURNING revision
+    )
+    SELECT revision FROM updated UNION ALL SELECT revision FROM inserted
+  `;
+  } catch (err) {
+    // Two callers can both pass the NOT EXISTS check at the same instant; the
+    // primary key settles which one lands, and the loser is in a conflict by
+    // another name.
+    if ((err as { code?: string })?.code === UNIQUE_VIOLATION) {
+      throw new RevisionConflictError(expectedRevision, 1);
+    }
+    throw err;
+  }
+
+  if (rows.length === 0) {
+    const current = await sql<{ revision: number }[]>`
+      SELECT revision FROM opb_content WHERE channel = ${channel}
+    `;
+    throw new RevisionConflictError(expectedRevision, current[0]?.revision ?? 0);
+  }
+
+  return rows[0].revision;
 }
 
 export async function readOwner(sql: Sql): Promise<OwnerRecord | null> {

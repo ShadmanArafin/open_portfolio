@@ -13,7 +13,8 @@ import type { CMSState, ContactMessage } from '@/cms/types/cms';
  */
 export interface MigrationDeps {
   readSnapshot: (channel: 'published' | 'draft') => Promise<CMSState | null>;
-  writeSnapshot: (channel: 'published' | 'draft', state: CMSState) => Promise<void>;
+  // Returns the new revision; the migration has no use for it.
+  writeSnapshot: (channel: 'published' | 'draft', state: CMSState) => Promise<unknown>;
   listMessages: () => Promise<ContactMessage[]>;
   appendMessage: (message: ContactMessage) => Promise<void>;
 }

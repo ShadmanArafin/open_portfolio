@@ -65,7 +65,9 @@ if (TEST_URL) {
         });
       },
       readSnapshot: (channel) => pg.readSnapshot(sql(), channel),
-      writeSnapshot: (channel, state) => pg.writeSnapshot(sql(), channel, state),
+      readSnapshotMeta: (channel) => pg.readSnapshotMeta(sql(), channel),
+      writeSnapshot: (channel, state, expected) =>
+        pg.writeSnapshot(sql(), channel, state, expected),
       readOwner: () => pg.readOwner(sql()),
       writeOwner: (owner) => pg.writeOwner(sql(), owner),
       kv: pg.makeKvAdapter(sql),

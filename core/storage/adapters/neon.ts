@@ -10,6 +10,7 @@ import {
   provisionSchema,
   readOwner,
   readSnapshot,
+  readSnapshotMeta,
   writeOwner,
   writeSnapshot,
 } from './_shared/postgres';
@@ -137,7 +138,8 @@ export const neonAdapter: StorageAdapter = {
   },
 
   readSnapshot: (channel) => readSnapshot(sql(), channel),
-  writeSnapshot: (channel, state) => writeSnapshot(sql(), channel, state),
+  readSnapshotMeta: (channel) => readSnapshotMeta(sql(), channel),
+  writeSnapshot: (channel, state, expected) => writeSnapshot(sql(), channel, state, expected),
   readOwner: () => readOwner(sql()),
   writeOwner: (owner) => writeOwner(sql(), owner),
 
