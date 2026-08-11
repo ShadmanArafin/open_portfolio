@@ -14,6 +14,33 @@ Chrome 154 · Chrome Android 151 · Safari 26.5 · iOS Safari 26.5 · Firefox 15
 - **VERIFIED** — quoted from primary source (spec, vendor docs, vendor blog, package metadata, or source code) fetched during this research.
 - **UNVERIFIED** — plausible/widely-repeated but not confirmed against a primary source in this pass. Flagged inline.
 
+**Contents**
+
+1. [PWA state of play now](#1-pwa-state-of-play-now) — support matrix, install criteria, iOS 26's removal of installability, storage eviction
+2. [Web push notifications](#2-web-push-notifications) — API matrix, iOS requirements, Declarative Web Push, VAPID, serverless
+3. [Next.js PWA in 2026](#3-nextjs-pwa-in-2026) — the official guide, `app/manifest.ts`, `next-pwa` vs Serwist, `useOffline`
+4. [Offline strategy for a CMS admin](#4-offline-strategy-for-a-cms-admin) — strategy catalogue and ten specific traps
+5. [Mobile admin UX patterns](#5-mobile-admin-ux-patterns) — 5A design evidence, 5B how existing CMSes handle mobile editing
+6. [What portfolio platforms offer on mobile](#6-what-portfolio-platforms-offer-on-mobile)
+7. [Quality-of-life features](#7-quality-of-life-features) — 10 features, hosted vs self-hosted, with difficulty verdicts
+8. [Accessibility on mobile](#8-accessibility-on-mobile--exact-criteria-and-thresholds) — exact WCAG criteria and thresholds
+   Appendix A — [Source index](#appendix-a--source-index) · Appendix B — [Open questions](#appendix-b--open-questions-for-follow-up)
+
+**Ten findings that changed the picture** (each expanded below with sources)
+
+| #   | Finding                                                                                                                                                                                                               | Where      |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| 1   | **iOS 26 removed installability requirements entirely** — _"There are now zero requirements for 'installability' in Safari"_, and every site added to the Home Screen opens as a web app by default                   | §1.4       |
+| 2   | **Chrome auto-revokes notification permission** from low-engagement sites since 2025-10-10 — but _"does not revoke notifications for any installed web apps"_                                                         | §2.7       |
+| 3   | **iOS never fires `pushsubscriptionchange`**, and Chrome only got it in 138 — subscription rotation must be polled on app open                                                                                        | §2.8       |
+| 4   | Notification `actions`, `badge`, `image` and `vibrate` are all **unsupported on iOS**; `vibrate` is also dead on Chrome Android. The official Next.js example uses two of them                                        | §2.1       |
+| 5   | **`next-pwa` last shipped 2022-08-23**; Next.js's own docs now name **Serwist** (`@serwist/next` 9.5.12, 2026-07-22)                                                                                                  | §3.5       |
+| 6   | **Next.js 16 ships experimental `useOffline`** — connectivity detection + automatic retry of navigations and Server Actions, with **no service worker and no caching**                                                | §3.6       |
+| 7   | **Serwist's `defaultCache` caches authenticated admin HTML and RSC payloads for 24 h** in an origin-scoped cache, with a `NetworkOnly` carve-out only for `/api/auth/*`                                               | §3.7, §4.3 |
+| 8   | **Background Sync does not exist on iOS** — an offline "outbox" can only flush when the user next opens the app                                                                                                       | §4.3       |
+| 9   | **The whole industry is moving away from mobile editing.** Webflow retired its legacy Editor on **2026-08-04**; Wix still lists site editing as an uncollected feature request; Squarespace has killed **eight** apps | §5B, §6    |
+| 10  | **Vercel Hobby forbids commercial use — including asking for donations** — which rules it out as the default host for a freelancer-facing portfolio builder                                                           | §7.6       |
+
 ---
 
 ## 1. PWA state of play now
@@ -1188,7 +1215,152 @@ Historical "Framer Preview" iOS/Android companion apps belonged to the pre-Frame
 
 ## 6. What portfolio platforms offer on mobile
 
-<!-- MERGE:PORTFOLIO_MOBILE -->
+All store figures verified **2026-08-11/12** via Apple's iTunes Lookup/Search API and live Google Play queries.
+
+### 6.0 Comparison table
+
+| Platform            | Official app (today)                               | Store data (2026-08-11)                                                                          | Edit pages from phone?                                                                                          | Verdict                                                   |
+| ------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| **Squarespace**     | **Squarespace: Run your business** (iOS + Android) | v2.124.0, released **2026-08-10**, 4.63 ★ / 18,765                                               | **Partly** — edit block _content_, not structure                                                                | Best in class, but **eight** apps were killed to get here |
+| **Wix**             | **Wix – Website Builder** (Owner) + **Wix Studio** | Owner v2.129416.0, 2026-07-23, 4.59 ★ / 16,786 · Studio v2.122264.0, 2026-05-11, **2.57 ★ / 49** | **No** — official: _"you can't edit sites created in the Wix Editor or Studio Editor using the Wix mobile app"_ | Big app, no site editing                                  |
+| **Webflow**         | **None**                                           | 3rd-party only (Phoneflow, EditFlow, Flow To-Go)                                                 | **No** — 1268px + mouse/keyboard                                                                                | Worst; got _worse_ on 2026-08-04                          |
+| **Framer**          | **None**                                           | Desktop app Mac/Windows only                                                                     | **CMS only** (since 2025-03-18)                                                                                 | Design is desktop-only                                    |
+| **Format**          | **Format** — iOS only                              | v2.16.6, released **2026-03-30**, 3.0 ★ / **only 4 ratings**                                     | **Yes** — galleries, blog, menus, real-time site edits                                                          | Real editing app; iOS-only, near-zero adoption            |
+| **Pixpa**           | **None for owners**                                | No iOS app; no Play app                                                                          | Web studio only (studio.pixpa.com)                                                                              | Client-gallery apps only — **frequently misreported**     |
+| **Adobe Portfolio** | **None**                                           | Adobe ships Behance/Lr/Ps, no Portfolio app                                                      | **Explicitly no**                                                                                               | Bluntest official refusal of the whole set                |
+| **Carrd**           | **None**                                           | Nothing by Carrd on either store                                                                 | **UNVERIFIED**                                                                                                  | No official position published                            |
+
+### 6.1 Squarespace — one app, eight corpses
+
+**The app today** (iTunes Lookup id 1361797894, 2026-08-11): _"Squarespace: Run your business"_, Squarespace Inc., **v2.124.0**, released **2026-08-10**, **4.63 ★ / 18,765 ratings**, ~324 MB.
+<https://apps.apple.com/us/app/squarespace-run-your-business/id1361797894> · Android `com.squarespace.android.squarespaceapp`
+Current release notes framing is commerce-first: _"In this release, our focus is on empowering sellers to sell anywhere, manage their shop, and grow their business with confidence."_
+
+**Eight apps discontinued** — official list, <https://support.squarespace.com/hc/en-us/articles/206544757-Discontinued-features>:
+
+| App                             | Discontinued       |
+| ------------------------------- | ------------------ |
+| Analytics app for Apple Watch   | November 2016      |
+| Start app                       | February 2017      |
+| Note app                        | October 2018       |
+| **Portfolio app**               | **March 2019**     |
+| **Blog app**                    | **July 2019**      |
+| **Analytics app**               | **June 2021**      |
+| **Commerce app**                | **September 2021** |
+| Video Studio app (formerly Cut) | September 2023     |
+
+Same page: _"To edit your site from a mobile device, use the Squarespace app."_
+
+**What the app can do** — <https://support.squarespace.com/hc/en-us/articles/360002093708-Edit-your-site-with-the-Squarespace-app>: _"You can edit Squarespace 7.1 or Squarespace 7.0 sites with the Squarespace app."_ Blog posts · products, discounts, invoices, Pay Links, in-person sales · images to Asset Library · block _content_ · page views and edits · section and header edits · common site settings · Email Campaigns.
+
+**What it cannot do — verbatim:**
+
+> _"You can edit block content in the app, but it's not possible to add or rearrange blocks on pages in the app."_
+> _"It's not possible to manage Acuity in the Squarespace app"_
+> _"To update a credit card, review invoices, or take other billing actions, log into your site on a computer."_
+> _"It's not possible to add images to a gallery this way"_ (re: Split View)
+> _"While the app doesn't currently include every part of Squarespace, we continue to add more features in regular updates."_
+
+**Mobile browser — the explicit limits** — <https://support.squarespace.com/hc/en-us/articles/214199477-Editing-your-site-on-mobile-devices> (created 2015-11-13, **updated 2026-07-02**):
+
+> _"Some areas of Squarespace aren't yet optimized for mobile browsers. For these areas, use the Squarespace app or a computer."_
+
+- **Not supported in a mobile browser:** adding/editing blocks not on the supported list · adding page sections · Analytics · Asset library · Commerce · Email Campaigns · "Other page editing options" · "Site styles and other design panels".
+- **Supported in a mobile browser (7.1):** add/delete/rearrange pages · edit page settings · delete/rearrange sections · add/delete/rearrange images in gallery sections · button, code, form, image, map, quote, social links, summary, video and donation blocks · header sections · site settings (billing, passwords, announcement bar, lock screen, mobile information bar, pop-ups, logo, title, footer).
+- iPad advice, verbatim: _"try turning the device to make the screen taller or wider. If this doesn't solve the problem, log into your site on a computer."_
+- Supported browsers page: _"You can edit many parts of your site on Chrome in Android and Safari in iOS and iPadOS."_ / _"Use the Squarespace app for areas that don't yet support mobile editing."_
+
+**Complaints** (App Store reviews, read 2026-08-11):
+
+> _"I don't understand why Squarespace thought this was going to be a replacement for the discontinued Portfolio App."_
+> _"For the money businesses pay at least hire developers who are not lazy about how the app moves w mobile devices. It's awkward, very freaking slow."_
+> _"Headings are tiny and gray making them visually subdued and super easy to overlook. Square-corner buttons are easy to mistake for plain text boxes."_
+
+Forum threads on the Commerce app removal: <https://forum.squarespace.com/topic/203408-concerns-about-removing-commerce-app/> · <https://forum.squarespace.com/topic/205976-switching-from-deprecated-commerce-mobile-app-to-squarespace-no-more-sell-now-button/>
+
+### 6.2 Wix — a big app that explicitly cannot edit your site
+
+| App                                       | Store ID   | Version    | Released       | Rating          |
+| ----------------------------------------- | ---------- | ---------- | -------------- | --------------- |
+| **Wix – Website Builder** (Owner app)     | 1545924344 | 2.129416.0 | **2026-07-23** | 4.59 ★ / 16,786 |
+| **Wix Studio**                            | 6450957812 | 2.122264.0 | **2026-05-11** | **2.57 ★ / 49** |
+| Spaces: Follow Businesses (member-facing) | 1099748482 | 2.129416.0 | 2025-07-22     | 4.7 ★ / 45K     |
+
+<https://apps.apple.com/us/app/wix-website-builder/id1545924344> (Android `com.wix.admin`) · <https://apps.apple.com/us/app/wix-studio/id6450957812>
+⚠️ **Spaces by Wix is member-facing** (customers following a business), not an owner tool.
+
+**The decisive official statement** — <https://support.wix.com/en/article/wix-owner-app-request-editing-your-site-from-the-app>:
+
+> **"Currently, you can't edit sites created in the Wix Editor or Studio Editor using the Wix mobile app."**
+
+The page is filed as a **Feature Request** with status _"We are collecting votes for this issue,"_ offers **no workaround** (it points to the Wix Partner marketplace to "Hire a Professional"), and carries the standard disclaimer that plans _"are subject to change or cancellation at any time at Wix's discretion."_ Known-issue article: <https://support.wix.com/en/article/some-users-unable-to-edit-site-from-owners-app>
+
+⚠️ **Terminology trap.** Wix's **"Mobile Editor"** is a _feature of the desktop Editor_ for designing your site's mobile breakpoint — **not** editing from a phone. Many "how to edit Wix on mobile" articles conflate the two.
+
+**What the apps do:** Owner app = dashboard, view live site, store/orders/inventory, live chat with visitors, bookings, analytics, social posts, blog. Studio app (agency-facing), verbatim: _"Manage client sites on the go: Stay on top of inboxes, analyze analytics reports, **edit or add blog posts**, manage Members Areas and check up on orders."_ Blog posts yes, site design no.
+
+**Complaint** — Wix Studio App Store review: _"you need to be on desktop to edit the website. You can edit the mobile app tho."_
+The Studio app's **2.57 ★ across only 49 ratings** is itself a finding.
+
+### 6.3 Webflow (builder angle)
+
+See §5B in full. **No native app** (third-party Phoneflow/EditFlow/Flow To-Go only); official requirement is _"a mouse-and-keyboard device (i.e., desktop or laptop computer) with a screen width of at least 1268px"_; the legacy Editor — the closest thing to a client-friendly, tablet-tolerant editing surface — was **retired 2026-08-04**.
+
+### 6.4 Framer (builder angle)
+
+See §5B in full. **No native app**; desktop app is macOS/Windows only; the Canvas officially requires _"a device running Windows, macOS, Linux, or ChromeOS"_; the sole mobile capability is **CMS entry create/edit/publish**, shipped **2025-03-18**.
+
+### 6.5 Format — a real editing app, on iOS only
+
+**iTunes Lookup id 1080574504:** _"Format"_, seller **Ideaform Inc.**, **v2.16.6**, released **2026-03-30**, **3.0 ★ / only 4 ratings**, min iOS 13.0, 37.6 MB. Also runs on iPad, Mac (M1+) and Apple Vision. <https://apps.apple.com/us/app/format/id1080574504>
+**No Android app** — a Play search (2026-08-11) returns nothing; `com.format.android` 404s. **iOS-exclusive.**
+
+**What you can do from the phone** (per the listing): create, edit and rearrange **galleries**; upload photos and video links; build **collection pages** with customisable visual menus; write and publish **blog posts** with image/video; edit the **site menu**; upload via the **Photos share extension**; set **password protection** on galleries and the site; and _"Modify your website in real-time on your phone."_
+
+**v2.16.6 release notes, verbatim:** _"We've upgraded to Apple's built-in photo picker… you can now upload TIFF and WebP, in addition to Apple ProRAW and RAW… adopted Apple's Liquid Glass UI"_ — confirming genuine 2026-era maintenance, not abandonware. But **4 total ratings** signals near-zero adoption.
+
+Historical: Format also shipped **Kredo**, a free iPad portfolio app (<https://www.format.com/press/coverage/popular-photography>); current status **UNVERIFIED**. `help.format.com` returns HTTP 403 to automated fetches, so Format's own help articles are **UNVERIFIED**.
+
+### 6.6 Pixpa — no owner app, and the review sites are wrong
+
+- iTunes Search "pixpa" (2026-08-11): **no app published by Pixpa** (results are Pixomatic, PicPay, pixiv).
+- Google Play search "Pixpa": **no app published by Pixpa** (results are Pixabay, Picsart, PixVerse).
+- What Pixpa actually offers are **client-facing gallery apps** — <https://www.pixpa.com/websites/mobile-gallery-apps>: _"Create a mobile gallery app to show a sneak peek of a photo shoot or share highlights from a project you have done."_ Branded with the photographer's contact info, **for sharing with clients**, not for editing.
+- <https://www.pixpa.com/apps> lists 100+ **third-party integrations** (Google Analytics, Stripe, PayPal, Mailchimp), not Pixpa-built mobile apps.
+- Editing happens in the web studio at `studio.pixpa.com`. Whether that is usable on a phone browser is **UNVERIFIED**.
+
+⚠️ **Misinformation flag:** velocenetwork.com states _"Yes, Pixpa has a mobile app for both iOS and Android devices. The app allows users to easily manage their website, portfolio, and online store from their mobile devices…"_ (<https://www.velocenetwork.com/pixpa/>). **This is contradicted by both app stores** and should be treated as inaccurate SEO content.
+
+### 6.7 Adobe Portfolio — the bluntest refusal in the set
+
+- iTunes Search "adobe portfolio" returns Behance, Express, Lightroom, Photoshop, Firefly, Capture, Acrobat — **no Portfolio editor app**.
+- **Supported Browsers and Devices** — <https://help.myportfolio.com/hc/en-us/articles/360038045914-Supported-Browsers-and-Devices> (fetched live 2026-08-11), verbatim:
+  > _"You can use the following browsers to edit and view Portfolio:_
+  > _Chrome - for PC, Mac · Firefox - for PC, Mac · Safari - for Mac only · Microsoft Edge - for PC only_
+  > _Note:_
+  > _**We do not support editing on mobile and tablet devices. For optimal editing experience, we suggest editing your site on a desktop**_
+  > _We support the two most recent versions of each browser mentioned above"_
+- Note Safari is **Mac only** and Edge is **PC only** — even desktop support is narrower than most.
+- Adjacent: Adobe's mobile apps (Lightroom v11.5.1, Behance v26.801.907, both updated Aug 2026) are where photographers' phone workflows live, and Lightroom→Portfolio integration exists — but **Behance is a separate network, not a Portfolio editor**. No Adobe mobile app edits a myportfolio.com site.
+- **Sunset status: no discontinuation notice found.** Portfolio remains a Creative Cloud benefit. Any claim it is being sunset is **UNVERIFIED**.
+
+### 6.8 Carrd — no app, no published position
+
+- iTunes Search "carrd" returns Linktree, Wix, Canva, Linkbio, vCarrd (unrelated) — **nothing published by Carrd**. No Play listing found.
+- **Official position on editing from a phone: NOT FOUND — UNVERIFIED.** Repeated attempts against `carrd.co/docs` and subsections returned 404s or contentless index pages. Carrd publishes no locatable browser/device requirements page.
+
+⚠️ **Terminology trap.** Carrd's documented **"Mobile View"** is a _breakpoint-preview and per-element mobile-override feature inside the desktop editor_, not a mobile editing mode. A Carrd plugin developer describing the actual workflow (via Reddit): _"switch to mobile editor view, then click on element, go to Appearance setting, scroll down and set Mobile settings to Manual, and adjust from there."_ That is desktop work on mobile _layout_. Third-party content promising you can "create and edit a Carrd website from your phone" is **unverified against any Carrd statement**.
+
+### 6.9 Cross-cutting observations
+
+1. **The 2026 direction of travel is _away_ from mobile editing, not toward it.** Webflow removed its most mobile-tolerant surface on **2026-08-04**. Wix still lists site editing as an uncollected feature request. Statamic quietly dropped "responsive" from its Control Panel marketing between v2 and v6. Only **Sanity** shipped a mobile-improving release this year (v5.31.0, 2026-06-10); only **Framer** added a mobile capability recently (CMS, 2025-03-18).
+2. **Three tiers emerge:**
+   - **Responsive-admin CMSes** (Sanity, Statamic, Ghost, WordPress mobile web) — no app, but the admin genuinely works on a phone.
+   - **Companion-app builders** (Squarespace, Wix, Format) — a real app exists, but it manages _content and commerce_, not _layout_. Squarespace draws the line most precisely: you can edit block content, but _"it's not possible to add or rearrange blocks."_
+   - **Desktop-only design tools** (Webflow, Framer, Adobe Portfolio, Carrd) — explicitly or effectively refuse the phone.
+3. **Native apps are being consolidated, not expanded.** Squarespace killed **eight** apps (2016–2023) to arrive at one commerce-led app. Ghost killed its only app in 2020 and never replaced it. Automattic split one app into two in 2023 and warns you not to run both.
+4. **Third-party apps are a reliable demand signal.** "Phoneflow — Webflow on Phone" (updated 2026-05), EditFlow, Flow To-Go, "Ghost CMS Editor & Publisher" (updated 2026-08-09) and **Nib** (announced on Ghost's own forum **2026-08-08**) all exist precisely because the vendors don't ship one.
+5. **Methodology caution:** several review/SEO sites (velocenetwork.com on Pixpa, "edit Carrd on mobile" tutorials) assert mobile capabilities that the app stores and official docs contradict. Cite the vendor or the store, never the review site.
 
 ---
 
@@ -1768,15 +1940,55 @@ Landing page: <https://www.w3.org/WAI/standards-guidelines/mobile/> — W3C has 
 - NN/g, _Basic Patterns for Mobile Navigation_ (2015-11-15) — <https://www.nngroup.com/articles/mobile-navigation-patterns/>
 - CSS-Tricks, 16px prevents iOS form zoom (2021-05-04) — <https://css-tricks.com/16px-or-larger-text-prevents-ios-form-zoom/>
 
+**CMS / platform mobile-editing sources (§5B, §6)**
+
+- Ghost Android changelog + Feb 2020 retirement notice — <https://ghost.org/changelog/android/>
+- Ghost forum, "Android app status" (2023-11-29) — <https://forum.ghost.org/t/android-app-status/43033>
+- Ghost forum, "Nib — an Android app for posting to Ghost" (2026-08-08) — <https://forum.ghost.org/t/i-built-nib-an-android-app-for-posting-to-ghost/63530>
+- Jetpack, "Switch to the Jetpack app" — <https://jetpack.com/support/switch-to-the-jetpack-app/>
+- WordPress.com announcement (2023-02-15) — <https://wordpress.com/blog/2023/02/15/switch-to-the-new-jetpack-mobile-app/>
+- Sanity Studio changelog v5.31.0 (2026-06-10) — <https://www.sanity.io/docs/changelog/studio-NS4zMC4w>
+- sanity-io/sanity #4196, mobile modal UX — <https://github.com/sanity-io/sanity/issues/4196>
+- Statamic 6 release (2026-01-28) — <https://statamic.com/blog/statamic-6> · CP overview <https://statamic.dev/control-panel/overview> · v2 responsive claim <https://v2.statamic.com/control-panel>
+- statamic/cms #2621, CP width on mobile — <https://github.com/statamic/cms/issues/2621>
+- Webflow, _Intro to Webflow_ (1268px + mouse/keyboard) — <https://help.webflow.com/hc/en-us/articles/33961260162323-Intro-to-Webflow>
+- Webflow, _Legacy Editor deprecation FAQ_ — <https://help.webflow.com/hc/en-us/articles/48412420902675-Legacy-Editor-deprecation-FAQ>
+- Webflow, _Edit site content as a content editor_ — <https://help.webflow.com/hc/en-us/articles/33961251014931-Edit-site-content-as-a-content-editor>
+- Framer, _Requirements and browser support_ — <https://www.framer.com/help/articles/requirements/>
+- Framer, _Mobile-friendly CMS_ (2025-03-18) — <https://www.framer.com/updates/mobile-friendly-cms>
+- Squarespace, _Discontinued features_ — <https://support.squarespace.com/hc/en-us/articles/206544757-Discontinued-features>
+- Squarespace, _Edit your site with the app_ — <https://support.squarespace.com/hc/en-us/articles/360002093708-Edit-your-site-with-the-Squarespace-app>
+- Squarespace, _Editing your site on mobile devices_ — <https://support.squarespace.com/hc/en-us/articles/214199477-Editing-your-site-on-mobile-devices>
+- Wix, _Editing your site from the app_ (feature request) — <https://support.wix.com/en/article/wix-owner-app-request-editing-your-site-from-the-app>
+- Pixpa, mobile gallery apps — <https://www.pixpa.com/websites/mobile-gallery-apps>
+- Adobe Portfolio, _Supported Browsers and Devices_ — <https://help.myportfolio.com/hc/en-us/articles/360038045914-Supported-Browsers-and-Devices>
+
+**Pricing / platform-limit sources (§7)**
+
+- Vercel: <https://vercel.com/docs/analytics/limits-and-pricing> · <https://vercel.com/docs/image-optimization/limits-and-pricing> · <https://vercel.com/docs/cron-jobs/usage-and-pricing> · <https://vercel.com/docs/vercel-blob/usage-and-pricing> · <https://vercel.com/docs/vercel-firewall/vercel-waf/rate-limiting> · <https://vercel.com/docs/deployment-protection> · <https://vercel.com/docs/domains/working-with-domains/add-a-domain> · <https://vercel.com/docs/plans/hobby> · <https://vercel.com/docs/limits/fair-use-guidelines>
+- Next.js: <https://nextjs.org/docs/app/guides/self-hosting> · <https://nextjs.org/docs/app/api-reference/components/image> · <https://nextjs.org/docs/app/api-reference/file-conventions/proxy> · <https://nextjs.org/docs/app/api-reference/file-conventions/metadata/opengraph-image> · <https://nextjs.org/docs/app/api-reference/functions/image-response> · <https://nextjs.org/docs/app/api-reference/file-conventions/route>
+- Cloudflare: <https://developers.cloudflare.com/r2/pricing/> · <https://developers.cloudflare.com/images/pricing/> · <https://developers.cloudflare.com/turnstile/> · <https://blog.cloudflare.com/turnstile-ga/> · <https://developers.cloudflare.com/web-analytics/limits/>
+- Email: <https://resend.com/pricing> · <https://postmarkapp.com/pricing> · <https://aws.amazon.com/ses/pricing/> · <https://support.google.com/a/answer/81126> · <https://docs.ghost.org/faq/mailgun-newsletters/>
+- Analytics: <https://plausible.io/docs/self-hosting> · <https://github.com/plausible/community-edition/> · <https://matomo.org/pricing/> · <https://www.goatcounter.com/> · <https://posthog.com/pricing>
+- DB / newsletter: <https://supabase.com/pricing> · <https://neon.com/pricing> · <https://listmonk.app/> · <https://buttondown.com/pricing> · <https://mailchimp.com/pricing/marketing/> · <https://ghost.org/pricing/>
+- TLS: <https://caddyserver.com/docs/automatic-https> · <https://letsencrypt.org/docs/rate-limits/>
+- Squarespace export: <https://support.squarespace.com/hc/en-us/articles/206566687-Exporting-your-site>
+
 **Sources checked and found unreliable / outdated**
 
 - <https://www.mobiloud.com/blog/progressive-web-apps-ios> — repeats the reverted EU PWA-removal claim
 - <https://webscraft.org/blog/pwa-pushspovischennya-na-ios-u-2026-scho-realno-pratsyuye?lang=en> — same
 - <https://www.magicbell.com/blog/pwa-ios-limitations-safari-support-complete-guide> — not independently verified
+- <https://www.velocenetwork.com/pixpa/> — claims Pixpa ships iOS and Android owner apps; **contradicted by both app stores**
+- Assorted "edit Carrd on mobile" tutorials — conflate Carrd's desktop-editor "Mobile View" breakpoint feature with editing from a phone
+- Third-party "SES costs $0.10/1K" posts — stale; AWS's own page now starts at **$0.16/1K** on Essentials
+- `discourse.webflow.com` threads on tablet/min-screen-size — now 301-redirect to <https://community.webflow.com/ask-answer>, content unrecoverable
 
 ---
 
 ## Appendix B — Open questions for follow-up
+
+### Technical (sections 1–4, 8)
 
 1. **Does iOS 26+ still require a `display: standalone|fullscreen` manifest for Web Push**, given "zero requirements for installability"? Needs a device test. (§1.4, §2.2)
 2. **Does iOS 26 generate splash screens from the manifest**, or is `apple-touch-startup-image` still mandatory? (§1.8)
@@ -1787,3 +1999,22 @@ Landing page: <https://www.w3.org/WAI/standards-guidelines/mobile/> — W3C has 
 7. **Material Design bottom-sheet specifications** — pages are client-rendered; need a fetchable source for the dp values. (§5A.6)
 8. **Apple HIG 44×44 pt** — needs a fetchable primary citation. (§5A.2)
 9. **WCAG SC 2.5.4 Motion Actuation** normative text. (§8.9)
+
+### Platform / market (sections 5B, 6, 7)
+
+10. **Contentful's official mobile-browser support position** — no supported-browsers page located; `contentful.com/help` returned persistent HTTP 429. (§5B)
+11. **Whether Ghost Admin, Sanity Studio, or the Statamic Control Panel ship as installable PWAs** — no official statement found for any of the three. Directly relevant as prior art. (§5B)
+12. **Statamic's small-screen container-query work and its "edit from your phone" marketing line** — widely quoted, not confirmed on a live official page. (§5B)
+13. **Carrd's position on mobile editing** — no official docs page locatable (repeated 404s). (§6.8)
+14. **Format's Kredo iPad app status**, and Format's own help-center articles (`help.format.com` returns HTTP 403). (§6.5)
+15. **Framer iPad complaint-thread body text**, and any dated discontinuation announcement for the old Framer Preview apps. (§5B)
+16. **Webflow's 1268px rule applying to Edit mode** — this is an _inference_ from two official articles, not a published sentence. Worth confirming. (§5B)
+17. **Vercel Blob's Hobby included-GB figure** — not published; the doc's worked example uses Pro numbers. (§7.2)
+18. **CAN-SPAM current maximum civil penalty per violation** — FTC guidance page returns HTTP 403 to automated fetch. Needs a legal check before publishing a figure in product docs. (§7.10)
+19. **2026 free-tier limits for hosted form backends** (Formspree, Basin, Getform, Web3Forms, Formspark, Netlify Forms, Tally, Formbricks) — all pricing pages defeated extraction. (§7.2)
+20. **2026 free tiers for Brevo, MailerSend, Mailgun, ZeptoMail; and whether SendGrid's free tier is genuinely gone.** (§7.2)
+21. **Microsoft/Outlook high-volume sender requirements** announced for May 2025. (§7.2)
+22. **Litestream / LiteFS 2026 status and licence**, if SQLite is on the table. (§7.7)
+23. **Substack's revenue share percentage** — pricing page 404'd. (§7.10)
+
+> **Note on research-budget exhaustion:** this session hit its 200-call WebSearch limit partway through. Everything after that point was gathered by direct `WebFetch` and by inspecting npm tarballs, MDN browser-compat-data and caniuse JSON. Items 17–23 above are the specific gaps that a search-enabled follow-up should close.

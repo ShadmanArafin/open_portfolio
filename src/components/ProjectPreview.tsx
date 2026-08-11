@@ -128,10 +128,15 @@ export const ProjectPreview: React.FC<ProjectPreviewProps> = ({ project }) => {
                   <span className="text-text-muted font-medium uppercase tracking-wider text-[11px] sm:text-xs">
                     Full case
                   </span>
+                  {/* min-h-24 and vertical padding: these measured 102x16 on a
+                      phone, under the 24x24 CSS px floor in WCAG 2.5.8 (Target
+                      Size, Minimum, AA). They are standalone calls to action
+                      rather than links inside a sentence, so the "inline"
+                      exception does not apply to them. */}
                   <Link
                     href={`/work/${project.slug}`}
                     aria-label={`Read the ${project.title} case page`}
-                    className="inline-flex items-center gap-1.5 font-medium text-text-primary hover:text-accent transition-colors group cursor-pointer"
+                    className="inline-flex min-h-[24px] items-center gap-1.5 py-1 font-medium text-text-primary hover:text-accent transition-colors group cursor-pointer"
                   >
                     <span>Read the case</span>
                     <ArrowUpRight className="w-4 h-4 text-current transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
@@ -151,7 +156,7 @@ export const ProjectPreview: React.FC<ProjectPreviewProps> = ({ project }) => {
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label={`Visit ${project.title} live website`}
-                      className="inline-flex items-center gap-1.5 font-medium text-text-primary hover:text-accent transition-colors group cursor-pointer"
+                      className="inline-flex min-h-[24px] items-center gap-1.5 py-1 font-medium text-text-primary hover:text-accent transition-colors group cursor-pointer"
                     >
                       <span>Visit Live Site</span>
                       <ArrowUpRight className="w-4 h-4 text-current transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />

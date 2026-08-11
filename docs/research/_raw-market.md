@@ -1,0 +1,817 @@
+# Raw market research — portfolio website builders
+
+**Compiled 2026-08-12.** This is a research dossier, not copy. Every factual
+claim carries a source URL. Prices and limits carry the date they were verified.
+Anything that could not be confirmed against a primary source is marked
+**UNVERIFIED** rather than guessed.
+
+## How this was gathered, and what that means for trusting it
+
+Five research streams ran in parallel: two on commercial competitors, one on the
+open-source landscape, one on user complaints, one on shutdowns and market data.
+Findings were cross-checked against primary sources wherever a primary source
+existed.
+
+Three limitations you should know before quoting anything from here:
+
+- **Most pricing pages render prices in JavaScript.** Squarespace, Wix, Webflow
+  and Framer all return feature tables without dollar figures to a fetcher. Where
+  that happened, prices come from (a) the vendor's own help centre, and (b) two
+  or more dated third-party sources that agree. Each such case is labelled.
+- **Reddit is not machine-readable from this environment.** `reddit.com`,
+  `old.reddit.com` and the `.json` endpoints all refuse the crawler. Reddit
+  material below comes from search-result snippets and from articles that quote
+  Reddit threads — it is labelled SUMMARY, not QUOTE, unless the literal text was
+  recovered. Hacker News, by contrast, is fully accessible through the Algolia
+  API, so HN quotes are verbatim with permalinks.
+- **Trustpilot, G2, Capterra and BLS block automated fetching** (HTTP 403). Where
+  their numbers appear below they are second-hand and flagged.
+
+---
+
+# 1. Commercial competitors
+
+## 1.1 Squarespace
+
+**Owner:** Permira, a private equity firm, which took Squarespace private for
+**$7.2 billion ($46.50/share)**, closing **17 October 2024**
+([PetaPixel, 18 Oct 2024](https://petapixel.com/2024/10/18/private-equity-firm-permira-acquires-squarespace-for-7-2-billion/)).
+Founder Anthony Casalena stayed on as CEO and chairman. This matters for the
+lock-in story: the platform holding a designer's portfolio is now owned by a
+buyout fund with a return horizon.
+
+### Pricing — plans renamed and raised in July 2026
+
+Squarespace retired Personal / Business / Commerce Basic / Commerce Advanced in
+favour of **Basic, Core, Plus, Advanced**.
+
+| Plan     | Annual (per mo)     | Month-to-month       | Annual change |
+| -------- | ------------------- | -------------------- | ------------- |
+| Basic    | **$19** (was $16)   | **$25** (unchanged)  | +19%          |
+| Core     | **$29** (was $23)   | **$39** (was $36)    | +26%          |
+| Plus     | **$49** (was $39)   | **$65** (was $56)    | +26%          |
+| Advanced | **$99** (unchanged) | **$139** (unchanged) | 0%            |
+
+Sources: [PetaPixel, 17 Jul 2026](https://petapixel.com/2026/07/17/squarespace-is-increasing-prices-by-up-to-26/)
+and [WebsiteBuilderExpert, updated 30 Jul 2026](https://www.websitebuilderexpert.com/website-builders/squarespace-pricing/),
+which agree on all eight figures. Verified 2026-08-12. Prices are UNVERIFIED
+against the live pricing page, which is JS-rendered.
+
+PetaPixel's account of how customers found out:
+
+> Customers were informed via direct email communications, though "Squarespace
+> has seemingly not published a specific memo about its price changes."
+
+Monthly billing rose less than annual: Core +8% ($36 → $39), Plus +16%
+($56 → $65), Basic and Advanced unchanged
+([PetaPixel, 17 Jul 2026](https://petapixel.com/2026/07/17/squarespace-is-increasing-prices-by-up-to-26/)).
+
+### There is no free tier — a 14-day trial only
+
+[Starting a Squarespace trial site](https://support.squarespace.com/hc/en-us/articles/206536827-Starting-a-Squarespace-trial-site)
+(help centre, updated 6 May 2026) lists what a trial forbids: custom domains,
+search-engine indexing ("Search engines don't index trial sites"), Google Search
+Console / Bing verification, accepting payments, subscription products, customer
+email notifications, form-submission emails, Apple Podcasts submission, Getty
+licensing. The site is private by default; maximum 5 contributors; one 7-day
+extension. On expiry, **"all content is marked for permanent deletion."**
+
+The pricing page itself confirms it: "Squarespace doesn't offer a free plan, but
+every site starts with a free trial—no credit card required."
+([squarespace.com/pricing](https://www.squarespace.com/pricing), fetched 2026-08-12).
+
+### Custom domain
+
+Cheapest plan that allows one: **Basic, $19/mo billed annually**. A free domain
+for year one is included **only on annual billing**. Squarespace's
+[domain renewals article](https://support.squarespace.com/hc/en-us/articles/218193418-Squarespace-domain-renewals)
+(updated 5 Aug 2026) notably declines to publish renewal prices, saying only that
+"the domain will renew for its listed price." A .com renewing at roughly $20/yr is
+a third-party figure and is **UNVERIFIED**.
+
+### Export — portfolio pages are explicitly excluded
+
+From [Exporting your site](https://support.squarespace.com/hc/en-us/articles/206566687-Exporting-your-site)
+(updated 12 Feb 2026). The export is a WordPress-shaped XML file. It carries
+layout pages, **one** blog page, text blocks and image blocks.
+
+It does **not** export: **portfolio pages**, album pages, cover pages, index
+pages, info pages, calendar pages, store pages, page-specific headers / footers /
+sidebars, additional blog pages, dropdown menus, audio blocks, product blocks,
+video blocks, drafts, style settings, or Custom CSS. Linked PDFs export but do
+not import into WordPress.
+
+This is the single most quotable fact about Squarespace for this project: **the
+one content type the platform markets hardest to creatives is the one content
+type it will not give back.**
+
+### Fees and caps
+
+From [Choosing the right Squarespace plan](https://support.squarespace.com/hc/en-us/articles/206536797-Choosing-the-right-Squarespace-plan)
+(updated 29 Jul 2026): commerce fee 2% on Basic, 0% above; digital-product fee
+7% / 5% / 1% / 0%; Squarespace Payments 2.9% + $0.30 falling to 2.5% + $0.30;
+video 30 min / 5 hr / 50 hr / unlimited; **1,000-page cap**; contributors 2 on
+Basic, unlimited above; bandwidth unlimited.
+
+### Password protection
+
+Both page-level and site-wide passwords exist on all plans, with sharp limits.
+
+[Page passwords](https://support.squarespace.com/hc/en-us/articles/205814618-Page-passwords),
+verbatim:
+
+> "Everyone uses the same password to access a password-protected page. It's not
+> possible to create unique passwords for different people."
+> "It's not possible to password-protect collection items individually or to
+> apply different passwords to different items."
+> "Passwords are case-sensitive and must be 30 characters or fewer."
+> "After visitors enter a page password, the session expires after four hours and
+> prompts them to re-enter the password."
+> "If you're hiding an existing page, setting a password only prevents search
+> engines from indexing it further. This means that search engines may have
+> already indexed this page, and this content could appear in search results."
+
+[Site-wide passwords](https://support.squarespace.com/hc/en-us/articles/205815528-Site-wide-passwords),
+verbatim: "After you add a site-wide password, your site won't be accessible to
+search engines. It will eventually stop appearing in search results." Customers
+also cannot check out while a site-wide password is on.
+
+For a photographer showing client galleries, "one shared password, four-hour
+session, kills your SEO" is a real constraint.
+
+### Multilingual — not native
+
+Squarespace does not have built-in translation. Its own help centre routes 7.1
+users to the third-party **Weglot** integration
+([Creating a multilingual site with Weglot](https://support.squarespace.com/hc/en-us/articles/205809778-Creating-a-multilingual-site-with-Weglot))
+and 7.0 users to a
+[manual duplicate-page method](https://support.squarespace.com/hc/en-us/articles/16552875658765-Manually-creating-a-multilingual-site).
+Weglot is a separate paid subscription.
+
+### Support — no phone support, by policy
+
+[Why we don't offer phone support](https://support.squarespace.com/hc/en-us/articles/206545487-Why-we-don-t-offer-phone-support),
+verbatim reasons given: "We can instantly view your website, account activity,
+system details, and other information so we can troubleshoot effectively";
+"Building a website is a visual process"; "It's faster"; "Online support keeps
+detailed records in one place." Channels are email (24/7), live chat (most
+weekdays) and X/@SquarespaceHelp.
+
+The Better Business Bureau profile for Squarespace, Inc. records **435 complaints
+in the last three years and 108 closed in the last twelve months**, and the
+company is **not BBB accredited**
+([BBB complaints page](https://www.bbb.org/us/ny/new-york/profile/internet-service/squarespace-inc-0121-103868/complaints),
+fetched 2026-08-12). Recent complaint excerpts from that page:
+
+> "They THEN went and charged me for a separate workspace feature...They took my
+> money for a feature that is canceled now" — 23 July 2026
+> "Squarespace is holding $14,000 of my money...There is no phone number to call
+> no escalation email" — 23 July 2026
+> "my domain is now in redemption status and I am being charged an additional $45
+> redemption fee" — 22 June 2026
+
+### Biggest limitation for a portfolio user
+
+Portfolio pages and Custom CSS are excluded from export, there is no free tier at
+all, and the entry price rose 19% in July 2026 with no public announcement.
+
+---
+
+## 1.2 Wix
+
+### Pricing
+
+| Plan           | Annual (per mo) | Month-to-month | Storage   |
+| -------------- | --------------- | -------------- | --------- |
+| Free           | $0              | $0             | 500 MB    |
+| Light          | **$17**         | **$24**        | 2 GB      |
+| Core           | **$29**         | **$36**        | 50 GB     |
+| Business       | **$39**         | **$46**        | 100 GB    |
+| Business Elite | **$159**        | **$172**       | Unlimited |
+
+Sources: [WebsiteBuilderExpert, updated 3 Feb 2026](https://www.websitebuilderexpert.com/website-builders/wix-pricing/)
+and [Tooltester, updated 11 May 2026](https://www.tooltester.com/en/reviews/wix-review/prices/),
+which agree. Live page is JS-rendered — UNVERIFIED at source. A separate **Wix
+Studio** track exists at Basic $19 / Standard $27 / Plus $49 / Elite $159
+([LiteExtension, Jul 2026](https://litextension.com/blog/wix-pricing/)).
+
+The Light / Core / Business / Business Elite structure replaced the legacy Combo,
+Unlimited, Pro, Business Basic and VIP plans. **The restructure date is
+UNVERIFIED.**
+
+### Free tier — publishes, but with an ad banner
+
+Wix has the only genuinely free published tier among the big three. It allows
+publishing on `username.wixsite.com/sitename`, templates, most editor features
+and AI tools. It forbids a custom domain, ecommerce, Google Analytics and
+advanced SEO, and caps storage at 500 MB and bandwidth at 1 GB. A Wix ad banner
+sits at the top of every page and scrolls with the visitor
+([WebsiteBuilderExpert](https://www.websitebuilderexpert.com/website-builders/wix-pricing/),
+3 Feb 2026).
+
+### Custom domain
+
+Cheapest plan: **Light, $17/mo annual**, which includes a free domain voucher for
+year one on annual billing. Renewal figures conflict across sources — $13.35,
+~$17, and $14.95 all appear, with two sources saying $14.95/yr for .com. Treat as
+approximate, **UNVERIFIED**. Private registration is +$9.90/yr.
+
+### Export — Wix's own help article exists to say you cannot leave
+
+[Exporting or Embedding Your Wix Site Elsewhere](https://support.wix.com/en/article/exporting-or-embedding-your-wix-site-elsewhere),
+fetched 2026-08-12, verbatim:
+
+> "Your Wix site is a standard HTML5 site, and is built with Wix's technology. In
+> order for your site to work properly, it needs to be hosted and operated on
+> Wix's servers."
+> "Since Wix is a SaaS solution, your site must run on Wix's servers."
+> "The content you build on Wix belongs to you."
+
+You can export _data_ — contacts, products, orders, invoices — and manually copy
+text and download images. There is **no HTML/CSS export** and no official path to
+another host. Migration means rebuilding by hand.
+
+### Biggest limitation for a portfolio user
+
+Total lock-in with zero design portability — worse than Squarespace, which at
+least emits an XML file. And the free tier's scrolling ad banner makes it
+unusable as a professional portfolio, so the real floor is $17/mo.
+
+---
+
+## 1.3 Webflow
+
+**Webflow overhauled pricing on 13 May 2026**, merging the CMS and Business site
+plans into a single "Premium" plan. The announcement lives at
+[help.webflow.com](https://help.webflow.com/hc/en-us/articles/51059955082387-Updated-pricing-and-simplified-plans-for-May-2026)
+(returns 403 to fetchers). Three independent dated write-ups agree on the
+details: [BRIX Templates, 18 May 2026](https://brixtemplates.com/blog/webflow-may-2026-pricing-changes-explained),
+[Flow Ninja, 15 May 2026](https://www.flowninja.com/blog/webflow-pricing-demystified),
+[Carly, 15 Jul 2026](https://www.usecarly.com/blog/webflow-pricing/).
+
+### Site plans (billed per website)
+
+| Plan          | Annual (per mo) | Monthly | Pages | CMS items               | Bandwidth |
+| ------------- | --------------- | ------- | ----- | ----------------------- | --------- |
+| Starter       | Free            | Free    | 2     | 50 (20 collections)     | 1 GB      |
+| Basic         | **$15**         | **$25** | 300   | none                    | 10 GB     |
+| Premium (new) | **$25**         | **$39** | 300   | 20,000 (40 collections) | 50 GB     |
+| Enterprise    | Custom          | —       | —     | —                       | —         |
+
+Superseded: CMS was $23/mo annual (2,000 items, 150 pages); Business $39/mo
+annual. Ecommerce unchanged: Standard $29/mo annual +2% fee, Plus $74/mo,
+Advanced $212/mo. Bandwidth add-on: first +50 GB = $20/mo annual. **CMS item
+add-ons were eliminated.**
+
+Rollout: new purchases from 13 May 2026; existing sites at next renewal on or
+after 29 Jun 2026; Freelancer/Agency Workspace sites and legacy pricing
+16 Nov 2026.
+
+### Workspace plans — you pay twice
+
+| Workspace  | Annual (per mo) | Staging sites            | Code export |
+| ---------- | --------------- | ------------------------ | ----------- |
+| Starter    | Free            | 2                        | **No**      |
+| Core       | **$19**         | 10                       | **Yes**     |
+| Growth     | **$49**         | Unlimited                | Yes         |
+| Freelancer | $16             | 10 unhosted client sites | Yes         |
+| Agency     | $35             | Unlimited unhosted       | Yes         |
+
+Seats: Full $39/mo, Limited $15/mo, Reviewer free. A new **Team plan at
+$2,500/mo** on annual contract exists. Add-ons: Optimize from $299/mo, Analyze
+from $9/mo, Localize $9–$29/mo per site.
+
+### Free tier
+
+Starter forbids a custom domain and code export, and caps at **2 pages, 50 CMS
+items, 1 GB bandwidth, 50 lifetime form submissions**. It publishes to
+`webflow.io` and keeps the Webflow badge in the bottom-right corner. No time
+limit, no card required. **Two pages is not a portfolio.**
+
+### Custom domain
+
+Cheapest: **Basic site plan, $15/mo annual**. **No free domain — Webflow is not a
+registrar.** You buy elsewhere and set DNS, or use the in-product "Buy new domain"
+flow which purchases through IONOS.
+
+### Export — the best in the paid set, and still lossy
+
+Code export requires a **paid Workspace plan** — site plans alone do not include
+it. Cheapest route is **Core Workspace at $19/mo annual** (or Freelancer at
+$16/mo). Because a published site also needs a site plan, a portfolio owner who
+wants both hosting and their own code pays **$15 + $19 = $34/mo minimum**.
+
+Export delivers a ZIP of per-page HTML, CSS, JS including interactions, images
+and fonts ([The CSS Agency, 11 Jun 2026](https://www.thecssagency.com/blog/how-to-export-code-from-webflow)).
+Lost on export: all CMS content and dynamic collections ("Webflow's CMS database
+stays within the Webflow platform"), ecommerce, and native form handling
+("Webflow's built-in form submission handling won't work on external hosting").
+
+### Biggest limitation for a portfolio user
+
+Double billing, plus the trap that the natural way to build a portfolio — one CMS
+item per project — is exactly the content that export strips out.
+
+---
+
+## 1.4 Framer
+
+### Pricing
+
+Verified from [framer.com/pricing](https://www.framer.com/pricing/) on
+2026-08-12. The page defaults to a yearly-billing toggle and does not expose
+month-to-month figures to a fetcher.
+
+| Plan       | Annual (per mo) | Monthly    | Pages  | CMS collections | CMS items | Bandwidth |
+| ---------- | --------------- | ---------- | ------ | --------------- | --------- | --------- |
+| Free       | $0              | $0         | 30     | 2               | 1,000     | 1 GB      |
+| Basic      | **$10**         | UNVERIFIED | 30     | 2               | 1,000     | 50 GB     |
+| Pro        | **$30**         | UNVERIFIED | 150    | 10              | 2,500     | 100 GB    |
+| Enterprise | Custom          | Custom     | Custom | Custom          | Custom    | Custom    |
+
+Corroborated as annual by [Goodspeed, 11 Aug 2026](https://goodspeed.studio/blog/framer-pricing-explained),
+[BRIX Templates, 26 May 2026](https://brixtemplates.com/blog/framer-pricing-plans),
+[The CSS Agency, 16 Jul 2026](https://www.thecssagency.com/blog/framer-pricing-breakdown).
+**Not one of six sources published the month-to-month price.** A "Scale" plan at
+$100/mo appears in third-party articles but did not appear on the live pricing
+page on 2026-08-12 — **UNVERIFIED**.
+
+Overage add-ons on Pro, verbatim from the live page: $20 per 100 additional
+pages; $40 per 10 CMS collections (max 40); $20 per 10,000 CMS items (max
+40,000); $40 per 100 GB bandwidth (max 2 TB). Localization $20/locale up to 20.
+Convert A/B testing $50 per 500,000 events. Advanced Hosting $200/mo.
+
+Seats: Editor $20/mo, Content Editor $10/mo, Viewers free. Framer **cut** editor
+seats from $40 to $20 in May 2026 and added the $10 Content Editor role — the
+only price decrease found anywhere in this dossier
+([Goodspeed, 11 Aug 2026](https://goodspeed.studio/blog/framer-pricing-explained)).
+
+### Free tier
+
+Publishes to a `framer.website` subdomain with a permanent "Made in Framer"
+badge, 1 GB bandwidth, 5 MB upload cap. The live pricing page states: "To connect
+a custom domain, you'll need to upgrade to a paid plan."
+
+### Custom domain
+
+Cheapest: **Basic, $10/mo annual** — and unlike Webflow, Basic includes a free
+custom domain. This is the cheapest real-design custom-domain entry point in the
+commercial set.
+
+### Export — none
+
+Framer offers no native HTML or code export. The third-party
+[NoCodeExport Framer page](https://www.nocodeexport.com/en/framer) exists because
+of that gap: "Framer is excellent for designing and publishing, but it is not
+built around portable source ownership." Even third-party extraction is partial:
+"Complex Framer Motion effects that rely on the React runtime cannot be perfectly
+replicated in raw HTML."
+
+### Biggest limitation for a portfolio user
+
+The 30-page cap on Basic combined with zero export. One page per project adds up;
+crossing 30 forces $10 → $30/mo, and Pro's 150-page ceiling then costs $20 per
+extra 100 pages. The animation work that makes a Framer portfolio distinctive is
+the least portable content in this entire dossier.
+
+---
+
+## 1.5 Carrd
+
+### Pricing — annual only, and an order of magnitude cheaper
+
+From [carrd.co/pro](https://carrd.co/pro) and
+[carrd.co/docs/pro/plans](https://carrd.co/docs/pro/plans), fetched 2026-08-12.
+**All prices are per YEAR.**
+
+| Tier             | Price/yr | Sites | Custom domain | Forms    | Branding removed |
+| ---------------- | -------- | ----- | ------------- | -------- | ---------------- |
+| Free             | $0       | 3     | No            | No       | **No**           |
+| Pro Lite         | **$9**   | 3     | No            | No       | Yes              |
+| Pro Lite 10      | **$14**  | 10    | No            | No       | Yes              |
+| Pro Lite 25      | **$29**  | 25    | No            | No       | Yes              |
+| **Pro Standard** | **$19**  | 10    | **Yes**       | Yes      | Yes              |
+| Pro Plus         | **$49**  | 25    | Yes           | Advanced | Yes              |
+
+Pro Standard scales: $39 (25 sites) / $69 (50) / $119 (100) / $249 (250) / $399
+(500) / $599 (1000). Pro Plus scales: $89 (50) / $159 (100) / $349 (250) / $599
+(500) / $999 (1000).
+
+Note the counter-intuitive ladder: Pro Lite 25 at $29/yr is *more expensive* than
+Pro Standard at $19/yr yet has **no** custom domain support.
+
+### Free tier
+
+"Build up to three sites per account and use all of Carrd's core features – for
+free!" Forbids custom domains and forms, and carries "Made with Carrd" branding.
+A 7-day Pro trial requires no payment details.
+
+### Custom domain
+
+Cheapest: **Pro Standard, $19/year** — about **$1.58/month**, roughly one twelfth
+of Squarespace Basic. Carrd does not sell domains, so there is no free year-one
+domain; you bring your own. SSL via Let's Encrypt.
+
+### Export — the best portability of any commercial platform here
+
+From [carrd.co/docs/pro/features](https://carrd.co/docs/pro/features), verbatim:
+
+> "Download the unminified HTML, CSS, JS, and images for any sites you build
+> (note: excludes server-side code)."
+
+_Unminified._ Carrd is the only commercial platform in this set that hands back
+readable, self-hostable source with essentially nothing lost but server-side form
+processing, and it is not plan-gated behind a second subscription.
+
+### Biggest limitation for a portfolio user
+
+Carrd builds **one-page sites**. Its own docs: "Carrd is a free service for
+building fully responsive one-page sites." The "3 sites" or "10 sites" counts are
+separate single-page sites, not pages within one portfolio. There is no CMS, no
+multi-page project structure and no per-project detail pages. A designer wanting
+a landing page plus twelve case studies cannot build it here.
+
+---
+
+## 1.6 Cargo (cargo.site)
+
+Pricing lives at `cargo.site/information`; `/pricing` and `/plans` both 404.
+
+| Plan                | Annual (per mo) | Monthly |
+| ------------------- | --------------- | ------- |
+| Free                | $0              | $0      |
+| **Standard**        | **$14**         | **$19** |
+| Standard + Commerce | **$19.50**      | **$28** |
+| Student / educator  | **Free**        | Free    |
+
+Verified on [cargo.site/information](https://cargo.site/information) and
+[Cargo 2 Rates & Services](https://cargo2support.cargo.site/Rates-Services),
+both fetched 2026-08-12 and mutually consistent.
+
+Cargo's explicit pitch is "One price, no tiers or hidden price stacking," and the
+Rates & Services page lists "Unlimited bandwidth" and "Unlimited pages" on every
+site, plus responsive templates, support, live chat, commerce integration, domain
+registration and management, SSL and premium font libraries.
+
+### Free tier — build-only, cannot publish
+
+Verbatim: "All Cargo sites are free to try or build. To make a site public simply
+choose a desired service option." The free tier is a design sandbox. **Storage
+caps, free-tier bandwidth, and whether a Cargo badge appears are UNVERIFIED** —
+the pricing surface is JS-rendered and `docs.cargo.site` article URLs returned
+503/404.
+
+### Student plan
+
+Free for "all students (as well as teachers and related administrators)" via
+[cargo.site/students](https://cargo.site/students). Requires a professor or
+school administrator to email `studentprogram@cargo.site` from an official
+`.edu`-style domain. Duration and included features unstated.
+
+### Custom domain
+
+Requires the paid plan. One free custom domain connection is included; additional
+domains are $2/mo billed yearly or $3/mo billed monthly. Whether year one is free
+and what renewal costs are **UNVERIFIED**.
+
+### Export
+
+**UNVERIFIED — no export capability is documented anywhere reachable.** Cargo is
+absent from NoCodeExport's supported-platform list (Framer, Webflow, Wix,
+Squarespace, WordPress, Elementor, Gamma). Assume none until confirmed.
+
+### Biggest limitation for a portfolio user
+
+You cannot show anyone your work without paying — unlike Wix (ad-supported),
+Webflow (2 pages), Framer (badged) or Carrd (3 free sites). Against that, at $14/mo
+annual with unlimited pages and unlimited bandwidth, Cargo is the only commercial
+platform here that does not punish a portfolio for growing.
+
+---
+
+## 1.7 Format
+
+### Pricing — the annual rates are a promotion expiring 31 Aug 2026
+
+From [format.com/pricing-portfolio](https://www.format.com/pricing-portfolio),
+fetched 2026-08-12. This page did render prices, including strikethroughs
+revealing regular versus promo rates.
+
+| Plan     | Monthly | Annual REGULAR | Annual PROMO (per mo)       |
+| -------- | ------- | -------------- | --------------------------- |
+| Basic    | **$14** | $10            | **$10**                     |
+| Pro      | **$24** | **$17**        | **$12** (code PROINTRO)     |
+| Pro Plus | **$36** | **$26**        | **$15** (code PROPLUSINTRO) |
+
+**The $12 and $15 annual rates expire 31 August 2026, 11:59 p.m. PST.** Anyone
+modelling Format's real cost should use $17 and $26.
+
+| Feature            | Basic    | Pro       | Pro Plus  |
+| ------------------ | -------- | --------- | --------- |
+| Website pages      | **10**   | Unlimited | Unlimited |
+| High-res images    | **70**   | 1,500     | Unlimited |
+| Image storage      | **None** | 100 GB    | 1 TB      |
+| Hosted video       | None     | 15 min    | 120 min   |
+| Client galleries   | 3–10     | 50        | 250       |
+| Store products     | None     | 15        | 1,000     |
+| Custom code editor | No       | Yes       | Yes       |
+| File transfers     | 2 GB     | 5 GB      | 10 GB     |
+
+An independent fetch of format.com/pricing on the same day returned the same
+plan structure with annual rates of $10 / $12 / $15 — consistent with the promo
+reading.
+
+### Free tier
+
+None. A **14-day free trial**, no credit card required. Annual plans refundable
+in full only within the first 30 days.
+
+### Custom domain
+
+Cheapest plan with a free year-one domain: **Pro ($17/mo annual regular, $24
+monthly)**. Basic gets no free domain but can connect one you already own —
+Format's support team performs the DNS connection. Renewal price after year one
+is **UNVERIFIED**; `help.format.com` returned 403 on every path.
+
+### Export
+
+**UNVERIFIED.** No export documentation was reachable and Format is absent from
+third-party export-tool coverage. File transfers (2–10 GB) move images, not the
+site.
+
+### Biggest limitation for a portfolio user
+
+Basic — the only sub-$17 tier — allows **no image storage and 70 high-res images
+across 10 pages**. For a photographer that is roughly two shoots. The plan aimed
+at portfolios is the one that cannot hold a portfolio.
+
+---
+
+## 1.8 Pixpa
+
+From [pixpa.com/pricing](https://www.pixpa.com/pricing), fetched 2026-08-12.
+
+| Plan         | Monthly | Yearly (per mo) | 2-yearly (per mo) |
+| ------------ | ------- | --------------- | ----------------- |
+| Basic        | $5      | $3              | $2.25             |
+| Creator      | $9      | $5.40           | $4.05             |
+| Professional | $19     | $11.40          | $8.55             |
+| Advanced     | $39     | $23.40          | $17.55            |
+
+| Feature         | Basic | Creator   | Professional | Advanced  |
+| --------------- | ----- | --------- | ------------ | --------- |
+| Pages/galleries | 10    | Unlimited | Unlimited    | Unlimited |
+| Gallery images  | 200   | Unlimited | Unlimited    | Unlimited |
+| Storage         | 3 GB  | 5 GB      | 25 GB        | 100 GB    |
+| Products        | 3     | 10        | 100          | Unlimited |
+| Gallery links   | 3     | 10        | 25           | Unlimited |
+
+No free plan — a **15-day free trial**, no credit card, 30-day money-back
+guarantee. All plans allow connecting a custom domain; Creator and above include
+a free domain for one year via Ionos. Pixpa is the cheapest full portfolio
+platform found. Export capability **UNVERIFIED**.
+
+---
+
+## 1.9 Adobe Portfolio
+
+Adobe Portfolio has no standalone price. It is bundled with a Creative Cloud
+subscription.
+
+**The lock-in is absolute and time-boxed.** Adobe community answers, consistent
+across multiple threads
+([Adobe Product Community](https://community.adobe.com/t5/photoshop-ecosystem-discussions/does-the-portfolio-gets-disabled-after-cancelling-subscription/td-p/13869346),
+[Adobe Product Community](https://community.adobe.com/questions-606/will-my-portfolio-be-deactivated-if-i-cancel-my-subscription-579416)):
+
+> If you cancel your paid membership and return to the free level of Creative
+> Cloud, your site remains online for **two weeks** after the cancellation. After
+> two weeks the site goes offline, though the content stays accessible in the
+> editor at myportfolio.com/editor and can be republished if you resubscribe with
+> the same Adobe ID.
+
+Stop paying Adobe and your portfolio is dark in fourteen days. `helpx.adobe.com`
+timed out repeatedly, so the exact CC plan requirement and current CC pricing are
+**UNVERIFIED** here (see the group-2 competitor section for figures if present).
+
+**Is Adobe still investing in it?** No official deprecation exists. But Adobe's
+own community has open threads titled
+["Has Adobe abandoned Portfolio, or is there still a team working on improving
+it?"](https://community.adobe.com/t5/creative-cloud-services-discussions/has-adobe-abandoned-portfolio-or-is-there-still-a-team-working-on-improving-it/td-p/15165849)
+and ["Is Portfolio still being developed?"](https://community.adobe.com/t5/creative-cloud-services-discussions/is-portfolio-still-being-developed/td-p/11583268),
+with users citing missing basics such as linking an existing page to the home
+page and creating a dropdown menu. For context on Adobe's willingness to retire
+creative tools: **Adobe Animate is being discontinued on 1 March 2026**
+([ITP.net](https://www.itp.net/digital-culture/adobe-to-discontinue-animate-as-ai-takes-centre-stage)).
+
+---
+
+## 1.10 Dunked
+
+**Still operating as of 2026-08-12** — the signup flow and pricing page are live.
+
+| Plan         | Annual (per mo) | Monthly | Limits                                     |
+| ------------ | --------------- | ------- | ------------------------------------------ |
+| Professional | **$8**          | **$12** | 100 projects, 100 pages, 1,000 images      |
+| Agency       | **$19**         | **$29** | Unlimited projects and pages, 5,000 images |
+
+Source: [dunked.com/pricing](http://dunked.com/pricing), fetched 2026-08-12. No
+free plan; a **10-day free trial** of the "full featured, unlimited version," no
+credit card. Both paid plans support a custom domain, but "You will need to
+purchase your own domain name from a registrar of your choice."
+
+The site publishes no copyright year, blog dates or changelog, so maintenance
+activity is **UNVERIFIED**. It still serves over plain HTTP at `dunked.com`
+(www redirects to non-TLS), which is a signal worth noting.
+
+---
+
+## 1.11 Semplice
+
+A **WordPress-based** portfolio product, not a hosted service.
+[semplice.com](http://www.semplice.com/) describes it as "Semplice 7 is a
+WordPress-based portfolio tool and community of the world's leading designers,"
+promising "Design a custom site that meets your level of taste and standards – no
+templates, no coding needed."
+
+The requirement chain is the point: **you must already have WordPress hosting.**
+The site links to a "Hosting for Semplice" resource. Three editions (Single,
+Studio, Business) exist; **exact prices are UNVERIFIED** — they are behind a
+"Compare all editions" link that did not render figures to a fetcher.
+
+---
+
+## 1.12 Super.so (Notion → website)
+
+From [super.so/pricing](https://super.so/pricing), fetched 2026-08-12.
+
+| Plan          | Price/mo        | What it adds                                                                                                 |
+| ------------- | --------------- | ------------------------------------------------------------------------------------------------------------ |
+| Free Site     | **$0**          | super.site domain, themes, "Made with Super" badge                                                           |
+| Personal Site | **$16**         | **custom domain**, custom code, **password-protected pages**, custom fonts, RSS/ATOM, badge removed          |
+| Pro Site      | **$28**         | manual publishing, advanced search, file uploads, redirects/hide pages, **multi-language**, priority support |
+| Custom        | from $50 + fees | sub-path hosting, SSO, custom design                                                                         |
+
+Annual billing is discounted; Personal is $144/site/year. Analytics is a separate
+$10–$400/month add-on tiered by pageviews. Teams are $5/member/month. Plans apply
+**per site**.
+
+**The stacked cost is the story:** a custom-domain Notion portfolio is
+Notion (free or $10+/user/mo) **plus** Super at $16/mo per site.
+
+---
+
+## 1.13 Notion itself as a website
+
+From [Notion Sites availability & pricing](https://www.notion.com/help/notion-sites-availability-and-pricing),
+fetched 2026-08-12, verbatim:
+
+- **Free plan:** "Publish an unlimited number of Notion Sites," "Claim one
+  `notion.site` domain," "Turn on search engine indexing."
+- **Paid plans add:** "Claim up to five `notion.site` domains," "Set a Homepage
+  for your domains," "Customize your Notion Sites," "Integrate your Notion Sites
+  with Google Analytics."
+- **Custom domain is a paid add-on on top of a paid plan:** "$10 per month"
+  monthly, "$8 per month" billed annually, and only "Workspace owners on paid
+  plans" can buy it. Cap of 25 custom domains.
+
+Notion's own plan prices: Free $0, Plus $10/user/mo, Business $20/user/mo,
+Enterprise custom ([notion.com/pricing](https://www.notion.com/pricing)).
+
+So the cheapest custom-domain Notion site is **Plus ($10/user/mo) + custom domain
+add-on ($8–10/mo) = $18–20/mo**, for a site with no real design control.
+
+On performance, a Hacker News commenter measuring a Notion-based site builder:
+
+> "notion websites are so slow. Google's page speed for your home page has a
+> score of 42. Why does it say 'fast page speed' and 'great seo'?"
+> — itake, 2021-10-21, [news.ycombinator.com/item?id=28947577](https://news.ycombinator.com/item?id=28947577)
+
+---
+
+## 1.14 Contra
+
+From [contra.com/pricing](https://contra.com/pricing), fetched 2026-08-12.
+
+| Plan | Price                                     | Fees                                                                                                |
+| ---- | ----------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Free | $0                                        | Client payment fees "$15 or $29 per payment >$500"; digital products "Capped 5% (min $3 - max $29)" |
+| Pro  | **$29/month** or **$199/year** (save 43%) | "No fees" on client payments and digital products; crypto payouts 1%; faster payouts 2%             |
+
+Contra markets itself as "commission-free for all creatives" — the asterisk being
+"This does not include payment processing fees charged by third-party providers."
+Custom domain support for Contra portfolios is **UNVERIFIED** (not mentioned on
+the pricing page).
+
+Contra is a marketplace with a portfolio attached, not a website builder. Your
+page lives at `contra.com/yourname` and its discoverability is the product.
+
+---
+
+## 1.15 Journo Portfolio
+
+From [journoportfolio.com/pricing](https://www.journoportfolio.com/pricing/),
+fetched 2026-08-12.
+
+| Plan      | Annual (per mo) | Monthly | Items     | Pages          | Custom domain                                        |
+| --------- | --------------- | ------- | --------- | -------------- | ---------------------------------------------------- |
+| Free      | $0              | $0      | **10**    | Home page only | **No**                                               |
+| Plus      | **$5**          | **$8**  | 50        | 5              | **No**                                               |
+| Pro       | **$8**          | **$12** | 1,000     | 10             | **Yes** (one included), 3 languages, 2 collaborators |
+| Unlimited | **$14**         | **$18** | Unlimited | Unlimited      | Yes, unlimited languages and collaborators           |
+
+The free tier is a single page with ten items on a subdomain. This is one of the
+few platforms in the set with genuinely usable multi-language support at a low
+price.
+
+---
+
+## 1.16 Authory
+
+From [authory.com/pricing](https://authory.com/pricing), fetched 2026-08-12.
+
+| Plan         | Monthly    | Annual (per mo)   | Content items | Custom domain                                |
+| ------------ | ---------- | ----------------- | ------------- | -------------------------------------------- |
+| Free         | $0 forever | $0                | **10**        | **No**                                       |
+| Lite         | $12        | **$9** ($108/yr)  | 50            | No                                           |
+| Standard     | $19        | **$15** ($180/yr) | Unlimited     | **Yes**, free for 12 months on yearly plans  |
+| Professional | $29        | **$24** ($288/yr) | Unlimited     | Yes, plus API, Zapier, GA and Search Console |
+
+14-day free trial, no credit card. The free plan's differentiator is a
+"searchable archive with full backups" — Authory's pitch is preserving journalism
+that disappears when publications die, which is the same anxiety this project
+addresses from the other end.
+
+---
+
+## 1.17 Copyfolio
+
+[copyfol.io](https://www.copyfol.io/) is a no-code portfolio builder aimed at
+writers, copywriters and marketers: "Create the hub of your online presence
+easily. No coding, just intuitive, responsive sections." It advertises "over
+93,000 users," a free start with no credit card, and custom domains ("Look
+professional with your own domain… Connect or buy your custom domain in just a
+few steps").
+
+**Exact tier prices are UNVERIFIED** — `copyfol.io/pricing`, `/prices` and
+`www.copyfol.io/pricing` all returned 404 to a fetcher, and the plan tier that
+unlocks the custom domain is not stated on the homepage.
+
+---
+
+## 1.18 UXfolio
+
+From [uxfol.io/pricing](https://uxfol.io/pricing), fetched 2026-08-12.
+
+| Plan                | Price                                  |
+| ------------------- | -------------------------------------- |
+| Free trial          | $0, **7 days**, no credit card         |
+| Full Access monthly | **$15/month**                          |
+| Full Access yearly  | **$108/year** (= $9/month, "save $72") |
+
+**The free plan cannot publish.** It allows "Unlimited draft portfolios" and
+"Unlimited draft case studies," basic customisation, device mockups and 4 AI
+actions. It forbids: publishing live portfolios or case studies, custom domains,
+feedback collection, Google Analytics 4, and password protection.
+
+A portfolio tool whose free tier forbids publishing a portfolio is the sharpest
+single illustration of the free-tier problem in this dossier.
+
+---
+
+## 1.19 Behance
+
+Free, owned by Adobe, requires an Adobe account. Behance ProSite — the
+custom-domain portfolio product Adobe once bundled — was discontinued and folded
+into Adobe Portfolio; the FAQ URL
+(`help.behance.net/hc/en-us/articles/204484564-Behance-ProSite-Discontinuation-FAQ`)
+still exists but returns 403 to fetchers, so **the exact discontinuation date is
+UNVERIFIED here**. Contemporary Hacker News comments from 2011 recommend
+"prosite.com for a great way to develop a portfolio site"
+([news.ycombinator.com/item?id=2639260](https://news.ycombinator.com/item?id=2639260)),
+which dates the product's active era.
+
+The structural limitation is not price but ownership: your work sits on
+`behance.net/yourname` inside an Adobe property, discoverability is controlled by
+Adobe's feed, and there is no custom domain.
+
+---
+
+## 1.20 Dribbble
+
+From [dribbble.com/pro](https://dribbble.com/pro), fetched 2026-08-12. Annual
+billing, advertised as 50% savings:
+
+| Tier     | Annual (per mo) | Includes                                                                                                                                                         |
+| -------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Lite     | **$4**          | Enhanced profile layout, lite search-ranking boost, leads and proposals, up to 3 services, portfolio website                                                     |
+| Standard | **$8**          | 0% designer platform fee, Recommendations and InstantMatch, 30 project-brief credits/mo, $30/mo boosted shot credit, 3 team seats, advanced analytics, pro badge |
+| Plus     | **$99**         | 0% client platform fee, 300 brief credits/mo, $300/mo boosted shot credit, 10 team seats, VIP support                                                            |
+
+Free accounts can upload shots (a documented 10/day limit) and keep a basic
+profile, but cannot access InstantMatch, project briefs, 0% fees, team seats or
+advanced analytics. Month-to-month rates were not exposed to a fetcher —
+**UNVERIFIED**.
+
+The pattern to note: Dribbble now sells **search ranking**. Paying more literally
+buys placement above other designers. Your portfolio's visibility is a purchased
+good.

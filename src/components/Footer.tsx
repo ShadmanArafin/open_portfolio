@@ -249,7 +249,11 @@ export const Footer: React.FC = () => {
         transition={{ duration: 0.8, delay: 0.2 }}
         className="w-full overflow-hidden select-none pointer-events-none mt-6 relative flex justify-center items-center"
       >
-        <h1 className="font-display font-medium text-[clamp(120px,22vw,360px)] leading-[0.8] tracking-tighter text-center text-text-primary/10 whitespace-nowrap -mb-[2vw]">
+        {/* The 120px floor was taller than a phone is wide, so a long name
+            spilled out of this element — measured at 406px inside a 375px
+            viewport. It did not scroll the page only because an ancestor
+            happened to clip it, which is luck rather than layout. */}
+        <h1 className="font-display font-medium text-[clamp(56px,20vw,360px)] leading-[0.8] tracking-tighter text-center text-text-primary/10 whitespace-nowrap -mb-[2vw] max-w-full overflow-hidden">
           {data.appearance?.giantFooterText || 'PORTFOLIO'}
         </h1>
         <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[var(--section-footer)] to-transparent pointer-events-none" />
