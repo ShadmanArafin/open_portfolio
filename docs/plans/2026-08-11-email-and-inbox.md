@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Every file under `core/` starts with `import 'server-only';`.
+- Every non-test file under `core/` that touches storage, auth or mail starts with `import 'server-only';`. Test files never do — `vitest.config.ts` stubs the module — and `core/theme/*` deliberately does not, because it runs in the browser too.
 - `sendMail()` never throws and never rejects. No caller may let a mail failure fail its own operation.
 - Never derive an authorization decision — including a reset link's origin — from a request header. Use `OPB_SITE_URL`.
 - Store `sha256(token)`, never the token itself, for anything that grants access.
@@ -701,7 +701,15 @@ describe('messages', () => {
     await reset();
     const adapter = await getAdapter();
     await adapter.provision();
+
+    await adapter.messages.append(enquiry('real', '2026-01-01T00:00:00.000Z'));
     await adapter.messages.update('never-existed', { status: 'read' });
+
+    // The point is that a patch for a missing id is a no-op rather than an
+    // error, *and* that it does not create a row out of a partial.
+    const listed = await adapter.messages.list();
+    expect(listed.length).toBe(1);
+    expect(listed[0].id).toBe('real');
   });
 
   it('removes one, and removing it twice is not an error', async () => {
