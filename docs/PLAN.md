@@ -965,6 +965,46 @@ _Honest scoping:_ Vercel Marketplace can only auto-provision Marketplace-native 
 
 ### Phase 9 — Blog, newsletter capture, themes 2–6, presets, launch (4–5 weeks)
 
+> ### DECIDED — it is "Writing", not a blog, and the label is the user's
+>
+> A blog is a _container_: dated, reverse-chronological, feed-driven. An article
+> is one thing inside it. The question is therefore not what to call it but
+> whether the ordering should be chronological — and for a portfolio it usually
+> should not.
+>
+> - **The best piece sinks.** A strong essay from 2022 ends up below a throwaway
+>   note from last week, which is the opposite of what a portfolio is for.
+> - **A blog creates an obligation people break.** An empty blog, or one whose
+>   newest post is eighteen months old, actively damages a portfolio — it reads
+>   as abandoned. Three pieces under "Writing" reads as complete; the same three
+>   under "Blog" with a year's gap reads as neglect.
+> - **Portfolio writing is evergreen.** "How I approach research" does not
+>   expire, and dating it prominently makes it look stale when it is not.
+>
+> **So: one collection, one editor, one route — with the label chosen by the
+> owner**, through the same profession vocabulary packs that already rename
+> sections. Developer → Blog. Designer → Writing. Photographer → Journal.
+> Writer → Essays. Academic → Publications.
+>
+> It gets: optional dates, a choice between newest-first and manual order so a
+> best piece can be pinned, and RSS regardless — it costs nothing and the people
+> who want a feed want it badly. No comments by default.
+>
+> **The honest counter-argument, and why it does not change the answer:** for
+> somebody chasing search traffic the blog format genuinely is better — dated,
+> frequent, chronological. So chronological stays available as one setting
+> rather than the product choosing for everybody. Default curated, because most
+> portfolios are not traffic plays.
+>
+> **Case studies stay separate.** They are project-linked and differently
+> shaped — client, role, outcome, images — and folding them into writing would
+> lose all of that.
+>
+> Recorded as a decision rather than left to be re-argued. The evidence half is
+> that a blog is a feature we currently lose on against Squarespace, Webflow and
+> Ghost (`research/MARKET-RESEARCH.md`); the chronological-is-wrong-for-portfolios
+> half is product judgement, not measured.
+
 > ### BARELY STARTED
 >
 > **Done:** `src/cms/data/professions.ts` — six vocabulary packs (Design,
