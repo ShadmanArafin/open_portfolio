@@ -64,6 +64,11 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+      mailpit:
+        image: axllent/mailpit
+        ports:
+          - 1025:1025
+          - 8025:8025
 
     steps:
       - uses: actions/checkout@v7
@@ -79,6 +84,7 @@ jobs:
         run: npm run test
         env:
           TEST_POSTGRES_URL: postgres://postgres:postgres@localhost:5432/opb_test
+          TEST_MAILPIT_URL: http://localhost:8025
 
   content-safety:
     name: No personal or client-owned content
