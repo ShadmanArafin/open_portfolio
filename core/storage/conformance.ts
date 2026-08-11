@@ -359,6 +359,26 @@ export function runConformanceSuite(
         await adapter.messages.remove('a');
         expect((await adapter.messages.list()).length).toBe(0);
       });
+
+      it('moves enquiries out of an old snapshot on provision, once', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        // What an instance upgraded from a previous version looks like.
+        const legacy = makeTestContent('legacy');
+        legacy.messages = [enquiry('old-1', '2026-01-01T00:00:00.000Z')];
+        await adapter.writeSnapshot('published', legacy);
+
+        await adapter.provision();
+        expect((await adapter.messages.list()).length).toBe(1);
+        expect((await adapter.readSnapshot('published'))?.messages.length).toBe(0);
+
+        // Idempotent: boot happens on every cold start, and on several at once.
+        await adapter.provision();
+        await adapter.provision();
+        expect((await adapter.messages.list()).length).toBe(1);
+      });
     });
 
     describe('owner', () => {

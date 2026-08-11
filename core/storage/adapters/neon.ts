@@ -13,6 +13,7 @@ import {
   writeOwner,
   writeSnapshot,
 } from './_shared/postgres';
+import { migrateSnapshotMessages } from './_shared/migrate-messages';
 
 /**
  * Neon Postgres for content, Vercel Blob for media.
@@ -127,6 +128,12 @@ export const neonAdapter: StorageAdapter = {
     // No bucket to create: Vercel Blob is provisioned by adding the
     // integration, and the token's existence is the only thing to check.
     blobToken();
+    await migrateSnapshotMessages({
+      readSnapshot: (channel) => neonAdapter.readSnapshot(channel),
+      writeSnapshot: (channel, state) => neonAdapter.writeSnapshot(channel, state),
+      listMessages: () => neonAdapter.messages.list(),
+      appendMessage: (message) => neonAdapter.messages.append(message),
+    });
   },
 
   readSnapshot: (channel) => readSnapshot(sql(), channel),

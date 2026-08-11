@@ -14,6 +14,7 @@ import {
   writeOwner,
   writeSnapshot,
 } from './_shared/postgres';
+import { migrateSnapshotMessages } from './_shared/migrate-messages';
 
 /**
  * Any Postgres, plus a disk for uploads.
@@ -138,6 +139,12 @@ export const postgresAdapter: StorageAdapter = {
   async provision() {
     await provisionSchema(sql());
     await mkdir(MEDIA_DIR, { recursive: true });
+    await migrateSnapshotMessages({
+      readSnapshot: (channel) => postgresAdapter.readSnapshot(channel),
+      writeSnapshot: (channel, state) => postgresAdapter.writeSnapshot(channel, state),
+      listMessages: () => postgresAdapter.messages.list(),
+      appendMessage: (message) => postgresAdapter.messages.append(message),
+    });
   },
 
   readSnapshot: (channel) => readSnapshot(sql(), channel),

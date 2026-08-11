@@ -12,6 +12,7 @@ import {
   writeOwner,
   writeSnapshot,
 } from './_shared/postgres';
+import { migrateSnapshotMessages } from './_shared/migrate-messages';
 
 /**
  * Supabase: Postgres for content, Supabase Storage for media.
@@ -175,6 +176,12 @@ export const supabaseAdapter: StorageAdapter = {
   async provision() {
     await provisionSchema(sql());
     await ensureBucket();
+    await migrateSnapshotMessages({
+      readSnapshot: (channel) => supabaseAdapter.readSnapshot(channel),
+      writeSnapshot: (channel, state) => supabaseAdapter.writeSnapshot(channel, state),
+      listMessages: () => supabaseAdapter.messages.list(),
+      appendMessage: (message) => supabaseAdapter.messages.append(message),
+    });
   },
 
   readSnapshot: (channel) => readSnapshot(sql(), channel),

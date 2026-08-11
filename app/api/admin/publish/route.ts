@@ -55,13 +55,12 @@ export async function POST(req: Request) {
 
   const content = body.content;
 
-  // Messages belong to the server, not to whatever the browser happens to be
-  // holding. Overwriting them with the editor's copy would erase enquiries that
-  // arrived while the tab was open.
-  const adapter = getStorageAdapter();
-  const existing = await adapter.readSnapshot('published');
-  const merged: CMSState = { ...content, messages: existing?.messages ?? content.messages ?? [] };
+  // Enquiries live on their own surface now. Publishing must not carry them:
+  // the editor's copy is a stale read, and writing it back would resurrect
+  // deleted enquiries and lose any that arrived while the tab was open.
+  const merged: CMSState = { ...content, messages: [] };
 
+  const adapter = getStorageAdapter();
   await adapter.writeSnapshot('published', merged);
 
   // Drop the cached renders so the change is live immediately rather than

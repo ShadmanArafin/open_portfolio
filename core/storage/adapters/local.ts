@@ -14,6 +14,7 @@ import type {
   OwnerRecord,
   StorageAdapter,
 } from '../contract';
+import { migrateSnapshotMessages } from './_shared/migrate-messages';
 
 /**
  * Filesystem-backed storage.
@@ -355,6 +356,12 @@ export const localAdapter: StorageAdapter = {
     await mkdir(MEDIA_DIR, { recursive: true });
     await mkdir(STATE_DIR, { recursive: true });
     await mkdir(MESSAGES_DIR, { recursive: true });
+    await migrateSnapshotMessages({
+      readSnapshot: (channel) => localAdapter.readSnapshot(channel),
+      writeSnapshot: (channel, state) => localAdapter.writeSnapshot(channel, state),
+      listMessages: () => messages.list(),
+      appendMessage: (message) => messages.append(message),
+    });
   },
 
   async readOwner(): Promise<OwnerRecord | null> {

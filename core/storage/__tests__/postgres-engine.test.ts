@@ -28,7 +28,11 @@ if (TEST_URL) {
 
   const load = async (): Promise<StorageAdapter> => {
     const pg = await import('../adapters/_shared/postgres');
+    const { migrateSnapshotMessages } = await import('../adapters/_shared/migrate-messages');
     const sql = () => pg.getSql(TEST_URL);
+    // Bound once so `provision` and the adapter's own `messages` member are
+    // the same object, the way every shipped adapter wires it.
+    const messages = pg.makeMessagesAdapter(sql);
 
     // Media is not part of the SQL engine, so it is stubbed and its tests are
     // skipped rather than pretended.
@@ -47,7 +51,19 @@ if (TEST_URL) {
         worksOnEphemeralHosts: true,
       },
       health: () => pg.health(sql(), 'test Postgres'),
-      provision: () => pg.provisionSchema(sql()),
+      provision: async () => {
+        await pg.provisionSchema(sql());
+        // Not part of the SQL engine's own provisioning, but every shipped
+        // adapter runs it from `provision()` and this double stands in for
+        // one in the "shared Postgres engine" suite — omitting it here would
+        // leave the migration untested against a real database.
+        await migrateSnapshotMessages({
+          readSnapshot: (channel) => pg.readSnapshot(sql(), channel),
+          writeSnapshot: (channel, state) => pg.writeSnapshot(sql(), channel, state),
+          listMessages: () => messages.list(),
+          appendMessage: (message) => messages.append(message),
+        });
+      },
       readSnapshot: (channel) => pg.readSnapshot(sql(), channel),
       writeSnapshot: (channel, state) => pg.writeSnapshot(sql(), channel, state),
       readOwner: () => pg.readOwner(sql()),
@@ -61,7 +77,7 @@ if (TEST_URL) {
         remove: async () => {},
         list: async () => [],
       },
-      messages: pg.makeMessagesAdapter(sql),
+      messages,
     };
   };
 
