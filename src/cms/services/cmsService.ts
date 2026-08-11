@@ -116,6 +116,8 @@ export class CMSService {
       this.emitError('Could not load saved content — showing the built-in defaults.');
     }
 
+    await this.adoptServerDraft();
+
     this.ready = true;
 
     if (typeof window !== 'undefined') {
@@ -352,6 +354,43 @@ export class CMSService {
 
     this.scheduleDraftSave();
     this.notify();
+  }
+
+  /**
+   * Takes the server's draft when it is the newer one.
+   *
+   * The browser store used to be the only source, and on a second machine — or
+   * after clearing your browser — it holds nothing, so the admin seeded itself
+   * from the built-in demo content and showed that as your site. The first
+   * autosave then pushed the demo content over your real draft. Silent, and
+   * it destroyed work rather than merely displaying the wrong thing.
+   *
+   * `lastSavedAt` decides rather than "server always wins", because always
+   * preferring the server would throw away edits made while offline — the
+   * opposite mistake, and just as quiet. Whichever was written last is the one
+   * somebody actually made, and the loser is kept in neither place because the
+   * winner is written straight back to the local store.
+   */
+  private async adoptServerDraft(): Promise<void> {
+    try {
+      const res = await fetch('/api/admin/draft');
+      if (!res.ok) return;
+
+      const data = (await res.json()) as { revision?: number; content?: CMSState | null };
+      this.draftRevision = data.revision;
+      if (!data.content) return;
+
+      const serverAt = Date.parse(data.content.lastSavedAt ?? '') || 0;
+      const localAt = Date.parse(this.draftState.lastSavedAt ?? '') || 0;
+      if (serverAt <= localAt) return;
+
+      this.draftState = this.migrate(data.content);
+      await this.store?.saveDraft(this.draftState);
+      this.notify();
+    } catch {
+      // Offline, or the session has expired. The local copy still works, and
+      // the conditional save will refuse to overwrite anything newer.
+    }
   }
 
   /**

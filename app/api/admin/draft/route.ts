@@ -23,11 +23,15 @@ import { RevisionConflictError } from '@/core/storage/contract';
 export const dynamic = 'force-dynamic';
 
 /**
- * What revision the draft is on, so an editor can save conditionally.
+ * The draft, and the revision it is on.
  *
- * Owner-only despite being a read: the revision alone says nothing, but this
- * sits under `/api/admin` and a route that is public "because it only returns a
- * number" is how the next one ends up public too.
+ * It returns the content as well as the number because the admin needs to be
+ * able to *load* it. It could not, and the consequence was severe: opening the
+ * admin on a second machine — or after clearing your browser — showed the
+ * built-in demo content, and the first autosave pushed that over the real
+ * draft. The local store is a cache; this is the source of truth.
+ *
+ * Owner-only, obviously: this is the unpublished site.
  */
 export async function GET() {
   try {
@@ -38,7 +42,11 @@ export async function GET() {
   }
 
   const meta = await (await getStorageAdapter()).readSnapshotMeta('draft');
-  return NextResponse.json({ ok: true, revision: meta?.revision ?? 0 });
+  return NextResponse.json({
+    ok: true,
+    revision: meta?.revision ?? 0,
+    content: meta?.state ?? null,
+  });
 }
 
 export async function POST(req: Request) {

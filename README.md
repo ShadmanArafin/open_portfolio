@@ -22,6 +22,14 @@ and your content stays in your own database.
 Built for people who need a portfolio but should not have to learn a framework
 to keep one: students, designers, developers, photographers, writers.
 
+<img src="docs/images/public-site.png" alt="A portfolio home page built from blocks: a headline, a supporting line, two buttons, and a row of figures." width="100%">
+
+<p align="center"><em>The site a visitor sees — every band on it is a block its owner arranged.</em></p>
+
+<img src="docs/images/page-builder.png" alt="The Pages screen in the admin, showing the home page with three blocks listed: Hero, Numbers and Cards, each with controls to hide, delete or open it." width="100%">
+
+<p align="center"><em>The same page in the editor. No code, no redeploy, and the address bar never leaves your own site.</em></p>
+
 > [!WARNING]
 > **Status: alpha (0.5).** The site, the editor and publishing all work, and the
 > admin has real server-side authentication. But there is no blog and only one
