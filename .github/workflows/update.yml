@@ -1,0 +1,164 @@
+# Brings the newest release of Open Portfolio Builder into this copy of it.
+#
+# Why this exists: the Deploy button *copies* the project into your GitHub
+# account rather than forking it, so GitHub's "Sync fork" button is not there.
+# Without this workflow there is no way to get updates without using a terminal.
+#
+# What it does: adds the original project as a second remote, merges its newest
+# release into a branch, and opens a pull request. Nothing is changed on your
+# site until you press Merge — and your content is never touched by any of it,
+# because your content lives in your database, not in this repository.
+#
+# It needs no token, no account and no setup from you. It runs on the first of
+# every month, and you can start it by hand at any time from the Actions tab.
+
+name: Check for updates
+
+on:
+  schedule:
+    # 03:00 UTC on the 1st. Monthly, because a portfolio is not a product that
+    # needs watching, and a weekly pull request nobody asked for becomes noise
+    # that gets muted — along with the security fix three months later.
+    - cron: '0 3 1 * *'
+  workflow_dispatch:
+  # Lets the admin's "Prepare update" button start this, for anyone who has
+  # connected a token. Without one, the button links here instead.
+  repository_dispatch:
+    types: [check-for-updates]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # The whole history, because a merge with no common ancestor is not a
+          # merge — it is a pile of conflicts in every file at once.
+          fetch-depth: 0
+
+      - name: Find the newest release
+        id: upstream
+        run: |
+          set -euo pipefail
+          UPSTREAM="https://github.com/ShadmanArafin/open_portfolio_builder.git"
+
+          # Skip all of this on the original project itself, where "updating
+          # from upstream" would mean merging the repository into itself.
+          if [ "${GITHUB_REPOSITORY}" = "ShadmanArafin/open_portfolio_builder" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git remote add upstream "$UPSTREAM" 2>/dev/null || git remote set-url upstream "$UPSTREAM"
+          git fetch upstream --tags --quiet
+
+          # Highest version tag, not the most recent commit: an update should
+          # land on something that was deliberately released and not on whatever
+          # happened to be pushed to the main branch an hour ago.
+          TAG=$(git tag -l 'v*' --sort=-v:refname | head -n1)
+          if [ -z "$TAG" ]; then
+            echo "No released version found upstream yet. Nothing to do."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+          if git merge-base --is-ancestor "$TAG" HEAD; then
+            echo "Already up to date with $TAG."
+            echo "needed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "needed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Merge it into a branch
+        id: merge
+        if: steps.upstream.outputs.skip == 'false' && steps.upstream.outputs.needed == 'true'
+        run: |
+          set -uo pipefail
+          TAG="${{ steps.upstream.outputs.tag }}"
+          BRANCH="update/${TAG}"
+
+          git config user.name  "Open Portfolio Builder"
+          git config user.email "noreply@github.com"
+          git checkout -B "$BRANCH"
+
+          # A merge, not a rebase or a reset: anything you changed in your own
+          # copy is kept, and where it disagrees with the update you are shown
+          # the disagreement rather than having one side silently thrown away.
+          if git merge --no-edit "$TAG"; then
+            echo "conflicts=false" >> "$GITHUB_OUTPUT"
+          else
+            # Commit the conflict markers on purpose. A pull request that shows
+            # exactly which files disagree is something a person can act on;
+            # a failed workflow with a red cross is not.
+            echo "conflicts=true" >> "$GITHUB_OUTPUT"
+            git diff --name-only --diff-filter=U > /tmp/conflicts.txt || true
+            git add -A
+            git commit -m "Update to ${TAG} (with conflicts to resolve)" --no-verify
+          fi
+
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+          git push --force-with-lease origin "$BRANCH"
+
+      - name: Open the pull request
+        if: steps.merge.outcome == 'success' && steps.upstream.outputs.needed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.upstream.outputs.tag }}
+          BRANCH: ${{ steps.merge.outputs.branch }}
+          CONFLICTS: ${{ steps.merge.outputs.conflicts }}
+        run: |
+          set -euo pipefail
+
+          if [ "$CONFLICTS" = "true" ]; then
+            BODY=$(cat <<EOF
+          ## Update to $TAG — needs a hand first
+
+          Most of this update merged cleanly, but some files you changed are also
+          changed upstream, so somebody has to decide which version wins.
+
+          **Your site is not affected.** Nothing here is live until this is
+          merged, and your content is in your database, not in these files.
+
+          Files that disagree:
+
+          \`\`\`
+          $(cat /tmp/conflicts.txt 2>/dev/null || echo "see the Files changed tab")
+          \`\`\`
+
+          If you have never edited the code yourself, this is unexpected — please
+          open an issue on the [main project](https://github.com/ShadmanArafin/open_portfolio_builder/issues)
+          and paste this list in.
+          EOF
+          )
+          else
+            BODY=$(cat <<EOF
+          ## Update to $TAG
+
+          This is ready to merge. **Press "Merge pull request" below** and your
+          host will redeploy on its own.
+
+          - **Your content is safe.** Everything you have written lives in your
+            database. These are code changes only — nothing here can reach it.
+          - **Your settings are safe**, including anything you configured under
+            Services.
+          - Any new database columns are created automatically the first time the
+            site is loaded after the update.
+
+          [What changed in this release](https://github.com/ShadmanArafin/open_portfolio_builder/releases/tag/$TAG)
+          EOF
+          )
+          fi
+
+          gh pr create \
+            --title "Update to $TAG" \
+            --body "$BODY" \
+            --head "$BRANCH" \
+            --base "${{ github.event.repository.default_branch }}" \
+            || gh pr edit "$BRANCH" --title "Update to $TAG" --body "$BODY"

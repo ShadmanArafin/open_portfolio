@@ -79,7 +79,7 @@ development.
 | Phase 5 blocks, pages, `draftMode()` preview  | Nothing external needed                                                     |
 | Phase 7 admin: MediaPicker, builder polish    | Nothing external needed                                                     |
 | Phase 9 blog, newsletter capture, themes      | Nothing external needed                                                     |
-| Postgres / Supabase / Neon **database** half  | `postgres:16` — already wired; with Mailpit takes the suite from 310 to 388 |
+| Postgres / Supabase / Neon **database** half  | `postgres:16` — already wired; with Mailpit takes the suite from 342 to 420 |
 | Supabase **Storage** half                     | `supabase start` runs the real `storage-api` container                      |
 | Email send path                               | `axllent/mailpit` — already wired                                           |
 | PocketBase, Appwrite adapters                 | Both ship official Docker images                                            |
@@ -834,6 +834,56 @@ _Honest scoping:_ Vercel Marketplace can only auto-provision Marketplace-native 
 > already learned twice that a file-backed implementation passing a suite says
 > nothing about the real one, so they should not ship unverified.
 
+### Community and updates (added after the original plan)
+
+> ### BUILT — blocked on one setting
+>
+> Not in the original plan, and asked for because every community-driven project
+> needs it: report a bug, ask for a feature, see what changed, and know whether
+> an update exists — all from the admin.
+>
+> **How updating works, which was the real question.** Content lives in the
+> owner's backend and code lives in their repository; the storage seam from
+> Phase 3 means there is no path from one to the other, so an update cannot
+> touch what somebody wrote. Database columns a release needs are created
+> automatically, because `provision()` already runs once per process and is
+> idempotent. Documented for a non-technical audience in `docs/UPDATING.md`.
+>
+> **The Deploy button copies rather than forks**, so GitHub's "Sync fork" button
+> does not exist for anyone who used it — which would have meant no update path
+> at all. `.github/workflows/update.yml` fills the gap: it adds the upstream as
+> a remote, merges the newest release tag into a branch, and opens a pull
+> request. Monthly, on demand, and needing no token from the owner. Conflicts
+> are committed and explained in the PR body rather than failing the run,
+> because a red cross is not something a non-developer can act on.
+>
+> **Duplicate detection happens before filing, not after.** The title box
+> searches existing issues as it is typed and answers one of three ways: already
+> fixed in a version newer than yours (update, there is nothing to report — and
+> only this screen can say that, because only it knows which version the site is
+> on), already reported (add what you know to the existing thread), or new. The
+> fix version is worked out from the first release published after the issue was
+> closed, which needs no discipline from the maintainer.
+>
+> **Reports go as pre-filled issue URLs** rather than through an API. No token to
+> ask for, no intake service to run or defend, and the issue is authored by the
+> person reporting — which is what makes a thank-you in the release notes
+> accurate rather than guessed at. The screen's contribution is the diagnostics,
+> shown in full before anything is sent and switchable off. A test builds a site
+> whose every text field is a marker and asserts no marker reaches the report:
+> the privacy claim is checked rather than promised.
+>
+> **This all works, and none of it can run yet: the repository is private.**
+> Found by using the screen — GitHub answered 422, which the code reported
+> verbatim before it was taught to say what that actually means. A private
+> repository cannot be searched anonymously, its releases cannot be listed, its
+> issue URLs 404 for everyone else, the Deploy button in the README cannot clone
+> it, and `update.yml` cannot fetch from it. The query shape itself was verified
+> against a public repository and returns correct results.
+>
+> **Making the repository public is the only thing standing between this and
+> working.** Nothing else here needs changing.
+
 ### Phase 9 — Blog, newsletter capture, themes 2–6, presets, launch (4–5 weeks)
 
 > ### BARELY STARTED
@@ -956,8 +1006,8 @@ The numbers you should see, as of this writing:
 | `lint`                    | **0 errors**, 64 warnings — the warnings are baseline |
 | `format:check`            | clean                                                 |
 | `check-no-personal-data`  | clean, listed by git                                  |
-| `test` with no containers | 310 passed, 7 skipped                                 |
-| `test` with both          | **388 passed, 2 skipped**                             |
+| `test` with no containers | 342 passed, 7 skipped                                 |
+| `test` with both          | **420 passed, 2 skipped**                             |
 
 The 2 remaining skips are the Supabase and Neon conformance runs, which need
 real cloud credentials. Everything else runs locally.

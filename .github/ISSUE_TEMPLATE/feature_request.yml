@@ -2,6 +2,14 @@ name: Feature request
 description: Suggest something the builder should be able to do
 labels: ['enhancement', 'needs triage']
 body:
+  - type: markdown
+    attributes:
+      value: |
+        **If your site is running, report this from its admin instead.** Open
+        **Help & feedback**: it checks whether this has already been reported or
+        already fixed in a newer version, and fills in your version, storage
+        backend and browser for you.
+
   - type: textarea
     id: problem
     attributes:

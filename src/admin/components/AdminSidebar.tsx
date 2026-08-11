@@ -28,6 +28,7 @@ import {
   FolderOpen,
   Settings2,
   Plug,
+  LifeBuoy,
 } from 'lucide-react';
 import { SideNav, SideNavHeading, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 import { Text } from '@astryxdesign/core/Text';
@@ -186,6 +187,7 @@ export const AdminSidebar: React.FC = () => {
           ],
         },
         { label: 'Version history', path: '/history', icon: HistoryIcon },
+        { label: 'Help & feedback', path: '/help', icon: LifeBuoy },
       ],
     },
   ];

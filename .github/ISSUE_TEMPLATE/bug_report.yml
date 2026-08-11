@@ -5,6 +5,14 @@ body:
   - type: markdown
     attributes:
       value: |
+        **If your site is running, report this from its admin instead.** Open
+        **Help & feedback**: it checks whether this has already been reported or
+        already fixed in a newer version, and fills in your version, storage
+        backend and browser for you.
+
+  - type: markdown
+    attributes:
+      value: |
         Thanks for reporting this. Please do **not** use this form for security
         problems — see [SECURITY.md](../blob/main/SECURITY.md) instead.
 

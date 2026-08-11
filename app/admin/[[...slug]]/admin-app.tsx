@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { ToastProvider } from '@/context/ToastContext';
 import { CMSProvider } from '@/cms/context/CMSContext';
+import { startCollectingErrors } from '@/admin/utils/errorLog';
 
 /*
  * The admin, still running on React Router inside a single Next.js route.
@@ -34,6 +35,9 @@ const AdminDashboard = lazy(() =>
 );
 const AdminAnalytics = lazy(() =>
   import('@/admin/pages/AdminAnalytics').then((m) => ({ default: m.AdminAnalytics }))
+);
+const AdminHelp = lazy(() =>
+  import('@/admin/pages/AdminHelp').then((m) => ({ default: m.AdminHelp }))
 );
 const AdminIntegrations = lazy(() =>
   import('@/admin/pages/AdminIntegrations').then((m) => ({ default: m.AdminIntegrations }))
@@ -92,6 +96,16 @@ const AdminNavigationCMS = lazy(() =>
   import('@/admin/pages/AdminNavigationCMS').then((m) => ({ default: m.AdminNavigationCMS }))
 );
 
+/*
+ * Start recording errors before anything else renders.
+ *
+ * At module scope rather than in an effect: an error thrown while the admin is
+ * mounting is exactly the kind worth capturing, and an effect has not run yet
+ * when it happens. Nothing is sent anywhere — the buffer lives in memory and is
+ * only ever read if somebody chooses to attach it to a bug report.
+ */
+startCollectingErrors();
+
 export default function AdminApp() {
   return (
     <ThemeProvider>
@@ -142,6 +156,7 @@ export default function AdminApp() {
                   <Route path="seo" element={<AdminSettings />} />
                   <Route path="settings" element={<AdminSettings />} />
                   <Route path="services" element={<AdminIntegrations />} />
+                  <Route path="help" element={<AdminHelp />} />
                   <Route path="history" element={<AdminVersionHistory />} />
                 </Route>
                 <Route path="*" element={<Navigate to="/" replace />} />
