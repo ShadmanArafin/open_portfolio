@@ -141,7 +141,10 @@ export const AdminWriting: React.FC = () => {
         <AdminRecordList>
           {entries.map((entry, index) => {
             const parsed = parsePage(entry.blocks);
-            const warnings = parsed.flatMap(runBlockChecks);
+            // Called explicitly rather than passed to flatMap: the callback's
+            // second argument is the array index, which would arrive where the
+            // block content belongs.
+            const warnings = parsed.flatMap((block) => runBlockChecks(block));
 
             return (
               <AdminRecord

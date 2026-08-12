@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { buildMetadata } from '@/core/content/metadata';
 import { BlockList } from '@/core/blocks/registry';
+import { blockContentFrom } from '@/core/blocks/content';
+import { getContentForChannel } from '@/core/content/read';
 import { currentChannel, resolveHomePage } from '@/core/pages/read';
 import { HomePage } from '@/views/HomePage';
 import { PreviewBanner } from './preview-banner';
@@ -34,13 +36,14 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function Page() {
   const channel = await currentChannel();
   const resolved = await resolveHomePage(channel);
+  const content = await getContentForChannel(channel);
 
   if (!resolved) return <HomePage />;
 
   return (
     <>
       {channel === 'draft' && <PreviewBanner status={resolved.page.status} path="/" />}
-      <BlockList blocks={resolved.blocks} />
+      <BlockList blocks={resolved.blocks} content={blockContentFrom(content)} />
     </>
   );
 }

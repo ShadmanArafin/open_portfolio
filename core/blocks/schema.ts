@@ -3,6 +3,7 @@ import type React from 'react';
 import type { BlockFrame } from '../primitives/frame';
 import type { HeadingLevel } from '../primitives/heading-level';
 import type { BlockField } from './fields';
+import type { BlockContent } from './content';
 
 /**
  * The block envelope, and the contract a block definition satisfies.
@@ -86,6 +87,14 @@ export interface BlockRenderProps<P> {
    * before rendering begins is the wrong trade twice over.
    */
   headingLevel: HeadingLevel;
+
+  /**
+   * The site's own records, for blocks that place them rather than restate
+   * them. Always present — a block that has to ask whether its content exists
+   * will forget, and an empty array renders an empty state while `undefined`
+   * renders a crash.
+   */
+  content: BlockContent;
 }
 
 /**
@@ -98,7 +107,14 @@ export interface BlockRenderProps<P> {
  */
 export interface BlockCheck<P> {
   id: string;
-  run(props: P): string | null;
+  /**
+   * `content` is here so a collection view can warn that it will render
+   * nothing. A block pointed at an empty collection is valid, publishes, and
+   * silently does not appear — the exact failure shape this project has shipped
+   * three times, and the author is the one person who cannot see it, because
+   * they know what they meant to put there.
+   */
+  run(props: P, content: BlockContent): string | null;
 }
 
 export interface BlockDefinition<P = unknown> {

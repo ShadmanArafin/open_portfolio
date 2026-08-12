@@ -3,6 +3,7 @@ import { BLOCK_DEFINITIONS } from './definitions';
 import { parseBlocks, type ParseContext } from './parse';
 import { clampLevel, type HeadingLevel } from '../primitives/heading-level';
 import type { BlockDefinition, ParsedBlock } from './schema';
+import { EMPTY_BLOCK_CONTENT, type BlockContent } from './content';
 
 /**
  * The block registry and the page renderer.
@@ -42,7 +43,15 @@ export function parsePage(raw: unknown): ParsedBlock[] {
  * "this block could not be read" tells them about our problem; the editor is
  * where that belongs, and `ParsedBlock` carries the reason for it.
  */
-function RenderOne({ entry, headingLevel }: { entry: ParsedBlock; headingLevel: HeadingLevel }) {
+function RenderOne({
+  entry,
+  headingLevel,
+  content,
+}: {
+  entry: ParsedBlock;
+  headingLevel: HeadingLevel;
+  content: BlockContent;
+}) {
   if (entry.kind === 'unknown') return null;
 
   const { block } = entry;
@@ -56,6 +65,7 @@ function RenderOne({ entry, headingLevel }: { entry: ParsedBlock; headingLevel: 
     frame: typeof block.frame;
     block: typeof block;
     headingLevel: HeadingLevel;
+    content: BlockContent;
   }>;
 
   return (
@@ -64,6 +74,7 @@ function RenderOne({ entry, headingLevel }: { entry: ParsedBlock; headingLevel: 
       frame={{ ...definition.frameDefaults, ...block.frame }}
       block={block}
       headingLevel={headingLevel}
+      content={content}
     />
   );
 }
@@ -76,7 +87,18 @@ function RenderOne({ entry, headingLevel }: { entry: ParsedBlock; headingLevel: 
  * what keeps the document outline correct when someone reorders the page — the
  * whole reason `Heading` takes its level from context.
  */
-export function BlockList({ blocks }: { blocks: ParsedBlock[] }) {
+export function BlockList({
+  blocks,
+  content = EMPTY_BLOCK_CONTENT,
+}: {
+  blocks: ParsedBlock[];
+  /**
+   * Defaulted rather than required, so the routes and tests that predate
+   * collection views keep working unchanged. A collection block with no content
+   * renders its empty state, which is the honest outcome.
+   */
+  content?: BlockContent;
+}) {
   const visible = blocks.filter((b) => b.kind === 'block' && !b.block.hidden);
   const firstRenderableId = visible[0]?.kind === 'block' ? visible[0].block.id : null;
 
@@ -89,6 +111,7 @@ export function BlockList({ blocks }: { blocks: ParsedBlock[] }) {
             key={id}
             entry={entry}
             headingLevel={clampLevel(id === firstRenderableId ? 1 : 2)}
+            content={content}
           />
         );
       })}
@@ -97,7 +120,10 @@ export function BlockList({ blocks }: { blocks: ParsedBlock[] }) {
 }
 
 /** Content warnings for the editor. Never blocks rendering. */
-export function runBlockChecks(entry: ParsedBlock): string[] {
+export function runBlockChecks(
+  entry: ParsedBlock,
+  content: BlockContent = EMPTY_BLOCK_CONTENT
+): string[] {
   if (entry.kind === 'unknown') return [entry.reason];
 
   const definition = getBlockDefinition(entry.block.type);
@@ -106,7 +132,7 @@ export function runBlockChecks(entry: ParsedBlock): string[] {
   return definition.checks
     .map((check) => {
       try {
-        return check.run(entry.block.props as never);
+        return check.run(entry.block.props as never, content);
       } catch {
         // A broken check must not take the editor down with it.
         return null;

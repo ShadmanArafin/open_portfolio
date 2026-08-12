@@ -105,6 +105,44 @@ export function Stack({ gap = 4, children }: { gap?: SpaceStep; children: React.
   return <div style={{ display: 'grid', gap: `var(--space-${gap})` }}>{children}</div>;
 }
 
+/**
+ * Horizontal rhythm, wrapping.
+ *
+ * The counterpart to `Stack`, for the handful of places a block genuinely lays
+ * things out side by side: a pair of buttons, a row of tags. Blocks were
+ * hand-rolling this as an inline flex `div`, identically, in two places — and
+ * every new block that needed a button row would have copied it again.
+ *
+ * Wrapping is not optional and there is no `nowrap`. A row that refuses to wrap
+ * is a horizontal scrollbar on a phone, which is the failure this whole
+ * primitive layer exists to make unreachable.
+ */
+export function Row({
+  gap = 3,
+  align = 'start',
+  children,
+}: {
+  gap?: SpaceStep;
+  /** Where the row sits when it is narrower than its container. */
+  align?: 'start' | 'center' | 'end';
+  children: React.ReactNode;
+}) {
+  const justify = align === 'start' ? 'flex-start' : align === 'end' ? 'flex-end' : 'center';
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        gap: `var(--space-${gap})`,
+        justifyContent: justify,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
 /* -------------------------------------------------------------------- Grid */
 
 /**

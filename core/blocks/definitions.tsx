@@ -11,6 +11,7 @@ import {
   Media,
   Metric,
   Prose,
+  Row,
   Stack,
   Text,
 } from '../primitives';
@@ -145,13 +146,13 @@ const hero: BlockDefinition<HeroProps> = {
         )}
         {props.cta?.length ? (
           <Stack gap={3}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
+            <Row>
               {props.cta.map((cta, i) => (
                 <Button key={cta.href} href={cta.href} variant={i === 0 ? 'primary' : 'secondary'}>
                   {cta.label}
                 </Button>
               ))}
-            </div>
+            </Row>
           </Stack>
         ) : null}
       </Stack>
@@ -440,20 +441,13 @@ const ctaBanner: BlockDefinition<CtaBannerProps> = {
             <Text>{props.description}</Text>
           </Measure>
         )}
-        <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 'var(--space-3)',
-            justifyContent: 'center',
-          }}
-        >
+        <Row align="center">
           {props.cta.map((cta, i) => (
             <Button key={cta.href} href={cta.href} variant={i === 0 ? 'primary' : 'secondary'}>
               {cta.label}
             </Button>
           ))}
-        </div>
+        </Row>
       </Stack>
     </Band>
   ),

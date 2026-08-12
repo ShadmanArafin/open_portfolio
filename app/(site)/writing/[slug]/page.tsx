@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { buildMetadata } from '@/core/content/metadata';
 import { BlockList } from '@/core/blocks/registry';
+import { blockContentFrom } from '@/core/blocks/content';
+import { getContentForChannel } from '@/core/content/read';
 import { currentChannel } from '@/core/pages/read';
 import { getPublicWriting, getWritingSettings, resolveWriting } from '@/core/writing/read';
 import { PreviewBanner } from '../../preview-banner';
@@ -42,9 +44,10 @@ export async function generateMetadata({
 export default async function WritingEntryPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const channel = await currentChannel();
-  const [settings, resolved] = await Promise.all([
+  const [settings, resolved, content] = await Promise.all([
     getWritingSettings(channel),
     resolveWriting(slug, channel),
+    getContentForChannel(channel),
   ]);
 
   if (!settings.enabled || !resolved) notFound();
@@ -57,7 +60,7 @@ export default async function WritingEntryPage({ params }: { params: Promise<{ s
           path={`/writing/${resolved.entry.slug}`}
         />
       )}
-      <BlockList blocks={resolved.blocks} />
+      <BlockList blocks={resolved.blocks} content={blockContentFrom(content)} />
     </>
   );
 }

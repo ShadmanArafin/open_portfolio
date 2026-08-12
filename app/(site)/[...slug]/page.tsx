@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { buildMetadata } from '@/core/content/metadata';
 import { BlockList } from '@/core/blocks/registry';
+import { blockContentFrom } from '@/core/blocks/content';
+import { getContentForChannel } from '@/core/content/read';
 import { currentChannel, getRoutablePages, resolvePage } from '@/core/pages/read';
 import { segmentsToSlug } from '@/core/pages/schema';
 import { PreviewBanner } from '../preview-banner';
@@ -59,7 +61,10 @@ export async function generateMetadata({
 export default async function Page({ params }: { params: Promise<{ slug: string[] }> }) {
   const slug = segmentsToSlug((await params).slug);
   const channel = await currentChannel();
-  const resolved = await resolvePage(slug, channel);
+  const [resolved, content] = await Promise.all([
+    resolvePage(slug, channel),
+    getContentForChannel(channel),
+  ]);
 
   // Resolved on the server so an address that does not exist returns a real 404
   // status, which matters to crawlers as much as to people.
@@ -70,7 +75,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string[
       {channel === 'draft' && (
         <PreviewBanner status={resolved.page.status} path={`/${resolved.page.slug}`} />
       )}
-      <BlockList blocks={resolved.blocks} />
+      <BlockList blocks={resolved.blocks} content={blockContentFrom(content)} />
     </>
   );
 }
