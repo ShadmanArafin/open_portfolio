@@ -75,6 +75,8 @@ a portfolio:
 
 - **Uploads have not been run against Vercel Blob or Supabase Storage with real
   credentials.** They work on the local filesystem and share the same code path.
+- **No newsletter sign-up form.** The rules are written and tested; nothing
+  collects an address yet.
 - **Themes change colour, type and spacing — not layout.** Six of them, but
   they do not rearrange the page. Different structures come with more block
   types.
@@ -93,7 +95,7 @@ In roughly this order. Nothing here is promised by a date.
 | **0.6** | A second theme, and a way to switch. More block types                                       |
 | **0.7** | Mobile admin, an installable app, notifications when someone writes to you                  |
 | **0.8** | Firebase, Convex, Cloudflare, PocketBase and Appwrite backends. Passkeys and one-time codes |
-| **0.9** | Blog with RSS, newsletter sign-ups, six themes, profession presets                          |
+| **0.9** | Newsletter sign-ups on the site, documentation, a marketing site                            |
 | **1.0** | Stable. Nothing renamed under you after this                                                |
 
 ---

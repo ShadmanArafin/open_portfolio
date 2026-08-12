@@ -267,6 +267,12 @@ discover them after typing in a portfolio:
   and works on a small screen, but the editing screens were designed for a
   desktop. Notifications are not built.
 - **Sign-in is an email and a passphrase.** No passkeys, no one-time codes.
+- **No newsletter sign-up form yet.** The rules for one are written and tested —
+  double opt-in, hashed tokens, a CSV export — but nothing on the site collects
+  an address yet.
+- **Five of the nine planned backends are not built.** Firebase, Convex,
+  Cloudflare, PocketBase and Appwrite. The four that exist are the four the
+  README offers.
 
 ## Tech stack
 
@@ -291,7 +297,7 @@ discover them after typing in a portfolio:
 | 0.6           | More block types, richer themes, a live demo                                     |
 | 0.7           | Mobile admin, installable app, notifications                                     |
 | 0.8           | Remaining backends, passkeys and one-time codes                                  |
-| 0.9           | Blog, newsletter capture, six themes, full profession presets                    |
+| 0.9           | Newsletter sign-ups on the site, docs, a marketing site                          |
 | 1.0           | Stable                                                                           |
 
 What changed in each release, and who asked for it, is in
