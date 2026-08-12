@@ -1,6 +1,7 @@
 import 'server-only';
 import postgres, { type Sql } from 'postgres';
 import type { CMSState, ContactMessage } from '@/cms/types/cms';
+import type { Subscriber } from '@/core/newsletter/schema';
 import { RevisionConflictError } from '../../contract';
 import type {
   Channel,
@@ -10,6 +11,7 @@ import type {
   MessagesAdapter,
   OwnerRecord,
   SnapshotRead,
+  SubscribersAdapter,
 } from '../../contract';
 
 /**
@@ -105,6 +107,14 @@ export async function provisionSchema(sql: Sql): Promise<void> {
   await sql`ALTER TABLE opb_kv ALTER COLUMN expires_at DROP NOT NULL`;
 
   await sql`CREATE INDEX IF NOT EXISTS opb_kv_expires_at_idx ON opb_kv (expires_at)`;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS opb_subscribers (
+      id            text PRIMARY KEY,
+      requested_at  timestamptz NOT NULL,
+      data          jsonb NOT NULL
+    )
+  `;
 
   await sql`
     CREATE TABLE IF NOT EXISTS opb_messages (
@@ -359,6 +369,50 @@ export function makeMessagesAdapter(getConnection: () => Sql): MessagesAdapter {
     async remove(id) {
       const sql = getConnection();
       await sql`DELETE FROM opb_messages WHERE id = ${id}`;
+    },
+  };
+}
+
+/**
+ * The mailing list.
+ *
+ * Shaped like the inbox and for the same reason: appended by strangers,
+ * concurrently. `ON CONFLICT DO NOTHING` makes a repeated signup idempotent
+ * rather than an error — somebody double-clicking a button is not a fault.
+ */
+export function makeSubscribersAdapter(getConnection: () => Sql): SubscribersAdapter {
+  return {
+    async append(subscriber) {
+      const sql = getConnection();
+      await sql`
+        INSERT INTO opb_subscribers (id, requested_at, data)
+        VALUES (${subscriber.id}, ${subscriber.requestedAt}, ${sql.json(subscriber as never)})
+        ON CONFLICT (id) DO NOTHING
+      `;
+    },
+
+    async list() {
+      const sql = getConnection();
+      const rows = await sql<{ data: Subscriber }[]>`
+        SELECT data FROM opb_subscribers ORDER BY requested_at DESC
+      `;
+      return rows.map((row) => row.data);
+    },
+
+    async update(id, patch) {
+      const sql = getConnection();
+      // Merged in the database rather than read-modify-write, so a confirmation
+      // and an unsubscribe arriving together cannot discard one another.
+      await sql`
+        UPDATE opb_subscribers
+           SET data = data || ${sql.json(patch as never)}
+         WHERE id = ${id}
+      `;
+    },
+
+    async remove(id) {
+      const sql = getConnection();
+      await sql`DELETE FROM opb_subscribers WHERE id = ${id}`;
     },
   };
 }

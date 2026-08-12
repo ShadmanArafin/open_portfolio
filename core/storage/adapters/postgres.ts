@@ -3,11 +3,13 @@ import { mkdir, readdir, stat, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { MediaAdapter, MediaRecord, StorageAdapter } from '../contract';
 import { AdapterConfigError } from '../contract';
+import { mediaRoot } from './_shared/data-dir';
 import {
   getSql,
   health,
   makeKvAdapter,
   makeMessagesAdapter,
+  makeSubscribersAdapter,
   provisionSchema,
   readOwner,
   readSnapshot,
@@ -33,7 +35,12 @@ import { migrateSnapshotMessages } from './_shared/migrate-messages';
  * directory, and refused on hosts that throw the disk away.
  */
 
-const MEDIA_DIR = path.join(process.cwd(), '.opb', 'media');
+/**
+ * Read on each call rather than captured at module load, so a test or a
+ * container that sets `OPB_DATA_DIR` after this file is imported still gets the
+ * directory it asked for.
+ */
+const mediaDir = () => mediaRoot();
 
 function connectionString(): string {
   const url = process.env.OPB_POSTGRES_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL;
@@ -51,8 +58,9 @@ function sql() {
 
 /** Rejects any key that would resolve outside the media directory. */
 function safePath(key: string): string {
-  const resolved = path.resolve(MEDIA_DIR, key);
-  if (resolved !== MEDIA_DIR && !resolved.startsWith(MEDIA_DIR + path.sep)) {
+  const root = mediaDir();
+  const resolved = path.resolve(root, key);
+  if (resolved !== root && !resolved.startsWith(root + path.sep)) {
     throw new Error(`Refusing to touch a media path outside the store: ${key}`);
   }
   return resolved;
@@ -91,11 +99,11 @@ const media: MediaAdapter = {
 
   async list() {
     try {
-      const names = await readdir(MEDIA_DIR);
+      const names = await readdir(mediaDir());
       const records = await Promise.all(
         names.map(async (name): Promise<MediaRecord | null> => {
           try {
-            const info = await stat(path.join(MEDIA_DIR, name));
+            const info = await stat(path.join(mediaDir(), name));
             if (!info.isFile()) return null;
             return {
               key: name,
@@ -139,7 +147,7 @@ export const postgresAdapter: StorageAdapter = {
 
   async provision() {
     await provisionSchema(sql());
-    await mkdir(MEDIA_DIR, { recursive: true });
+    await mkdir(mediaDir(), { recursive: true });
     await migrateSnapshotMessages({
       readSnapshot: (channel) => postgresAdapter.readSnapshot(channel),
       writeSnapshot: (channel, state) => postgresAdapter.writeSnapshot(channel, state),
@@ -157,4 +165,5 @@ export const postgresAdapter: StorageAdapter = {
   kv: makeKvAdapter(sql),
   media,
   messages: makeMessagesAdapter(sql),
+  subscribers: makeSubscribersAdapter(sql),
 };

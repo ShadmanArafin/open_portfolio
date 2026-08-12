@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { getStorageAdapter } from '@/core/storage/registry';
+import { mediaRoot } from '@/core/storage/adapters/_shared/data-dir';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,7 +17,13 @@ export const dynamic = 'force-dynamic';
  *   SVG is sent as an attachment. An SVG rendered inline from your own origin
  *   can run script, which would be stored XSS against the site owner.
  */
-const MEDIA_DIR = path.join(process.cwd(), '.opb', 'media');
+/**
+ * The same directory the adapters write to, from the same helper. It was its
+ * own copy of the path expression, which meant an install with `OPB_DATA_DIR`
+ * set — every Docker install — would have served 404 for an image it had
+ * successfully stored.
+ */
+const mediaDir = () => mediaRoot();
 
 const CONTENT_TYPES: Record<string, string> = {
   '.png': 'image/png',
@@ -32,8 +39,9 @@ export async function GET(_req: Request, ctx: { params: Promise<{ key: string[] 
   const { key } = await ctx.params;
   const relative = key.join('/');
 
-  const resolved = path.resolve(MEDIA_DIR, relative);
-  if (resolved !== MEDIA_DIR && !resolved.startsWith(MEDIA_DIR + path.sep)) {
+  const root = mediaDir();
+  const resolved = path.resolve(root, relative);
+  if (resolved !== root && !resolved.startsWith(root + path.sep)) {
     return new NextResponse('Not found', { status: 404 });
   }
 

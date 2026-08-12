@@ -7,6 +7,7 @@ import {
   health,
   makeKvAdapter,
   makeMessagesAdapter,
+  makeSubscribersAdapter,
   provisionSchema,
   readOwner,
   readSnapshot,
@@ -146,4 +147,5 @@ export const neonAdapter: StorageAdapter = {
   kv: makeKvAdapter(sql),
   media,
   messages: makeMessagesAdapter(sql),
+  subscribers: makeSubscribersAdapter(sql),
 };

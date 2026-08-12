@@ -1,5 +1,6 @@
 import 'server-only';
 import type { CMSState, ContactMessage } from '@/cms/types/cms';
+import type { Subscriber } from '@/core/newsletter/schema';
 
 /**
  * The storage contract every backend implements.
@@ -118,6 +119,26 @@ export class RevisionConflictError extends Error {
   }
 }
 
+/**
+ * The mailing list.
+ *
+ * Its own surface for the same reason the inbox has one: strangers append to it
+ * concurrently, while content is written deliberately by one person. Folding it
+ * into the content document would mean read-modify-write on every signup, and
+ * two people subscribing in the same second would keep one of them.
+ *
+ * Deliberately small. Finding somebody by address or by token is a scan of the
+ * list, because a portfolio's list is hundreds of rows and an index is a cost
+ * with no reader.
+ */
+export interface SubscribersAdapter {
+  append(subscriber: Subscriber): Promise<void>;
+  list(): Promise<Subscriber[]>;
+  /** Shallow merge. An unknown id is ignored rather than an error. */
+  update(id: string, patch: Partial<Subscriber>): Promise<void>;
+  remove(id: string): Promise<void>;
+}
+
 export interface HealthReport {
   ok: boolean;
   detail: string;
@@ -212,6 +233,7 @@ export interface StorageAdapter {
 
   readonly media: MediaAdapter;
   readonly messages: MessagesAdapter;
+  readonly subscribers: SubscribersAdapter;
 }
 
 /** Thrown when a backend is named but not usable, with a message for a human. */

@@ -104,6 +104,7 @@ uploaded image, which is your backup and the way to move everything to another i
 | Visual explorations    | The image gallery on the About page.                                                                                               |
 | Media library          | Every uploaded image and PDF. Uploading a PDF also sets it as the downloadable résumé.                                             |
 | Messages               | Enquiries submitted through the contact form.                                                                                      |
+| Newsletter             | The sign-up box on your site, and the addresses collected. Exports as a CSV. Sending needs a mail server connected under Services. |
 | Navigation             | Links in the header. Warns if a link points at a page that doesn't exist.                                                          |
 | Footer & social        | Copyright line, oversized footer word, social cards.                                                                               |
 | Microcopy              | Every short string — buttons, labels, confirmations. Searchable.                                                                   |

@@ -26,7 +26,7 @@ JavaScript bundle. None of that remains.
 ```bash
 npm install
 npm run dev                     # http://localhost:3000
-npm test                        # 461 passing, 7 skipped
+npm test                        # 492 passing, 7 skipped
 npm run typecheck && npm run lint && npm run build
 ```
 
@@ -40,7 +40,7 @@ docker run -d --name opb-mail -p 1025:1025 -p 8025:8025 axllent/mailpit
 # that looks like a code bug for about ten minutes.
 
 TEST_POSTGRES_URL="postgres://postgres:postgres@localhost:55432/opb_test" \
-TEST_MAILPIT_URL="http://localhost:8025" npm test    # 539 passing, 2 skipped
+TEST_MAILPIT_URL="http://localhost:8025" npm test    # 588 passing, 2 skipped
 ```
 
 To exercise it as a stranger would:
@@ -63,22 +63,24 @@ container and recreating it against the same volume.
 
 Everything below was run, not reasoned about.
 
-|                                | Verified by                                                     |
-| ------------------------------ | --------------------------------------------------------------- |
-| Deploy → claim → login         | Fresh install, full HTTP walkthrough                            |
-| Second claim refused           | Same walkthrough                                                |
-| Build a page from blocks       | Browser: add block, reorder, edit, publish                      |
-| **Home page from blocks**      | Browser: outline becomes h1 hero → h2 cards → h3 items          |
-| Media picker                   | Browser: chose from library, filled `src` and `alt` together    |
-| Publish reaches visitors       | `curl` of the public HTML after publishing                      |
-| Draft preview                  | Preview showed the draft title; public showed the published one |
-| Contact form → inbox           | HTTP round trip                                                 |
-| Contact form → email           | Real message delivered to Mailpit with correct headers          |
-| SMTP configured from the admin | Browser: entered settings, pressed Test, got a real connection  |
-| Storage conformance            | 21 assertions against real Postgres in Docker, in CI            |
-| Revisions and conflicts        | Two racing conditional writes; exactly one wins                 |
-| Docker self-host               | Container destroyed and recreated; owner and content survived   |
-| Uploads (local filesystem)     | HTTP upload, file on disk, served back                          |
+|                                | Verified by                                                                                    |
+| ------------------------------ | ---------------------------------------------------------------------------------------------- |
+| Deploy → claim → login         | Fresh install, full HTTP walkthrough                                                           |
+| Second claim refused           | Same walkthrough                                                                               |
+| Build a page from blocks       | Browser: add block, reorder, edit, publish                                                     |
+| **Home page from blocks**      | Browser: outline becomes h1 hero → h2 cards → h3 items                                         |
+| Media picker                   | Browser: chose from library, filled `src` and `alt` together                                   |
+| Publish reaches visitors       | `curl` of the public HTML after publishing                                                     |
+| Draft preview                  | Preview showed the draft title; public showed the published one                                |
+| Contact form → inbox           | HTTP round trip                                                                                |
+| Contact form → email           | Real message delivered to Mailpit with correct headers                                         |
+| SMTP configured from the admin | Browser: entered settings, pressed Test, got a real connection                                 |
+| Storage conformance            | 21 assertions against real Postgres in Docker, in CI                                           |
+| Revisions and conflicts        | Two racing conditional writes; exactly one wins                                                |
+| Docker self-host               | Container destroyed and recreated; owner and content survived                                  |
+| Uploads (local filesystem)     | HTTP upload, file on disk, served back                                                         |
+| Uploads (Docker + Postgres)    | Upload through the admin, file on the mounted volume, served back at 200                       |
+| Newsletter, end to end         | Sign up → Mailpit → confirm → CSV → one-click unsubscribe, on both the filesystem and Postgres |
 
 ### The one thing that matters and is not verified
 
@@ -100,7 +102,7 @@ Ordered by how much a user would notice.
 
 | Gap                                  | Notes                                                                                                                                                         |
 | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Newsletter is rules only**         | `core/newsletter` has the schema, consent rules and tests. No endpoint, no form, no admin screen — nothing can store an address yet                           |
+| **The newsletter cannot send**       | By design. It collects, confirms and exports; broadcasting is a different product. It also needs SMTP configured, or sign-ups fail honestly with a 503        |
 | **No mobile admin layout**           | It installs and works on a phone; the editing screens were drawn for a desktop. The research sizes this at 10–20 days and calls it retention, not acquisition |
 | **No push notifications**            | Needs VAPID and a real device. The service worker must carve out `/admin` first — see the Serwist trap below                                                  |
 | **No marketing site, no docs site**  | `research/LANDING-PAGE.md` is a 1,117-line spec with the copy already written                                                                                 |
@@ -135,7 +137,19 @@ running the thing, not by the suite.
 
 **One implementation is not a contract.** The file-backed storage adapter passed
 every revision test while real Postgres failed four. Two implementations is the
-minimum that proves anything.
+minimum that proves anything. The same shape recurred with `undefined` in a
+patch: spreading it over an object removes the key, merging it as jsonb drops it
+before it reaches the database and the old value survives — so clearing a spent
+confirmation token worked on one backend and silently did not on the other.
+Clearing is now an empty string, and the conformance suite asserts it.
+
+**A default that is only wrong when configured.** The Postgres adapter and the
+media route each carried their own `path.join(process.cwd(), '.opb', 'media')`
+and ignored `OPB_DATA_DIR`. With the variable unset — which is every test and
+every `npm run dev` — the wrong expression and the right one give the same
+answer, so 584 tests passed while `docker compose up`, the documented
+one-command install, died on its first write with `EACCES: mkdir '/app/.opb'`.
+There is now one `dataRoot()` and a test that sets the variable.
 
 **Service workers ignore HTTP cache headers.** `/admin` sets `no-store`, and
 that does not constrain Cache Storage. Serwist's default configuration caches
@@ -176,24 +190,25 @@ wrong. Capture into state in an effect.
 **1. Verify uploads against Vercel Blob and Supabase Storage.** The single
 highest-consequence unknown. Twenty minutes.
 
-**2. Finish the newsletter.** The rules are written; the endpoint, the form, the confirm and unsubscribe routes and the admin screen are not. It is the smallest complete thing left.
-
-**3. Tag a first release.** Three shipped features read GitHub Releases and
+**2. Tag a first release.** Three shipped features read GitHub Releases and
 currently find nothing: the update checker has no baseline, "What's new" is
 empty, and duplicate detection cannot say "already fixed in v0.6.0" without
 release dates to compare against. It also starts awesome-selfhosted's
 four-month clock. See [GOING-PUBLIC.md](research/GOING-PUBLIC.md).
 
-**4. Mobile admin layout.** "Every portfolio looks the same" is the best-evidenced
-complaint in the market research, and shipping one theme makes us the worst
-offender in the field on that axis.
+**3. Mobile admin layout.** The research sizes it at 10–20 days and calls it
+retention rather than acquisition: people do not choose a portfolio builder for
+its phone editor, but they do abandon one they cannot fix a typo in from a
+train. It installs to a home screen already; the screens themselves were drawn
+for a desktop.
 
-**5. The marketing site.** Every other launch asset points at it. Specified in
-[LANDING-PAGE.md](research/LANDING-PAGE.md) as `OPB_DEMO_MODE`, a product
-feature rather than an ops task — every hand-maintained sandbox in the
+**4. The marketing site.** Every other launch asset points at it, and it is
+specified in [LANDING-PAGE.md](research/LANDING-PAGE.md) down to the copy. The
+live demo it needs already exists — `OPB_DEMO_MODE`, built as a product feature
+rather than an ops task, because every hand-maintained sandbox in the
 researched corpus is dead or retired.
 
-**6. Then push notifications and the remaining adapters**, both of which need something this machine does not have — a real device, and five emulators.
+**5. Then push notifications and the remaining adapters**, both of which need something this machine does not have — a real device, and five emulators.
 
 Open decisions that are the maintainer's, not an engineer's, are listed at the
 end of [PLAN.md](PLAN.md).

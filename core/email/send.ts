@@ -27,6 +27,12 @@ export interface MailInput {
   html?: string;
   /** The enquirer's address, so the owner can just hit reply. */
   replyTo?: string;
+  /**
+   * Extra headers. Exactly one thing needs them today — `List-Unsubscribe` and
+   * `List-Unsubscribe-Post` on the newsletter confirmation, which is what makes
+   * a mail client show its own one-click unsubscribe button (RFC 8058).
+   */
+  headers?: Record<string, string>;
 }
 
 export type SendResult =
@@ -57,6 +63,7 @@ export async function sendMail(input: MailInput): Promise<SendResult> {
       text: input.text,
       html: input.html,
       replyTo: input.replyTo,
+      headers: input.headers,
     });
     return { ok: true };
   } catch (err) {

@@ -32,9 +32,11 @@ to keep one: students, designers, developers, photographers, writers.
 
 > [!WARNING]
 > **Status: alpha (0.5).** The site, the editor and publishing all work, and the
-> admin has real server-side authentication. But there is no blog and only one
-> visual theme. Read [What does not work yet](#what-does-not-work-yet) before
-> using this for anything you depend on.
+> admin has real server-side authentication. The gaps are real and specific —
+> the admin is not laid out for a phone, five of the nine planned backends are
+> not built, and uploads have not been run against a hosted object store with
+> live credentials. Read [What does not work yet](#what-does-not-work-yet)
+> before using this for anything you depend on.
 
 ## Deploy your own
 
@@ -164,6 +166,12 @@ Every step is skippable. None of it is permanent.
   from the same blocks as your pages, with RSS. Ordered the way you choose
   rather than newest-first, so your best piece stays at the top instead of
   sinking under last week's note. Scheduling works with nothing running.
+- **A mailing list, without a mailing-list account.** Switch on a sign-up box
+  and visitors can ask to hear from you. Everybody confirms by email before
+  they are on the list, leaving takes one press from the mail client itself,
+  and the list downloads as a CSV that Buttondown, Mailchimp and the rest
+  import directly. Nothing sends from here — the export is the exit, not a
+  lock-in.
 - **Seven starting points.** Design, Software, Photography, Writing, Research,
   Student or something else — each one sets the wording, the theme and what your
   writing section is called, and every part of it can be changed afterwards.
@@ -267,9 +275,12 @@ discover them after typing in a portfolio:
   and works on a small screen, but the editing screens were designed for a
   desktop. Notifications are not built.
 - **Sign-in is an email and a passphrase.** No passkeys, no one-time codes.
-- **No newsletter sign-up form yet.** The rules for one are written and tested —
-  double opt-in, hashed tokens, a CSV export — but nothing on the site collects
-  an address yet.
+- **The newsletter collects addresses; it does not send.** Sign-up, double
+  opt-in and export all work. Actually mailing your list means deliverability,
+  bounce handling and list hygiene — a different product with different
+  obligations — so the export is deliberately the exit: a CSV in the shape
+  Buttondown, Mailchimp and the rest import. Sign-ups also need SMTP
+  configured, because confirming means sending somebody a link.
 - **Five of the nine planned backends are not built.** Firebase, Convex,
   Cloudflare, PocketBase and Appwrite. The four that exist are the four the
   README offers.
@@ -293,11 +304,11 @@ discover them after typing in a portfolio:
 | 0.2           | Next.js App Router, server rendering, SEO, Open Graph, sitemap, real 404         |
 | 0.3           | Server-side auth, publishing that reaches visitors, a contact form that delivers |
 | 0.4           | Pluggable storage with a conformance suite every backend must pass               |
-| **0.5 (now)** | Page builder, home page from blocks, media picker, services, Docker              |
-| 0.6           | More block types, richer themes, a live demo                                     |
-| 0.7           | Mobile admin, installable app, notifications                                     |
+| **0.5 (now)** | Page builder, six themes, writing, presets, newsletter sign-ups, Docker          |
+| 0.6           | More block types, a live demo                                                    |
+| 0.7           | Mobile admin, notifications                                                      |
 | 0.8           | Remaining backends, passkeys and one-time codes                                  |
-| 0.9           | Newsletter sign-ups on the site, docs, a marketing site                          |
+| 0.9           | A documentation site and a marketing site                                        |
 | 1.0           | Stable                                                                           |
 
 What changed in each release, and who asked for it, is in

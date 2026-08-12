@@ -1,4 +1,5 @@
 import type { CMSState, ContactMessage } from '@/cms/types/cms';
+import type { Subscriber } from '@/core/newsletter/schema';
 import { RevisionConflictError } from './contract';
 import type { StorageAdapter } from './contract';
 
@@ -524,6 +525,149 @@ export function runConformanceSuite(
         await adapter.provision();
         await adapter.provision();
         expect((await adapter.messages.list()).length).toBe(1);
+      });
+    });
+
+    describe('subscribers', () => {
+      const signup = (id: string, requestedAt: string): Subscriber => ({
+        id,
+        email: `${id}@example.com`,
+        status: 'pending',
+        confirmTokenHash: `hash-${id}`,
+        unsubscribeTokenHash: `unsub-${id}`,
+        requestedAt,
+      });
+
+      it('is empty on a fresh instance', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+        expect((await adapter.subscribers.list()).length).toBe(0);
+      });
+
+      it('round-trips a sign-up, newest first', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        await adapter.subscribers.append(signup('older', '2026-01-01T00:00:00.000Z'));
+        await adapter.subscribers.append(signup('newer', '2026-06-01T00:00:00.000Z'));
+
+        const listed = await adapter.subscribers.list();
+        expect(listed.length).toBe(2);
+        expect(listed[0].id).toBe('newer');
+        expect(listed[0].email).toBe('newer@example.com');
+        expect(listed[0].confirmTokenHash).toBe('hash-newer');
+      });
+
+      it('loses nothing when fifty sign up at once', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        // The reason this has its own surface rather than living in the content
+        // document: strangers append to it concurrently, and a
+        // read-modify-write on a shared blob keeps one of them.
+        await Promise.all(
+          Array.from({ length: 50 }, (_, i) =>
+            adapter.subscribers.append(signup(`s${i}`, '2026-01-01T00:00:00.000Z'))
+          )
+        );
+
+        expect((await adapter.subscribers.list()).length).toBe(50);
+      });
+
+      it('confirms without disturbing the rest of the record', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        await adapter.subscribers.append(signup('a', '2026-01-01T00:00:00.000Z'));
+        await adapter.subscribers.update('a', {
+          status: 'confirmed',
+          confirmedAt: '2026-01-02T00:00:00.000Z',
+        });
+
+        const [stored] = await adapter.subscribers.list();
+        expect(stored.status).toBe('confirmed');
+        expect(stored.email).toBe('a@example.com');
+        expect(stored.unsubscribeTokenHash).toBe('unsub-a');
+      });
+
+      it('can empty a token so it cannot be used twice', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        await adapter.subscribers.append(signup('a', '2026-01-01T00:00:00.000Z'));
+        await adapter.subscribers.update('a', { status: 'confirmed', confirmTokenHash: '' });
+
+        // Emptied, not deleted, and this assertion is why. Spreading a patch
+        // over an object treats `undefined` as "remove the key"; merging it as
+        // jsonb drops `undefined` before it reaches the database, so the old
+        // value survives. One of those backends would have left a confirmation
+        // link working forever — including after the person unsubscribed.
+        const [stored] = await adapter.subscribers.list();
+        expect(stored.confirmTokenHash ?? '').toBe('');
+      });
+
+      it('keeps both patches when two updates race on the same id', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        await adapter.subscribers.append(signup('racer', '2026-01-01T00:00:00.000Z'));
+
+        await Promise.all([
+          adapter.subscribers.update('racer', { status: 'confirmed' }),
+          adapter.subscribers.update('racer', { source: '/writing' }),
+        ]);
+
+        const [stored] = await adapter.subscribers.list();
+        expect(stored.status).toBe('confirmed');
+        expect(stored.source).toBe('/writing');
+      });
+
+      it('ignores a patch for somebody who is not there', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        await adapter.subscribers.append(signup('real', '2026-01-01T00:00:00.000Z'));
+        await adapter.subscribers.update('never-existed', { status: 'confirmed' });
+
+        const listed = await adapter.subscribers.list();
+        expect(listed.length).toBe(1);
+        expect(listed[0].id).toBe('real');
+      });
+
+      it('removes one, and removing it twice is not an error', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        // Somebody writing "take me off your list" by hand is a request the
+        // owner has to be able to honour, so this is a real path, not cleanup.
+        await adapter.subscribers.append(signup('a', '2026-01-01T00:00:00.000Z'));
+        await adapter.subscribers.remove('a');
+        await adapter.subscribers.remove('a');
+        expect((await adapter.subscribers.list()).length).toBe(0);
+      });
+
+      it('never lets a subscriber into the content snapshot', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        await adapter.subscribers.append(signup('a', '2026-01-01T00:00:00.000Z'));
+        await adapter.writeSnapshot('published', makeTestContent('site'));
+
+        // The published snapshot is serialised into the HTML of every public
+        // page and copied whole by the backup button. A list of strangers'
+        // email addresses must be in neither, and the only guarantee of that is
+        // that the two never share a store.
+        const snapshot = JSON.stringify(await adapter.readSnapshot('published'));
+        expect(snapshot.includes('a@example.com')).toBe(false);
       });
     });
 

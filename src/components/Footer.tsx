@@ -11,6 +11,7 @@ import { useToast } from '../context/ToastContext';
 import { cn } from '../utils/cn';
 import { useCMS } from '../cms/context/CMSContext';
 import { CMSImage } from './common/CMSImage';
+import { NewsletterSignup } from './NewsletterSignup';
 import { resolveAssetUrl } from '../cms/utils/mediaUrls';
 
 export const Footer: React.FC = () => {
@@ -232,6 +233,9 @@ export const Footer: React.FC = () => {
             </motion.div>
           </div>
         </div>
+
+        {/* Renders nothing at all unless the owner switched it on. */}
+        <NewsletterSignup />
 
         {/* FOOTER LOWER META AREA */}
         <div className="flex items-center justify-center py-6 border-t border-border text-xs text-text-muted font-body font-normal text-center w-full">

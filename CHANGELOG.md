@@ -19,6 +19,10 @@ portfolio online and run it without opening a file.
   wording, the theme and what your writing is called.
 - **Install the editor on your phone.** Add it to your home screen and it opens
   like an app.
+- **Collect email addresses.** Switch on a sign-up box and visitors can ask to
+  hear from you. Everybody confirms by email first, leaving takes one press from
+  the mail client's own unsubscribe button, and the list downloads as a CSV that
+  Buttondown, Mailchimp and the rest import directly. Nothing sends from here.
 - **Publish writing.** Essays, notes, posts — you choose what the section is
   called, whether dates appear at all, and whether your best piece stays pinned
   at the top or the newest comes first. RSS either way.
@@ -66,7 +70,13 @@ portfolio online and run it without opening a file.
 - **Unknown and future content is quarantined, never dropped**, so an older
   build cannot destroy what a newer one wrote.
 - **Concurrent edits are detected** rather than silently overwriting each other.
-- 353 tests, or 420 with a database and a mail server attached.
+- **`docker compose up` reaches setup.** It did not: two adapters had each
+  written their own copy of "where may this install write", one of them ignored
+  `OPB_DATA_DIR`, and the documented one-command install died on its first
+  write with `EACCES: mkdir '/app/.opb'`. Every test passed throughout, because
+  every test ran with that variable unset. There is now one function and a test
+  that sets it.
+- 492 tests, or 588 with a database and a mail server attached.
 
 ### Known gaps
 
@@ -75,8 +85,9 @@ a portfolio:
 
 - **Uploads have not been run against Vercel Blob or Supabase Storage with real
   credentials.** They work on the local filesystem and share the same code path.
-- **No newsletter sign-up form.** The rules are written and tested; nothing
-  collects an address yet.
+- **The newsletter collects addresses; it does not send them anything.** The
+  export is the exit. Sign-ups also need a mail server connected, because
+  confirming means emailing somebody a link.
 - **Themes change colour, type and spacing — not layout.** Six of them, but
   they do not rearrange the page. Different structures come with more block
   types.
@@ -92,10 +103,10 @@ In roughly this order. Nothing here is promised by a date.
 
 |         |                                                                                             |
 | ------- | ------------------------------------------------------------------------------------------- |
-| **0.6** | A second theme, and a way to switch. More block types                                       |
-| **0.7** | Mobile admin, an installable app, notifications when someone writes to you                  |
+| **0.6** | More block types, and a live demo anybody can open                                          |
+| **0.7** | Mobile admin, notifications when someone writes to you                                      |
 | **0.8** | Firebase, Convex, Cloudflare, PocketBase and Appwrite backends. Passkeys and one-time codes |
-| **0.9** | Newsletter sign-ups on the site, documentation, a marketing site                            |
+| **0.9** | Documentation, and a site that explains this project to somebody who has not used it        |
 | **1.0** | Stable. Nothing renamed under you after this                                                |
 
 ---

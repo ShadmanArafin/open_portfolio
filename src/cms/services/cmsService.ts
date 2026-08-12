@@ -505,8 +505,12 @@ export class CMSService {
     const parts: string[] = [];
 
     const countDiff = (key: keyof CMSState, label: string) => {
-      const a = from[key] as unknown[];
-      const b = to[key] as unknown[];
+      // Missing counts as empty. Collections added after this file was written
+      // are optional on `CMSState`, so the first page or first piece of writing
+      // is a change from `undefined` — and bailing out on that reported "no
+      // content changes" for the one publish where something new appeared.
+      const a = (from[key] ?? []) as unknown[];
+      const b = (to[key] ?? []) as unknown[];
       if (!Array.isArray(a) || !Array.isArray(b)) return;
       if (JSON.stringify(a) !== JSON.stringify(b)) {
         const delta = b.length - a.length;
@@ -523,7 +527,11 @@ export class CMSService {
     objDiff('microcopy', 'microcopy');
     objDiff('appearance', 'appearance');
     objDiff('seo', 'SEO');
+    objDiff('newsletter', 'newsletter');
+    objDiff('writingSettings', 'writing settings');
     countDiff('sections', 'sections');
+    countDiff('pages', 'pages');
+    countDiff('writing', 'writing');
     countDiff('projects', 'projects');
     countDiff('caseStudies', 'case studies');
     countDiff('brands', 'brands');

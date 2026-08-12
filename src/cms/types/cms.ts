@@ -1,5 +1,6 @@
 import type { PageRecord } from '@/core/pages/schema';
 import type { WritingEntry, WritingSettings } from '@/core/writing/schema';
+import type { NewsletterSettings } from '@/core/newsletter/schema';
 
 export type PublishStatus = 'draft' | 'published' | 'archived';
 
@@ -462,6 +463,16 @@ export interface CMSState {
    */
   writing?: WritingEntry[];
   writingSettings?: WritingSettings;
+  /**
+   * The sign-up form's wording and whether it appears at all.
+   *
+   * Settings only. The subscribers themselves are deliberately not here: this
+   * document is published, serialised into every page's HTML and exported by
+   * the backup button, and a list of strangers' email addresses must be in
+   * none of those. They live on the storage adapter's own `subscribers`
+   * surface.
+   */
+  newsletter?: NewsletterSettings;
   projects: ProjectItem[];
   caseStudies: CaseStudyItem[];
   brands: BrandItem[];

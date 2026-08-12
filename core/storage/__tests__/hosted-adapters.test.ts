@@ -31,7 +31,7 @@ async function truncate(adapter: { provision: () => Promise<void> }) {
     process.env.NEON_DATABASE_URL ||
     process.env.POSTGRES_URL!;
   const sql = getSql(url);
-  await sql`TRUNCATE opb_content, opb_owner, opb_kv, opb_messages`;
+  await sql`TRUNCATE opb_content, opb_owner, opb_kv, opb_messages, opb_subscribers`;
 }
 
 if (SUPABASE_READY) {

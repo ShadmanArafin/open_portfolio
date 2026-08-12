@@ -2,6 +2,7 @@ import 'server-only';
 import { cookies } from 'next/headers';
 import type { CMSState, ContactMessage } from '@/cms/types/cms';
 import { INITIAL_CMS_STATE } from '@/cms/data/initialData';
+import type { Subscriber } from '@/core/newsletter/schema';
 import { hashPassphrase } from '@/core/auth/passphrase';
 import {
   DEMO_EMAIL,
@@ -22,6 +23,7 @@ import type {
   OwnerRecord,
   SnapshotRead,
   StorageAdapter,
+  SubscribersAdapter,
 } from '../contract';
 import { RevisionConflictError } from '../contract';
 
@@ -42,6 +44,7 @@ import { RevisionConflictError } from '../contract';
  */
 
 interface Sandbox {
+  subscribers: Subscriber[];
   published: { state: CMSState; revision: number } | null;
   draft: { state: CMSState; revision: number } | null;
   owner: OwnerRecord | null;
@@ -96,6 +99,7 @@ async function freshSandbox(): Promise<Sandbox> {
       sessionEpoch: 1,
     },
     messages: [],
+    subscribers: [],
     kv: new Map(),
     touchedAt: Date.now(),
   };
@@ -170,6 +174,24 @@ const messages: MessagesAdapter = {
   async remove(id) {
     const sandbox = await current();
     sandbox.messages = sandbox.messages.filter((m) => m.id !== id);
+  },
+};
+
+const subscribers: SubscribersAdapter = {
+  async append(subscriber) {
+    (await current()).subscribers.unshift(subscriber);
+  },
+  async list() {
+    return (await current()).subscribers;
+  },
+  async update(id, patch) {
+    const sandbox = await current();
+    const index = sandbox.subscribers.findIndex((s) => s.id === id);
+    if (index >= 0) sandbox.subscribers[index] = { ...sandbox.subscribers[index], ...patch, id };
+  },
+  async remove(id) {
+    const sandbox = await current();
+    sandbox.subscribers = sandbox.subscribers.filter((s) => s.id !== id);
   },
 };
 
@@ -251,6 +273,7 @@ export const demoAdapter: StorageAdapter = {
   kv,
   media,
   messages,
+  subscribers,
 };
 
 /** Test seam. Never called in production. */

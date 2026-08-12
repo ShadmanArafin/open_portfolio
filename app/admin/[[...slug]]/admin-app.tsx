@@ -39,6 +39,9 @@ const AdminAnalytics = lazy(() =>
 const AdminWriting = lazy(() =>
   import('@/admin/pages/AdminWriting').then((m) => ({ default: m.AdminWriting }))
 );
+const AdminNewsletter = lazy(() =>
+  import('@/admin/pages/AdminNewsletter').then((m) => ({ default: m.AdminNewsletter }))
+);
 const AdminHelp = lazy(() =>
   import('@/admin/pages/AdminHelp').then((m) => ({ default: m.AdminHelp }))
 );
@@ -140,6 +143,7 @@ export default function AdminApp() {
                   <Route path="homepage" element={<AdminPagesEditor />} />
                   <Route path="pages" element={<AdminSitePages />} />
                   <Route path="writing" element={<AdminWriting />} />
+                  <Route path="newsletter" element={<AdminNewsletter />} />
                   <Route path="projects" element={<AdminProjectsCMS />} />
                   <Route path="case-studies" element={<AdminCaseStudiesCMS />} />
                   <Route path="brands" element={<AdminBrandsCMS />} />

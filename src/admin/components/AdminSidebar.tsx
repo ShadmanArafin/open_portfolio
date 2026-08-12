@@ -30,6 +30,7 @@ import {
   Plug,
   LifeBuoy,
   PenLine,
+  AtSign,
 } from 'lucide-react';
 import { SideNav, SideNavHeading, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 import { Text } from '@astryxdesign/core/Text';
@@ -170,7 +171,13 @@ export const AdminSidebar: React.FC = () => {
     },
     {
       title: 'Inbox',
-      entries: [{ label: 'Messages', path: '/messages', icon: Mail, count: unread || undefined }],
+      entries: [
+        { label: 'Messages', path: '/messages', icon: Mail, count: unread || undefined },
+        // Not counted. The number of subscribers lives on the server, and
+        // fetching it to decorate a nav item would put a request on every
+        // screen in the admin.
+        { label: 'Newsletter', path: '/newsletter', icon: AtSign },
+      ],
     },
     {
       title: 'Configuration',

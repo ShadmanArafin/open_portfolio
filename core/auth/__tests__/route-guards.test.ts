@@ -37,6 +37,11 @@ const PUBLIC_ROUTES: Record<string, string> = {
   'auth/reset/confirm': 'Account recovery. Authorised by the emailed token, not a session.',
   'setup/claim': 'Runs before an owner exists. Guarded by the setup token and a one-time lock.',
   contact: 'The contact form. Visitors are the entire point.',
+  'newsletter/subscribe': 'The sign-up form. A visitor asking to hear from the owner.',
+  'newsletter/confirm':
+    'Completing a sign-up. Authorised by the emailed token, which is the only thing that could be.',
+  'newsletter/unsubscribe':
+    'Leaving a list. Authorised by the emailed token, and reachable by a mail provider under RFC 8058.',
   'media/[...key]': 'Serves published assets to visitors.',
   'preview/end':
     'Turning your own preview off grants nothing. Requiring a session here would strand someone in preview when it expired.',

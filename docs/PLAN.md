@@ -87,8 +87,8 @@ development.
 | Phase 2 primitives, ESLint bans, publish gate | Nothing external needed                                                     |
 | Phase 5 blocks, pages, `draftMode()` preview  | Nothing external needed                                                     |
 | Phase 7 admin: MediaPicker, builder polish    | Nothing external needed                                                     |
-| Phase 9 blog, newsletter capture, themes      | Nothing external needed                                                     |
-| Postgres / Supabase / Neon **database** half  | `postgres:16` — already wired; with Mailpit takes the suite from 461 to 539 |
+| Phase 9 docs site and launch checklist        | Nothing external needed                                                     |
+| Postgres / Supabase / Neon **database** half  | `postgres:16` — already wired; with Mailpit takes the suite from 492 to 588 |
 | Supabase **Storage** half                     | `supabase start` runs the real `storage-api` container                      |
 | Email send path                               | `axllent/mailpit` — already wired                                           |
 | PocketBase, Appwrite adapters                 | Both ship official Docker images                                            |
@@ -126,7 +126,8 @@ Four things, and only four:
 4. **Phase 8 adapters** — five files, each against its own local emulator.
 5. **Phase 8 integrations registry + vault** — now with two real consumers
    (SMTP and Turnstile) to design the abstraction against, rather than none.
-6. **Phase 9** — blog, newsletter, themes, presets.
+6. ~~**Phase 9 writing, themes, presets, newsletter**~~ — done. What is left of
+   the phase is the docs site and the launch checklist.
 7. **Only then:** one cloud pass covering all four items above at once.
 
 ---
@@ -1030,21 +1031,36 @@ _Honest scoping:_ Vercel Marketplace can only auto-provision Marketplace-native 
 > Ghost (`research/MARKET-RESEARCH.md`); the chronological-is-wrong-for-portfolios
 > half is product judgement, not measured.
 
-> ### BARELY STARTED
+> ### MOSTLY DONE
 >
-> **Done:** `src/cms/data/professions.ts` — six vocabulary packs (Design,
-> Software, Photography, Writing, Student, Other) that rename sections and
-> microcopy. They change **wording only, never structure**, so switching is safe
-> at any point and nothing a user has written can be lost. Applied by the
-> first-run wizard.
+> **Done:** the profession packs (`src/cms/data/professions.ts`), seven full
+> presets, all six themes, Writing with RSS and predicate scheduling, and
+> newsletter capture.
 >
-> **Remaining:** the entire blog (Tiptap, RSS, JSON Feed, sitemap entries,
-> Giscus), newsletter capture with double opt-in, all six themes, the full
-> preset system (block arrangements and demo content per profession), the docs
-> site, and the launch checklist.
+> **Newsletter capture, as built.** Double opt-in, tokens stored only as
+> SHA-256, RFC 8058 one-click unsubscribe, CSV export in the shape Buttondown
+> and Mailchimp import. Three things came out differently from the sketch above:
 >
-> Themes depend on Phase 2's tokens. Full presets depend on Phase 5's blocks.
-> Neither can start before those land.
+> - **Subscribers are their own adapter surface**, not a field on the content
+>   document — for the same reason the inbox is. Strangers append to it
+>   concurrently, so a read-modify-write on a shared blob loses sign-ups; and
+>   the content document is serialised into every public page and copied whole
+>   by the backup button, neither of which may contain a list of email
+>   addresses. The conformance suite asserts that a subscriber never appears in
+>   a snapshot.
+> - **Confirming is a POST from a page, not the emailed link itself.** Corporate
+>   gateways and link-safety scanners open every URL in a message before its
+>   recipient does, so a `GET` that confirms turns double opt-in quietly back
+>   into single opt-in. The link opens a page; the page asks.
+> - **The reply to a sign-up is identical whatever the truth is.** "You are
+>   already subscribed" is a way to test, one query at a time, whether a given
+>   person is on somebody's list.
+>
+> **Remaining in this phase:** the docs site and the launch checklist. The
+> Tiptap rich-text editor and Giscus comments were not built — writing uses the
+> same block editor as pages, which means every block added later works there
+> without anyone doing anything, and comments on a portfolio were judged a
+> moderation obligation rather than a feature.
 
 Tiptap blog (structured JSON so posts render through token primitives in all 6 themes; markdown import/export so nobody is locked in). **Scheduling is a query predicate**, not a cron job — `status='published' OR (status='scheduled' AND published_at <= now())` applied everywhere, so a post appears within the cache window on any host with zero scheduler. RSS + JSON Feed + sitemap + Giscus. Newsletter capture with double opt-in, hashed tokens, RFC 8058 one-click unsubscribe, CSV/Buttondown export. Themes 2–6 (pure token files by now). 7 fully authored presets. Docs site (Fumadocs, integration pages **generated from the registry** so they can't drift). Security review, a11y pass, Lighthouse budgets, 1.0.
 
@@ -1147,11 +1163,11 @@ The numbers you should see, as of this writing:
 | Check                     | Expected                                              |
 | ------------------------- | ----------------------------------------------------- |
 | `typecheck`               | 0 errors                                              |
-| `lint`                    | **0 errors**, 64 warnings — the warnings are baseline |
+| `lint`                    | **0 errors**, 84 warnings — the warnings are baseline |
 | `format:check`            | clean                                                 |
 | `check-no-personal-data`  | clean, listed by git                                  |
-| `test` with no containers | 461 passed, 7 skipped                                 |
-| `test` with both          | **539 passed, 2 skipped**                             |
+| `test` with no containers | 492 passed, 7 skipped                                 |
+| `test` with both          | **588 passed, 2 skipped**                             |
 
 The 2 remaining skips are the Supabase and Neon conformance runs, which need
 real cloud credentials. Everything else runs locally.

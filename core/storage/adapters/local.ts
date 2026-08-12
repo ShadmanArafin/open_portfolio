@@ -4,6 +4,7 @@ import { randomBytes } from 'node:crypto';
 import path from 'node:path';
 import type { CMSState, ContactMessage } from '@/cms/types/cms';
 import type {
+  SubscribersAdapter,
   Channel,
   HealthReport,
   KvAdapter,
@@ -16,6 +17,7 @@ import type {
 } from '../contract';
 import { RevisionConflictError } from '../contract';
 import { migrateSnapshotMessages } from './_shared/migrate-messages';
+import { dataRoot } from './_shared/data-dir';
 
 /**
  * Filesystem-backed storage.
@@ -32,16 +34,11 @@ import { migrateSnapshotMessages } from './_shared/migrate-messages';
  */
 
 /**
- * Where content, uploads and sessions are written.
- *
- * `OPB_DATA_DIR` exists for containers: the working directory inside an image
- * is replaced every time it is rebuilt, so writing there means a deploy quietly
- * deletes somebody's site. The volume has to be mounted somewhere that survives
- * the container, and the app has to be told where that is.
+ * Where content, uploads and sessions are written. See `_shared/data-dir` for
+ * why `OPB_DATA_DIR` exists and what happened when two adapters answered this
+ * question separately.
  */
-const ROOT = process.env.OPB_DATA_DIR
-  ? path.resolve(process.env.OPB_DATA_DIR)
-  : path.join(process.cwd(), '.opb');
+const ROOT = dataRoot();
 const CONTENT_DIR = path.join(ROOT, 'content');
 const MEDIA_DIR = path.join(ROOT, 'media');
 const MESSAGES_DIR = path.join(ROOT, 'messages');
@@ -371,6 +368,63 @@ const messages: MessagesAdapter = {
   },
 };
 
+/**
+ * Subscribers, one file each.
+ *
+ * The same shape as messages and for the same reason: appended by strangers,
+ * concurrently, so a single shared file would lose signups to read-modify-write.
+ */
+const SUBSCRIBERS_DIR = path.join(ROOT, 'subscribers');
+
+const subscribers: SubscribersAdapter = {
+  async append(subscriber) {
+    await mkdir(SUBSCRIBERS_DIR, { recursive: true });
+    await atomicWrite(
+      path.join(SUBSCRIBERS_DIR, `${subscriber.id}.json`),
+      JSON.stringify(subscriber, null, 2)
+    );
+  },
+
+  async list() {
+    try {
+      const files = (await readdir(SUBSCRIBERS_DIR)).filter((f) => f.endsWith('.json'));
+      const all = await Promise.all(
+        files.map(async (file) => {
+          try {
+            return JSON.parse(await readFile(path.join(SUBSCRIBERS_DIR, file), 'utf8'));
+          } catch {
+            // One unreadable record must not hide the whole list.
+            return null;
+          }
+        })
+      );
+      return all.filter(Boolean).sort((a, b) => b.requestedAt.localeCompare(a.requestedAt));
+    } catch {
+      return [];
+    }
+  },
+
+  async update(id, patch) {
+    const target = path.join(SUBSCRIBERS_DIR, `${id}.json`);
+    await runQueued(target, async () => {
+      try {
+        const existing = JSON.parse(await readFile(target, 'utf8'));
+        await writeAtomically(target, JSON.stringify({ ...existing, ...patch, id }, null, 2));
+      } catch {
+        // Unknown id. Ignored rather than an error, per the contract.
+      }
+    });
+  },
+
+  async remove(id) {
+    try {
+      await unlink(path.join(SUBSCRIBERS_DIR, `${id}.json`));
+    } catch {
+      // Already gone is the outcome the caller wanted.
+    }
+  },
+};
+
 export const localAdapter: StorageAdapter = {
   id: 'local',
   displayName: 'Local filesystem',
@@ -467,4 +521,5 @@ export const localAdapter: StorageAdapter = {
 
   media,
   messages,
+  subscribers,
 };

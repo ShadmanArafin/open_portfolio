@@ -32,6 +32,7 @@ export const RESERVED_TOP_LEVEL: readonly string[] = [
   'api',
   'case-studies',
   'contact',
+  'newsletter',
   'setup',
   'work',
   'writing',
