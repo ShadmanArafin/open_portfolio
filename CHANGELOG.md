@@ -38,16 +38,16 @@ portfolio online and run it without opening a file.
   before publishing. Sixteen blocks you fill in yourself: hero, text, image,
   gallery, numbers, cards, a call to action, a contact form, questions and
   answers, a video, a picture beside text, a quote, a newsletter box, your
-  social links, what you offer, and space.
+  social links, what you offer, a file to download, and space.
 - **Take enquiries from any page.** The contact form used to exist only at
   `/contact` and could not be placed anywhere else. It is a block now, posting
   to the same endpoint, so it keeps the origin check, the rate limit and the
   spam trap.
 - **Show a video without loading YouTube on every visit.** A poster and a play
   button; nothing is fetched until somebody presses it.
-- **Put your own work on a page.** Six more blocks show what you have already
-  entered elsewhere — your work, experience, clients, recommendations, what you
-  do, and how you work. You choose which and how many; the page follows the
+- **Put your own work on a page.** Seven more blocks show what you have already
+  entered elsewhere — your work, your writing, experience, clients,
+  recommendations, what you do, and how you work. You choose which and how many; the page follows the
   records, so updating a project updates every page showing it. A block whose
   list is still empty tells you it will not appear, rather than leaving a gap
   you find out about later.
@@ -95,7 +95,7 @@ portfolio online and run it without opening a file.
   about another product carries a source link and the date it was read, and
   every comparison page names at least two things the other product does
   better.
-- 655 tests, or 751 with a database and a mail server attached.
+- 676 tests, or 772 with a database and a mail server attached.
 
 ### Known gaps
 

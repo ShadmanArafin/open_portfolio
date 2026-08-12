@@ -112,7 +112,7 @@ export default function Home() {
                 stamp: <span className="stamp stamp--plain">Shipped</span>,
               },
               {
-                label: '655 tests',
+                label: '676 tests',
                 note: 'Including a conformance suite every storage backend must pass before it ships — and the rule that authentication state never travels inside a content export.',
                 stamp: (
                   <a className="stamp stamp--verified" href={`${REPO}/actions`}>
@@ -178,13 +178,13 @@ export default function Home() {
               </p>
             </div>
             <div className="card">
-              <h3 className="head">Pages built from twenty-two blocks</h3>
+              <h3 className="head">Pages built from twenty-four blocks</h3>
               <p>
                 A hero, text, images, a gallery, figures, cards, a call to action, a contact form,
                 questions and answers, a video, a picture beside text, a quote, a newsletter box,
-                your social links, what you offer, and space. Six more place your own records — so
-                updating a project updates every page showing it. Your home page is built the same
-                way.
+                your social links, what you offer, a file to download, and space. Seven more place
+                your own records — including your writing — so updating a project updates every page
+                showing it. Your home page is built the same way.
               </p>
             </div>
             <div className="card">

@@ -182,12 +182,12 @@ Every step is skippable. None of it is permanent.
   checked against the same contrast rules that block publishing. Pick one and
   change anything you like on top; your changes always win.
 - **A visual page builder.** Add blocks, drag them into order, hide them, edit
-  every field. Twenty-two block types. Sixteen you fill in yourself — hero,
+  every field. Twenty-four block types. Seventeen you fill in yourself — hero,
   text, image, gallery, numbers, cards, a call to action, a contact form,
   questions and answers, a video, a picture beside text, a quote, a newsletter
-  box, your social links, what you offer, and space — and six that show what
-  you have already entered: your work, experience, clients, recommendations,
-  what you do and how you work. Those follow the records, so updating a project
+  box, your social links, what you offer, a file to download, and space — and seven that show what you
+  have already entered: your work, your writing, experience, clients,
+  recommendations, what you do and how you work. Those follow the records, so updating a project
   updates every page showing it. Reordering is buttons in an outline rather
   than dragging a canvas, so it works with a keyboard and on a phone.
 - **A contact form you can put anywhere**, not only at `/contact`. And a video

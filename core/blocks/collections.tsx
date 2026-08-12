@@ -4,6 +4,7 @@ import {
   Band,
   Button,
   Card,
+  Divider,
   Eyebrow,
   Grid,
   Heading,
@@ -540,7 +541,105 @@ const steps: BlockDefinition<StepsProps> = {
   },
 };
 
+/* ----------------------------------------------------------------- writing */
+
+const writingListProps = z.object({
+  heading: z.string().optional(),
+  limit: z.number().int().min(0).max(24).optional(),
+  showSummaries: z.boolean().optional(),
+  moreLink: z.boolean().optional(),
+});
+
+type WritingListProps = z.infer<typeof writingListProps>;
+
+/**
+ * Recent writing, on any page.
+ *
+ * The hole this closes: writing was a collection with a route and an RSS feed
+ * and no way to put it anywhere. Somebody could publish an essay and could not
+ * link to it from their own home page except by typing the address into a
+ * text block by hand — which then goes stale the moment they write another.
+ *
+ * It reads the label, the ordering and the date decision from the Writing
+ * screen rather than offering its own. Those are settings the owner made once
+ * for the whole section, and a block that let a page disagree with them would
+ * produce two answers to "do dates show" with no way to tell which was meant.
+ */
+const writingList: BlockDefinition<WritingListProps> = {
+  type: 'writingList',
+  version: 1,
+  label: 'Your writing',
+  description: 'Essays, notes or posts you have published. Follows the order you chose.',
+  group: 'work',
+  schema: writingListProps,
+  defaults: () => ({ limit: 3, showSummaries: true, moreLink: true }),
+  fields: [
+    {
+      kind: 'text',
+      path: 'heading',
+      label: 'Heading',
+      help: 'Leave blank to use whatever you called the section.',
+    },
+    limitField,
+    { kind: 'toggle', path: 'showSummaries', label: 'Show the one-line summary' },
+    { kind: 'toggle', path: 'moreLink', label: 'Link to everything at the bottom' },
+  ],
+  checks: [
+    emptyCheck<WritingListProps>('empty', (content) => content.writing.length, 'published pieces'),
+  ],
+  Render: ({ props, frame, headingLevel, content }) => {
+    const entries = take(content.writing, props.limit);
+    if (entries.length === 0) return null;
+
+    return (
+      <Band frame={frame}>
+        <Stack gap={6}>
+          <Heading level={headingLevel}>{props.heading || content.writingSettings.label}</Heading>
+
+          {/* Each entry carries the rule above it, so the list reads as one
+              continuous thing rather than a set of cards. */}
+          <Stack gap={8}>
+            {entries.map((entry) => (
+              <Stack key={entry.id} gap={3}>
+                <Divider />
+                <Stack gap={2}>
+                  <a href={`/writing/${entry.slug}`} style={{ textDecoration: 'none' }}>
+                    <Heading level={deeper(headingLevel)} size="sm">
+                      {entry.title}
+                    </Heading>
+                  </a>
+                  {/* The date appears only if the owner said dates appear.
+                      Portfolio writing is usually evergreen, and stamping a
+                      2022 essay makes it look stale when it is not. */}
+                  {content.writingSettings.showDates && entry.publishedAt && (
+                    <Text size="sm">
+                      {new Date(entry.publishedAt).toLocaleDateString(undefined, {
+                        year: 'numeric',
+                        month: 'long',
+                      })}
+                    </Text>
+                  )}
+                  {props.showSummaries && entry.summary && <Text>{entry.summary}</Text>}
+                </Stack>
+              </Stack>
+            ))}
+          </Stack>
+
+          {props.moreLink && (
+            <Row>
+              <Button href="/writing" variant="secondary">
+                All {content.writingSettings.label.toLowerCase()}
+              </Button>
+            </Row>
+          )}
+        </Stack>
+      </Band>
+    );
+  },
+};
+
 export const COLLECTION_DEFINITIONS = [
+  writingList,
   collection,
   timeline,
   logoWall,

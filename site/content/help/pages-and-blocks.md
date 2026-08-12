@@ -36,6 +36,7 @@ The page stays a draft until you publish. Drafts are invisible to visitors, and 
 
 - **Image**, **Gallery**, **Video** — a picture, a set of pictures, or a YouTube or Vimeo link.
 - **Your work** — the one that pays off. It shows projects or case studies you have already entered. Choose "featured only" and "first four" and the page follows your records: update a project and every page showing it updates too.
+- **Your writing** — the essays or notes you have published, in the order you chose.
 - **Clients** — the logos you have added.
 
 **To back it up**
@@ -49,6 +50,7 @@ The page stays a draft until you publish. Drafts are invisible to visitors, and 
 
 - **Contact form** — a real one. Messages arrive in your inbox in the admin.
 - **What you offer** — what you take on and what it costs.
+- **Something to download** — a CV, a rate card, a press kit. Any file in your library.
 - **Newsletter sign-up**, **Where else to find you**, **Call to action**.
 
 **Utility**

@@ -26,7 +26,7 @@ JavaScript bundle. None of that remains.
 ```bash
 npm ci                          # ci, not install — see "Traps" below
 npm run dev                     # http://localhost:3000
-npm test                        # 655 passing, 7 skipped
+npm test                        # 676 passing, 7 skipped
 npm run typecheck && npm run lint && npm run build
 ```
 
@@ -44,12 +44,19 @@ docker run -d --name opb-mail -p 1025:1025 -p 8025:8025 axllent/mailpit
 # ECONNREFUSED. Both look like code bugs and neither is.
 
 TEST_POSTGRES_URL="postgres://postgres:postgres@localhost:55432/opb_test" \
-TEST_MAILPIT_URL="http://localhost:8025" npm test    # 751 passing, 2 skipped
+TEST_MAILPIT_URL="http://localhost:8025" npm test    # 772 passing, 2 skipped
 ```
 
 Setting `TEST_POSTGRES_URL` without the container running is worse than not
 setting it: the Postgres tests stop skipping and start failing, so a stopped
 container reads as 90 broken tests.
+
+One observed flake, recorded because it will happen to you and not because it
+is understood: the **first** run immediately after `docker start opb-pg` once
+showed a single failure, which no subsequent run reproduced — not on a re-run,
+and not after `docker restart` either. Most likely the first connection landing
+while Postgres was still coming up. If a lone Postgres test fails on a cold
+container, run it again before investigating it.
 
 On later sessions the containers already exist — `docker start opb-pg opb-mail`.
 
@@ -148,19 +155,19 @@ free Vercel account and about twenty minutes.
 
 Ordered by how much a user would notice.
 
-| Gap                                    | Notes                                                                                                                                                                                                            |
-| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **The newsletter cannot send**         | By design. It collects, confirms and exports; broadcasting is a different product. It also needs SMTP configured, or sign-ups fail honestly with a 503                                                           |
-| **No mobile admin layout**             | It installs and works on a phone; the editing screens were drawn for a desktop. The research sizes this at 10–20 days and calls it retention, not acquisition                                                    |
-| **No push notifications**              | Needs VAPID and a real device. The service worker must carve out `/admin` first — see the Serwist trap below                                                                                                     |
-| **The marketing site has no home**     | Built, in `site/`, and it builds to a static export. It is not deployed and there is no domain — see "What to do next"                                                                                           |
-| **No hosted demo**                     | `OPB_DEMO_MODE` works and `docker compose -f docker-compose.demo.yml up` runs it. Nothing is hosted, so `/demo` on the marketing site says so rather than linking to a dead button                               |
-| **No product screenshots on the site** | The marketing site ships with no imagery. The research specifies a shot list and one photographer persona throughout; `docs/images/` has two shots and they are of the old admin                                 |
-| **22 block types**                     | Literal: `hero richText image gallery stats cards ctaBanner contactForm faq video split quote newsletter socialRow services separator`. Record-placing: `collection timeline logoWall testimonials skills steps` |
-| **5 storage backends unbuilt**         | Firebase, Convex, Cloudflare D1+R2, PocketBase, Appwrite. Not advertised in the README. Each needs an emulator — do not ship one you have not run                                                                |
-| **Passphrase auth only**               | No passkeys, no email OTP                                                                                                                                                                                        |
-| **Themes change tokens, not layout**   | Six of them, and they do not rearrange a page. Less true than it was, since a page of record-placing blocks follows the records rather than fixed copy, but a theme still cannot change the arrangement itself   |
-| **Tailwind 4**                         | Deferred, not blocked                                                                                                                                                                                            |
+| Gap                                    | Notes                                                                                                                                                                                                                                 |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **The newsletter cannot send**         | By design. It collects, confirms and exports; broadcasting is a different product. It also needs SMTP configured, or sign-ups fail honestly with a 503                                                                                |
+| **No mobile admin layout**             | It installs and works on a phone; the editing screens were drawn for a desktop. The research sizes this at 10–20 days and calls it retention, not acquisition                                                                         |
+| **No push notifications**              | Needs VAPID and a real device. The service worker must carve out `/admin` first — see the Serwist trap below                                                                                                                          |
+| **The marketing site has no home**     | Built, in `site/`, and it builds to a static export. It is not deployed and there is no domain — see "What to do next"                                                                                                                |
+| **No hosted demo**                     | `OPB_DEMO_MODE` works and `docker compose -f docker-compose.demo.yml up` runs it. Nothing is hosted, so `/demo` on the marketing site says so rather than linking to a dead button                                                    |
+| **No product screenshots on the site** | The marketing site ships with no imagery. The research specifies a shot list and one photographer persona throughout; `docs/images/` has two shots and they are of the old admin                                                      |
+| **24 block types**                     | Literal: `hero richText image gallery stats cards ctaBanner contactForm faq video split quote newsletter socialRow services download separator`. Record-placing: `collection writingList timeline logoWall testimonials skills steps` |
+| **5 storage backends unbuilt**         | Firebase, Convex, Cloudflare D1+R2, PocketBase, Appwrite. Not advertised in the README. Each needs an emulator — do not ship one you have not run                                                                                     |
+| **Passphrase auth only**               | No passkeys, no email OTP                                                                                                                                                                                                             |
+| **Themes change tokens, not layout**   | Six of them, and they do not rearrange a page. Less true than it was, since a page of record-placing blocks follows the records rather than fixed copy, but a theme still cannot change the arrangement itself                        |
+| **Tailwind 4**                         | Deferred, not blocked                                                                                                                                                                                                                 |
 
 ---
 

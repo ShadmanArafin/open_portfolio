@@ -214,3 +214,98 @@ describe('space or a line', () => {
     expect(renderBlock('separator', { rule: false, size: 'loose' })).not.toContain('<hr');
   });
 });
+
+describe('the two holes in the palette', () => {
+  it('places writing on a page, in the order the owner chose', () => {
+    // Writing had a route, a feed and a scheduler, and no way to put it
+    // anywhere. Somebody could publish an essay and could not link to it from
+    // their own home page except by typing the address in by hand.
+    const html = renderBlock('writingList', { limit: 2, showSummaries: true, moreLink: true }, {
+      ...EMPTY_BLOCK_CONTENT,
+      writing: [
+        {
+          id: 'w1',
+          slug: 'first',
+          title: 'The first one',
+          summary: 'A summary.',
+          status: 'published',
+          blocks: [],
+          featured: true,
+          sortOrder: 1,
+          revision: 1,
+          updatedAt: '2026-01-01T00:00:00.000Z',
+          publishedAt: '2026-01-01T00:00:00.000Z',
+        },
+        {
+          id: 'w2',
+          slug: 'second',
+          title: 'The second one',
+          summary: '',
+          status: 'published',
+          blocks: [],
+          featured: false,
+          sortOrder: 2,
+          revision: 1,
+          updatedAt: '2026-02-01T00:00:00.000Z',
+        },
+      ],
+      writingSettings: { label: 'Essays', showDates: false },
+    } as unknown as BlockContent);
+
+    expect(html).toContain('/writing/first');
+    expect(html).toContain('The second one');
+    expect(html).toContain('A summary.');
+    // The heading and the "all of them" button both take the owner's own word
+    // for the section rather than saying "Writing" at somebody who called it
+    // something else.
+    expect(html).toContain('Essays');
+  });
+
+  it('shows a date only when the owner said dates appear', () => {
+    const entry = {
+      id: 'w1',
+      slug: 'first',
+      title: 'The first one',
+      summary: '',
+      status: 'published',
+      blocks: [],
+      featured: false,
+      sortOrder: 1,
+      revision: 1,
+      updatedAt: '2026-01-01T00:00:00.000Z',
+      publishedAt: '2026-01-01T00:00:00.000Z',
+    };
+    const render = (showDates: boolean) =>
+      renderBlock('writingList', { limit: 0 }, {
+        ...EMPTY_BLOCK_CONTENT,
+        writing: [entry],
+        writingSettings: { label: 'Writing', showDates },
+      } as unknown as BlockContent);
+
+    // The decision belongs to the Writing screen. A block prop for it would let
+    // a page disagree with the section, silently, with the owner last to know.
+    expect(render(true)).toMatch(/January|2026/);
+    expect(render(false)).not.toMatch(/January 2026/);
+  });
+
+  it('renders nothing when there is no writing yet', () => {
+    expect(renderBlock('writingList', { limit: 3 })).toBe('');
+  });
+
+  it('offers a file as a real download, and nothing without one', () => {
+    // Uploading a PDF could make it the footer's CV link and nothing else.
+    // There was no way to put "Download my CV" on an About page.
+    const html = renderBlock('download', {
+      heading: 'My CV',
+      label: 'Download',
+      file: '/api/media/cv.pdf',
+      meta: 'PDF · 2 MB',
+    });
+    expect(html).toContain('href="/api/media/cv.pdf"');
+    // Without `download`, a PDF opens in the browser's viewer instead — a
+    // different outcome from the one the button promised.
+    expect(html).toContain('download=""');
+
+    expect(renderBlock('download', { label: 'Download', file: '' })).toBe('');
+  });
+});

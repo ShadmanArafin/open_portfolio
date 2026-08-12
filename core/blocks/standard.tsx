@@ -888,6 +888,107 @@ const separator: BlockDefinition<SeparatorProps> = {
   ),
 };
 
+/* -------------------------------------------------------------- download */
+
+const downloadProps = z.object({
+  heading: z.string().optional(),
+  description: z.string().optional(),
+  label: z.string().min(1),
+  file: z.string(),
+  meta: z.string().optional(),
+});
+type DownloadProps = z.infer<typeof downloadProps>;
+
+/**
+ * A file to take away.
+ *
+ * The hole this closes: uploading a PDF offered to make it the CV the footer
+ * links to, and that was the only place a file could be offered anywhere on the
+ * site. Somebody could not put "Download my CV" on their About page, or a rate
+ * card on a Services page, or a press kit anywhere at all.
+ *
+ * The file is picked from the media library rather than read from the site's
+ * settings, which is what makes it general. A PDF uploaded for the footer is
+ * already in the library, so nothing is uploaded twice.
+ */
+const download: BlockDefinition<DownloadProps> = {
+  type: 'download',
+  version: 1,
+  label: 'Something to download',
+  description: 'A CV, a rate card, a press kit. Any file already in your library.',
+  group: 'conversion',
+  schema: downloadProps,
+  defaults: () => ({ heading: 'My CV', label: 'Download', file: '' }),
+  fields: [
+    headingField,
+    { kind: 'textarea', path: 'description', label: 'What it is', rows: 2 },
+    {
+      kind: 'media',
+      path: 'file',
+      label: 'The file',
+      help: 'Anything in your media library — a PDF, an image, a document.',
+    },
+    { kind: 'text', path: 'label', label: 'Button text' },
+    {
+      kind: 'text',
+      path: 'meta',
+      label: 'Size or format',
+      placeholder: 'PDF · 2 MB',
+      help: 'Optional, and appreciated. Nobody likes finding out after the tap.',
+    },
+  ],
+  frameDefaults: { width: 'narrow', surface: 'raised' },
+  checks: [
+    {
+      id: 'has-file',
+      run: (props) =>
+        props.file.trim() ? null : 'No file chosen yet, so this block will not appear on the page.',
+    },
+  ],
+  Render: ({ props, frame, headingLevel }) => {
+    if (!props.file.trim()) return null;
+
+    return (
+      <Band frame={frame}>
+        <Stack gap={4}>
+          {props.heading && (
+            <Heading level={headingLevel} size="md">
+              {props.heading}
+            </Heading>
+          )}
+          {props.description && <Text>{props.description}</Text>}
+          <Row gap={3}>
+            {/* A real download rather than a navigation. Without `download` a
+                PDF opens in the browser's viewer, which on a phone is a
+                different and usually worse outcome than the button promised. */}
+            <a
+              href={props.file}
+              download
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 'var(--space-2)',
+                minHeight: 'var(--control-height)',
+                paddingInline: 'var(--space-6)',
+                borderRadius: 'var(--radius-full)',
+                background: 'var(--btn-primary-bg)',
+                color: 'var(--btn-primary-text)',
+                fontFamily: 'var(--font-body)',
+                fontSize: 'var(--text-sm)',
+                fontWeight: 500,
+                textDecoration: 'none',
+              }}
+            >
+              {props.label}
+            </a>
+            {props.meta && <Text size="sm">{props.meta}</Text>}
+          </Row>
+        </Stack>
+      </Band>
+    );
+  },
+};
+
 export const STANDARD_DEFINITIONS = [
   contactForm,
   faq,
@@ -897,5 +998,6 @@ export const STANDARD_DEFINITIONS = [
   newsletter,
   socialRow,
   services,
+  download,
   separator,
 ] as unknown as BlockDefinition<never>[];

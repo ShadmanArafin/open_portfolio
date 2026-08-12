@@ -10,6 +10,7 @@ import type {
   RecommendationItem,
   SocialLinkItem,
 } from '@/cms/types/cms';
+import { WRITING_DEFAULTS, arrange, isLive, type WritingEntry } from '@/core/writing/schema';
 
 /**
  * The site's own records, as a block sees them.
@@ -46,6 +47,22 @@ export interface BlockContent {
    * site already prints in its footer — so a block may place them.
    */
   socialLinks: SocialLinkItem[];
+  /**
+   * Essays, notes, posts — already filtered to what is live and already put in
+   * the order the owner chose, so a block only has to decide how many.
+   */
+  writing: WritingEntry[];
+  /**
+   * The two decisions from the Writing screen a block cannot make for itself.
+   *
+   * A narrow exception to "records only, never settings", and worth stating
+   * why: whether dates appear at all is a decision the owner already made once,
+   * for the whole section, in the place where it belongs. Giving a block its
+   * own `showDates` prop would let a page contradict the Writing screen, and
+   * the two would disagree silently — with the owner as the last person to
+   * notice, because they know what they set.
+   */
+  writingSettings: { label: string; showDates: boolean };
 }
 
 /** What a block sees when nobody passed it anything. Never null — see below. */
@@ -59,6 +76,8 @@ export const EMPTY_BLOCK_CONTENT: BlockContent = {
   capabilityGroups: [],
   recommendations: [],
   socialLinks: [],
+  writing: [],
+  writingSettings: { label: WRITING_DEFAULTS.label, showDates: WRITING_DEFAULTS.showDates },
 };
 
 function byOrder<T extends { sortOrder: number }>(items: T[]): T[] {
@@ -84,6 +103,8 @@ export function blockContentFrom(state: CMSState | undefined): BlockContent {
   const visible = <T extends { visible: boolean; sortOrder: number }>(items: T[] | undefined) =>
     byOrder((items ?? []).filter((item) => item.visible !== false));
 
+  const settings = { ...WRITING_DEFAULTS, ...(state.writingSettings ?? {}) };
+
   return {
     projects: byOrder((state.projects ?? []).filter((p) => p.status === 'published')),
     caseStudies: byOrder((state.caseStudies ?? []).filter((c) => c.status === 'published')),
@@ -94,5 +115,13 @@ export function blockContentFrom(state: CMSState | undefined): BlockContent {
     capabilityGroups: visible(state.capabilityGroups),
     recommendations: visible(state.recommendations),
     socialLinks: visible(state.socialLinks),
+    // `isLive` rather than a status check, because writing can be scheduled:
+    // "published, or scheduled and the date has passed". The predicate lives
+    // with the schema so every reader agrees about what live means.
+    writing: arrange(
+      (state.writing ?? []).filter((entry) => isLive(entry)),
+      settings.order
+    ),
+    writingSettings: { label: settings.label, showDates: settings.showDates },
   };
 }

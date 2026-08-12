@@ -62,7 +62,7 @@ npm run dev
 ## Running the tests
 
 ```bash
-npm test          # 655 passing, 7 skipped
+npm test          # 676 passing, 7 skipped
 ```
 
 The skipped ones need containers:
