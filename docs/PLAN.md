@@ -88,7 +88,7 @@ development.
 | Phase 5 blocks, pages, `draftMode()` preview  | Nothing external needed                                                     |
 | Phase 7 admin: MediaPicker, builder polish    | Nothing external needed                                                     |
 | Phase 9 blog, newsletter capture, themes      | Nothing external needed                                                     |
-| Postgres / Supabase / Neon **database** half  | `postgres:16` — already wired; with Mailpit takes the suite from 342 to 420 |
+| Postgres / Supabase / Neon **database** half  | `postgres:16` — already wired; with Mailpit takes the suite from 461 to 539 |
 | Supabase **Storage** half                     | `supabase start` runs the real `storage-api` container                      |
 | Email send path                               | `axllent/mailpit` — already wired                                           |
 | PocketBase, Appwrite adapters                 | Both ship official Docker images                                            |
@@ -918,6 +918,31 @@ _Honest scoping:_ Vercel Marketplace can only auto-provision Marketplace-native 
 
 ### Phase 10 — Launch: site, demo, mobile (added after the original plan)
 
+> ### UPDATE — the demo and the PWA landed
+>
+> **The demo is a product feature, not an environment.** `OPB_DEMO_MODE=1` gives
+> every visitor their own sandbox, keyed by a cookie, in memory, discarded after
+> an hour. That isolation is what lets the editor stay completely usable — there
+> is nothing shared to vandalise, so nothing has to be read-only. Uploading,
+> saving service passwords and sending mail are refused at the endpoints rather
+> than by hiding buttons, email most of all: a public form sending from a real
+> domain is a spam relay within a day.
+>
+> It is a **build-time** flag as well as a run-time one. The adapter reads a
+> cookie, which is what stops every page being prerendered once and served
+> identically to everybody — set it only at run time and no visitor's edits
+> appear. `docker-compose.demo.yml` passes it both ways.
+>
+> **The PWA installs**, with a manifest built from the site's own settings and
+> `start_url` pointing at `/admin` — nobody installs their own portfolio to look
+> at it. No service worker yet, deliberately: Serwist's default configuration
+> caches `GET /api/admin/messages` for 24 hours in an origin-scoped cache that
+> logging out does not clear, and it is `NetworkOnly` in dev so it cannot be
+> reproduced locally. The carve-out gets written before the feature.
+>
+> **Still missing from this phase:** the marketing site, the docs site, the
+> mobile admin layout, and push.
+
 > ### RESEARCHED, NOTHING BUILT
 >
 > Four dossiers, ~7,500 lines and ~580 sources, in `docs/research/`. They exist
@@ -1125,8 +1150,8 @@ The numbers you should see, as of this writing:
 | `lint`                    | **0 errors**, 64 warnings — the warnings are baseline |
 | `format:check`            | clean                                                 |
 | `check-no-personal-data`  | clean, listed by git                                  |
-| `test` with no containers | 342 passed, 7 skipped                                 |
-| `test` with both          | **420 passed, 2 skipped**                             |
+| `test` with no containers | 461 passed, 7 skipped                                 |
+| `test` with both          | **539 passed, 2 skipped**                             |
 
 The 2 remaining skips are the Supabase and Neon conformance runs, which need
 real cloud credentials. Everything else runs locally.

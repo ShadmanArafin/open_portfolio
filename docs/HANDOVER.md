@@ -26,7 +26,7 @@ JavaScript bundle. None of that remains.
 ```bash
 npm install
 npm run dev                     # http://localhost:3000
-npm test                        # 353 passing, 7 skipped
+npm test                        # 461 passing, 7 skipped
 npm run typecheck && npm run lint && npm run build
 ```
 
@@ -35,9 +35,12 @@ The skipped tests need containers:
 ```bash
 docker run -d --name opb-pg -e POSTGRES_PASSWORD=postgres -p 55432:5432 postgres:16
 docker run -d --name opb-mail -p 1025:1025 -p 8025:8025 axllent/mailpit
+# The -p flags matter. A Mailpit container created without them is "healthy"
+# and unreachable, and the four email tests fail with ECONNREFUSED in a way
+# that looks like a code bug for about ten minutes.
 
 TEST_POSTGRES_URL="postgres://postgres:postgres@localhost:55432/opb_test" \
-TEST_MAILPIT_URL="http://localhost:8025" npm test    # 420 passing, 2 skipped
+TEST_MAILPIT_URL="http://localhost:8025" npm test    # 539 passing, 2 skipped
 ```
 
 To exercise it as a stranger would:
@@ -95,19 +98,17 @@ free Vercel account and about twenty minutes.
 
 Ordered by how much a user would notice.
 
-| Gap                                          | Notes                                                                                                                                                                         |
-| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **One theme, no way to swap**                | The token layer and the block/theme boundary are built and ESLint-enforced. There is no `themes/` directory. This is our weakest point commercially — see the market research |
-| **7 block types of ~29**                     | `hero richText image gallery stats cards ctaBanner`                                                                                                                           |
-| **No blog**                                  | Planned: Tiptap, RSS, scheduling as a query predicate not a cron                                                                                                              |
-| **Nothing on mobile beyond responsive**      | No manifest, no service worker, no notifications, no phone layout                                                                                                             |
-| **Passphrase auth only**                     | No passkeys, no email OTP                                                                                                                                                     |
-| **5 storage backends unbuilt**               | Firebase, Convex, Cloudflare D1+R2, PocketBase, Appwrite. Not advertised in the README                                                                                        |
-| **No demo, no marketing site, no docs site** | All planned in Phase 10                                                                                                                                                       |
-| **Newsletter, presets**                      | Not started                                                                                                                                                                   |
-| **Five duplicate settings routes**           | `footer`, `microcopy`, `appearance`, `seo`, `settings` all render `AdminSettings`                                                                                             |
-| **`work`/`timeline` merges**                 | Still four separate collections                                                                                                                                               |
-| **Tailwind 4**                               | Deferred, not blocked                                                                                                                                                         |
+| Gap                                  | Notes                                                                                                                                                         |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Newsletter is rules only**         | `core/newsletter` has the schema, consent rules and tests. No endpoint, no form, no admin screen — nothing can store an address yet                           |
+| **No mobile admin layout**           | It installs and works on a phone; the editing screens were drawn for a desktop. The research sizes this at 10–20 days and calls it retention, not acquisition |
+| **No push notifications**            | Needs VAPID and a real device. The service worker must carve out `/admin` first — see the Serwist trap below                                                  |
+| **No marketing site, no docs site**  | `research/LANDING-PAGE.md` is a 1,117-line spec with the copy already written                                                                                 |
+| **7 block types of ~29**             | `hero richText image gallery stats cards ctaBanner`                                                                                                           |
+| **5 storage backends unbuilt**       | Firebase, Convex, Cloudflare D1+R2, PocketBase, Appwrite. Not advertised in the README. Each needs an emulator — do not ship one you have not run             |
+| **Passphrase auth only**             | No passkeys, no email OTP                                                                                                                                     |
+| **Themes change tokens, not layout** | Six of them, and they do not rearrange a page. Different structures need more block types                                                                     |
+| **Tailwind 4**                       | Deferred, not blocked                                                                                                                                         |
 
 ---
 
@@ -175,22 +176,24 @@ wrong. Capture into state in an effect.
 **1. Verify uploads against Vercel Blob and Supabase Storage.** The single
 highest-consequence unknown. Twenty minutes.
 
-**2. Tag a first release.** Three shipped features read GitHub Releases and
+**2. Finish the newsletter.** The rules are written; the endpoint, the form, the confirm and unsubscribe routes and the admin screen are not. It is the smallest complete thing left.
+
+**3. Tag a first release.** Three shipped features read GitHub Releases and
 currently find nothing: the update checker has no baseline, "What's new" is
 empty, and duplicate detection cannot say "already fixed in v0.6.0" without
 release dates to compare against. It also starts awesome-selfhosted's
 four-month clock. See [GOING-PUBLIC.md](research/GOING-PUBLIC.md).
 
-**3. A second theme.** "Every portfolio looks the same" is the best-evidenced
+**4. Mobile admin layout.** "Every portfolio looks the same" is the best-evidenced
 complaint in the market research, and shipping one theme makes us the worst
 offender in the field on that axis.
 
-**4. The demo.** Every other launch asset points at it. Specified in
+**5. The marketing site.** Every other launch asset points at it. Specified in
 [LANDING-PAGE.md](research/LANDING-PAGE.md) as `OPB_DEMO_MODE`, a product
 feature rather than an ops task — every hand-maintained sandbox in the
 researched corpus is dead or retired.
 
-**5. Marketing site, then mobile.** Both fully planned in `docs/research/`.
+**6. Then push notifications and the remaining adapters**, both of which need something this machine does not have — a real device, and five emulators.
 
 Open decisions that are the maintainer's, not an engineer's, are listed at the
 end of [PLAN.md](PLAN.md).
