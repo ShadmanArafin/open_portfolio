@@ -24,7 +24,7 @@ JavaScript bundle. None of that remains.
 ## Run it
 
 ```bash
-npm install
+npm ci                          # ci, not install — see "Traps" below
 npm run dev                     # http://localhost:3000
 npm test                        # 492 passing, 7 skipped
 npm run typecheck && npm run lint && npm run build
@@ -33,15 +33,25 @@ npm run typecheck && npm run lint && npm run build
 The skipped tests need containers:
 
 ```bash
-docker run -d --name opb-pg -e POSTGRES_PASSWORD=postgres -p 55432:5432 postgres:16
+docker run -d --name opb-pg -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=opb_test \
+  -p 55432:5432 postgres:16
 docker run -d --name opb-mail -p 1025:1025 -p 8025:8025 axllent/mailpit
-# The -p flags matter. A Mailpit container created without them is "healthy"
-# and unreachable, and the four email tests fail with ECONNREFUSED in a way
-# that looks like a code bug for about ten minutes.
+# Both the -e and the -p flags matter, in the same way and for the same ten
+# minutes. Without POSTGRES_DB the image creates only a database called
+# `postgres`, so the connection string below finds nothing and 90 tests fail
+# with `database "opb_test" does not exist`. A Mailpit container created
+# without -p is "healthy" and unreachable, and the four email tests fail with
+# ECONNREFUSED. Both look like code bugs and neither is.
 
 TEST_POSTGRES_URL="postgres://postgres:postgres@localhost:55432/opb_test" \
 TEST_MAILPIT_URL="http://localhost:8025" npm test    # 588 passing, 2 skipped
 ```
+
+Setting `TEST_POSTGRES_URL` without the container running is worse than not
+setting it: the Postgres tests stop skipping and start failing, so a stopped
+container reads as 90 broken tests.
+
+On later sessions the containers already exist — `docker start opb-pg opb-mail`.
 
 To exercise it as a stranger would:
 
@@ -56,6 +66,34 @@ nothing at all. That has cost time twice.
 
 Docker: `docker compose up`. Verified end to end, including destroying the
 container and recreating it against the same volume.
+
+---
+
+### Architecture in three sentences
+
+`app/` holds routes only. `core/` holds server-only domain logic — storage
+adapters behind one contract, auth, email, content reads — and files there start
+with `import 'server-only'` so a leaked credential is a build failure, except
+`core/theme/*`, which deliberately runs in the browser too. `src/` still holds
+the public site components (`src/views`, `src/components`) and the admin
+(`src/admin`).
+
+### Environment variables
+
+All optional except where noted. Full list with commentary in
+[.env.example](../.env.example); mail can also be configured from the admin.
+
+| Variable                      | Meaning                                                    |
+| ----------------------------- | ---------------------------------------------------------- |
+| `OPB_SMTP_HOST`               | Presence of this alone selects the SMTP transport          |
+| `OPB_SMTP_PORT`               | Defaults to 587                                            |
+| `OPB_SMTP_USER` / `_PASSWORD` | Optional — Mailpit needs neither                           |
+| `OPB_SMTP_SECURE`             | `1` for implicit TLS on port 465 only                      |
+| `OPB_MAIL_FROM`               | Defaults to `no-reply@<your SMTP host>`                    |
+| `OPB_SITE_URL`                | **Required for passphrase reset**, and for canonical links |
+| `OPB_SETUP_TOKEN`             | Required to claim a site on any public host                |
+| `OPB_ALLOW_INSECURE_COOKIES`  | `1` to test a production build over plain HTTP locally     |
+| `OPB_DATA_DIR`                | Where the filesystem backend writes. Honour it — see below |
 
 ---
 
@@ -114,6 +152,71 @@ Ordered by how much a user would notice.
 
 ---
 
+### Smaller known defects
+
+Real, none blocking, none fixed.
+
+- **The `unread-messages` health check pluralises wrongly** — "2 enquiry
+  enquiries unread".
+- **`/api/admin/messages` has no rate limiting**, unlike every sibling admin
+  route. Owner-only and same-origin, so the risk is low.
+- **An inert leftover after a crash.** If a process dies between the message
+  migration's append and its snapshot-clear, a copy stays in that channel's
+  snapshot and is never revisited, because the guard is destination-based.
+  Self-heals on the next publish for `published`, not for `draft`.
+- **A database hiccup renders as an empty inbox, not an error.**
+  `app/api/admin/messages/route.ts` calls `messages.list()` outside its `try`,
+  and `CMSContext` swallows a non-ok response.
+- **`transport.test.ts`'s "implicit TLS only for the documented value" asserts
+  only the positive case.** It never checks that `'true'` or `'0'` leave TLS
+  off, so its title overstates what it proves.
+
+---
+
+## Invariants worth not breaking
+
+Each was arrived at the hard way. Changing one is a decision, not a refactor.
+
+**A mail failure must never lose an enquiry, and must never be silent.** The
+contact route stores first and notifies second, and records the send outcome on
+the message. This project has twice shipped bugs that were silent _and_
+invisible specifically to the one person able to report them — uploaded images
+that rendered as a blank pixel only the owner's own browser could resolve, and
+before that a contact form that filed enquiries into the sender's own browser.
+Do not make a third.
+
+**`sendMail()` never throws.** Every failure is a returned value. A caller that
+wraps it in a try/catch and swallows the reason has defeated the point.
+
+**Never derive an authorization decision from a request header.** A
+`Host: localhost` check in the claim flow was a real auth bypass. Reset links
+come from `OPB_SITE_URL`. Cookies and environment only.
+
+**Enquiries never travel inside published content.** `withoutEnquiries()` in
+`core/content/sanitise.ts` strips them at the publish boundary — including out
+of nested version snapshots, because the published document is serialised into
+the HTML of every public page.
+
+**`getStorageAdapter()` is async and provisions once per process.** Await it.
+It was synchronous once, and the change fixed a defect where an upgraded
+instance never created its `opb_messages` table.
+
+---
+
+## Adding a storage backend
+
+One file in `core/storage/adapters/`, one line in `core/storage/registry.ts`,
+env-var inference in `inferAdapterId()`, and a green run of
+`core/storage/conformance.ts`. If it is SQL, reuse
+`core/storage/adapters/_shared/postgres.ts` — Supabase, Neon and generic
+Postgres all do, which is why the fourth one cost almost nothing.
+
+**The conformance suite is not optional.** It has caught three real concurrency
+bugs so far, two of which only appeared on one platform. An adapter without a
+green run should not ship.
+
+---
+
 ## Traps in this codebase
 
 Each of these has already cost real time. They are not hypothetical.
@@ -166,6 +269,16 @@ errored. A test now reads the hrefs.
 **Reading the outside world during render.** `recentErrors()`, `navigator`,
 `window.screen` — the React Compiler rejects the component and it is genuinely
 wrong. Capture into state in an effect.
+
+**Windows and Linux disagree about concurrent renames.** Linux allows a rename
+onto a file another rename is touching; Windows returns `EPERM`. The filesystem
+adapter serialises writes per path because of this, and the same fix caused
+`ENOENT` on Linux before it was made per-path. A test passing on one platform is
+not evidence about the other — Docker is right there.
+
+**Prettier does not read `.gitignore`.** Generated and scratch directories have
+to be listed in `.prettierignore` separately, or `format:check` fails on files
+that are not part of the project. `.opb` and `.superpowers` are already there.
 
 ---
 

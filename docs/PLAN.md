@@ -100,7 +100,10 @@ development.
 
 **All five missing storage adapters can be written and conformance-tested
 without a single account.** That was not obvious and it changes the ordering:
-Phase 8's adapters are no longer gated on anything.
+Phase 8's adapters are gated on installing five emulators, not on signing up for
+five services. HANDOVER.md counts them as "something this machine does not
+have", which is true of any machine that has not installed them yet — it is a
+setup cost, not a dependency on anybody's cloud.
 
 ### What genuinely needs the cloud
 
@@ -117,8 +120,13 @@ Four things, and only four:
 
 ### Suggested order
 
-1. **Phase 2 remainder** — the publish-time contrast gate is small and
-   `checkContrast` is ready; then Tailwind 4 (PR #7), now unblocked.
+1. ~~**Phase 2 remainder**~~ — the publish-time contrast gate shipped, and so
+   did the primitives. **Tailwind 4 is now argued against rather than merely
+   deferred**: PR #7 is a version bump carrying none of the migration — the
+   PostCSS plugin moved, the `@tailwind` directives are gone and
+   `tailwind.config.js` is no longer read, so every `bg-bg` and
+   `text-text-primary` would compile to nothing — and v4 requires Safari 16.4+,
+   which decides who can see a site built with this. See the locked decisions.
 2. ~~**Phase 5 blocks and pages**~~ — done. Blocks, pages, routing, preview and
    revisions all shipped; the record-per-row storage split moved to Phase 9.
 3. ~~**Phase 7 `MediaPicker`**~~ — done. The shadcn rebuild is cancelled; see
@@ -139,10 +147,10 @@ Four things, and only four:
 **The current architecture cannot deliver that**, and the reasons are structural, not cosmetic:
 
 - Content lives in the _editor's own browser_ (IndexedDB). Visitors see whatever seed data was compiled into the JS bundle. **Clicking Publish changes nothing for visitors.**
-- `submitContactMessage` ([cmsService.ts:421](src/cms/services/cmsService.ts#L421)) writes enquiries to the _visitor's_ IndexedDB. The owner never receives a message. The form has always been a no-op.
-- `VITE_ADMIN_PASSCODE` is compiled into the public bundle in plaintext; the session is an unsigned `{expiresAt}` in localStorage ([cmsService.ts:643-685](src/cms/services/cmsService.ts#L643-L685)) that anyone forges in one console line. The only guard is a client-side redirect ([AdminLayout.tsx:34-36](src/admin/layouts/AdminLayout.tsx#L34-L36)).
+- `submitContactMessage` ([cmsService.ts:421](../src/cms/services/cmsService.ts#L421)) writes enquiries to the _visitor's_ IndexedDB. The owner never receives a message. The form has always been a no-op.
+- `VITE_ADMIN_PASSCODE` is compiled into the public bundle in plaintext; the session is an unsigned `{expiresAt}` in localStorage ([cmsService.ts:643-685](../src/cms/services/cmsService.ts#L643-L685)) that anyone forges in one console line. The only guard is a client-side redirect ([AdminLayout.tsx:34-36](../src/admin/layouts/AdminLayout.tsx#L34-L36)).
 - No server ⇒ no email, no OTP, no secret-keeping. `SEOSettings` is fully editable and **read by nothing**; every route serves one hardcoded `<title>`. No OG unfurls, near-zero crawlability.
-- `uploadMedia` ([cmsService.ts:482](src/cms/services/cmsService.ts#L482)) stores raw `File` objects with no size cap, no byte sniffing, and classifies SVG as first-class — stored XSS the moment a server exists.
+- `uploadMedia` ([cmsService.ts:482](../src/cms/services/cmsService.ts#L482)) stores raw `File` objects with no size cap, no byte sniffing, and classifies SVG as first-class — stored XSS the moment a server exists.
 - 102 occurrences of the owner's name across 17 files; `public/` holds a personal résumé, two personal photos, 4 client screenshots and **10 third-party trademarked client logos** (Bank Asia, Apex, Mumuso…) that cannot legally ship in an MIT template.
 - No LICENSE, no tests, no CI, no ESLint config (`npm run lint` is a broken script — eslint isn't even a dependency), no error boundaries, no 404 page.
 
@@ -212,7 +220,7 @@ Four things, and only four:
 
 Key departures from today's `ContentStore`:
 
-- **Media returns a URL, never a Blob.** `getMedia(): Promise<Blob>` ([storage/types.ts:28](src/cms/services/storage/types.ts#L28)) forces `hydrateMediaBlobs()` to download _every_ asset at boot. Replaced by `resolveUrl(key) → string`. The `idb:` protocol and the whole object-URL registry ([mediaUrls.ts](src/cms/utils/mediaUrls.ts)) are deleted.
+- **Media returns a URL, never a Blob.** `getMedia(): Promise<Blob>` ([storage/types.ts:28](../src/cms/services/storage/types.ts#L28)) forces `hydrateMediaBlobs()` to download _every_ asset at boot. Replaced by `resolveUrl(key) → string`. The `idb:` protocol and the whole object-URL registry ([mediaUrls.ts](../src/cms/utils/mediaUrls.ts)) are deleted.
 - **Adapters declare `capabilities`** (`durable`, `auth`, `fileStorage`, `fullTextSearch`, `realtime`, `transactions`, `listQueries`). Admin screens **hide** unsupported features rather than breaking.
 - **Adapter config lives in env vars only, never in the database** — config is what tells you how to reach the database. Resolves the chicken-and-egg completely.
 - Surfaces: `readSnapshot/writeSnapshot`, `list/get/put/remove/bulkPut`, `getSingleton/putSingleton`, `media`, `kv` (sessions/OTP/rate-limits/locks — deliberately _not_ content, so auth state is never exportable), optional `auth`, optional `transaction`.
@@ -264,7 +272,7 @@ Migration map:
 
 | Today                                                                                                                                               | Becomes                                                                                                                        |
 | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `sections[]` ([HomePage.tsx:23-34](src/pages/HomePage.tsx#L23-L34) fixed registry)                                                                  | Deleted → blocks on a seeded Home page. Lossless field mapping                                                                 |
+| `sections[]` ([HomePage.tsx](../src/views/HomePage.tsx) fixed registry)                                                                             | Deleted → blocks on a seeded Home page. Lossless field mapping                                                                 |
 | `projects` + `caseStudies`                                                                                                                          | **`work`** — optional `story: { blocks }` decides depth. 301 redirects seeded for `/case-studies/:slug`                        |
 | `experience` + `education`                                                                                                                          | **`timeline`** with `kind: 'work'\|'education'\|'other'`                                                                       |
 | `brands` → `logos` (+`group`), `recommendations` → `testimonials`, `capabilityGroups` → `skills`, `processSteps` → `steps`, `artifacts` → `gallery` | 1:1, derived `number`/`year`                                                                                                   |
@@ -277,7 +285,7 @@ Migration map:
 
 **Blocks × themes contract:** blocks own semantics, themes own tokens, neither imports the other. Blocks may only compose from ~17 closed primitives (`Band`, `Measure`, `Grid`, `Heading`, `Prose`, `Card`, `Media`, `Button`…), enforced by ESLint bans on colour/size utilities and arbitrary values inside `core/blocks/**` and `themes/**`. **A theme that ships only tokens is a complete theme.** There is deliberately no per-block override hook — that is the crack the whole contract leaks through.
 
-**Tokens:** primitive → semantic → component, ~95 tokens generated from ~10 author-facing inputs (brand colour, neutral temperature, radius, density, type scale, fonts…). OKLCH ramps via `culori`; **APCA contrast enforced four ways** — derive `--text-on-accent` rather than ask; live "use #0E9E6B instead" suggestions in the picker; a publish-**blocking** health issue below threshold; and clamping at generation so even a neon accent yields usable subtle/link/border roles. Tokens are **server-rendered into a scoped `<style>`** — today's `useEffect` write to `documentElement` ([CMSContext.tsx:83-104](src/cms/context/CMSContext.tsx#L83-L104)) flashes the default palette on every load.
+**Tokens:** primitive → semantic → component, ~95 tokens generated from ~10 author-facing inputs (brand colour, neutral temperature, radius, density, type scale, fonts…). OKLCH ramps via `culori`; **APCA contrast enforced four ways** — derive `--text-on-accent` rather than ask; live "use #0E9E6B instead" suggestions in the picker; a publish-**blocking** health issue below threshold; and clamping at generation so even a neon accent yields usable subtle/link/border roles. Tokens are **server-rendered into a scoped `<style>`** — today's `useEffect` write to `documentElement` ([CMSContext.tsx:83-104](../src/cms/context/CMSContext.tsx#L83-L104)) flashes the default palette on every load.
 
 ---
 
@@ -305,11 +313,11 @@ Each phase ends with a runnable, deployable app.
 
 Do this **first**. Every hour spent migrating the owner's real content to Next.js is an hour spent moving something that must be deleted.
 
-- Remove all 102 name occurrences; delete `src/data/*.ts` (10 files) and rewrite [initialData.ts](src/cms/data/initialData.ts) as generic demo packs.
+- Remove all 102 name occurrences; delete `src/data/*.ts` (10 files) and rewrite [initialData.ts](../src/cms/data/initialData.ts) as generic demo packs.
 - Delete `public/` personal media (résumé, 2 photos, 4 client screenshots) and **all 10 client logos**. _Legal:_ MIT grants rights in our copyright, not in Bank Asia's trademark; nominative fair use covers the owner's own site, not redistribution to thousands of strangers. Replace with fictional CC0 wordmarks. Same for client screenshots (client IP, plausibly NDA'd). Delete the on-disk `dist/` (4 MB of copies).
 - **Squash history to one orphan commit** — deleting files in a new commit does not remove the blobs from a repo about to go public.
-- Rename storage keys under `opb.*`. Bundle format → `'open-portfolio-builder'` with `ACCEPTED_BUNDLE_FORMATS` compat (validated at [cmsService.ts:588](src/cms/services/cmsService.ts#L588)) and a golden-file test.
-- Fix hardcoded identity in [Navbar.tsx:57,58,95](src/components/Navbar.tsx#L57-L58) — the only non-CMS-driven name in the UI.
+- Rename storage keys under `opb.*`. Bundle format → `'open-portfolio-builder'` with `ACCEPTED_BUNDLE_FORMATS` compat (validated at [cmsService.ts:588](../src/cms/services/cmsService.ts#L588)) and a golden-file test.
+- Fix hardcoded identity in [Navbar.tsx:57,58,95](../src/components/Navbar.tsx#L57-L58) — the only non-CMS-driven name in the UI.
 - LICENSE (MIT), CONTRIBUTING (DCO, not CLA), CODE_OF_CONDUCT, SECURITY.md (GitHub Private Vulnerability Reporting), issue/PR templates.
 - ESLint 9 flat config + jsx-a11y + Prettier + `.editorconfig` (fixes the broken `lint` script). Delete dead code: `supabaseClient.ts`, `pdf-lib`, `AdminListRow.tsx`, 5 dead appearance fields, `revokeAllMediaBlobs`.
 - CI: typecheck, lint, build, `check:personal-data` (denylist), gitleaks over full history, `knip`.
@@ -440,7 +448,7 @@ _Risk: theme hydration mismatch → keep the blocking script verbatim, `suppress
 > The content core (schema, dates, health, listOps) was **not** moved into
 > `core/` — it still lives under `src/cms/`. It works; tidy it when convenient.
 
-`core/content/schema` (today's [cms.ts](src/cms/types/cms.ts) moved + zod mirror), snapshot split, ports of `dates.ts`, `contentHealth.ts`, `listOps.ts`, `socialPlatforms.ts` (**split the react-icons half out** or it drags the icon library into every server module). Token generator + contrast validator + the 17 primitives + Default theme + the ESLint/CI bans.
+`core/content/schema` (today's [cms.ts](../src/cms/types/cms.ts) moved + zod mirror), snapshot split, ports of `dates.ts`, `contentHealth.ts`, `listOps.ts`, `socialPlatforms.ts` (**split the react-icons half out** or it drags the icon library into every server module). Token generator + contrast validator + the 17 primitives + Default theme + the ESLint/CI bans.
 
 ### Phase 3 — Adapter contract + `local` + read path (2 weeks)
 
@@ -500,7 +508,7 @@ _`generateStaticParams` must never fail the build_ — try/catch → `[]`, so a 
 > decision. Both now derive from environment only.
 > **Do not reintroduce header-derived authorization.**
 
-Passkey + OTP + sessions + claim + CSRF + rate limiting + CSP/headers. `requireOwner()` **deny-by-default**. Delete [cmsService.ts:637-685](src/cms/services/cmsService.ts#L637-L685) and `VITE_ADMIN_PASSCODE`.
+Passkey + OTP + sessions + claim + CSRF + rate limiting + CSP/headers. `requireOwner()` **deny-by-default**. Delete [cmsService.ts:637-685](../src/cms/services/cmsService.ts#L637-L685) and `VITE_ADMIN_PASSCODE`.
 
 ### Phase 5 — Write path, publish, blocks, pages (3 weeks)
 
@@ -641,7 +649,7 @@ Passkey + OTP + sessions + claim + CSRF + rate limiting + CSP/headers. `requireO
 > Bytes are accepted on their leading bytes rather than their filename, so an
 > HTML page named `.pdf` and an SVG carrying `onload` are both refused.
 
-Per-record writes with revision checks; publish (validate → version → bulkPut → `writeSnapshot` → `revalidateTag`); `draftMode()` preview replacing the `?preview=true` iframe. Block schema + registry + validation + migration harness + renderer with the first 6 blocks and the kitchen-sink matrix **from day one**. Catch-all `[[...slug]]` routing. Keep `MAX_VERSIONS = 20` and the snapshot-excludes-history decision ([cmsService.ts:284-298](src/cms/services/cmsService.ts#L284-L298)) — both were right.
+Per-record writes with revision checks; publish (validate → version → bulkPut → `writeSnapshot` → `revalidateTag`); `draftMode()` preview replacing the `?preview=true` iframe. Block schema + registry + validation + migration harness + renderer with the first 6 blocks and the kitchen-sink matrix **from day one**. Catch-all `[[...slug]]` routing. Keep `MAX_VERSIONS = 20` and the snapshot-excludes-history decision ([cmsService.ts:284-298](../src/cms/services/cmsService.ts#L284-L298)) — both were right.
 
 ### Phase 6 — Adapters #2 and #3, _before_ the admin UI (2 weeks)
 
@@ -745,7 +753,7 @@ Supabase (built-in auth, presigned storage) and Neon+Vercel Blob (SQL, **no** bu
 > `src/admin/**` are router-relative because of `basename="/admin"` — an
 > absolute `/admin/login` resolves to `/admin/admin/login`.
 
-`npx shadcn init`, AdminShell (sidebar IA ported as _data_ from [AdminSidebar.tsx:72-138](src/admin/components/AdminSidebar.tsx#L72-L138)), **`<MediaPicker>` first** (it unblocks every image field and the fixed-4-slot problem), then the block builder (3-pane, `@dnd-kit` reorder **in the outline not the canvas** — keyboard-operable, touch-friendly, testable), then one record editor end-to-end as the template, then the rest. Progressive disclosure: Essentials → Details → SEO. Collapse the 5 duplicate settings routes into `settings/[panel]`.
+`npx shadcn init`, AdminShell (sidebar IA ported as _data_ from [AdminSidebar.tsx:72-138](../src/admin/components/AdminSidebar.tsx#L72-L138)), **`<MediaPicker>` first** (it unblocks every image field and the fixed-4-slot problem), then the block builder (3-pane, `@dnd-kit` reorder **in the outline not the canvas** — keyboard-operable, touch-friendly, testable), then one record editor end-to-end as the template, then the rest. Progressive disclosure: Essentials → Details → SEO. Collapse the 5 duplicate settings routes into `settings/[panel]`.
 
 ### Phase 8 — Remaining 5 adapters + integrations (3 weeks)
 
@@ -1079,14 +1087,14 @@ Tiptap blog (structured JSON so posts render through token primitives in all 6 t
 
 ## Critical files
 
-- [src/cms/types/cms.ts](src/cms/types/cms.ts) — the domain schema; the most valuable asset in the repo, moves near-verbatim to `core/content/schema/types.ts`
-- [src/cms/services/cmsService.ts](src/cms/services/cmsService.ts) — the 691-line singleton being dissolved; contains the auth to delete (637-685), publish/version logic to keep (269-329), bundle format (23-30, 561-616), and the broken contact form (421)
-- [src/cms/services/storage/types.ts](src/cms/services/storage/types.ts) — today's `ContentStore`, replaced by `adapters/contract.ts`
-- [src/cms/utils/mediaUrls.ts](src/cms/utils/mediaUrls.ts) — the `idb:` scheme to delete before any adapter work
-- [src/pages/HomePage.tsx](src/pages/HomePage.tsx) — the fixed `SECTION_COMPONENTS` registry the block registry replaces
-- [src/cms/utils/contentHealth.ts](src/cms/utils/contentHealth.ts) — 304 lines of genuinely good product thinking; decomposes into per-block checks + the publish gate + the new Security page
-- [src/styles/index.css](src/styles/index.css) — the token indirection the semantic layer replaces
-- [src/admin/components/AdminRecord.tsx](src/admin/components/AdminRecord.tsx) — the interaction model to carry into shadcn
+- [src/cms/types/cms.ts](../src/cms/types/cms.ts) — the domain schema; the most valuable asset in the repo, moves near-verbatim to `core/content/schema/types.ts`
+- [src/cms/services/cmsService.ts](../src/cms/services/cmsService.ts) — the 691-line singleton being dissolved; contains the auth to delete (637-685), publish/version logic to keep (269-329), bundle format (23-30, 561-616), and the broken contact form (421)
+- [src/cms/services/storage/types.ts](../src/cms/services/storage/types.ts) — today's `ContentStore`, replaced by `adapters/contract.ts`
+- [src/cms/utils/mediaUrls.ts](../src/cms/utils/mediaUrls.ts) — the `idb:` scheme to delete before any adapter work
+- [src/views/HomePage.tsx](../src/views/HomePage.tsx) — the fixed `SECTION_COMPONENTS` registry the block registry replaces. `src/pages` was renamed `src/views` in Phase 1, because Next reserves `pages`
+- [src/cms/utils/contentHealth.ts](../src/cms/utils/contentHealth.ts) — 304 lines of genuinely good product thinking; decomposes into per-block checks + the publish gate + the new Security page
+- [src/styles/index.css](../src/styles/index.css) — the token indirection the semantic layer replaces
+- [src/admin/components/AdminRecord.tsx](../src/admin/components/AdminRecord.tsx) — the interaction model to carry into shadcn
 
 ## Risks
 
@@ -1098,252 +1106,22 @@ Tiptap blog (structured JSON so posts render through token primitives in all 6 t
 
 ---
 
-## Handoff notes for whoever picks this up
+## Handover, and the decisions still open
 
-Written for another engineer or AI agent starting fresh on a different machine.
-Everything here is something that cost time to learn and is not obvious from the
-code.
+**Operational notes live in [HANDOVER.md](HANDOVER.md), not here.** How to run
+it, which containers the suite needs, the test counts to expect, the traps that
+have already cost time, the invariants, the known defects and what to do next
+are all in that one file.
 
-### Where things stand, exactly
+They used to be duplicated in this section. Two copies of a fact means one of
+them goes stale, and one already had: the Postgres container command drifted
+between the two, and the version people were more likely to read omitted
+`POSTGRES_DB` — producing ninety failing tests that look like a code bug. This
+section is now a pointer so that cannot happen again.
 
-Everything described in this file is on `main`. There is no work in progress and
-no unmerged branch — the email and durable-inbox work was reviewed, fixed and
-merged before this note was written.
-
-The last substantial change was Phase 8's first slice: SMTP email, enquiry
-notification, passphrase reset, and moving the contact inbox out of the
-published content snapshot onto its own storage surface. Its design is in
-[specs/2026-08-11-email-and-inbox-design.md](specs/2026-08-11-email-and-inbox-design.md)
-and the task-by-task plan in
-[plans/2026-08-11-email-and-inbox.md](plans/2026-08-11-email-and-inbox.md).
-Both are worth reading before touching `core/email/`, `core/storage/` or the
-contact route — they record the reasoning, not just the result.
-
-### Get running on a new machine
-
-```bash
-git clone https://github.com/ShadmanArafin/open_portfolio_builder.git
-cd open_portfolio_builder
-npm ci                # ci, not install — see "Things that will bite you"
-npm run dev           # http://localhost:3000, then claim the site at /setup
-```
-
-No account, no keys, no database. The local filesystem adapter is the default
-and stores everything under `.opb/`. Delete that folder to reset to a fresh
-install. `npm run dev` needs no `OPB_SETUP_TOKEN`; a production build does.
-
-### The two Docker containers the full test suite needs
-
-Neither is optional if you want the real numbers. Without them a large part of
-the suite skips, silently and by design — a skipped test is not a passing one.
-
-```bash
-docker run -d --name opb-pg   -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=opb_test \
-  -p 55432:5432 postgres:16
-docker run -d --name opb-mail -p 1025:1025 -p 8025:8025 axllent/mailpit
-```
-
-Mailpit's web inbox is at <http://localhost:8025>. On later sessions just
-`docker start opb-pg opb-mail`.
-
-### Verify before you change anything
-
-```bash
-npm run typecheck && npm run lint && npm run format:check && npm run build
-node scripts/check-no-personal-data.mjs
-
-# Tests, with both containers running:
-TEST_POSTGRES_URL="postgres://postgres:postgres@localhost:55432/opb_test" \
-TEST_MAILPIT_URL=http://localhost:8025 \
-npm run test
-```
-
-The numbers you should see, as of this writing:
-
-| Check                     | Expected                                              |
-| ------------------------- | ----------------------------------------------------- |
-| `typecheck`               | 0 errors                                              |
-| `lint`                    | **0 errors**, 84 warnings — the warnings are baseline |
-| `format:check`            | clean                                                 |
-| `check-no-personal-data`  | clean, listed by git                                  |
-| `test` with no containers | 492 passed, 7 skipped                                 |
-| `test` with both          | **588 passed, 2 skipped**                             |
-
-The 2 remaining skips are the Supabase and Neon conformance runs, which need
-real cloud credentials. Everything else runs locally.
-
-### Running the app with email
-
-```bash
-docker start opb-mail
-OPB_SMTP_HOST=localhost OPB_SMTP_PORT=1025 OPB_SITE_URL=http://localhost:3000 npm run dev
-```
-
-Submit the contact form and the notification appears at
-<http://localhost:8025>. Stop the container and submit again: the visitor still
-sees success, the enquiry is still in `/admin/messages`, and the SMTP error is
-shown on the message and raised on the dashboard. That asymmetry is deliberate
-and is the point of the design — see "Invariants worth not breaking".
-
-`OPB_SITE_URL` is **required** for passphrase reset, in development too. Reset
-links are built from it and never from the request, because a link built from a
-caller-supplied `Host` mails the owner a valid token pointing at somebody else's
-domain.
-
-### Environment variables added recently
-
-All optional except where noted. Full list with commentary in `.env.example`.
-
-| Variable                      | Meaning                                                    |
-| ----------------------------- | ---------------------------------------------------------- |
-| `OPB_SMTP_HOST`               | Presence of this alone selects the SMTP transport          |
-| `OPB_SMTP_PORT`               | Defaults to 587                                            |
-| `OPB_SMTP_USER` / `_PASSWORD` | Optional — Mailpit needs neither                           |
-| `OPB_SMTP_SECURE`             | `1` for implicit TLS on port 465 only                      |
-| `OPB_MAIL_FROM`               | Defaults to `no-reply@<your SMTP host>`                    |
-| `OPB_SITE_URL`                | **Required for passphrase reset**, and for canonical links |
-
-### Invariants worth not breaking
-
-These were each arrived at the hard way. Changing one is a decision, not a
-refactor.
-
-**A mail failure must never lose an enquiry, and must never be silent.** The
-contact route stores first and notifies second, and records the send outcome on
-the message. This project has twice shipped bugs that were silent _and_
-invisible specifically to the one person able to report them — uploaded images
-that rendered as a blank pixel only the owner's own browser could resolve, and
-before that a contact form that filed enquiries into the sender's own browser.
-Do not make a third.
-
-**`sendMail()` never throws.** Every failure is a returned value. A caller that
-wraps it in a try/catch and swallows the reason has defeated the point.
-
-**Never derive an authorization decision from a request header.** A
-`Host: localhost` check in the claim flow was a real auth bypass. Reset links
-come from `OPB_SITE_URL`. Cookies and environment only.
-
-**Enquiries never travel inside published content.** They are separate storage
-now, and `withoutEnquiries()` in `core/content/sanitise.ts` strips them at the
-publish boundary — including out of nested version snapshots, because the
-published document is serialised into the HTML of every public page.
-
-**`getStorageAdapter()` is async and provisions once per process.** Await it.
-It was synchronous until recently, and the change fixed a defect where an
-upgraded instance never created its `opb_messages` table.
-
-### Things that will bite you
-
-**Test with `npm ci`, not `npm install`.** A populated `node_modules` lets npm
-reuse what is already there and hides peer-dependency conflicts. This exact
-mistake merged a broken dependency bump into `main`. Delete `node_modules`,
-run `npm ci`, then check.
-
-**ESLint is pinned to 9 and TypeScript to 5.5, on purpose.** ESLint 10 has no
-compatible `eslint-plugin-jsx-a11y`, and TypeScript 7 falls outside
-`typescript-eslint`'s peer range. Do not bump either until upstream catches up.
-Dependabot will keep proposing it.
-
-**Tailwind is pinned to 3.4.** PR #7 (Tailwind 4) is open and was held until the
-design tokens existed. They exist now, so it is unblocked — but it replaces the
-JS config with CSS-first `@theme`, and the cascade-layer ordering below is
-load-bearing, so treat it as real work rather than a version bump.
-
-**Cascade layer order matters.** `src/styles/layers.css` must be imported before
-the Astryx stylesheets. Tailwind 3 emits Preflight unlayered and a layer's rank
-is fixed the first time it appears; get it wrong and
-`button { background-color: transparent }` silently cancels Astryx button fills.
-
-**Admin paths are router-relative.** The admin runs under `basename="/admin"`,
-so `to="/admin/login"` resolves to `/admin/admin/login`. Write `to="/login"`.
-Related: Astryx's `Link` is a plain anchor, not router-aware — inside the admin
-it needs an `onClick` that calls `preventDefault()` and `navigate()`, or a cold
-load will 404 outside the router.
-
-**`middleware.ts` redirects sessionless `/admin/*` requests.** Any new
-unauthenticated admin entry point must be exempted there, or the query string is
-silently dropped. This is how the emailed reset link broke: it worked from
-inside the app and failed on the cold load that is the only real-world path.
-
-**Windows and Linux disagree about concurrent renames.** Linux allows a rename
-onto a file another rename is touching; Windows returns `EPERM`. The local
-adapter serialises writes per path because of this. If a test passes on one
-platform, that is not evidence it passes on the other — Docker is right there.
-
-**`format:check` and line endings.** `.gitattributes` normalises to LF. If you
-see a diff touching every file, your checkout is CRLF and something is wrong
-with your git config, not with the code.
-
-**Prettier does not read `.gitignore`.** Agent scratch and generated
-directories have to be listed in `.prettierignore` separately, or `format:check`
-fails on files that are not part of the project.
-
-**Do not run a background agent and foreground work in the same checkout.** Two
-processes editing one working tree produced transient `ReferenceError`s from
-reading files mid-write, and one agent watched another's commit land underneath
-it. Use a worktree or wait.
-
-### Known bugs and deferred items
-
-Nothing here is a blocker; all of it is real and none of it is fixed.
-
-**Cosmetic — the `unread-messages` health check pluralises wrongly**, producing
-"2 enquiry enquiries unread".
-
-**Robustness — `/api/admin/messages` has no rate limiting**, unlike every
-sibling admin route. Owner-only and same-origin, so the risk is low.
-
-**Robustness — an inert leftover after a crash.** If a process dies between the
-message migration's append and its snapshot-clear, a copy stays in that
-channel's snapshot and is never revisited, because the guard is
-destination-based. Self-heals on the next publish for `published`, not for
-`draft`.
-
-**Reporting — a database hiccup renders as an empty inbox, not an error.**
-`app/api/admin/messages/route.ts` calls `messages.list()` outside its `try`, and
-`CMSContext` swallows a non-ok response. The cause that made this matter is
-fixed; the amplifier is not.
-
-**Test gap — `transport.test.ts`'s "implicit TLS only for the documented value"
-asserts only the positive case.** It never checks that `'true'` or `'0'` leave
-TLS off, so its title currently overstates what it proves.
-
-### What is genuinely unverified
-
-Be careful about claiming otherwise. Only four things need a cloud account, and
-none of them block local development — see
-[Finishing locally, before any cloud account](#finishing-locally-before-any-cloud-account).
-
-1. **Vercel Blob.** Proprietary, no emulator, and it is what the Deploy button
-   provisions — so it is the highest-priority cloud check. The database half of
-   Neon is proven; the object-store half has never run.
-2. **Supabase Storage against the live service.** The code path is exercised
-   locally, but `supabase start` has not been wired into the suite yet.
-3. **Real SMTP deliverability.** Mailpit accepts everything; a real provider
-   enforces SPF, DKIM and rate limits.
-4. **The Deploy button flow**, and anything measured on a public URL —
-   Lighthouse budgets, securityheaders.com, Mozilla Observatory.
-
-### Architecture in three sentences
-
-`app/` holds routes only. `core/` holds server-only domain logic — storage
-adapters behind one contract, auth, email, content reads — and files there start
-with `import 'server-only'` so a leaked credential is a build failure, except
-`core/theme/*`, which deliberately runs in the browser too. `src/` still holds
-the public site components (`src/views`, `src/components`) and the old admin
-(`src/admin`), which is the part Phase 7 replaces.
-
-### Adding a storage backend
-
-One file in `core/storage/adapters/`, one line in `core/storage/registry.ts`,
-env-var inference in `inferAdapterId()`, and a green run of
-`core/storage/conformance.ts`. If it is SQL, reuse
-`core/storage/adapters/_shared/postgres.ts` — Supabase, Neon and generic
-Postgres all do, which is why the fourth one cost almost nothing.
-
-**The conformance suite is not optional.** It has caught three real concurrency
-bugs so far, two of which only appeared on one platform. An adapter without a
-green run should not ship.
+What stays below is the part that belongs to a _plan_ rather than to a handover:
+where the built thing knowingly departs from what was designed, and which
+choices are still the maintainer's to make.
 
 ### Deliberate deviations from the plan above
 
@@ -1387,20 +1165,3 @@ These are not blocked on work. They are choices about the product.
 | **Tag a first release**                 | Three features read GitHub Releases and find nothing. Do it after verifying uploads                                                                           |
 | **Vercel Hobby's non-commercial terms** | Now quoted and dated in the README, without interpretation. Nothing further is needed unless you want to change the primary recommendation                    |
 | **Feedback route**                      | Settled: GitHub device flow. Needs one OAuth App created once, and `OPB_GITHUB_CLIENT_ID` set. Until then the admin falls back to opening a pre-filled tab    |
-
-### Verifying your work
-
-Claims in this repository are expected to be backed by something you ran. The
-patterns used throughout:
-
-- **Server rendering:** `curl` the route and grep the raw HTML for the content
-  and the meta tags. If it is only in the DOM after hydration, it is not
-  server-rendered.
-- **Auth:** check the failure cases, not the success case. Wrong passphrase,
-  wrong email, no session, cross-site origin, a replayed reset link.
-- **Storage:** run the conformance suite against a real database in Docker.
-- **Email:** send to Mailpit and read what arrived, including the headers.
-- **Anything visual:** load it in a browser and check the console is clean.
-- **Any bug fix:** confirm the new test fails against the unfixed code before
-  you fix it. A test that never failed proves nothing, and this rule has already
-  caught a fix that did not work.
