@@ -18,6 +18,11 @@ function sampleFor(field: BlockField): unknown {
       return true;
     case 'paragraphs':
       return ['One.', 'Two.'];
+    // Both write an array of strings; they differ only in what the editor
+    // splits on. The `default` branch below returns a bare string, which is
+    // what caught this the first time a `lines` field was added.
+    case 'lines':
+      return ['One', 'Two'];
     case 'choice':
       return field.options[0].value;
     case 'list':

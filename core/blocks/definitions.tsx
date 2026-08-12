@@ -19,6 +19,7 @@ import { deeper } from '../primitives/heading-level';
 import type { BlockField } from './fields';
 import type { BlockDefinition } from './schema';
 import { COLLECTION_DEFINITIONS } from './collections';
+import { STANDARD_DEFINITIONS } from './standard';
 
 /**
  * The first six block types.
@@ -541,4 +542,9 @@ export const BLOCK_DEFINITIONS = [
   // because their props say *which* records to show and never what the records
   // say — a different shape, and this file is long enough.
   ...COLLECTION_DEFINITIONS,
+  // The palette every other builder has and this one did not: a contact form,
+  // an accordion, a video, a picture beside text. Chosen from what Squarespace,
+  // Wix, Framer, Carrd and Adobe Portfolio all ship, rather than from what this
+  // architecture found convenient to add.
+  ...STANDARD_DEFINITIONS,
 ] as unknown as BlockDefinition<never>[];

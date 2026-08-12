@@ -141,6 +141,24 @@ const OneField: React.FC<{
         />
       );
 
+    case 'lines':
+      return (
+        <TextArea
+          label={field.label}
+          description={field.help ?? 'One per line.'}
+          rows={5}
+          value={Array.isArray(value) ? (value as string[]).join('\n') : ''}
+          onChange={(next) =>
+            write(
+              next
+                .split('\n')
+                .map((line) => line.trim())
+                .filter(Boolean)
+            )
+          }
+        />
+      );
+
     case 'textarea':
       return (
         <TextArea

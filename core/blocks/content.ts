@@ -8,6 +8,7 @@ import type {
   ProcessStepItem,
   ProjectItem,
   RecommendationItem,
+  SocialLinkItem,
 } from '@/cms/types/cms';
 
 /**
@@ -40,6 +41,11 @@ export interface BlockContent {
   processSteps: ProcessStepItem[];
   capabilityGroups: CapabilityGroupItem[];
   recommendations: RecommendationItem[];
+  /**
+   * Where else to find the owner. Public by definition — they are links the
+   * site already prints in its footer — so a block may place them.
+   */
+  socialLinks: SocialLinkItem[];
 }
 
 /** What a block sees when nobody passed it anything. Never null — see below. */
@@ -52,6 +58,7 @@ export const EMPTY_BLOCK_CONTENT: BlockContent = {
   processSteps: [],
   capabilityGroups: [],
   recommendations: [],
+  socialLinks: [],
 };
 
 function byOrder<T extends { sortOrder: number }>(items: T[]): T[] {
@@ -86,5 +93,6 @@ export function blockContentFrom(state: CMSState | undefined): BlockContent {
     processSteps: visible(state.processSteps),
     capabilityGroups: visible(state.capabilityGroups),
     recommendations: visible(state.recommendations),
+    socialLinks: visible(state.socialLinks),
   };
 }

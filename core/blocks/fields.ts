@@ -24,6 +24,18 @@ export type BlockField =
   | (FieldBase & { kind: 'text'; placeholder?: string })
   | (FieldBase & { kind: 'textarea'; rows?: number })
   | (FieldBase & { kind: 'paragraphs' })
+  /**
+   * A list of short strings, one per line.
+   *
+   * Distinct from `paragraphs`, which splits on blank lines because a paragraph
+   * may itself contain single newlines. These are labels — the things included
+   * in an offer, the choices in a dropdown — and asking somebody to leave a
+   * blank line between two three-word items is a strange thing to ask.
+   *
+   * Also distinct from `list`, whose rows are objects. A `list` of bare strings
+   * has nowhere to put its `titlePath` and no sub-field path to write to.
+   */
+  | (FieldBase & { kind: 'lines'; placeholder?: string })
   | (FieldBase & { kind: 'choice'; options: { value: string | number; label: string }[] })
   | (FieldBase & { kind: 'toggle' })
   | (FieldBase & {
