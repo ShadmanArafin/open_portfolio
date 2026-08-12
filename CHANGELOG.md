@@ -35,8 +35,14 @@ portfolio online and run it without opening a file.
   editor with nothing shared to vandalise.
 - **Build pages visually.** Add blocks, reorder them, hide them, edit every
   field, set each page's own title and description for search results, preview
-  before publishing. Seven block types: hero, text, image, gallery, numbers,
-  cards, and a call to action.
+  before publishing. Seven blocks you fill in yourself: hero, text, image,
+  gallery, numbers, cards, and a call to action.
+- **Put your own work on a page.** Six more blocks show what you have already
+  entered elsewhere — your work, experience, clients, recommendations, what you
+  do, and how you work. You choose which and how many; the page follows the
+  records, so updating a project updates every page showing it. A block whose
+  list is still empty tells you it will not appear, rather than leaving a gap
+  you find out about later.
 - **Build your home page the same way.** It falls back to the theme's own
   layout until you publish one, so nothing changes until you decide it should.
 - **Choose pictures from your library** instead of uploading the same file
@@ -89,8 +95,8 @@ a portfolio:
   export is the exit. Sign-ups also need a mail server connected, because
   confirming means emailing somebody a link.
 - **Themes change colour, type and spacing — not layout.** Six of them, but
-  they do not rearrange the page. Different structures come with more block
-  types.
+  they do not rearrange the page. Blocks that show your records adapt to what
+  you have; a theme still cannot change the arrangement itself.
 - **The admin is not laid out for a phone yet**, though it installs and works.
   Notifications are not built.
 - **Sign-in is an email and a passphrase.** No passkeys, no one-time codes.

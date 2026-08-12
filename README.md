@@ -182,9 +182,13 @@ Every step is skippable. None of it is permanent.
   checked against the same contrast rules that block publishing. Pick one and
   change anything you like on top; your changes always win.
 - **A visual page builder.** Add blocks, drag them into order, hide them, edit
-  every field. Seven block types so far: hero, text, image, gallery, numbers,
-  cards and a call to action. Reordering is buttons in an outline rather than
-  dragging a canvas, so it works with a keyboard and on a phone.
+  every field. Thirteen block types so far. Seven you fill in yourself — hero,
+  text, image, gallery, numbers, cards and a call to action — and six that show
+  what you have already entered: your work, experience, clients,
+  recommendations, what you do and how you work. Those follow the records, so
+  updating a project updates every page showing it. Reordering is buttons in an
+  outline rather than dragging a canvas, so it works with a keyboard and on a
+  phone.
 - **Any number of pages**, each at its own address, each with its own title and
   description for search results. If you pick an address the site already uses,
   it says so and suggests one that works instead of quietly 404ing later.
@@ -262,15 +266,16 @@ discover them after typing in a portfolio:
   end to end on the local filesystem backend. The same code path drives Supabase
   Storage and Vercel Blob, and the storage conformance suite covers both, but
   neither has yet been run against the live service with real credentials.
-- **Your home page is not built from blocks yet.** You can create any number of
-  pages and build them visually — add blocks, reorder them, edit every field,
-  set each page's own SEO, preview before publishing. The home page itself is
-  still the theme's fixed sections, edited under Homepage. That is the largest
-  remaining gap in the builder.
+- **Your home page starts as the theme's fixed layout.** Not a gap any more —
+  you can rebuild it from blocks under Pages, and it takes over the moment you
+  publish. Until you do, nothing about your site changes. The old layout is
+  still edited on its own screen, which is the part that has not been merged
+  away.
 - **Six themes, but they are colour, type and spacing only.** Each one changes
   the palette, the typeface, how tight the layout is and how round the corners
-  are — not the arrangement of the page. Different structures come with more
-  block types.
+  are — not the arrangement of the page. Blocks that show your records adapt to
+  what you have, so a page is less fixed than it was, but a theme still cannot
+  rearrange it.
 - **The admin is not laid out for a phone yet.** It installs to a home screen
   and works on a small screen, but the editing screens were designed for a
   desktop. Notifications are not built.

@@ -521,9 +521,21 @@ Passkey + OTP + sessions + claim + CSRF + rate limiting + CSP/headers. `requireO
 >
 > **The block system now exists.** `core/blocks/` ships the versioned envelope,
 > a registry, defensive parsing, per-block-type migrations, the renderer, and
-> seven block types (hero, richText, image, gallery, stats, cards, ctaBanner)
-> composed only from primitives. The `frame` vocabulary landed with the
-> primitives in Phase 2.
+> thirteen block types composed only from primitives. The `frame` vocabulary
+> landed with the primitives in Phase 2.
+>
+> Seven hold what somebody typed into them — `hero`, `richText`, `image`,
+> `gallery`, `stats`, `cards`, `ctaBanner`. Six hold a _rule_ about which
+> records to show — `collection`, `timeline`, `logoWall`, `testimonials`,
+> `skills`, `steps` — and the page follows the records. That second kind is the
+> plan's "your stuff lives in collections; your pages arrange it", and until it
+> existed the ten collections in the admin were reachable from no block at all:
+> a person could build a page but not put their own work on it.
+>
+> Content reaches a block through `BlockContent`, passed down by the renderer
+> rather than fetched inside the block — `Render` is synchronous, so a block
+> that awaited its own content would be an async Server Component. It is
+> deliberately narrow, and a test fails if `messages` ever appears in it.
 >
 > Three decisions in it are load-bearing:
 >

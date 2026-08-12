@@ -138,17 +138,17 @@ free Vercel account and about twenty minutes.
 
 Ordered by how much a user would notice.
 
-| Gap                                  | Notes                                                                                                                                                         |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **The newsletter cannot send**       | By design. It collects, confirms and exports; broadcasting is a different product. It also needs SMTP configured, or sign-ups fail honestly with a 503        |
-| **No mobile admin layout**           | It installs and works on a phone; the editing screens were drawn for a desktop. The research sizes this at 10–20 days and calls it retention, not acquisition |
-| **No push notifications**            | Needs VAPID and a real device. The service worker must carve out `/admin` first — see the Serwist trap below                                                  |
-| **No marketing site, no docs site**  | `research/LANDING-PAGE.md` is a 1,117-line spec with the copy already written                                                                                 |
-| **7 block types of ~29**             | `hero richText image gallery stats cards ctaBanner`                                                                                                           |
-| **5 storage backends unbuilt**       | Firebase, Convex, Cloudflare D1+R2, PocketBase, Appwrite. Not advertised in the README. Each needs an emulator — do not ship one you have not run             |
-| **Passphrase auth only**             | No passkeys, no email OTP                                                                                                                                     |
-| **Themes change tokens, not layout** | Six of them, and they do not rearrange a page. Different structures need more block types                                                                     |
-| **Tailwind 4**                       | Deferred, not blocked                                                                                                                                         |
+| Gap                                  | Notes                                                                                                                                                                                                          |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **The newsletter cannot send**       | By design. It collects, confirms and exports; broadcasting is a different product. It also needs SMTP configured, or sign-ups fail honestly with a 503                                                         |
+| **No mobile admin layout**           | It installs and works on a phone; the editing screens were drawn for a desktop. The research sizes this at 10–20 days and calls it retention, not acquisition                                                  |
+| **No push notifications**            | Needs VAPID and a real device. The service worker must carve out `/admin` first — see the Serwist trap below                                                                                                   |
+| **No marketing site, no docs site**  | `research/LANDING-PAGE.md` is a 1,117-line spec with the copy already written                                                                                                                                  |
+| **13 block types of ~29**            | Literal: `hero richText image gallery stats cards ctaBanner`. Record-placing: `collection timeline logoWall testimonials skills steps`                                                                         |
+| **5 storage backends unbuilt**       | Firebase, Convex, Cloudflare D1+R2, PocketBase, Appwrite. Not advertised in the README. Each needs an emulator — do not ship one you have not run                                                              |
+| **Passphrase auth only**             | No passkeys, no email OTP                                                                                                                                                                                      |
+| **Themes change tokens, not layout** | Six of them, and they do not rearrange a page. Less true than it was, since a page of record-placing blocks follows the records rather than fixed copy, but a theme still cannot change the arrangement itself |
+| **Tailwind 4**                       | Deferred, not blocked                                                                                                                                                                                          |
 
 ---
 
