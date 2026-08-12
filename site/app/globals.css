@@ -1,0 +1,855 @@
+/*
+ * The look, in one file.
+ *
+ * The idea it is built on: this is a page about *provenance*. Its whole
+ * argument is that every claim on it can be checked — the licence, the
+ * competitors' own support articles, the cost of each host, the gaps in the
+ * product. So it borrows the visual language of the documents that exist to be
+ * verified rather than admired: share certificates, land deeds, registry
+ * entries.
+ *
+ * That produces three decisions everything else follows from.
+ *
+ * 1. **Security-printing green** as the only positive accent. Banknotes and
+ *    stock certificates were engraved in that green because it was the hardest
+ *    colour to forge — it has meant "this can be checked" for a hundred and
+ *    fifty years. Here it marks anything a reader can verify in one click.
+ * 2. **An oxide red counter-stamp**, used for exactly one thing: what does not
+ *    work yet. Two accents, each with a job, so a colour on this page always
+ *    means something.
+ * 3. **A didone display face.** Bodoni is the typographic language of engraved
+ *    certificates. Paired with a civic grotesque for reading and a mono for the
+ *    record — versions, dates, commands, citations.
+ *
+ * The paper is a cool grey-green certificate stock rather than a warm cream,
+ * and dark mode is the same family rather than a different one: an ink-green
+ * black, so the accents keep their meaning in both.
+ */
+
+@import '@fontsource-variable/bodoni-moda';
+@import '@fontsource-variable/public-sans';
+@import '@fontsource/ibm-plex-mono/400.css';
+@import '@fontsource/ibm-plex-mono/500.css';
+
+:root {
+  --paper: #eef1ec;
+  --paper-sunken: #e3e8e2;
+  --card: #f8faf7;
+  --ink: #0e1a16;
+  --ink-2: #3d4a44;
+  /*
+   * Darker than it looks like it should be. The obvious value for a muted grey
+   * on this paper cleared 4.04:1, and 3.71:1 on the tinted band — and this
+   * token is used for the mono eyebrows, the table headers and the footer,
+   * which are all small text and all need 4.5. Checked, not eyeballed.
+   */
+  --ink-3: #586560;
+  --rule: #c9d2cb;
+  --rule-strong: #9aa8a0;
+  --seal: #0b5d3b;
+  --seal-wash: #dcebe2;
+  --stamp: #a6351f;
+  --stamp-wash: #f2e0da;
+
+  --font-display: 'Bodoni Moda Variable', 'Bodoni MT', Didot, 'Times New Roman', serif;
+  --font-body: 'Public Sans Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+
+  /* A fifth-based scale, clamped so nothing needs a breakpoint. */
+  --t-hero: clamp(2.75rem, 1.4rem + 6vw, 6rem);
+  --t-title: clamp(2rem, 1.2rem + 3.2vw, 3.5rem);
+  --t-head: clamp(1.35rem, 1.05rem + 1.2vw, 1.85rem);
+  --t-sub: clamp(1.05rem, 0.98rem + 0.35vw, 1.2rem);
+  --t-body: 1rem;
+  --t-small: 0.875rem;
+  --t-micro: 0.75rem;
+
+  --gutter: clamp(1.25rem, 5vw, 4rem);
+  --band-y: clamp(3.5rem, 7vw, 7rem);
+  --measure: 62ch;
+  --rail: 8.5rem;
+  --radius: 2px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #0c1512;
+    --paper-sunken: #091110;
+    --card: #121e19;
+    --ink: #e8eee9;
+    --ink-2: #aab8b1;
+    --ink-3: #7d8c85;
+    --rule: #223129;
+    --rule-strong: #3a4d43;
+    --seal: #6fcb9f;
+    --seal-wash: #10261c;
+    --stamp: #e58a70;
+    --stamp-wash: #2a1712;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--t-body);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--seal);
+  outline-offset: 3px;
+}
+
+/* ------------------------------------------------------------------ bands */
+
+/*
+ * The page is a stack of full-bleed bands with a hairline between them, which
+ * is the product's own model for a page. The site is built the way the thing
+ * it sells builds things.
+ */
+.band {
+  border-top: 1px solid var(--rule);
+  padding-block: var(--band-y);
+  padding-inline: var(--gutter);
+  scroll-margin-top: 4rem;
+}
+
+.band--first {
+  border-top: 0;
+}
+
+.band--sunken {
+  background: var(--paper-sunken);
+}
+
+.band__inner {
+  max-width: 76rem;
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: var(--rail) minmax(0, 1fr);
+  gap: clamp(1rem, 3vw, 3rem);
+}
+
+/* The rail carries the block type, not a number: these are the product's own
+   block names, so the label says something true rather than counting. */
+.band__rail {
+  font-family: var(--font-mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--rule-strong);
+  align-self: start;
+  position: sticky;
+  top: 5rem;
+}
+
+@media (max-width: 60rem) {
+  .band__inner {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .band__rail {
+    position: static;
+    padding-top: 0;
+    border-top: 0;
+    margin-bottom: 0.5rem;
+  }
+}
+
+.band__body {
+  min-width: 0;
+}
+
+/* --------------------------------------------------------------- typography */
+
+.display {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-weight: 500;
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  margin: 0;
+  font-size: var(--t-hero);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+  margin: 0;
+  font-size: var(--t-title);
+}
+
+.head {
+  font-family: var(--font-display);
+  font-weight: 500;
+  line-height: 1.15;
+  margin: 0;
+  font-size: var(--t-head);
+}
+
+.lede {
+  font-size: var(--t-sub);
+  line-height: 1.5;
+  color: var(--ink-2);
+  max-width: var(--measure);
+  margin: 0;
+}
+
+.prose {
+  max-width: var(--measure);
+  color: var(--ink-2);
+}
+
+.prose p {
+  margin: 0 0 1rem;
+}
+
+.prose p:last-child {
+  margin-bottom: 0;
+}
+
+.prose strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.micro {
+  font-family: var(--font-mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin: 0;
+}
+
+.small {
+  font-size: var(--t-small);
+  color: var(--ink-3);
+}
+
+/* ------------------------------------------------------------------ stamps */
+
+/*
+ * The signature element.
+ *
+ * Every factual claim on this site carries a provenance chip: what it was
+ * checked against and on what date, or an explicit admission that it could not
+ * be checked. Not one comparison page in the researched corpus date-stamps a
+ * competitor claim; doing it turns the page into something closer to an audit
+ * than an advertisement, which is the argument the product is making anyway.
+ */
+.stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius);
+  border: 1px solid currentColor;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.stamp--verified {
+  color: var(--seal);
+  background: var(--seal-wash);
+}
+
+.stamp--unverified {
+  color: var(--stamp);
+  background: var(--stamp-wash);
+}
+
+.stamp--plain {
+  color: var(--ink-3);
+  border-color: var(--rule-strong);
+}
+
+a.stamp:hover {
+  border-width: 1px;
+  filter: brightness(0.92);
+}
+
+/* ----------------------------------------------------------------- buttons */
+
+.cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 3rem;
+  padding-inline: 1.5rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--seal);
+  background: var(--seal);
+  color: var(--paper);
+  font-family: var(--font-body);
+  font-size: var(--t-small);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 120ms ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--rule-strong);
+}
+
+.btn--link {
+  min-height: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--seal);
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 1px solid currentColor;
+  border-radius: 0;
+}
+
+/* ------------------------------------------------------------------- lists */
+
+.rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--rule);
+}
+
+.rows > li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-block: 0.9rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.rows__label {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.rows__note {
+  color: var(--ink-2);
+  flex: 1 1 22rem;
+  min-width: 0;
+}
+
+.grid {
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+  grid-template-columns: repeat(auto-fit, minmax(min(19rem, 100%), 1fr));
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: clamp(1.25rem, 2.5vw, 1.75rem);
+  display: grid;
+  gap: 0.6rem;
+  align-content: start;
+}
+
+/* ------------------------------------------------------------------ tables */
+
+.table-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+}
+
+table.data {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--t-small);
+  min-width: 44rem;
+}
+
+table.data th,
+table.data td {
+  text-align: left;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+}
+
+table.data thead th {
+  font-family: var(--font-mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  background: var(--paper-sunken);
+}
+
+table.data tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+/* ----------------------------------------------------------------- quotes */
+
+.pullquote {
+  margin: 0;
+  padding-left: 1.25rem;
+  border-left: 3px solid var(--seal);
+  display: grid;
+  gap: 0.75rem;
+}
+
+.pullquote blockquote {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--t-head);
+  line-height: 1.3;
+  color: var(--ink);
+}
+
+.pullquote figcaption {
+  font-size: var(--t-small);
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* -------------------------------------------------------------------- nav */
+
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: color-mix(in oklab, var(--paper) 88%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--rule);
+}
+
+.nav__inner {
+  max-width: 76rem;
+  margin-inline: auto;
+  padding: 0.65rem var(--gutter);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav__brand {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.nav__version {
+  font-family: var(--font-mono);
+  font-size: var(--t-micro);
+  color: var(--seal);
+  letter-spacing: 0.08em;
+}
+
+.nav__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.1rem;
+  align-items: center;
+  font-size: var(--t-small);
+}
+
+.nav__links a {
+  text-decoration: none;
+  color: var(--ink-2);
+  padding-block: 0.4rem;
+}
+
+.nav__links a:hover {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* ----------------------------------------------------------------- footer */
+
+.footer {
+  border-top: 1px solid var(--rule);
+  padding: var(--band-y) var(--gutter) 3rem;
+  background: var(--paper-sunken);
+}
+
+.footer__inner {
+  max-width: 76rem;
+  margin-inline: auto;
+  display: grid;
+  gap: 2.5rem;
+}
+
+.footer__cols {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(11rem, 100%), 1fr));
+}
+
+.footer h2 {
+  font-family: var(--font-mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin: 0 0 0.75rem;
+  font-weight: 500;
+}
+
+.footer ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+  font-size: var(--t-small);
+}
+
+.footer a {
+  color: var(--ink-2);
+  text-decoration: none;
+}
+
+.footer a:hover {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.footer__strapline {
+  border-top: 1px solid var(--rule);
+  padding-top: 1.5rem;
+  font-size: var(--t-small);
+  color: var(--ink-3);
+  max-width: var(--measure);
+}
+
+/* --------------------------------------------------------------- doc pages */
+
+.doc {
+  max-width: 76rem;
+  margin-inline: auto;
+  padding: 2.5rem var(--gutter) 5rem;
+  display: grid;
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  grid-template-columns: 16rem minmax(0, 1fr);
+  align-items: start;
+}
+
+@media (max-width: 62rem) {
+  .doc {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.doc__nav {
+  position: sticky;
+  top: 4.5rem;
+  display: grid;
+  gap: 1.5rem;
+  font-size: var(--t-small);
+}
+
+@media (max-width: 62rem) {
+  .doc__nav {
+    position: static;
+  }
+}
+
+.doc__group h2 {
+  font-family: var(--font-mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin: 0 0 0.5rem;
+  font-weight: 500;
+}
+
+.doc__group ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.15rem;
+  border-left: 1px solid var(--rule);
+}
+
+.doc__group a {
+  display: block;
+  padding: 0.3rem 0 0.3rem 0.85rem;
+  margin-left: -1px;
+  border-left: 1px solid transparent;
+  color: var(--ink-2);
+  text-decoration: none;
+}
+
+.doc__group a:hover {
+  color: var(--ink);
+}
+
+.doc__group a[aria-current='page'] {
+  color: var(--seal);
+  border-left-color: var(--seal);
+  font-weight: 600;
+}
+
+/* Markdown output. Scoped so it cannot reach the marketing components. */
+.md {
+  max-width: 68ch;
+  color: var(--ink-2);
+}
+
+.md > *:first-child {
+  margin-top: 0;
+}
+
+.md h1 {
+  font-family: var(--font-display);
+  font-size: var(--t-title);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  margin: 0 0 0.75rem;
+}
+
+.md h2 {
+  font-family: var(--font-display);
+  font-size: var(--t-head);
+  font-weight: 500;
+  color: var(--ink);
+  margin: 2.5rem 0 0.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--rule);
+}
+
+.md h3 {
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 1.75rem 0 0.5rem;
+}
+
+.md p,
+.md li {
+  line-height: 1.65;
+}
+
+.md p {
+  margin: 0 0 1rem;
+}
+
+.md ul,
+.md ol {
+  margin: 0 0 1rem;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.md a {
+  color: var(--seal);
+  text-underline-offset: 3px;
+}
+
+.md strong {
+  color: var(--ink);
+}
+
+.md code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background: var(--paper-sunken);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 0.1em 0.35em;
+}
+
+.md pre {
+  font-family: var(--font-mono);
+  font-size: var(--t-small);
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 1rem;
+  overflow-x: auto;
+  line-height: 1.55;
+}
+
+.md pre code {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: inherit;
+}
+
+.md blockquote {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border-left: 3px solid var(--stamp);
+  background: var(--stamp-wash);
+  color: var(--ink);
+  border-radius: var(--radius);
+}
+
+.md blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+.md table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--t-small);
+  margin: 0 0 1rem;
+  display: block;
+  overflow-x: auto;
+}
+
+.md th,
+.md td {
+  text-align: left;
+  padding: 0.6rem 0.8rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.md th {
+  font-family: var(--font-mono);
+  font-size: var(--t-micro);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+  font-weight: 500;
+}
+
+.md hr {
+  border: 0;
+  border-top: 1px solid var(--rule);
+  margin: 2rem 0;
+}
+
+/* -------------------------------------------------------------- disclosure */
+
+/*
+ * Native `<details>`, so the FAQ opens with no JavaScript, before hydration,
+ * from a keyboard, and announces its own state.
+ *
+ * Hiding the default triangle needs two declarations, not one: `list-style`
+ * covers Firefox and the modern path, and the `::-webkit-details-marker`
+ * pseudo-element is still what WebKit uses. Setting only the first leaves a
+ * stray triangle in Safari, which is invisible until somebody opens it there.
+ */
+details > summary {
+  list-style: none;
+}
+
+details > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* The affordance the marker was providing. Rotates rather than swaps glyphs,
+   so it reads as one thing changing state. */
+details > summary::after {
+  content: '+';
+  margin-left: auto;
+  padding-left: 1rem;
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  transition: transform 150ms ease;
+}
+
+details[open] > summary::after {
+  content: '−';
+}
+
+/* ------------------------------------------------------------------- misc */
+
+.skip {
+  position: absolute;
+  left: -9999px;
+}
+
+.skip:focus {
+  left: var(--gutter);
+  top: 0.5rem;
+  z-index: 50;
+  padding: 0.6rem 1rem;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: var(--radius);
+}
+
+.stack {
+  display: grid;
+  gap: 1.5rem;
+  align-content: start;
+}
+
+.stack--tight {
+  gap: 0.75rem;
+}
+
+.stack--loose {
+  gap: 2.5rem;
+}

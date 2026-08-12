@@ -26,7 +26,7 @@ JavaScript bundle. None of that remains.
 ```bash
 npm ci                          # ci, not install — see "Traps" below
 npm run dev                     # http://localhost:3000
-npm test                        # 492 passing, 7 skipped
+npm test                        # 655 passing, 7 skipped
 npm run typecheck && npm run lint && npm run build
 ```
 
@@ -44,7 +44,7 @@ docker run -d --name opb-mail -p 1025:1025 -p 8025:8025 axllent/mailpit
 # ECONNREFUSED. Both look like code bugs and neither is.
 
 TEST_POSTGRES_URL="postgres://postgres:postgres@localhost:55432/opb_test" \
-TEST_MAILPIT_URL="http://localhost:8025" npm test    # 588 passing, 2 skipped
+TEST_MAILPIT_URL="http://localhost:8025" npm test    # 751 passing, 2 skipped
 ```
 
 Setting `TEST_POSTGRES_URL` without the container running is worse than not
@@ -78,6 +78,14 @@ with `import 'server-only'` so a leaked credential is a build failure, except
 the public site components (`src/views`, `src/components`) and the admin
 (`src/admin`).
 
+`site/` is a **separate application** — the marketing site, the help centre and
+the developer docs. Its own `package.json`, its own toolchain, deliberately not
+an npm workspace member, and excluded from the product's tsconfig, ESLint and
+Prettier. It cannot live under the product's `app/` because the Deploy button
+clones this repository into the user's GitHub account, which would put
+`/alternatives/squarespace` on everybody's portfolio. See
+[site/README.md](../site/README.md).
+
 ### Environment variables
 
 All optional except where noted. Full list with commentary in
@@ -101,24 +109,26 @@ All optional except where noted. Full list with commentary in
 
 Everything below was run, not reasoned about.
 
-|                                | Verified by                                                                                    |
-| ------------------------------ | ---------------------------------------------------------------------------------------------- |
-| Deploy → claim → login         | Fresh install, full HTTP walkthrough                                                           |
-| Second claim refused           | Same walkthrough                                                                               |
-| Build a page from blocks       | Browser: add block, reorder, edit, publish                                                     |
-| **Home page from blocks**      | Browser: outline becomes h1 hero → h2 cards → h3 items                                         |
-| Media picker                   | Browser: chose from library, filled `src` and `alt` together                                   |
-| Publish reaches visitors       | `curl` of the public HTML after publishing                                                     |
-| Draft preview                  | Preview showed the draft title; public showed the published one                                |
-| Contact form → inbox           | HTTP round trip                                                                                |
-| Contact form → email           | Real message delivered to Mailpit with correct headers                                         |
-| SMTP configured from the admin | Browser: entered settings, pressed Test, got a real connection                                 |
-| Storage conformance            | 21 assertions against real Postgres in Docker, in CI                                           |
-| Revisions and conflicts        | Two racing conditional writes; exactly one wins                                                |
-| Docker self-host               | Container destroyed and recreated; owner and content survived                                  |
-| Uploads (local filesystem)     | HTTP upload, file on disk, served back                                                         |
-| Uploads (Docker + Postgres)    | Upload through the admin, file on the mounted volume, served back at 200                       |
-| Newsletter, end to end         | Sign up → Mailpit → confirm → CSV → one-click unsubscribe, on both the filesystem and Postgres |
+|                                | Verified by                                                                                                                                           |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Deploy → claim → login         | Fresh install, full HTTP walkthrough                                                                                                                  |
+| Second claim refused           | Same walkthrough                                                                                                                                      |
+| Build a page from blocks       | Browser: add block, reorder, edit, publish                                                                                                            |
+| **Home page from blocks**      | Browser: outline becomes h1 hero → h2 cards → h3 items                                                                                                |
+| Media picker                   | Browser: chose from library, filled `src` and `alt` together                                                                                          |
+| Publish reaches visitors       | `curl` of the public HTML after publishing                                                                                                            |
+| Draft preview                  | Preview showed the draft title; public showed the published one                                                                                       |
+| Contact form → inbox           | HTTP round trip                                                                                                                                       |
+| Contact form → email           | Real message delivered to Mailpit with correct headers                                                                                                |
+| SMTP configured from the admin | Browser: entered settings, pressed Test, got a real connection                                                                                        |
+| Storage conformance            | 21 assertions against real Postgres in Docker, in CI                                                                                                  |
+| Revisions and conflicts        | Two racing conditional writes; exactly one wins                                                                                                       |
+| Docker self-host               | Container destroyed and recreated; owner and content survived                                                                                         |
+| Uploads (local filesystem)     | HTTP upload, file on disk, served back                                                                                                                |
+| Uploads (Docker + Postgres)    | Upload through the admin, file on the mounted volume, served back at 200                                                                              |
+| Newsletter, end to end         | Sign up → Mailpit → confirm → CSV → one-click unsubscribe, on both the filesystem and Postgres                                                        |
+| Marketing site, 31 pages       | Static export served and walked in a browser: light and dark, 390px and 1280px, one h1, no skipped heading levels, no horizontal scroll               |
+| Its own contrast rule          | `npm run check:contrast` in `site/`, wired into its build. Caught a muted grey at 4.04:1 that had already shipped into every eyebrow and table header |
 
 ### The one thing that matters and is not verified
 
@@ -138,17 +148,19 @@ free Vercel account and about twenty minutes.
 
 Ordered by how much a user would notice.
 
-| Gap                                  | Notes                                                                                                                                                                                                          |
-| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **The newsletter cannot send**       | By design. It collects, confirms and exports; broadcasting is a different product. It also needs SMTP configured, or sign-ups fail honestly with a 503                                                         |
-| **No mobile admin layout**           | It installs and works on a phone; the editing screens were drawn for a desktop. The research sizes this at 10–20 days and calls it retention, not acquisition                                                  |
-| **No push notifications**            | Needs VAPID and a real device. The service worker must carve out `/admin` first — see the Serwist trap below                                                                                                   |
-| **No marketing site, no docs site**  | `research/LANDING-PAGE.md` is a 1,117-line spec with the copy already written                                                                                                                                  |
-| **13 block types of ~29**            | Literal: `hero richText image gallery stats cards ctaBanner`. Record-placing: `collection timeline logoWall testimonials skills steps`                                                                         |
-| **5 storage backends unbuilt**       | Firebase, Convex, Cloudflare D1+R2, PocketBase, Appwrite. Not advertised in the README. Each needs an emulator — do not ship one you have not run                                                              |
-| **Passphrase auth only**             | No passkeys, no email OTP                                                                                                                                                                                      |
-| **Themes change tokens, not layout** | Six of them, and they do not rearrange a page. Less true than it was, since a page of record-placing blocks follows the records rather than fixed copy, but a theme still cannot change the arrangement itself |
-| **Tailwind 4**                       | Deferred, not blocked                                                                                                                                                                                          |
+| Gap                                    | Notes                                                                                                                                                                                                            |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **The newsletter cannot send**         | By design. It collects, confirms and exports; broadcasting is a different product. It also needs SMTP configured, or sign-ups fail honestly with a 503                                                           |
+| **No mobile admin layout**             | It installs and works on a phone; the editing screens were drawn for a desktop. The research sizes this at 10–20 days and calls it retention, not acquisition                                                    |
+| **No push notifications**              | Needs VAPID and a real device. The service worker must carve out `/admin` first — see the Serwist trap below                                                                                                     |
+| **The marketing site has no home**     | Built, in `site/`, and it builds to a static export. It is not deployed and there is no domain — see "What to do next"                                                                                           |
+| **No hosted demo**                     | `OPB_DEMO_MODE` works and `docker compose -f docker-compose.demo.yml up` runs it. Nothing is hosted, so `/demo` on the marketing site says so rather than linking to a dead button                               |
+| **No product screenshots on the site** | The marketing site ships with no imagery. The research specifies a shot list and one photographer persona throughout; `docs/images/` has two shots and they are of the old admin                                 |
+| **22 block types**                     | Literal: `hero richText image gallery stats cards ctaBanner contactForm faq video split quote newsletter socialRow services separator`. Record-placing: `collection timeline logoWall testimonials skills steps` |
+| **5 storage backends unbuilt**         | Firebase, Convex, Cloudflare D1+R2, PocketBase, Appwrite. Not advertised in the README. Each needs an emulator — do not ship one you have not run                                                                |
+| **Passphrase auth only**               | No passkeys, no email OTP                                                                                                                                                                                        |
+| **Themes change tokens, not layout**   | Six of them, and they do not rearrange a page. Less true than it was, since a page of record-placing blocks follows the records rather than fixed copy, but a theme still cannot change the arrangement itself   |
+| **Tailwind 4**                         | Deferred, not blocked                                                                                                                                                                                            |
 
 ---
 
@@ -315,13 +327,21 @@ its phone editor, but they do abandon one they cannot fix a typo in from a
 train. It installs to a home screen already; the screens themselves were drawn
 for a desktop.
 
-**4. The marketing site.** Every other launch asset points at it, and it is
-specified in [LANDING-PAGE.md](research/LANDING-PAGE.md) down to the copy. The
-live demo it needs already exists — `OPB_DEMO_MODE`, built as a product feature
-rather than an ops task, because every hand-maintained sandbox in the
-researched corpus is dead or retired.
+**4. Deploy the marketing site and the demo.** The site is built and it exports
+to static files; it has never been deployed and there is no domain. It is a
+second Vercel project on the same repository with **Root Directory** set to
+`site` and `SITE_URL` set to whatever the domain turns out to be. The demo is a
+third deployment of the _product_ with `OPB_DEMO_MODE=1`; until it exists,
+`/demo` says so rather than offering a button that does nothing.
 
-**5. Then push notifications and the remaining adapters**, both of which need something this machine does not have — a real device, and five emulators.
+**5. Screenshots.** The marketing site ships with no product imagery at all,
+which is the biggest visible gap in it. The research specifies the shot list and
+insists on one persona throughout — a photographer, because the gallery and
+image blocks are the best-looking part of the product and image-heavy shots
+survive being scaled to a social card. Mixing personas across screenshots is the
+fastest way to make a young product look like a mock-up.
+
+**6. Then push notifications and the remaining adapters**, both of which need something this machine does not have — a real device, and five emulators.
 
 Open decisions that are the maintainer's, not an engineer's, are listed at the
 end of [PLAN.md](PLAN.md).

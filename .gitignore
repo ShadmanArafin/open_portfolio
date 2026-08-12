@@ -40,3 +40,8 @@ next-env.d.ts
 
 # TypeScript incremental build cache
 *.tsbuildinfo
+
+# The marketing and docs site is a separate application in site/.
+site/node_modules/
+site/.next/
+site/out/

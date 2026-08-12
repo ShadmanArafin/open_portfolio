@@ -35,8 +35,16 @@ portfolio online and run it without opening a file.
   editor with nothing shared to vandalise.
 - **Build pages visually.** Add blocks, reorder them, hide them, edit every
   field, set each page's own title and description for search results, preview
-  before publishing. Seven blocks you fill in yourself: hero, text, image,
-  gallery, numbers, cards, and a call to action.
+  before publishing. Sixteen blocks you fill in yourself: hero, text, image,
+  gallery, numbers, cards, a call to action, a contact form, questions and
+  answers, a video, a picture beside text, a quote, a newsletter box, your
+  social links, what you offer, and space.
+- **Take enquiries from any page.** The contact form used to exist only at
+  `/contact` and could not be placed anywhere else. It is a block now, posting
+  to the same endpoint, so it keeps the origin check, the rate limit and the
+  spam trap.
+- **Show a video without loading YouTube on every visit.** A poster and a play
+  button; nothing is fetched until somebody presses it.
 - **Put your own work on a page.** Six more blocks show what you have already
   entered elsewhere — your work, experience, clients, recommendations, what you
   do, and how you work. You choose which and how many; the page follows the
@@ -82,7 +90,12 @@ portfolio online and run it without opening a file.
   write with `EACCES: mkdir '/app/.opb'`. Every test passed throughout, because
   every test ran with that variable unset. There is now one function and a test
   that sets it.
-- 492 tests, or 588 with a database and a mail server attached.
+- **A marketing site, a help centre and developer docs**, in `site/` — a
+  separate application that builds to a static export. Every claim it makes
+  about another product carries a source link and the date it was read, and
+  every comparison page names at least two things the other product does
+  better.
+- 655 tests, or 751 with a database and a mail server attached.
 
 ### Known gaps
 

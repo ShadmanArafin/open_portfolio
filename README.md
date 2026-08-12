@@ -182,13 +182,18 @@ Every step is skippable. None of it is permanent.
   checked against the same contrast rules that block publishing. Pick one and
   change anything you like on top; your changes always win.
 - **A visual page builder.** Add blocks, drag them into order, hide them, edit
-  every field. Thirteen block types so far. Seven you fill in yourself — hero,
-  text, image, gallery, numbers, cards and a call to action — and six that show
-  what you have already entered: your work, experience, clients,
-  recommendations, what you do and how you work. Those follow the records, so
-  updating a project updates every page showing it. Reordering is buttons in an
-  outline rather than dragging a canvas, so it works with a keyboard and on a
-  phone.
+  every field. Twenty-two block types. Sixteen you fill in yourself — hero,
+  text, image, gallery, numbers, cards, a call to action, a contact form,
+  questions and answers, a video, a picture beside text, a quote, a newsletter
+  box, your social links, what you offer, and space — and six that show what
+  you have already entered: your work, experience, clients, recommendations,
+  what you do and how you work. Those follow the records, so updating a project
+  updates every page showing it. Reordering is buttons in an outline rather
+  than dragging a canvas, so it works with a keyboard and on a phone.
+- **A contact form you can put anywhere**, not only at `/contact`. And a video
+  block that loads nothing from YouTube until a visitor presses play — most of
+  them never will, and that is half a megabyte and some third-party state you
+  did not agree to on their behalf.
 - **Any number of pages**, each at its own address, each with its own title and
   description for search results. If you pick an address the site already uses,
   it says so and suggests one that works instead of quietly 404ing later.
@@ -313,8 +318,24 @@ discover them after typing in a portfolio:
 | 0.6           | More block types, a live demo                                                    |
 | 0.7           | Mobile admin, notifications                                                      |
 | 0.8           | Remaining backends, passkeys and one-time codes                                  |
-| 0.9           | A documentation site and a marketing site                                        |
+| 0.9           | The marketing site and the demo actually deployed, with screenshots              |
 | 1.0           | Stable                                                                           |
+
+### Documentation
+
+There are two sets, for two different people, and they live in
+[site/](site/) — a separate application in this repository that builds to a
+static export. It is not part of what you deploy.
+
+- **Help centre** (`site/content/help/`) — for anyone with a portfolio to run.
+  Never shows a terminal command; where a task needs one it links across.
+- **Developer docs** (`site/content/docs/`) — self-hosting, every environment
+  variable, the storage adapter contract, the block system, the theme tokens,
+  and why it is built the way it is.
+
+Both are plain Markdown with four lines of frontmatter, and the navigation,
+search and sitemap are generated from the files. `cd site && npm install &&
+npm run dev` to read them locally.
 
 What changed in each release, and who asked for it, is in
 **[CHANGELOG.md](CHANGELOG.md)**. Detailed status for every phase, including

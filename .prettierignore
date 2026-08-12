@@ -7,3 +7,6 @@ public/demo
 next-env.d.ts
 .opb
 .superpowers
+site/node_modules
+site/.next
+site/out
