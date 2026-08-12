@@ -18,6 +18,7 @@ import {
 import { deeper } from '../primitives/heading-level';
 import type { BlockField } from './fields';
 import type { BlockDefinition } from './schema';
+import { COLLECTION_DEFINITIONS } from './collections';
 
 /**
  * The first six block types.
@@ -536,4 +537,8 @@ export const BLOCK_DEFINITIONS = [
   stats,
   cards,
   ctaBanner,
+  // Blocks that place records rather than restate them. Kept in their own file
+  // because their props say *which* records to show and never what the records
+  // say — a different shape, and this file is long enough.
+  ...COLLECTION_DEFINITIONS,
 ] as unknown as BlockDefinition<never>[];
