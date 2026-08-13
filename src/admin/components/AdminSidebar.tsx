@@ -31,6 +31,7 @@ import {
   LifeBuoy,
   PenLine,
   AtSign,
+  Database,
 } from 'lucide-react';
 import { SideNav, SideNavHeading, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 import { Text } from '@astryxdesign/core/Text';
@@ -193,6 +194,7 @@ export const AdminSidebar: React.FC = () => {
             { label: 'SEO', path: '/seo', icon: Search },
             { label: 'General & backup', path: '/settings', icon: Sliders },
             { label: 'Services', path: '/services', icon: Plug },
+            { label: 'Where content lives', path: '/storage', icon: Database },
           ],
         },
         { label: 'Version history', path: '/history', icon: HistoryIcon },

@@ -1,5 +1,5 @@
 import 'server-only';
-import { del, head, list, put } from '@vercel/blob';
+import { BlobNotFoundError, del, head, list, put } from '@vercel/blob';
 import type { MediaAdapter, StorageAdapter } from '../contract';
 import { AdapterConfigError } from '../contract';
 import {
@@ -81,17 +81,26 @@ const media: MediaAdapter = {
     try {
       const found = await head(key, { token: blobToken() });
       return found?.url ?? null;
-    } catch {
-      // `head` throws rather than returning null when the blob is absent.
-      return null;
+    } catch (err) {
+      // `head` throws rather than returning null when the blob is absent, so
+      // that one error is the answer "no". Everything else — an expired token,
+      // a suspended store, a rate limit — is a fault, and returning null for it
+      // would report a configuration problem as a missing picture. The site
+      // would show gaps and the admin would say nothing, which is the exact
+      // failure this project keeps having to remove.
+      if (err instanceof BlobNotFoundError) return null;
+      throw err;
     }
   },
 
   async remove(key) {
     try {
       await del(key, { token: blobToken() });
-    } catch {
-      // Already gone is the outcome the caller wanted.
+    } catch (err) {
+      // Already gone is the outcome the caller wanted. A refused delete is not,
+      // and swallowing it would report "deleted" for a file still there.
+      if (err instanceof BlobNotFoundError) return;
+      throw err;
     }
   },
 
