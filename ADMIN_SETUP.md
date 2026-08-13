@@ -112,6 +112,7 @@ uploaded image, which is your backup and the way to move everything to another i
 | SEO                    | Page title, meta description, share image.                                                                                         |
 | General & backup       | Your name and contact details, the About story, and export/import/reset.                                                           |
 | Version history        | The last 20 published snapshots, any of which can be restored into your draft.                                                     |
+| Your site              | The public address to give people, and step-by-step for putting your own domain on it. Says plainly that a domain is not free.     |
 | Where content lives    | Which backend is storing your site, whether it is answering, and how the alternatives compare. Explains rather than switches.      |
 
 `src/data/` is **seed content only** — the demo projects and clients a fresh install starts with,

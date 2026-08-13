@@ -14,6 +14,12 @@ portfolio online and run it without opening a file.
 
 ### You can now
 
+- **Find out where your site actually is.** A screen showing the public address
+  to put on your CV, with a copy button — and, if you want one, exactly how to
+  put your own domain on it for your host. It is honest that the free address
+  is permanent and that a domain costs about £10–15 a year, paid to a registrar
+  and not to us.
+
 - **Upload pictures on a hosted backend, verified.** Both Supabase Storage and
   Vercel Blob were run against the real services for the first time. Supabase
   turned out to be broken in a way that would have stopped every Supabase site
