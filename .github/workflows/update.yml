@@ -34,7 +34,7 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           # The whole history, because a merge with no common ancestor is not a
           # merge — it is a pile of conflicts in every file at once.
