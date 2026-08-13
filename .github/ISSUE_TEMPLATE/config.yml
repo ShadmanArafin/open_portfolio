@@ -4,7 +4,7 @@
 blank_issues_enabled: true
 contact_links:
   - name: Report it from your own site's admin instead
-    url: https://github.com/ShadmanArafin/open_portfolio_builder/blob/main/docs/UPDATING.md
+    url: https://github.com/ShadmanArafin/open_portfolio/blob/main/docs/UPDATING.md
     about: >-
       Open "Help & feedback" in your admin. It checks whether the thing has
       already been reported or already fixed, and fills in the version, backend

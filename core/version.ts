@@ -24,7 +24,7 @@ export const APP_VERSION: string = pkg.version;
  */
 export const UPSTREAM = {
   owner: 'ShadmanArafin',
-  repo: 'open_portfolio_builder',
+  repo: 'open_portfolio',
 } as const;
 
 export const UPSTREAM_URL = `https://github.com/${UPSTREAM.owner}/${UPSTREAM.repo}`;

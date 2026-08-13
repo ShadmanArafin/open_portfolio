@@ -7,7 +7,7 @@
  * is noticed.
  */
 
-export const REPO = 'https://github.com/ShadmanArafin/open_portfolio_builder';
+export const REPO = 'https://github.com/ShadmanArafin/open_portfolio';
 
 /**
  * The public address, overridable at build time.

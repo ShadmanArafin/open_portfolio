@@ -17,7 +17,7 @@ What you get in exchange: nobody can raise your rent, change the terms, or take 
 
 ## There is nobody to phone
 
-Questions go to [GitHub issues](https://github.com/ShadmanArafin/open_portfolio_builder/issues), and you can open one from inside your own admin without visiting GitHub — **Help & feedback**. It checks first whether somebody already reported it, and whether it is already fixed in a newer version.
+Questions go to [GitHub issues](https://github.com/ShadmanArafin/open_portfolio/issues), and you can open one from inside your own admin without visiting GitHub — **Help & feedback**. It checks first whether somebody already reported it, and whether it is already fixed in a newer version.
 
 Expect an answer from one person, in their own time.
 

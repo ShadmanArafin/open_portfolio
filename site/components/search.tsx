@@ -73,10 +73,7 @@ export function Search({
           {results.length === 0 ? (
             <p className="small">
               Nothing here matches that. Try one word rather than a sentence, or{' '}
-              <a href="https://github.com/ShadmanArafin/open_portfolio_builder/issues">
-                ask about it
-              </a>
-              .
+              <a href="https://github.com/ShadmanArafin/open_portfolio/issues">ask about it</a>.
             </p>
           ) : (
             <ul className="rows" style={{ maxWidth: '46rem' }}>

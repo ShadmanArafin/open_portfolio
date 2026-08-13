@@ -6,7 +6,7 @@
 Change any word, image or colour from an admin panel — no code, no redeploy,
 and your content stays in your own database.
 
-[![CI](https://github.com/ShadmanArafin/open_portfolio_builder/actions/workflows/ci.yml/badge.svg)](https://github.com/ShadmanArafin/open_portfolio_builder/actions/workflows/ci.yml)
+[![CI](https://github.com/ShadmanArafin/open_portfolio/actions/workflows/ci.yml/badge.svg)](https://github.com/ShadmanArafin/open_portfolio/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
@@ -40,7 +40,7 @@ to keep one: students, designers, developers, photographers, writers.
 
 ## Deploy your own
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FShadmanArafin%2Fopen_portfolio_builder&project-name=my-portfolio&repository-name=my-portfolio&env=OPB_SETUP_TOKEN&envDescription=Invent+any+long+phrase.+You+will+be+asked+for+it+once%2C+to+prove+the+site+is+yours.&envLink=https%3A%2F%2Fgithub.com%2FShadmanArafin%2Fopen_portfolio_builder%23what-happens-on-first-run&stores=%5B%7B%22type%22%3A%22integration%22%2C%22integrationSlug%22%3A%22neon%22%2C%22productSlug%22%3A%22neon%22%2C%22protocol%22%3A%22storage%22%7D%2C%7B%22type%22%3A%22blob%22%2C%22access%22%3A%22public%22%7D%5D)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FShadmanArafin%2Fopen_portfolio&project-name=my-portfolio&repository-name=my-portfolio&env=OPB_SETUP_TOKEN&envDescription=Invent+any+long+phrase.+You+will+be+asked+for+it+once%2C+to+prove+the+site+is+yours.&envLink=https%3A%2F%2Fgithub.com%2FShadmanArafin%2Fopen_portfolio%23what-happens-on-first-run&stores=%5B%7B%22type%22%3A%22integration%22%2C%22integrationSlug%22%3A%22neon%22%2C%22productSlug%22%3A%22neon%22%2C%22protocol%22%3A%22storage%22%7D%2C%7B%22type%22%3A%22blob%22%2C%22access%22%3A%22public%22%7D%5D)
 
 Vercel copies this repository into your own GitHub account, provisions a free
 Neon Postgres database and a Blob store for your images, and asks you to invent
@@ -139,8 +139,8 @@ needed to try it, and no account anywhere.
 Node 20.9 or newer. No account, no API key, nothing to sign up for.
 
 ```bash
-git clone https://github.com/ShadmanArafin/open_portfolio_builder.git
-cd open_portfolio_builder
+git clone https://github.com/ShadmanArafin/open_portfolio.git
+cd open_portfolio
 npm install
 npm run dev
 ```

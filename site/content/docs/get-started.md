@@ -13,7 +13,7 @@ Ordered easiest-first, deliberately. Leading with a source build is how a projec
 
 ## 1. One click
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FShadmanArafin%2Fopen_portfolio_builder)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FShadmanArafin%2Fopen_portfolio)
 
 Vercel clones the repository into the user's own GitHub account, provisions a Neon Postgres database and a Blob store, and asks for one variable — `OPB_SETUP_TOKEN`, which they invent.
 
@@ -24,8 +24,8 @@ Nothing else is required. The adapter is chosen from whichever backend's environ
 ## 2. Docker
 
 ```bash
-git clone https://github.com/ShadmanArafin/open_portfolio_builder.git
-cd open_portfolio_builder
+git clone https://github.com/ShadmanArafin/open_portfolio.git
+cd open_portfolio
 docker compose up
 ```
 
@@ -49,8 +49,8 @@ docker run -p 3000:3000 -v opb-data:/data \
 Node 20.9 or newer. No database needed; the filesystem backend is the default.
 
 ```bash
-git clone https://github.com/ShadmanArafin/open_portfolio_builder.git
-cd open_portfolio_builder
+git clone https://github.com/ShadmanArafin/open_portfolio.git
+cd open_portfolio
 npm ci
 npm run dev
 ```

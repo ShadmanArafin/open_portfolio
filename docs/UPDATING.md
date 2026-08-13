@@ -62,7 +62,7 @@ somebody has to decide which version wins. GitHub calls this a conflict.
 proposal; until you merge it, nothing has happened.
 
 If you have never edited the code yourself, this is unexpected — please
-[open an issue](https://github.com/ShadmanArafin/open_portfolio_builder/issues)
+[open an issue](https://github.com/ShadmanArafin/open_portfolio/issues)
 and paste in the list of files the pull request names.
 
 ---
@@ -89,7 +89,7 @@ If a release causes a problem:
 
 - **On Vercel or Netlify**, open your deployments, find the previous one and
   promote it. It takes seconds and your content is unaffected.
-- **Then** please [tell us what went wrong](https://github.com/ShadmanArafin/open_portfolio_builder/issues)
+- **Then** please [tell us what went wrong](https://github.com/ShadmanArafin/open_portfolio/issues)
   — the Help & feedback screen in your admin fills in most of the report for you.
 
 One caveat, stated plainly: if a release added new database columns, rolling the

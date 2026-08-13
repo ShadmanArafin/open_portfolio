@@ -186,7 +186,7 @@ async function ensureBucket(): Promise<void> {
 export const supabaseAdapter: StorageAdapter = {
   id: 'supabase',
   displayName: 'Supabase',
-  docsUrl: 'https://github.com/ShadmanArafin/open_portfolio_builder#choose-your-backend',
+  docsUrl: 'https://github.com/ShadmanArafin/open_portfolio#choose-your-backend',
 
   capabilities: {
     durable: true,

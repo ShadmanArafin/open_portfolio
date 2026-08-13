@@ -142,7 +142,7 @@ The secondary CTA is a fork one level down: `/deploy` is where the two vocabular
 > Nobody is using this yet. There are no customer logos on this page and no testimonials, because there are no customers and no users. So here is everything you can check for yourself instead, in one click each.
 >
 > - **MIT licence** — [read it](/LICENSE). Already released, and not revocable for anything already released.
-> - **The whole thing is one repository** — [github.com/…](https://github.com/ShadmanArafin/open_portfolio_builder). Every commit, every issue, every decision.
+> - **The whole thing is one repository** — [github.com/…](https://github.com/ShadmanArafin/open_portfolio). Every commit, every issue, every decision.
 > - **v0.5.0, released ⟨date⟩** — [changelog](/changelog). The version number is on this page because it is alpha and you should know that before you type in a portfolio.
 > - **`docker compose up`** — one command, app and database together. The container was destroyed and rebuilt against the same volume and every piece of content survived; that test is in the repository.
 > - **Export everything as one JSON file, at any time** — the export button exists today, not on a roadmap.

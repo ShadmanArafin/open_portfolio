@@ -127,7 +127,7 @@ const media: MediaAdapter = {
 export const postgresAdapter: StorageAdapter = {
   id: 'postgres',
   displayName: 'Postgres (any host)',
-  docsUrl: 'https://github.com/ShadmanArafin/open_portfolio_builder#choose-your-backend',
+  docsUrl: 'https://github.com/ShadmanArafin/open_portfolio#choose-your-backend',
 
   capabilities: {
     durable: true,

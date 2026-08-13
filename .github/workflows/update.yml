@@ -44,11 +44,11 @@ jobs:
         id: upstream
         run: |
           set -euo pipefail
-          UPSTREAM="https://github.com/ShadmanArafin/open_portfolio_builder.git"
+          UPSTREAM="https://github.com/ShadmanArafin/open_portfolio.git"
 
           # Skip all of this on the original project itself, where "updating
           # from upstream" would mean merging the repository into itself.
-          if [ "${GITHUB_REPOSITORY}" = "ShadmanArafin/open_portfolio_builder" ]; then
+          if [ "${GITHUB_REPOSITORY}" = "ShadmanArafin/open_portfolio" ]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -133,7 +133,7 @@ jobs:
           \`\`\`
 
           If you have never edited the code yourself, this is unexpected — please
-          open an issue on the [main project](https://github.com/ShadmanArafin/open_portfolio_builder/issues)
+          open an issue on the [main project](https://github.com/ShadmanArafin/open_portfolio/issues)
           and paste this list in.
           EOF
           )
@@ -151,7 +151,7 @@ jobs:
           - Any new database columns are created automatically the first time the
             site is loaded after the update.
 
-          [What changed in this release](https://github.com/ShadmanArafin/open_portfolio_builder/releases/tag/$TAG)
+          [What changed in this release](https://github.com/ShadmanArafin/open_portfolio/releases/tag/$TAG)
           EOF
           )
           fi

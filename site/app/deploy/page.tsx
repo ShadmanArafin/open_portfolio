@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 const DEPLOY_URL =
-  'https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FShadmanArafin%2Fopen_portfolio_builder&project-name=my-portfolio&repository-name=my-portfolio&env=OPB_SETUP_TOKEN&envDescription=Invent+any+long+phrase.+You+will+be+asked+for+it+once%2C+to+prove+the+site+is+yours.&stores=%5B%7B%22type%22%3A%22integration%22%2C%22integrationSlug%22%3A%22neon%22%2C%22productSlug%22%3A%22neon%22%2C%22protocol%22%3A%22storage%22%7D%2C%7B%22type%22%3A%22blob%22%2C%22access%22%3A%22public%22%7D%5D';
+  'https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FShadmanArafin%2Fopen_portfolio&project-name=my-portfolio&repository-name=my-portfolio&env=OPB_SETUP_TOKEN&envDescription=Invent+any+long+phrase.+You+will+be+asked+for+it+once%2C+to+prove+the+site+is+yours.&stores=%5B%7B%22type%22%3A%22integration%22%2C%22integrationSlug%22%3A%22neon%22%2C%22productSlug%22%3A%22neon%22%2C%22protocol%22%3A%22storage%22%7D%2C%7B%22type%22%3A%22blob%22%2C%22access%22%3A%22public%22%7D%5D';
 
 /**
  * The install fork, and the one page where the two audiences genuinely split.
@@ -90,7 +90,7 @@ export default function DeployPage() {
           <pre className="md">
             <code>
               {`git clone ${REPO.replace('https://github.com', 'https://github.com')}.git
-cd open_portfolio_builder
+cd open_portfolio
 docker compose up`}
             </code>
           </pre>
@@ -130,7 +130,7 @@ docker compose up`}
 
           <pre className="md">
             <code>{`git clone ${REPO}.git
-cd open_portfolio_builder
+cd open_portfolio
 npm ci
 npm run dev`}</code>
           </pre>

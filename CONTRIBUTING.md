@@ -15,8 +15,8 @@ required** to run the project locally — that is deliberate, and if you hit a
 step that seems to need one, that is a bug worth reporting.
 
 ```bash
-git clone https://github.com/ShadmanArafin/open_portfolio_builder.git
-cd open_portfolio_builder
+git clone https://github.com/ShadmanArafin/open_portfolio.git
+cd open_portfolio
 npm install
 npm run dev
 ```

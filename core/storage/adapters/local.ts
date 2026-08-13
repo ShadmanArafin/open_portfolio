@@ -428,7 +428,7 @@ const subscribers: SubscribersAdapter = {
 export const localAdapter: StorageAdapter = {
   id: 'local',
   displayName: 'Local filesystem',
-  docsUrl: 'https://github.com/ShadmanArafin/open_portfolio_builder#choose-your-backend',
+  docsUrl: 'https://github.com/ShadmanArafin/open_portfolio#choose-your-backend',
 
   capabilities: {
     durable: true,

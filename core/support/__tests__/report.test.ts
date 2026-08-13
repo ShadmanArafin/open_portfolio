@@ -132,7 +132,7 @@ describe('the issue URL', () => {
   it('points at the upstream project, not at whatever this copy is called', () => {
     // A report has to reach the person who can fix it. Somebody who renamed
     // their copy must not end up filing bugs against themselves.
-    expect(buildIssueUrl(bug)).toContain('ShadmanArafin/open_portfolio_builder/issues/new');
+    expect(buildIssueUrl(bug)).toContain('ShadmanArafin/open_portfolio/issues/new');
   });
 
   it('encodes a body that would otherwise break the URL', () => {
