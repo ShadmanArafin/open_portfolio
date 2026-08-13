@@ -31,12 +31,12 @@ to keep one: students, designers, developers, photographers, writers.
 <p align="center"><em>The same page in the editor. No code, no redeploy, and the address bar never leaves your own site.</em></p>
 
 > [!WARNING]
-> **Status: alpha (0.5).** The site, the editor and publishing all work, and the
-> admin has real server-side authentication. The gaps are real and specific —
-> the admin is not laid out for a phone, five of the nine planned backends are
-> not built, and uploads have not been run against a hosted object store with
-> live credentials. Read [What does not work yet](#what-does-not-work-yet)
-> before using this for anything you depend on.
+> **Status: alpha (0.5).** The site, the editor and publishing all work, the
+> admin has real server-side authentication, and uploads are now verified
+> end to end against both hosted object stores. The gaps are real and specific —
+> the admin is not laid out for a phone, and five of the nine planned backends
+> are not built. Read [What does not work yet](#what-does-not-work-yet) before
+> using this for anything you depend on.
 
 ## Deploy your own
 
@@ -273,11 +273,10 @@ discover them after typing in a portfolio:
   [.env.example](.env.example)) and the owner is also emailed when one
   arrives, and a forgotten passphrase can be reset from `/admin/login` instead
   of deleting the owner record. There is still no OTP.
-- **Uploads have not been run against Vercel Blob.** Supabase Storage now has
-  been — against a real `storage-api`, which found and fixed two bugs that
-  would have broken every Supabase deployment after its first boot. Vercel Blob
-  has no local equivalent, so it is still untested, and it is what the Deploy
-  button provisions.
+- ~~Uploads unverified on the hosted stores.~~ **Both are now verified**, each
+  end to end: upload through the admin, then an anonymous fetch of the result.
+  Supabase cost two real bugs that would have broken every Supabase deployment
+  after its first boot; Vercel Blob passed 48/48 first time.
 - **Your home page starts as the theme's fixed layout.** Not a gap any more —
   you can rebuild it from blocks under Pages, and it takes over the moment you
   publish. Until you do, nothing about your site changes. The old layout is

@@ -14,6 +14,11 @@ portfolio online and run it without opening a file.
 
 ### You can now
 
+- **Upload pictures on a hosted backend, verified.** Both Supabase Storage and
+  Vercel Blob were run against the real services for the first time. Supabase
+  turned out to be broken in a way that would have stopped every Supabase site
+  working after its first restart; that is fixed.
+
 - **See where your content lives.** A screen in the admin showing which backend
   you are on, whether it is answering, and what the alternatives cost — with
   what to set and where to find it for each. It explains rather than switches,

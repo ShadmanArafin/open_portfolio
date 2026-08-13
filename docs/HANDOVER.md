@@ -162,16 +162,31 @@ Supabase's own listing.
 The lesson worth keeping: 21 assertions that skip silently without credentials
 look exactly like 21 that pass.
 
-### The one thing that matters and is still not verified
+### Vercel Blob: verified too
 
-**Uploads have never been run against Vercel Blob.** There is no emulator — the
-SDK is hard-wired to the hosted API — so this genuinely needs a free Vercel
-account and about twenty minutes. It is what the Deploy button provisions, so
-it is the last thing standing between this and telling strangers to use it.
+Run against the real service on 13 August 2026 with a Hobby-tier token.
+**48/48 first time, no bugs.** Then the same end-to-end walk as Supabase:
+claim, upload through the admin, and an anonymous fetch that followed the 307
+to `*.public.blob.vercel-storage.com` and came back byte-identical, with
+nothing written to local disk.
 
-Set `DATABASE_URL` and `BLOB_READ_WRITE_TOKEN`, then run the suite; the Neon
-conformance run stops skipping. Given what Supabase turned out to be hiding,
-expect to find something.
+Worth knowing for whoever repeats it: **this needs no deployment and no Neon
+account.** The Neon adapter takes any Postgres through `DATABASE_URL`, so the
+Docker Postgres proves the database half exactly as well as a hosted one
+would. The only thing that requires Vercel is the blob token, which makes this
+a twenty-minute job rather than a deployment exercise.
+`scripts/verify-blob.sh` does the whole thing from a token in `.env.local`.
+
+The store must be created with **public** access. The adapter uploads with
+`access: 'public'` and `/api/media/<key>` 307s the visitor's browser straight
+at the blob URL, carrying no token — private blobs would 403 for every visitor
+on every published site.
+
+### Both hosted backends are now verified
+
+That was the project's headline gap for its whole life, and it is closed.
+Supabase cost two real bugs; Vercel Blob cost none. What is left unverified is
+smaller and named in "What is not built" below.
 
 ---
 
