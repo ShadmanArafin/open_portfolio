@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Footer, Nav } from '@/components/chrome';
+import { ChromeGate } from '@/components/chrome-gate';
 import { DESCRIPTION, PRODUCT, SITE_URL } from '@/lib/site';
 
 export const metadata: Metadata = {
@@ -29,9 +30,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <a className="skip" href="#main">
           Skip to content
         </a>
-        <Nav />
+        <ChromeGate>
+          <Nav />
+        </ChromeGate>
         <main id="main">{children}</main>
-        <Footer />
+        <ChromeGate>
+          <Footer />
+        </ChromeGate>
       </body>
     </html>
   );

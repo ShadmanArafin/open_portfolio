@@ -99,6 +99,14 @@ export default function DemoPage() {
               </p>
             </div>
             <div className="card">
+              <h3 className="head">Add a block, and delete one</h3>
+              <p>
+                All twenty-four, grouped as your own install groups them. Each arrives empty, which
+                is what adding a block actually looks like — including the warning telling you it
+                will render nothing until you fill it in.
+              </p>
+            </div>
+            <div className="card">
               <h3 className="head">Switch theme</h3>
               <p>
                 Six of them, changing palette, typeface, spacing and radius together. Then change a
@@ -136,7 +144,8 @@ export default function DemoPage() {
             </p>
             <p>
               <strong>Simulated:</strong> signing in, saving, uploading and email. There is no
-              server, so pressing Publish moves one array in your browser to another.
+              server, so pressing Publish moves one array in your browser to another — and signing
+              out drops your edits rather than ending a session, because there is none.
             </p>
             <p>
               <strong>Absent:</strong> three screens that cannot exist without a server, and each

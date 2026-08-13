@@ -1,17 +1,17 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
-import {
-  getBlockDefinition,
-  listBlockDefinitions,
-  parsePage,
-  runBlockChecks,
-} from '../../../core/blocks/registry';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { PanelRight, Trash2 } from 'lucide-react';
+import { getBlockDefinition, parsePage, runBlockChecks } from '../../../core/blocks/registry';
 import { PERSONAS, type Persona, type PersonaId } from '@/lib/demo/personas';
 import { THEMES, blockContentFor, vocabulary } from '@/lib/demo/render';
 import type { PageBlock } from '@/lib/demo/types';
-import { DEVICES, SitePreview, type DeviceId } from './site-preview';
+import { type DeviceId } from './site-preview';
+import { PreviewPane } from './preview-pane';
+import { AdminNav, type ScreenId } from './nav';
+import { Palette } from './palette';
 import { FieldList } from './fields';
+import { stashPreview } from '@/lib/demo/handoff';
 import { demoState } from '@/lib/demo/state';
 import {
   Appearance,
@@ -51,65 +51,20 @@ type Screen = 'signin' | 'wizard' | 'studio';
 type Channel = 'draft' | 'live';
 
 /**
- * The admin's own navigation, and every entry goes somewhere.
+ * How wide the preview starts, and how far it can be dragged.
  *
- * It used to be a static list, which made the demo look like the product had
- * one screen. Most of these are a list and a form over content the demo already
- * holds; the three that genuinely cannot exist without a server say so when you
- * open them, which is better than not being there.
+ * A percentage rather than pixels so the split survives a window resize, and
+ * so the same fraction reads the same on a laptop and a 32-inch monitor.
+ *
+ * It opened at roughly half, which is why the admin beside it was being judged
+ * at half width. 38% still shows the page's real layout — the site inside is
+ * rendered at a device width and scaled, so a narrower pane costs sharpness and
+ * not columns — while leaving the editor the space it needs to look like the
+ * application it is.
  */
-type ScreenId =
-  | 'dashboard'
-  | 'pages'
-  | 'writing'
-  | 'work'
-  | 'clients'
-  | 'experience'
-  | 'messages'
-  | 'newsletter'
-  | 'appearance'
-  | 'seo'
-  | 'media'
-  | 'history'
-  | 'services'
-  | 'help';
-
-const SIDEBAR: { group: string; items: { id: ScreenId; label: string }[] }[] = [
-  {
-    group: 'Overview',
-    items: [
-      { id: 'dashboard', label: 'Dashboard' },
-      { id: 'pages', label: 'Pages' },
-      { id: 'writing', label: 'Writing' },
-    ],
-  },
-  {
-    group: 'Content',
-    items: [
-      { id: 'work', label: 'Selected work' },
-      { id: 'clients', label: 'Clients' },
-      { id: 'experience', label: 'Experience' },
-      { id: 'media', label: 'Media library' },
-    ],
-  },
-  {
-    group: 'Inbox',
-    items: [
-      { id: 'messages', label: 'Messages' },
-      { id: 'newsletter', label: 'Newsletter' },
-    ],
-  },
-  {
-    group: 'Configuration',
-    items: [
-      { id: 'appearance', label: 'Appearance' },
-      { id: 'seo', label: 'SEO' },
-      { id: 'services', label: 'Services' },
-      { id: 'history', label: 'Version history' },
-      { id: 'help', label: 'Help & feedback' },
-    ],
-  },
-];
+const PREVIEW_START = 38;
+const PREVIEW_MIN = 20;
+const PREVIEW_MAX = 72;
 
 export function Studio() {
   const [screen, setScreen] = useState<Screen>('signin');
@@ -138,7 +93,63 @@ export function Studio() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [justPublished, setJustPublished] = useState(false);
 
+  const [previewOpen, setPreviewOpen] = useState(true);
+  const [previewWidth, setPreviewWidth] = useState(PREVIEW_START);
+  const body = useRef<HTMLDivElement>(null);
+  const dragging = useRef(false);
+
   const dirty = useMemo(() => JSON.stringify(draft) !== JSON.stringify(live), [draft, live]);
+
+  /**
+   * Dragging the split.
+   *
+   * Listeners on the window rather than the handle, because a pointer moving
+   * faster than React re-renders leaves the handle behind and the drag stops
+   * dead halfway. Pointer events rather than mouse events so it works on a
+   * touchscreen, which is where a four-pane layout is most in need of one pane
+   * being made smaller.
+   */
+  const onDrag = useCallback((event: PointerEvent) => {
+    const box = body.current?.getBoundingClientRect();
+    if (!box || box.width === 0) return;
+    const fromRight = ((box.right - event.clientX) / box.width) * 100;
+    setPreviewWidth(Math.min(PREVIEW_MAX, Math.max(PREVIEW_MIN, fromRight)));
+  }, []);
+
+  useEffect(() => {
+    const move = (event: PointerEvent) => {
+      if (!dragging.current) return;
+      // Stops the drag selecting the text of both panes as it crosses them.
+      event.preventDefault();
+      onDrag(event);
+    };
+    const stop = () => {
+      dragging.current = false;
+      document.body.classList.remove('is-dragging');
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', stop);
+    window.addEventListener('pointercancel', stop);
+    return () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', stop);
+      window.removeEventListener('pointercancel', stop);
+      stop();
+    };
+  }, [onDrag]);
+
+  const startDrag = () => {
+    dragging.current = true;
+    document.body.classList.add('is-dragging');
+  };
+
+  /** The keyboard equivalent, because a drag handle that only drags is a wall. */
+  const nudge = (event: React.KeyboardEvent) => {
+    const by = event.key === 'ArrowLeft' ? 4 : event.key === 'ArrowRight' ? -4 : 0;
+    if (by === 0) return;
+    event.preventDefault();
+    setPreviewWidth((current) => Math.min(PREVIEW_MAX, Math.max(PREVIEW_MIN, current + by)));
+  };
 
   /** Switching who you are reloads their content, their theme and their words. */
   const choosePersona = (id: PersonaId) => {
@@ -192,11 +203,57 @@ export function Studio() {
       return copy;
     });
 
+  /**
+   * Adding a block, the way the real admin adds one.
+   *
+   * `definition.defaults()` is the product's own — `AdminSitePages` calls the
+   * same thing — so what lands is a real, empty block carrying the version it
+   * was created at, and the editor opens on it because that is the next thing
+   * anybody wants.
+   *
+   * Ids are a counter and not `crypto.randomUUID()`. Nothing here is stored or
+   * compared across tabs, and a counter is stable between the server-rendered
+   * markup and hydration, which a random id is not.
+   */
+  const addBlock = (type: string) => {
+    const definition = getBlockDefinition(type);
+    if (!definition) return;
+    const id = `demo-${type}-${nextId()}`;
+    setDraft((current) => [
+      ...current,
+      { id, type: definition.type, v: definition.version, props: definition.defaults() },
+    ]);
+    setSelectedId(id);
+    // Being on the Draft tab is the point: the block is not published yet, and
+    // showing it on Live would be showing something visitors cannot see.
+    setChannel('draft');
+  };
+
+  const removeBlock = (id: string) => {
+    setDraft((current) => current.filter((block) => block.id !== id));
+    setSelectedId((current) => (current === id ? null : current));
+  };
+
   const publish = () => {
     setLive(draft);
     setChannel('live');
     setJustPublished(true);
     setTimeout(() => setJustPublished(false), 2600);
+  };
+
+  /** Back to the sign-in card, with the edits dropped — as signing out does. */
+  const signOut = () => {
+    setDraft(persona.blocks);
+    setLive(persona.blocks);
+    setSelectedId(null);
+    setChannel('draft');
+    setScreenId('pages');
+    setScreen('signin');
+  };
+
+  const popOut = () => {
+    stashPreview({ personaId, themeId, mode, channel, blocks });
+    window.open('/demo/site', '_blank', 'noopener,noreferrer');
   };
 
   const words = vocabulary(persona);
@@ -343,19 +400,6 @@ export function Studio() {
             {mode === 'light' ? 'Dark' : 'Light'}
           </button>
 
-          <div className="studio__toggle" role="group" aria-label="Screen size">
-            {DEVICES.map((option) => (
-              <button
-                key={option.id}
-                type="button"
-                aria-pressed={device === option.id}
-                onClick={() => setDevice(option.id)}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-
           <div className="studio__toggle" role="group" aria-label="Which version to show">
             {(['draft', 'live'] as Channel[]).map((value) => (
               <button
@@ -368,30 +412,32 @@ export function Studio() {
               </button>
             ))}
           </div>
+
+          {/* Only when it is hidden. A button whose whole job is to bring the
+              preview back is noise while the preview is on screen — the way to
+              close it is on the preview itself. */}
+          {!previewOpen && (
+            <button type="button" className="studio__btn" onClick={() => setPreviewOpen(true)}>
+              <PanelRight className="studio__navicon" aria-hidden /> Show preview
+            </button>
+          )}
         </div>
       </div>
 
-      <div className="studio__body">
-        <nav className="studio__nav" aria-label="Admin">
-          {SIDEBAR.map((section) => (
-            <div key={section.group}>
-              <h3>{section.group}</h3>
-              <ul>
-                {section.items.map((item) => (
-                  <li key={item.id}>
-                    <button
-                      type="button"
-                      aria-current={item.id === screenId ? 'page' : undefined}
-                      onClick={() => setScreenId(item.id)}
-                    >
-                      {item.id === 'work' ? vocabulary(persona).work : item.label}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </nav>
+      <div
+        className="studio__body"
+        ref={body}
+        data-preview={previewOpen ? 'on' : 'off'}
+        style={{ ['--preview-w' as string]: `${previewWidth}%` }}
+      >
+        <AdminNav
+          persona={persona}
+          current={screenId}
+          unread={state.messages.filter((message) => message.status === 'unread').length}
+          workLabel={words.work}
+          onGo={setScreenId}
+          onSignOut={signOut}
+        />
 
         {screenId === 'pages' ? (
           <>
@@ -439,24 +485,22 @@ export function Studio() {
                         >
                           {block.hidden ? '◌' : '●'}
                         </button>
+                        {/* Paired with Add. Being able to put a block on a page
+                            and not take it off again is worse than neither. */}
+                        <button
+                          type="button"
+                          onClick={() => removeBlock(block.id)}
+                          aria-label={`Delete ${def?.label ?? block.type}`}
+                        >
+                          <Trash2 className="studio__navicon" aria-hidden />
+                        </button>
                       </span>
                     </li>
                   );
                 })}
               </ol>
 
-              <details className="studio__palette">
-                <summary>Add a block</summary>
-                <p className="studio__hint">
-                  {listBlockDefinitions().length} types. Adding is switched off here so the demo
-                  stays the shape it started in.
-                </p>
-                <ul>
-                  {listBlockDefinitions().map((def) => (
-                    <li key={def.type}>{def.label}</li>
-                  ))}
-                </ul>
-              </details>
+              <Palette onAdd={addBlock} />
             </div>
 
             <div className="studio__panel">
@@ -490,29 +534,51 @@ export function Studio() {
           <div className="studio__screen">{renderScreen()}</div>
         )}
 
-        <div className="studio__preview">
-          <div className="studio__previewbar">
-            <span>
-              {channel === 'draft' ? 'Draft — only you can see this' : 'Live — what visitors see'}
-            </span>
-            <span>
-              {DEVICES.find((d) => d.id === device)?.width}px ·{' '}
-              {persona.name.toLowerCase().replace(/\s+/g, '')}.example
-            </span>
-          </div>
-          <div className="studio__frame">
-            <SitePreview
+        {previewOpen && (
+          <>
+            <div
+              className="studio__handle"
+              role="separator"
+              aria-orientation="vertical"
+              aria-label="Resize the preview"
+              aria-valuenow={Math.round(previewWidth)}
+              aria-valuemin={PREVIEW_MIN}
+              aria-valuemax={PREVIEW_MAX}
+              tabIndex={0}
+              onPointerDown={startDrag}
+              onKeyDown={nudge}
+              onDoubleClick={() => setPreviewWidth(PREVIEW_START)}
+              title="Drag to resize · double-click to reset"
+            />
+            <PreviewPane
               persona={persona}
               blocks={blocks}
               themeId={themeId}
               mode={mode}
               device={device}
+              channel={channel}
+              onDevice={setDevice}
+              onClose={() => setPreviewOpen(false)}
+              onPopOut={popOut}
             />
-          </div>
-        </div>
+          </>
+        )}
       </div>
     </div>
   );
+}
+
+/**
+ * Ids for blocks added during a session.
+ *
+ * A module counter, not a random id: nothing here is stored or compared across
+ * tabs, and a counter produces the same value on the server-rendered markup and
+ * on hydration, which `crypto.randomUUID()` does not.
+ */
+let counter = 0;
+function nextId(): number {
+  counter += 1;
+  return counter;
 }
 
 /**

@@ -9,6 +9,33 @@ whole point of the Help & feedback screen in the admin.
 
 ## Unreleased
 
+### The demo is the admin now
+
+The browser demo was an admin sitting inside a marketing page: a site header
+above it, a four-column footer below, and the preview taking more than half of
+what was left. Somebody deciding whether they could work this was judging it
+through a letterbox. It now takes the window.
+
+- **No site chrome.** The demo route drops the header and the footer and carries
+  one bar of its own — the product on the left, a way out on the right.
+
+- **The preview closes, and moves.** Drag the divider, or close it entirely and
+  give the whole window to the admin. Desktop, tablet and phone moved onto the
+  preview itself, which is where the product keeps them and roughly three metres
+  closer to the thing they change.
+
+- **Open the page in its own tab.** At the width of your actual window, not a
+  scaled-down pane.
+
+- **The navigation has its icons**, the same ones the real admin uses, an unread
+  count on Messages, and your name, role and a sign-out at the bottom. On a
+  narrow window it becomes an icon rail instead of vanishing.
+
+- **You can add a block.** All twenty-four, grouped the way your own install
+  groups them, each inserted by the same call the real editor makes — so they
+  arrive empty, with the warnings that come with being empty. And you can delete
+  one again.
+
 ### Changed
 
 - **The product is now called Open Portfolio**, not Open Portfolio Builder. The

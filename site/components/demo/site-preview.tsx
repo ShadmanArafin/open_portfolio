@@ -111,34 +111,52 @@ export function SitePreview({
   themeId,
   mode,
   device = 'desktop',
+  fluid = false,
 }: {
   persona: Persona;
   blocks: PageBlock[];
   themeId: string;
   mode: 'light' | 'dark';
   device?: DeviceId;
+  /**
+   * Lay the page out at whatever width it is given, rather than at a device
+   * width scaled to fit.
+   *
+   * For the tab the demo opens on its own: there, "full size" means the size of
+   * the window somebody is looking at. Rendering 1280px centred in a 1600px
+   * window and calling it full size shows a narrower page than the one their
+   * own visitors would get, which is the opposite of the point.
+   */
+  fluid?: boolean;
 }) {
   const [note, setNote] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const shell = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
-  const width = DEVICES.find((d) => d.id === device)?.width ?? 1280;
+  const [fluidWidth, setFluidWidth] = useState(1280);
+  const deviceWidth = DEVICES.find((d) => d.id === device)?.width ?? 1280;
+  const width = fluid ? fluidWidth : deviceWidth;
 
   useEffect(() => {
     const element = shell.current;
     if (!element) return;
     const measure = () => {
+      if (fluid) {
+        setFluidWidth(element.clientWidth);
+        setScale(1);
+        return;
+      }
       // Never scale up. A phone frame blown up to fill a desktop pane looks
       // like a mistake, and the point of the narrow widths is to see the real
       // thing at its real size.
-      setScale(Math.min(1, element.clientWidth / width));
+      setScale(Math.min(1, element.clientWidth / deviceWidth));
     };
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(element);
     return () => observer.disconnect();
-  }, [width]);
+  }, [deviceWidth, fluid]);
 
   const parsed = useMemo(() => parsePage(blocks), [blocks]);
   const content = useMemo(() => blockContentFor(persona), [persona]);
@@ -163,7 +181,23 @@ export function SitePreview({
 
   return (
     <div ref={shell} style={{ position: 'relative', height: '100%', overflow: 'hidden' }}>
-      <div style={{ height: '100%', overflowY: 'auto', display: 'grid', justifyContent: 'center' }}>
+      {/*
+        `overflow: hidden auto` — the horizontal half matters.
+        The page inside is laid out at a real device width and then scaled with
+        a transform, which changes what you see and not what the box occupies.
+        So a 1280px page in a 600px pane still claims 1280px of scroll width,
+        and the pane grew a horizontal scrollbar for content already fully
+        visible. Hiding it is correct rather than a patch: there is nothing out
+        there to scroll to.
+      */}
+      <div
+        style={{
+          height: '100%',
+          overflow: 'hidden auto',
+          display: 'grid',
+          justifyContent: 'center',
+        }}
+      >
         <div
           style={{
             width,

@@ -13,10 +13,98 @@
  * itself.
  */
 
+/* --------------------------------------------------------- the demo's bar */
+
+/*
+ * The site's nav and footer are not rendered on this route — see ChromeGate —
+ * so this is the only chrome above the admin. One row, the product on the left,
+ * the way out on the right.
+ */
+
+.demobar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.55rem var(--gutter);
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.demobar__left,
+.demobar__right {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 0.9rem;
+  align-items: center;
+}
+
+.demobar__brand {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  line-height: 1.1;
+}
+
+.demobar__chip {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.4rem;
+  border: 1px solid rgb(255 255 255 / 0.35);
+  border-radius: 2px;
+}
+
+.demobar__note {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.65;
+}
+
+@media (max-width: 52rem) {
+  .demobar__note {
+    display: none;
+  }
+}
+
+.demobar__link {
+  color: inherit;
+  font-size: 0.78rem;
+  text-decoration: none;
+  opacity: 0.8;
+}
+
+.demobar__link:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+.demobar__exit {
+  min-height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  padding-inline: 0.75rem;
+  border: 1px solid rgb(255 255 255 / 0.45);
+  border-radius: 2px;
+  color: inherit;
+  font-size: 0.78rem;
+  text-decoration: none;
+}
+
+.demobar__exit:hover {
+  background: var(--paper);
+  color: var(--ink);
+}
+
 .studio {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  height: calc(100dvh - 3.6rem);
+  /* The demo bar above, and nothing else — the site's own header and footer are
+     suppressed on this route, so the admin gets the rest of the window. */
+  height: calc(100dvh - 3rem);
   min-height: 40rem;
   border-top: 1px solid var(--rule);
 }
@@ -125,23 +213,21 @@
 .studio__body {
   display: grid;
   /*
-   * The three editor panes are as narrow as they can usefully be, because the
-   * preview is what the visitor came for — and because the width left over
-   * decides whether the previewed site shows its card grid in two columns or
-   * one. Three rem of chrome was the difference.
+   * Navigation, outline, the field editor, a drag handle, the preview.
+   *
+   * The editor column flexes and the preview is the fixed share, which is the
+   * opposite of how this started. The preview was `1fr` against three fixed
+   * panes, so it took more than half the window and the admin — the thing a
+   * visitor is deciding whether they could work — was permanently judged at
+   * half width. Now it is `--preview-w`, set by the handle, and everything left
+   * over goes to the editor.
    */
-  grid-template-columns: 10rem 14rem 17rem minmax(0, 1fr);
+  grid-template-columns: 11rem 16.5rem minmax(0, 1fr) 0.4rem var(--preview-w, 38%);
   min-height: 0;
 }
 
-@media (max-width: 78rem) {
-  .studio__body {
-    grid-template-columns: 14rem 17rem minmax(0, 1fr);
-  }
-
-  .studio__nav {
-    display: none;
-  }
+.studio__body[data-preview='off'] {
+  grid-template-columns: 11rem 16.5rem minmax(0, 1fr);
 }
 
 @media (max-width: 62rem) {
@@ -149,12 +235,18 @@
     height: auto;
   }
 
-  .studio__body {
+  .studio__body,
+  .studio__body[data-preview='off'] {
     grid-template-columns: minmax(0, 1fr);
   }
 
   .studio__preview {
     height: 34rem;
+  }
+
+  /* Nothing to drag when the panes are stacked. */
+  .studio__handle {
+    display: none;
   }
 }
 
@@ -163,15 +255,208 @@
 .studio__panel {
   border-right: 1px solid var(--rule);
   padding: 1rem;
-  overflow-y: auto;
+  /* Vertical only. A pane that scrolls sideways is a pane whose contents did
+     not fit, and the fix is always to let them elide rather than to offer a
+     scrollbar for two clipped pixels. */
+  overflow: hidden auto;
   min-height: 0;
 }
 
+/*
+ * The nav is a column with a pinned account row, so the list scrolls under it
+ * rather than pushing "sign out" off the bottom of a short window.
+ */
 .studio__nav {
   background: var(--paper-sunken);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  overflow: hidden;
+  padding: 0.9rem 0.7rem;
+}
+
+.studio__navscroll {
   display: grid;
   gap: 1.1rem;
   align-content: start;
+  overflow-y: auto;
+  min-height: 0;
+  flex: 1;
+}
+
+.studio__navicon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.studio__navlabel {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.studio__navcount {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  padding: 0.05rem 0.3rem;
+  border-radius: 999px;
+  background: var(--seal);
+  color: var(--paper);
+}
+
+.studio__account {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--rule);
+}
+
+.studio__avatar {
+  display: grid;
+  place-items: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--seal);
+  color: var(--paper);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.02em;
+}
+
+.studio__accountwho {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+}
+
+.studio__accountwho strong {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.studio__accountwho em {
+  font-size: 0.66rem;
+  font-style: normal;
+  color: var(--ink-3);
+}
+
+.studio__account > button {
+  display: grid;
+  place-items: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  flex-shrink: 0;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  background: none;
+  color: var(--ink-3);
+  cursor: pointer;
+}
+
+.studio__account > button:hover {
+  border-color: var(--rule-strong);
+  color: var(--ink);
+}
+
+/*
+ * Below this the labels stop fitting, so the nav becomes an icon rail rather
+ * than disappearing. It used to be hidden entirely, which on a 13-inch laptop
+ * made the product look like it had one screen.
+ *
+ * Placed after the rules it overrides, and scoped through `.studio__nav`, for a
+ * reason worth keeping: a media query adds no specificity. `.studio__accountwho
+ * { display: none }` inside one still loses to a plain `.studio__accountwho
+ * { display: grid }` written later in the file, and the account name spilled
+ * out of a 3rem rail while every other label obeyed — because those had no
+ * competing `display` to lose to.
+ */
+@media (max-width: 82rem) {
+  .studio__body {
+    grid-template-columns: 3.5rem 15.5rem minmax(0, 1fr) 0.4rem var(--preview-w, 38%);
+  }
+
+  .studio__body[data-preview='off'] {
+    grid-template-columns: 3.5rem 15.5rem minmax(0, 1fr);
+  }
+
+  .studio__nav .studio__navlabel,
+  .studio__nav .studio__navsection h3,
+  .studio__nav .studio__accountwho {
+    display: none;
+  }
+
+  .studio__nav {
+    padding: 0.6rem 0.3rem;
+  }
+
+  /* No scrollbar eating a third of a 3.5rem rail. The list is short enough to
+     clip at the bottom on a very short window, which is better than a rail that
+     is mostly gutter. */
+  .studio__nav .studio__navscroll {
+    overflow: hidden;
+  }
+
+  .studio__nav li > button {
+    justify-content: center;
+    padding-inline: 0;
+  }
+
+  /* The count rides on the icon rather than beside it, and inside the rail
+     rather than over its edge — 1rem put it a pixel past the border. */
+  .studio__nav .studio__navcount {
+    position: absolute;
+    margin: -0.85rem 0 0 0.7rem;
+  }
+
+  .studio__nav li {
+    position: relative;
+  }
+
+  /* Stacked: the avatar and the sign-out button side by side need 67px, and
+     the rail is 46px wide inside its padding. */
+  .studio__account {
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+}
+
+/* --------------------------------------------------- the resizable divider */
+
+.studio__handle {
+  background: var(--rule);
+  cursor: col-resize;
+  position: relative;
+}
+
+.studio__handle::after {
+  /* A wider invisible target than the line itself: a 6px hit area is a fair
+     test of somebody's mouse, not of the product. */
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline: -0.3rem;
+}
+
+.studio__handle:hover,
+.studio__handle:focus-visible {
+  background: var(--seal);
+  outline: none;
+}
+
+/* Set on <body> for the duration of a drag, so the pointer keeps its resize
+   cursor and neither pane selects text as it crosses them. */
+body.is-dragging {
+  cursor: col-resize;
+  user-select: none;
 }
 
 .studio__nav h3,
@@ -199,16 +484,35 @@
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 0.15rem;
+  gap: 0.1rem;
   font-size: 0.8rem;
   color: var(--ink-2);
 }
 
-.studio__nav li {
-  padding: 0.25rem 0;
+.studio__nav li > button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 2rem;
+  padding: 0 0.5rem;
+  border: 0;
+  border-radius: 2px;
+  background: none;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 0.8rem;
+  text-align: left;
+  cursor: pointer;
 }
 
-.studio__nav li[aria-current='page'] {
+.studio__nav li > button:hover {
+  background: var(--card);
+  color: var(--ink);
+}
+
+.studio__nav li > button[aria-current='page'] {
+  background: var(--seal-wash);
   color: var(--seal);
   font-weight: 600;
 }
@@ -260,6 +564,9 @@
 
 .studio__outline li > button {
   flex: 1;
+  /* Without this a long block name refuses to shrink below its own width, and
+     the whole column grows a horizontal scrollbar rather than eliding. */
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 0.4rem;
@@ -276,6 +583,7 @@
 
 .studio__blocklabel {
   flex: 1;
+  min-width: 0;
 }
 
 .studio__flag {
@@ -301,8 +609,10 @@
 }
 
 .studio__rowbtns button {
-  width: 1.9rem;
-  height: 1.9rem;
+  display: grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
   border: 1px solid transparent;
   border-radius: 2px;
   background: none;
@@ -321,36 +631,86 @@
   cursor: default;
 }
 
-.studio__palette summary {
-  cursor: pointer;
-  font-size: 0.8rem;
-  color: var(--seal);
-  font-weight: 600;
-  min-height: 2.25rem;
+/* ------------------------------------------------------------- add a block */
+
+.studio__addbtn {
+  width: 100%;
   display: flex;
   align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 2.25rem;
+  border: 1px dashed var(--rule-strong);
+  border-radius: 2px;
+  background: none;
+  color: var(--seal);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
 }
 
-.studio__palette ul {
+.studio__addbtn:hover {
+  border-style: solid;
+  background: var(--seal-wash);
+}
+
+.studio__addbtn svg {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.studio__palettebody {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 0.6rem;
+  padding: 0.7rem;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--card);
+}
+
+.studio__palettebody h4 {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.studio__palettebody ul {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.3rem;
+  gap: 0.25rem;
 }
 
-.studio__palette li {
-  font-size: 0.7rem;
-  padding: 0.15rem 0.4rem;
+.studio__palettebody li > button {
+  padding: 0.2rem 0.45rem;
   border: 1px solid var(--rule);
   border-radius: 2px;
-  color: var(--ink-3);
+  background: var(--paper-sunken);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 0.72rem;
+  cursor: pointer;
 }
+
+.studio__palettebody li > button:hover {
+  border-color: var(--seal);
+  background: var(--seal-wash);
+  color: var(--seal);
+}
+
+/* ---------------------------------------------------------- the preview pane */
 
 .studio__preview {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
   min-height: 0;
   background: var(--paper-sunken);
 }
@@ -358,18 +718,123 @@
 .studio__previewbar {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem 1rem;
+  gap: 0.4rem 0.75rem;
+  align-items: center;
   justify-content: space-between;
-  padding: 0.5rem 1rem;
+  padding: 0.4rem 0.6rem;
   border-bottom: 1px solid var(--rule);
   font-family: var(--font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.06em;
+  font-size: 0.64rem;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--ink-3);
 }
 
+.studio__previewwhat {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.studio__dot {
+  width: 0.4rem;
+  height: 0.4rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--stamp);
+}
+
+.studio__dot[data-live='true'] {
+  background: var(--seal);
+}
+
+.studio__previewtools {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.studio__devices {
+  display: flex;
+  gap: 0.1rem;
+  padding: 0.1rem;
+  border: 1px solid var(--rule-strong);
+  border-radius: 2px;
+  background: var(--card);
+}
+
+.studio__devices button,
+.studio__iconbtn {
+  display: grid;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  background: none;
+  color: var(--ink-3);
+  cursor: pointer;
+}
+
+.studio__devices button svg,
+.studio__iconbtn svg {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.studio__devices button:hover,
+.studio__iconbtn:hover {
+  color: var(--ink);
+  border-color: var(--rule-strong);
+}
+
+.studio__devices button[aria-pressed='true'] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+
 .studio__frame {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.studio__previewfoot {
+  margin: 0;
+  padding: 0.35rem 0.6rem;
+  border-top: 1px solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* ------------------------------------- the preview, opened in its own tab */
+
+.popped {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100dvh;
+}
+
+.popped__bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  justify-content: space-between;
+  padding: 0.5rem var(--gutter);
+  border-bottom: 1px solid var(--rule);
+  background: var(--paper-sunken);
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.popped__frame {
   min-height: 0;
   overflow: hidden;
 }
@@ -380,7 +845,10 @@
   display: grid;
   place-items: center;
   padding: clamp(2rem, 6vw, 5rem) var(--gutter);
-  min-height: 32rem;
+  /* Fills what is left under the demo bar. It used to be a fixed 32rem, which
+     under a site header and above a footer looked deliberate; with the window
+     to itself it left a band of empty paper below the card. */
+  min-height: calc(100dvh - 3rem);
   background: var(--paper-sunken);
   border-top: 1px solid var(--rule);
 }

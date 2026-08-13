@@ -95,6 +95,10 @@ entirely in your browser — no account, no server, nothing saved. Seven
 professions and six themes, and it renders with the product's real blocks and
 themes rather than with screenshots.
 
+It is the admin, not a picture of it: build the page, add and delete blocks,
+reorder them, change the theme, publish, and open the result full size in its own
+tab. What is simulated is persistence, sign-in, uploads and email.
+
 For the full thing, with real saving, uploads and email:
 
 ```bash

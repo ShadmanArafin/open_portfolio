@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import '../../studio.css';
 import { Studio } from '@/components/demo/studio';
+import { DemoTopBar } from '@/components/demo/topbar';
 
 export const metadata: Metadata = {
   title: 'Try it',
@@ -16,29 +16,15 @@ export const metadata: Metadata = {
  * Deliberately its own page rather than a section on `/demo`: it fills the
  * window, and something that fills the window should have an address somebody
  * can send to a friend.
+ *
+ * The site's nav and footer are suppressed here — see `ChromeGate` — because
+ * this route is not a document. What replaces them is one bar naming the
+ * product and offering a way out, which is what an application has.
  */
 export default function TryPage() {
   return (
     <>
-      <div
-        style={{
-          padding: '0.75rem var(--gutter)',
-          borderBottom: '1px solid var(--rule)',
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '0.5rem 1.5rem',
-          alignItems: 'baseline',
-          justifyContent: 'space-between',
-        }}
-      >
-        <p className="micro" style={{ margin: 0 }}>
-          Demo · nothing is saved and nothing is sent
-        </p>
-        <p className="small" style={{ margin: 0 }}>
-          <Link href="/deploy">Deploy your own</Link> · <Link href="/demo">What this is</Link>
-        </p>
-      </div>
-
+      <DemoTopBar />
       <Studio />
     </>
   );

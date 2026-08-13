@@ -104,6 +104,13 @@ clones this repository into the user's GitHub account, which would put
 `/alternatives/squarespace` on everybody's portfolio. See
 [site/README.md](../site/README.md).
 
+`site/`'s demo imports the product's real blocks, renderer, tokens and field
+metadata, so **a change to a block definition changes the demo with no work in
+`site/` — and can break it with none either.** It is not covered by the
+product's tests, so `cd site && npm run build` after touching `core/blocks/*`.
+It has no tests of its own; the build and a walk through `/demo/try` are the
+check.
+
 ### Environment variables
 
 All optional except where noted. Full list with commentary in

@@ -1,6 +1,6 @@
 # The marketing and documentation site
 
-`openportfoliobuilder.com` — the homepage, the comparison pages, `/what-it-costs`,
+`getopenportfolio.vercel.app` — the homepage, the comparison pages, `/what-it-costs`,
 `/is-this-right-for-you`, the help centre and the developer docs.
 
 **This is not part of the product.** It is a separate Next.js application that
@@ -48,19 +48,19 @@ Without it the default in `lib/site.ts` is used.
 
 ## How it is put together
 
-| Path                         | What it holds                                                                                          |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `app/`                       | Routes. One file per page; nothing clever.                                                             |
-| `content/help/*.md`          | The help centre. Plain Markdown, four lines of frontmatter.                                            |
-| `content/docs/*.md`          | The developer docs. Same.                                                                              |
-| `lib/facts.ts`               | **Every claim about another product, with a source URL and the date it was checked.**                  |
-| `lib/alternatives.ts`        | The four comparison pages, as data.                                                                    |
-| `lib/content.ts`             | Reads the Markdown at build time and builds the navigation from the files.                             |
-| `app/globals.css`            | The whole design, and the reasoning behind it.                                                         |
-| `scripts/check-contrast.mjs` | Reads the tokens out of the stylesheet and fails the build below 4.5:1.                                |
-| `lib/demo/`                  | The seven invented personas behind `/demo/try`, and the bridge to the product.                         |
-| `components/demo/`           | The interactive demo: the admin shell, thirteen screens, the generated field editor, the live preview. |
-| `public/shots/`              | Product screenshots. One persona throughout — see below.                                               |
+| Path                         | What it holds                                                                                                                              |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `app/`                       | Routes. One file per page; nothing clever.                                                                                                 |
+| `content/help/*.md`          | The help centre. Plain Markdown, four lines of frontmatter.                                                                                |
+| `content/docs/*.md`          | The developer docs. Same.                                                                                                                  |
+| `lib/facts.ts`               | **Every claim about another product, with a source URL and the date it was checked.**                                                      |
+| `lib/alternatives.ts`        | The four comparison pages, as data.                                                                                                        |
+| `lib/content.ts`             | Reads the Markdown at build time and builds the navigation from the files.                                                                 |
+| `app/globals.css`            | The whole design, and the reasoning behind it.                                                                                             |
+| `scripts/check-contrast.mjs` | Reads the tokens out of the stylesheet and fails the build below 4.5:1.                                                                    |
+| `lib/demo/`                  | The seven invented personas behind `/demo/try`, and the bridge to the product.                                                             |
+| `components/demo/`           | The interactive demo: the admin shell and its nav, thirteen screens, the block palette, the generated field editor, the resizable preview. |
+| `public/shots/`              | Product screenshots. One persona throughout — see below.                                                                                   |
 
 ## The demo imports the product
 
@@ -95,6 +95,26 @@ A consequence worth recognising rather than fixing: `next build` prints
 `Proxy (Middleware)` because it finds the product's `middleware.ts` up there.
 A static export cannot emit middleware, and the export was checked — nothing
 from it ships. It is noise, not a leak.
+
+### It gets the whole window
+
+`/demo/try` and `/demo/site` are the two routes the site's own header and footer
+are not rendered on — see `components/chrome-gate.tsx`, and add to the list there
+rather than hiding chrome with CSS. They are applications rather than documents,
+and the demo carries its own bar instead.
+
+Two consequences worth knowing before changing this layout. The preview is a
+fixed share of the width (`--preview-w`, set by the drag handle) and the editor
+takes the rest, which is the opposite of the obvious arrangement and deliberate:
+`1fr` on the preview made it more than half the window, so the admin was
+permanently judged at half width. And the narrow-width rules that turn the
+navigation into an icon rail live _after_ the rules they override, because a
+media query adds no specificity — one `display: none` inside one already lost to
+a plain rule written further down the file.
+
+`/demo/site` renders whatever the editor last handed it through local storage.
+Not the URL: a full page of blocks does not survive a query string, and a
+truncated one would look like the product being broken.
 
 ## Screenshots
 
