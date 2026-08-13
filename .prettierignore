@@ -13,3 +13,5 @@ site/out
 
 # Shell scripts. Prettier has no parser for them.
 *.sh
+.vercel
+site/.vercel
