@@ -12,11 +12,18 @@ export const REPO = 'https://github.com/ShadmanArafin/open_portfolio';
 /**
  * The public address, overridable at build time.
  *
- * No domain has been bought yet. Set `SITE_URL` in the deployment's
- * environment and every canonical link, the sitemap and the social cards follow
- * — there is nothing else to change.
+ * No domain has been bought yet, so this defaults to where the site actually
+ * lives. That matters more than it looks: canonical links, the sitemap and the
+ * social cards all derive from it, so a default pointing at a domain nobody
+ * owns tells search engines the real version of every page is somewhere that
+ * does not resolve.
+ *
+ * Set `SITE_URL` in the deployment's environment when a domain is bought, and
+ * every one of those follows — there is nothing else to change. Note that the
+ * site is currently deployed as a prebuilt static export, so it has to be set
+ * at build time, not only in the Vercel project.
  */
-export const SITE_URL = (process.env.SITE_URL ?? 'https://openportfoliobuilder.com').replace(
+export const SITE_URL = (process.env.SITE_URL ?? 'https://getopenportfolio.vercel.app').replace(
   /\/$/,
   ''
 );
