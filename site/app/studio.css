@@ -1,0 +1,469 @@
+/*
+ * The interactive demo.
+ *
+ * Its own stylesheet because it is a different kind of surface from the rest of
+ * the site: everything else is a document, and this is an application pretending
+ * to be one.
+ *
+ * Four panes on a desktop — navigation, outline, the field editor and a live
+ * preview — because that is the arrangement of the real admin, and what a
+ * visitor is deciding here is whether they could work it. Below 62rem the panes
+ * stack rather than shrink: four columns on a phone is exactly how a builder
+ * produces something nobody can use, and this project applies that lesson to
+ * itself.
+ */
+
+.studio {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: calc(100dvh - 3.6rem);
+  min-height: 40rem;
+  border-top: 1px solid var(--rule);
+}
+
+.studio__bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem var(--gutter);
+  border-bottom: 1px solid var(--rule);
+  background: var(--paper-sunken);
+}
+
+.studio__group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.studio__status {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.studio__status[data-dirty='true'] {
+  color: var(--stamp);
+}
+
+.studio__btn {
+  min-height: 2.25rem;
+  padding-inline: 0.9rem;
+  border: 1px solid var(--rule-strong);
+  border-radius: 2px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.studio__btn--primary {
+  background: var(--seal);
+  border-color: var(--seal);
+  color: var(--paper);
+  font-weight: 600;
+}
+
+.studio__btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.studio__pick {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.studio__pick select {
+  min-height: 2.25rem;
+  padding: 0 0.5rem;
+  border: 1px solid var(--rule-strong);
+  border-radius: 2px;
+  background: var(--card);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.studio__toggle {
+  display: flex;
+  border: 1px solid var(--rule-strong);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.studio__toggle button {
+  min-height: 2.25rem;
+  padding-inline: 0.8rem;
+  border: 0;
+  background: var(--card);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.studio__toggle button[aria-pressed='true'] {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.studio__body {
+  display: grid;
+  /*
+   * The three editor panes are as narrow as they can usefully be, because the
+   * preview is what the visitor came for — and because the width left over
+   * decides whether the previewed site shows its card grid in two columns or
+   * one. Three rem of chrome was the difference.
+   */
+  grid-template-columns: 10rem 14rem 17rem minmax(0, 1fr);
+  min-height: 0;
+}
+
+@media (max-width: 78rem) {
+  .studio__body {
+    grid-template-columns: 14rem 17rem minmax(0, 1fr);
+  }
+
+  .studio__nav {
+    display: none;
+  }
+}
+
+@media (max-width: 62rem) {
+  .studio {
+    height: auto;
+  }
+
+  .studio__body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .studio__preview {
+    height: 34rem;
+  }
+}
+
+.studio__nav,
+.studio__outline,
+.studio__panel {
+  border-right: 1px solid var(--rule);
+  padding: 1rem;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.studio__nav {
+  background: var(--paper-sunken);
+  display: grid;
+  gap: 1.1rem;
+  align-content: start;
+}
+
+.studio__nav h3,
+.studio__outline h3,
+.studio__panel h3 {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.studio__panel h3 {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--ink);
+}
+
+.studio__nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.15rem;
+  font-size: 0.8rem;
+  color: var(--ink-2);
+}
+
+.studio__nav li {
+  padding: 0.25rem 0;
+}
+
+.studio__nav li[aria-current='page'] {
+  color: var(--seal);
+  font-weight: 600;
+}
+
+.studio__navnote {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: var(--ink-3);
+}
+
+.studio__hint {
+  margin: 0 0 0.75rem;
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+
+.studio__warn {
+  margin: 0 0 0.75rem;
+  padding: 0.55rem 0.7rem;
+  border-left: 3px solid var(--stamp);
+  background: var(--stamp-wash);
+  font-size: 0.76rem;
+  line-height: 1.45;
+  color: var(--ink);
+}
+
+.studio__outline ol {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: grid;
+  gap: 0.15rem;
+}
+
+.studio__outline li {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid transparent;
+  border-radius: 2px;
+}
+
+.studio__outline li[data-selected='true'] {
+  border-color: var(--seal);
+  background: var(--seal-wash);
+}
+
+.studio__outline li > button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.25rem;
+  padding: 0 0.5rem;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.82rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.studio__blocklabel {
+  flex: 1;
+}
+
+.studio__flag {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.1rem 0.3rem;
+  border: 1px solid var(--rule-strong);
+  border-radius: 2px;
+  color: var(--ink-3);
+}
+
+.studio__flag--warn {
+  color: var(--stamp);
+  border-color: currentColor;
+}
+
+.studio__rowbtns {
+  display: flex;
+  gap: 0.1rem;
+  padding-right: 0.25rem;
+}
+
+.studio__rowbtns button {
+  width: 1.9rem;
+  height: 1.9rem;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  background: none;
+  color: var(--ink-3);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.studio__rowbtns button:hover:not(:disabled) {
+  border-color: var(--rule-strong);
+  color: var(--ink);
+}
+
+.studio__rowbtns button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.studio__palette summary {
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--seal);
+  font-weight: 600;
+  min-height: 2.25rem;
+  display: flex;
+  align-items: center;
+}
+
+.studio__palette ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.studio__palette li {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.4rem;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  color: var(--ink-3);
+}
+
+.studio__preview {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  background: var(--paper-sunken);
+}
+
+.studio__previewbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.studio__frame {
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ------------------------------------------------------------- demo gates */
+
+.gate {
+  display: grid;
+  place-items: center;
+  padding: clamp(2rem, 6vw, 5rem) var(--gutter);
+  min-height: 32rem;
+  background: var(--paper-sunken);
+  border-top: 1px solid var(--rule);
+}
+
+.gate__card {
+  width: 100%;
+  max-width: 26rem;
+  display: grid;
+  gap: 1rem;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+}
+
+.gate__card--wide {
+  max-width: 52rem;
+}
+
+.gate__creds {
+  margin: 0;
+  display: grid;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.gate__creds > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0.7rem;
+  background: var(--paper-sunken);
+  border-radius: 2px;
+}
+
+.gate__creds dt {
+  color: var(--ink-3);
+}
+
+.gate__creds dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  color: var(--ink);
+}
+
+.gate__note {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--ink-3);
+}
+
+.gate__choices {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(13rem, 100%), 1fr));
+}
+
+.gate__choices button {
+  display: grid;
+  gap: 0.2rem;
+  align-content: start;
+  text-align: left;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--rule-strong);
+  border-radius: 2px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+  min-height: 3.5rem;
+}
+
+.gate__choices button[aria-pressed='true'] {
+  border-color: var(--seal);
+  background: var(--seal-wash);
+}
+
+.gate__choices strong {
+  font-size: 0.9rem;
+}
+
+.gate__choices span {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--ink-3);
+}

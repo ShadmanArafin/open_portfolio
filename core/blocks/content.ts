@@ -10,7 +10,11 @@ import type {
   RecommendationItem,
   SocialLinkItem,
 } from '@/cms/types/cms';
-import { WRITING_DEFAULTS, arrange, isLive, type WritingEntry } from '@/core/writing/schema';
+// Relative, like every other runtime import in this directory. The `@/`
+// alias is a convenience of the product's own build; a relative path resolves
+// the same way anywhere, which is what lets the marketing site's demo render
+// real blocks instead of a look-alike that drifts.
+import { WRITING_DEFAULTS, arrange, isLive, type WritingEntry } from '../writing/schema';
 
 /**
  * The site's own records, as a block sees them.

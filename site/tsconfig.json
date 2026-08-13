@@ -19,6 +19,8 @@
       }
     ],
     "paths": {
+      "@/core/*": ["../core/*"],
+      "@/cms/*": ["../src/cms/*"],
       "@/*": ["./*"]
     }
   },
@@ -26,6 +28,8 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
+    "../core/**/*.ts",
+    "../core/**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
