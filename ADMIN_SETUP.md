@@ -112,6 +112,7 @@ uploaded image, which is your backup and the way to move everything to another i
 | SEO                    | Page title, meta description, share image.                                                                                         |
 | General & backup       | Your name and contact details, the About story, and export/import/reset.                                                           |
 | Version history        | The last 20 published snapshots, any of which can be restored into your draft.                                                     |
+| Where content lives    | Which backend is storing your site, whether it is answering, and how the alternatives compare. Explains rather than switches.      |
 
 `src/data/` is **seed content only** — the demo projects and clients a fresh install starts with,
 so the site is never an empty shell. Editing those files will not change an install that already

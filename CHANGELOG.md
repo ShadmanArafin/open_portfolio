@@ -14,6 +14,12 @@ portfolio online and run it without opening a file.
 
 ### You can now
 
+- **See where your content lives.** A screen in the admin showing which backend
+  you are on, whether it is answering, and what the alternatives cost — with
+  what to set and where to find it for each. It explains rather than switches,
+  because the setting that says how to reach your database cannot itself live
+  in the database.
+
 - **Start from what you do.** Seven starting points — Design, Software,
   Photography, Writing, Research, Student, or something else — each setting the
   wording, the theme and what your writing is called.

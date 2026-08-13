@@ -138,17 +138,40 @@ Everything below was run, not reasoned about.
 | Marketing site, 31 pages       | Static export served and walked in a browser: light and dark, 390px and 1280px, one h1, no skipped heading levels, no horizontal scroll                                                                                                         |
 | Its own contrast rule          | `npm run check:contrast` in `site/`, wired into its build. Caught a muted grey at 4.04:1 that had already shipped into every eyebrow and table header                                                                                           |
 
-### The one thing that matters and is not verified
+### Supabase Storage: verified, and it was broken
 
-**Uploads have never been run against Vercel Blob or Supabase Storage with real
-credentials.** The code path is shared with the local backend and the
-conformance suite covers the interface, but neither live service has been
-touched.
+Run against a real `storage-api` for the first time on 13 August 2026, via a
+local `supabase start`. **The suite went 47 failed, 1 passed.** Two genuine
+bugs, both the same shape:
 
-For a portfolio builder this is the highest-consequence gap in the project: the
-recommended deployment is Vercel + Neon + Blob, and the core act of a portfolio
-is uploading a picture. **Do this before telling anyone to use it.** It needs a
-free Vercel account and about twenty minutes.
+Supabase Storage does not put its semantic status in the HTTP status. Creating
+a bucket that already exists and deleting an object that does not both answer
+**HTTP 400**, with the real code inside the JSON body —
+`{"statusCode":"409","code":"BucketAlreadyExists"}` and
+`{"statusCode":"404","code":"NoSuchKey"}`. Two call sites checked
+`res.status !== 409` and `res.status !== 404`; neither could ever match, so
+both threw on exactly the case they were written to tolerate.
+
+The bucket one was severe. `provision()` runs once per process, so on a
+serverless host it runs on every cold start — a Supabase deployment worked on
+its first boot and then failed on **every** one after it, the whole adapter
+rejecting rather than just uploads. Now 48/48, plus a claim, an upload and a
+public fetch through the running app, with the object confirmed present in
+Supabase's own listing.
+
+The lesson worth keeping: 21 assertions that skip silently without credentials
+look exactly like 21 that pass.
+
+### The one thing that matters and is still not verified
+
+**Uploads have never been run against Vercel Blob.** There is no emulator — the
+SDK is hard-wired to the hosted API — so this genuinely needs a free Vercel
+account and about twenty minutes. It is what the Deploy button provisions, so
+it is the last thing standing between this and telling strangers to use it.
+
+Set `DATABASE_URL` and `BLOB_READ_WRITE_TOKEN`, then run the suite; the Neon
+conformance run stops skipping. Given what Supabase turned out to be hiding,
+expect to find something.
 
 ---
 

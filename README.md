@@ -273,11 +273,11 @@ discover them after typing in a portfolio:
   [.env.example](.env.example)) and the owner is also emailed when one
   arrives, and a forgotten passphrase can be reset from `/admin/login` instead
   of deleting the owner record. There is still no OTP.
-- **Uploads have not been run against the hosted object stores.** Uploading now
-  goes through the server into whichever backend is configured, and is verified
-  end to end on the local filesystem backend. The same code path drives Supabase
-  Storage and Vercel Blob, and the storage conformance suite covers both, but
-  neither has yet been run against the live service with real credentials.
+- **Uploads have not been run against Vercel Blob.** Supabase Storage now has
+  been — against a real `storage-api`, which found and fixed two bugs that
+  would have broken every Supabase deployment after its first boot. Vercel Blob
+  has no local equivalent, so it is still untested, and it is what the Deploy
+  button provisions.
 - **Your home page starts as the theme's fixed layout.** Not a gap any more —
   you can rebuild it from blocks under Pages, and it takes over the moment you
   publish. Until you do, nothing about your site changes. The old layout is
