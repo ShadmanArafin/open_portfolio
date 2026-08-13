@@ -212,19 +212,19 @@ smaller and named in "What is not built" below.
 
 Ordered by how much a user would notice.
 
-| Gap                                        | Notes                                                                                                                                                                                                                                                                                                                                                               |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **The newsletter cannot send**             | By design. It collects, confirms and exports; broadcasting is a different product. It also needs SMTP configured, or sign-ups fail honestly with a 503                                                                                                                                                                                                              |
-| **No mobile admin layout**                 | It installs and works on a phone; the editing screens were drawn for a desktop. The research sizes this at 10–20 days and calls it retention, not acquisition                                                                                                                                                                                                       |
-| **No push notifications**                  | Needs VAPID and a real device. The service worker must carve out `/admin` first — see the Serwist trap below                                                                                                                                                                                                                                                        |
-| **The marketing site is deployed by hand** | No longer true — it builds from `main`. Kept as a row only because the first git-triggered build has not been watched end to end yet                                                                                                                                                                                                                                |
-| **No hosted demo, and none planned**       | Decided, not outstanding. `/demo/try` runs the admin and the site client-side from the product's real blocks and themes, and `docker compose -f docker-compose.demo.yml up` runs the full thing with real saving, uploads and email. A hosted instance would add nothing those two do not cover, and every hand-maintained demo in the research was dead or retired |
-| **Only three screenshots**                 | `site/public/shots/` has the public site, the page builder and the block outline, all of the real product with the photographer persona. None of them contains an actual photograph — every image slot in the demo content is an empty placeholder                                                                                                                  |
-| **24 block types**                         | Literal: `hero richText image gallery stats cards ctaBanner contactForm faq video split quote newsletter socialRow services download separator`. Record-placing: `collection writingList timeline logoWall testimonials skills steps`                                                                                                                               |
-| **5 storage backends unbuilt**             | Firebase, Convex, Cloudflare D1+R2, PocketBase, Appwrite. Not advertised in the README. Each needs an emulator — do not ship one you have not run                                                                                                                                                                                                                   |
-| **Passphrase auth only**                   | No passkeys, no email OTP                                                                                                                                                                                                                                                                                                                                           |
-| **Themes change tokens, not layout**       | Six of them, and they do not rearrange a page. Less true than it was, since a page of record-placing blocks follows the records rather than fixed copy, but a theme still cannot change the arrangement itself                                                                                                                                                      |
-| **Tailwind 4**                             | Deferred, not blocked. PR #7 is closed and Dependabot ignores the major line; tracked in issue #9, which lists the missing test first — nothing here asserts the built CSS, so the breakage would produce a green build and an unstyled site                                                                                                                        |
+| Gap                                            | Notes                                                                                                                                                                                                                                                                                                                                                               |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **The newsletter cannot send**                 | By design. It collects, confirms and exports; broadcasting is a different product. It also needs SMTP configured, or sign-ups fail honestly with a 503                                                                                                                                                                                                              |
+| **No mobile admin layout**                     | It installs and works on a phone; the editing screens were drawn for a desktop. The research sizes this at 10–20 days and calls it retention, not acquisition                                                                                                                                                                                                       |
+| **No push notifications**                      | Needs VAPID and a real device. The service worker must carve out `/admin` first — see the Serwist trap below                                                                                                                                                                                                                                                        |
+| **~~The marketing site is deployed by hand~~** | Done. It builds from `main` and both published addresses follow production; verified by pushing and reading the result on the live site                                                                                                                                                                                                                             |
+| **No hosted demo, and none planned**           | Decided, not outstanding. `/demo/try` runs the admin and the site client-side from the product's real blocks and themes, and `docker compose -f docker-compose.demo.yml up` runs the full thing with real saving, uploads and email. A hosted instance would add nothing those two do not cover, and every hand-maintained demo in the research was dead or retired |
+| **Only three screenshots**                     | `site/public/shots/` has the public site, the page builder and the block outline, all of the real product with the photographer persona. None of them contains an actual photograph — every image slot in the demo content is an empty placeholder                                                                                                                  |
+| **24 block types**                             | Literal: `hero richText image gallery stats cards ctaBanner contactForm faq video split quote newsletter socialRow services download separator`. Record-placing: `collection writingList timeline logoWall testimonials skills steps`                                                                                                                               |
+| **5 storage backends unbuilt**                 | Firebase, Convex, Cloudflare D1+R2, PocketBase, Appwrite. Not advertised in the README. Each needs an emulator — do not ship one you have not run                                                                                                                                                                                                                   |
+| **Passphrase auth only**                       | No passkeys, no email OTP                                                                                                                                                                                                                                                                                                                                           |
+| **Themes change tokens, not layout**           | Six of them, and they do not rearrange a page. Less true than it was, since a page of record-placing blocks follows the records rather than fixed copy, but a theme still cannot change the arrangement itself                                                                                                                                                      |
+| **Tailwind 4**                                 | Deferred, not blocked. PR #7 is closed and Dependabot ignores the major line; tracked in issue #9, which lists the missing test first — nothing here asserts the built CSS, so the breakage would produce a green build and an unstyled site                                                                                                                        |
 
 ---
 
@@ -332,6 +332,15 @@ generation rather than refused at publish, so "set a pale accent and watch it be
 refused" does not happen. Both had been true once. **If a sentence states a
 number or a behaviour, something should exercise it.**
 
+**A build that only works on a machine with the other thing installed.** The
+marketing site imports the product's source, and every one of the four things
+that broke its first git deploy passed locally: a missing `zod`, a missing
+`@types/react`, the product's Tailwind PostCSS config picked up two directories
+away, and a tsconfig glob dragging in the product's test suite. All four
+resolved fine here, off a `node_modules` the build machine has no reason to
+have. **If one application reads another's source, the question is not "does it
+build" but "does it build somewhere that has only its own dependencies".**
+
 **A default that is only wrong when configured.** The Postgres adapter and the
 media route each carried their own `path.join(process.cwd(), '.opb', 'media')`
 and ignored `OPB_DATA_DIR`. With the variable unset — which is every test and
@@ -403,20 +412,36 @@ its phone editor, but they do abandon one they cannot fix a typo in from a
 train. It installs to a home screen already; the screens themselves were drawn
 for a desktop.
 
-**4. Watch the first git-triggered build.** The site is **live at
-<https://getopenportfolio.vercel.app>** and now **builds from `main`** — the
-Vercel project `open_portfolio` is connected to the repository with Root
-Directory `site`, "Include files outside the Root Directory" on (required: the
-demo imports the product's real blocks and themes from `../../../core`), and
-`SITE_URL` set in all three environments. What has not happened yet is a build
-of this repository _by Vercel_ rather than an upload of one built here, so the
-first push after the connection is worth watching.
+**4. ~~Connect the marketing site to git.~~ Done.** It is live at
+<https://getopenportfolio.vercel.app>, builds from `main`, and both published
+addresses follow production. It took five builds to get there; the four
+settings that were missing are in the section above, and every one of them
+passed locally first.
 
-Every package the site can reach — including everything it pulls out of `core/`
-and `src/cms/` — is in `site/package.json`, so a build that installs only in the
-root directory resolves. That was checked by walking the import graph, not
-assumed: it currently reaches `lucide-react`, `marked`, `next`, `react` and
-`zod`, and nothing else.
+### The four settings a git build needs, and why
+
+Every one of these was found by a build failing on Vercel after passing here,
+and they all have the same cause: **this machine has the product installed and
+the build machine does not.** `site/` imports the product's source, so anything
+that source needs at build time has to exist on the other side too.
+
+| Setting                                                    | Why                                                                                                                                                                                                        |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Root Directory** `site`                                  | Otherwise Vercel builds the product over the marketing site                                                                                                                                                |
+| **Include files outside the Root Directory** on            | The demo imports `../../../core`                                                                                                                                                                           |
+| **Install Command** `cd .. && npm ci && cd site && npm ci` | `core/**` resolves its bare imports from the _repository root's_ `node_modules`. A plain root-directory install leaves it without `zod`, and without `@types/react` it cannot type-check `core/primitives` |
+| **`site/postcss.config.mjs`**, empty                       | Without it Turbopack walks up and loads the _product's_ PostCSS config, which requires `tailwindcss` — a dependency this application does not have and does not want                                       |
+
+And one that is a `tsconfig` matter rather than a Vercel one: `site/tsconfig.json`
+must **not** glob `../core/**` into `include`. The product reaches this program
+by being imported, which TypeScript follows on its own; the glob additionally
+dragged in the product's whole test suite, which wants `vitest`.
+
+An import-graph walk cleared this application to build in isolation before any
+of that was discovered — and it was right about what the _code_ imports. It said
+nothing about what the _build_ requires, which is where all four of these lived:
+a PostCSS config two directories up, a type package, a resolution root, and a
+glob.
 
 **`cd site && npm run deploy` still works** and is the way to push a build
 without a commit. It builds, stages `out/` and uploads. Do not upload `out/` by
