@@ -1097,7 +1097,9 @@ _Honest scoping:_ Vercel Marketplace can only auto-provision Marketplace-native 
 > that had been repeated across the README, the help centre and the homepage —
 > see the note on stale copy in [HANDOVER.md](HANDOVER.md).
 >
-> **Remaining in this phase:** the launch checklist, and deploying any of it.
+> **Remaining in this phase:** the launch checklist. A hosted demo instance was
+> considered and dropped — the browser demo and `docker-compose.demo.yml` cover
+> it between them, and a hosted one is a thing somebody has to keep alive.
 > The Tiptap rich-text editor and Giscus comments were not built — writing uses
 > the same block editor as pages, which means every block added later works
 > there without anyone doing anything, and comments on a portfolio were judged a
