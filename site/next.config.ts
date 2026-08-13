@@ -18,10 +18,10 @@ const nextConfig: NextConfig = {
   /**
    * Two roots, and they are deliberately different.
    *
-   * `turbopack.root` stays at `site/`. Without it Next walks up, finds the
-   * product's lockfile, decides the repository root is the workspace root, and
-   * compiles the *product's* `middleware.ts` — which fails with a
-   * module-not-found error naming a file this application has never heard of.
+   * `turbopack.root` stays at `site/`. Move it up and Next decides the
+   * repository root is the workspace root and compiles the *product's*
+   * `middleware.ts`, which fails naming a file this application has never
+   * heard of.
    *
    * `outputFileTracingRoot` is the repository root, and that is what lets the
    * demo import the product's real theme presets, primitives and block
@@ -29,8 +29,12 @@ const nextConfig: NextConfig = {
    * that climbs out of this directory resolves to nothing — the file is plainly
    * there on disk and the bundler will not look at it.
    *
-   * Getting either one wrong produces a confusing five minutes, so they are
-   * written down rather than left to be rediscovered.
+   * Note what is *not* here: an alias pointing `react` and `zod` at this
+   * application's copies. `core/**` resolves its bare imports from the
+   * repository root's `node_modules`, exactly as it does on a developer's
+   * machine, and the Vercel project's install command installs both trees so
+   * that it can. Aliasing was tried first and Turbopack rejects an absolute
+   * path in `resolveAlias` without saying so usefully.
    */
   turbopack: { root: import.meta.dirname },
   outputFileTracingRoot: path.join(import.meta.dirname, '..'),
