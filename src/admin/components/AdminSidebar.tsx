@@ -32,6 +32,7 @@ import {
   PenLine,
   AtSign,
   Database,
+  Globe,
 } from 'lucide-react';
 import { SideNav, SideNavHeading, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 import { Text } from '@astryxdesign/core/Text';
@@ -194,6 +195,7 @@ export const AdminSidebar: React.FC = () => {
             { label: 'SEO', path: '/seo', icon: Search },
             { label: 'General & backup', path: '/settings', icon: Sliders },
             { label: 'Services', path: '/services', icon: Plug },
+            { label: 'Your site', path: '/your-site', icon: Globe },
             { label: 'Where content lives', path: '/storage', icon: Database },
           ],
         },

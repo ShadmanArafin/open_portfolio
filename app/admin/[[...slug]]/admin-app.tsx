@@ -45,6 +45,9 @@ const AdminNewsletter = lazy(() =>
 const AdminHelp = lazy(() =>
   import('@/admin/pages/AdminHelp').then((m) => ({ default: m.AdminHelp }))
 );
+const AdminYourSite = lazy(() =>
+  import('@/admin/pages/AdminYourSite').then((m) => ({ default: m.AdminYourSite }))
+);
 const AdminStorage = lazy(() =>
   import('@/admin/pages/AdminStorage').then((m) => ({ default: m.AdminStorage }))
 );
@@ -168,6 +171,7 @@ export default function AdminApp() {
                   <Route path="settings" element={<AdminSettings />} />
                   <Route path="services" element={<AdminIntegrations />} />
                   <Route path="storage" element={<AdminStorage />} />
+                  <Route path="your-site" element={<AdminYourSite />} />
                   <Route path="help" element={<AdminHelp />} />
                   <Route path="history" element={<AdminVersionHistory />} />
                 </Route>
