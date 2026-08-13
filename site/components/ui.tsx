@@ -147,3 +147,40 @@ export function Cta({
     </Link>
   );
 }
+
+/**
+ * A product screenshot.
+ *
+ * One persona throughout the whole site — an invented photographer, Mira
+ * Halloran — because mixing personas across screenshots is the fastest way to
+ * make a young product look like a mock-up. Every shot is of the real product
+ * running locally with that content published, not a mock-up or a redraw.
+ *
+ * `loading="lazy"` on everything below the first, and an explicit aspect ratio
+ * so the page does not jump as they arrive.
+ */
+export function Shot({
+  src,
+  alt,
+  caption,
+  priority,
+}: {
+  src: string;
+  alt: string;
+  caption: string;
+  priority?: boolean;
+}) {
+  return (
+    <figure className="shot">
+      <img
+        src={src}
+        alt={alt}
+        width={1440}
+        height={950}
+        loading={priority ? 'eager' : 'lazy'}
+        decoding="async"
+      />
+      <figcaption>{caption}</figcaption>
+    </figure>
+  );
+}

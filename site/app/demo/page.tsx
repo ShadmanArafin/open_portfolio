@@ -5,7 +5,7 @@ import { PRODUCT, REPO } from '@/lib/site';
 export const metadata: Metadata = {
   title: 'Live demo',
   description:
-    'A full editor with nothing to sign up for. Every visitor gets their own copy of the site, in memory, discarded after an hour.',
+    'The admin and the published site, running in your browser with nothing behind them. Seven professions, six themes, no account and nothing saved.',
   alternates: { canonical: '/demo' },
 };
 
@@ -28,40 +28,36 @@ export default function DemoPage() {
           <div className="stack">
             <h1 className="display">Try it, with nothing to sign up for.</h1>
             <p className="lede">
-              Not a sales call and not a video. A real editor, with your own copy of a real site in
-              it. Every visitor gets a separate sandbox held in memory and thrown away after an
-              hour, so you can change anything, publish it, and break it, and nobody else sees any
-              of it.
+              Not a sales call and not a video. The admin and the published site, running in your
+              browser tab with nothing behind them — so you can change anything, publish it and
+              break it, and there is no account to make and nothing for anybody else to see.
+            </p>
+            <p className="lede">
+              It is not a mock-up either: the blocks, the block renderer, the theme tokens and the
+              editor&rsquo;s own forms are all the product&rsquo;s, imported. What is simulated is
+              persistence, sign-in, uploads and email.
             </p>
           </div>
 
           <div className="cta-row">
-            {/*
-             * Deliberately not linked yet. A dead "Open the editor" button is
-             * worse than an honest note — and this page ships before the demo
-             * instance is deployed, because the pages that link here need it to
-             * exist.
-             */}
-            <Cta href="/deploy">Deploy your own instead — free</Cta>
+            <Cta href="/demo/try">Open the editor</Cta>
             <Cta href={REPO} variant="ghost">
               Read the code
             </Cta>
           </div>
 
-          <p className="micro">
-            The hosted demo is not up yet — see below for running it in one command
-          </p>
+          <p className="micro">No account · nothing saved · seven professions and six themes</p>
         </div>
       </Band>
 
       <Band rail="Run it" sunken>
         <div className="stack stack--loose">
           <div className="stack">
-            <h2 className="title">Run the demo yourself, in one command</h2>
+            <h2 className="title">Or run the whole thing, in one command</h2>
             <p className="lede">
-              The demo mode is part of the product rather than a hosted sandbox somebody maintains —
-              which is the only version of this that stays alive. Every hand-maintained demo
-              instance in the research was dead or retired.
+              The browser demo simulates sign-in, saving, uploads and email. If you want those
+              working — a real database, a real inbox, a real publish — the product ships a demo
+              mode of its own, and it is one command.
             </p>
           </div>
 
@@ -71,8 +67,14 @@ export default function DemoPage() {
 
           <div className="prose">
             <p>
-              Open <code>http://localhost:3000</code>. Sign in with the details printed on the page.
-              Every browser that visits gets its own copy.
+              Open <code>http://localhost:3000</code> and sign in with the details printed on the
+              page. Every browser that visits gets its own copy of the site, held in memory and
+              discarded after an hour.
+            </p>
+            <p>
+              That mode is part of the product rather than a sandbox somebody maintains, which is
+              the only version of this that stays alive. Every hand-maintained demo instance in the
+              research was dead or retired.
             </p>
           </div>
         </div>
@@ -117,28 +119,27 @@ export default function DemoPage() {
       <Band rail="Limits" sunken>
         <div className="stack stack--loose">
           <div className="stack">
-            <h2 className="title">What the demo will not let you do</h2>
+            <h2 className="title">What is real, and what is not</h2>
             <p className="lede">
-              Three things are switched off, and they are the three that turn a public sandbox into
-              somebody else&rsquo;s problem within a day of being noticed.
+              Worth being precise about, because a demo that overstates itself is worse than no
+              demo.
             </p>
           </div>
           <div className="prose">
             <p>
-              <strong>Uploading files.</strong> A public editor with file upload is a free file
-              host. Images are picked from a library that is already there.
+              <strong>Real, and imported from the product:</strong> every block and the renderer
+              that draws them, the theme token generator, the profession vocabulary that renames
+              your sections, the editor&rsquo;s forms — which are generated from each block&rsquo;s
+              own field metadata — and the content warnings, including the one telling you a block
+              will render nothing.
             </p>
             <p>
-              <strong>Sending email.</strong> A public contact form that sends from a real domain is
-              a spam relay. Messages still arrive in the demo inbox, which is where you would read
-              them anyway.
+              <strong>Simulated:</strong> signing in, saving, uploading and email. There is no
+              server, so pressing Publish moves one array in your browser to another.
             </p>
             <p>
-              <strong>Saving service credentials.</strong> Nothing that would be encrypted and
-              stored can be entered.
-            </p>
-            <p>
-              Everything else is the real product, running the real code, from the same repository.
+              <strong>Absent:</strong> the other twenty-two admin screens. You get the page builder,
+              because it is the one that decides whether the tool is for you.
             </p>
           </div>
           <div className="cta-row">

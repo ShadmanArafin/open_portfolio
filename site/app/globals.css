@@ -853,3 +853,29 @@ details[open] > summary::after {
 .stack--loose {
   gap: 2.5rem;
 }
+
+/* ------------------------------------------------------------------- shots */
+
+.shot {
+  margin: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1440 / 950;
+  object-fit: cover;
+  object-position: top center;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+.shot figcaption {
+  font-size: var(--t-small);
+  color: var(--ink-3);
+  max-width: var(--measure);
+}

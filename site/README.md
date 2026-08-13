@@ -58,6 +58,44 @@ Without it the default in `lib/site.ts` is used.
 | `lib/content.ts`             | Reads the Markdown at build time and builds the navigation from the files.            |
 | `app/globals.css`            | The whole design, and the reasoning behind it.                                        |
 | `scripts/check-contrast.mjs` | Reads the tokens out of the stylesheet and fails the build below 4.5:1.               |
+| `lib/demo/`                  | The seven invented personas behind `/demo/try`, and the bridge to the product.        |
+| `components/demo/`           | The interactive demo: the admin shell, the generated field editor, the live preview.  |
+| `public/shots/`              | Product screenshots. One persona throughout — see below.                              |
+
+## The demo imports the product
+
+`/demo/try` runs the admin and the published site in the browser with nothing
+behind them. It is not a mock-up: the blocks, the block renderer, the theme
+token generator, the profession vocabulary, the editor's field metadata and the
+content warnings are all imported from `../core` and `../src/cms`. A block added
+to the product appears in the demo with no work here.
+
+Two build settings make that possible and they are easy to get backwards:
+
+- **`turbopack.root` stays at `site/`.** Move it up and Next decides the
+  repository root is the workspace root and compiles the _product's_
+  `middleware.ts`, which fails naming a file this application has never heard of.
+- **`outputFileTracingRoot` must be the repository root.** Leave it at `site/`
+  and every relative import climbing out of this directory resolves to nothing,
+  with the file plainly there on disk.
+
+A consequence worth recognising rather than fixing: `next build` prints
+`Proxy (Middleware)` because it finds the product's `middleware.ts` up there.
+A static export cannot emit middleware, and the export was checked — nothing
+from it ships. It is noise, not a leak.
+
+## Screenshots
+
+`public/shots/` holds real screenshots of the product running locally with the
+photographer persona published — not mock-ups and not redraws.
+
+**One persona everywhere.** The same invented photographer appears in the
+screenshots, in the demo and in the README. Mixing personas across screenshots is
+the fastest way to make a young product look like a mock-up.
+
+To retake them: run the product on port 3111 with a fresh `OPB_DATA_DIR`, seed it,
+and capture at 1440x950. Everything in them is fictional — invented names,
+invented studios, invented clients — and it stays that way.
 
 ## Two rules for editing it
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Metadata } from 'next';
-import { Band, Claim, Cta, Rows, Stamp } from '@/components/ui';
+import { Band, Claim, Cta, Rows, Shot, Stamp } from '@/components/ui';
 import { CLAIMS } from '@/lib/facts';
 import { MAINTAINER, PRODUCT, REPO, VERSION } from '@/lib/site';
 
@@ -44,7 +44,7 @@ export default function Home() {
 
           <div className="stack stack--tight">
             <div className="cta-row">
-              <Cta href="/demo">Open the live demo</Cta>
+              <Cta href="/demo/try">Try it — no account</Cta>
               <Cta href="/deploy" variant="ghost">
                 Deploy your own — free
               </Cta>
@@ -53,6 +53,13 @@ export default function Home() {
                 detail in the whole research corpus. */}
             <p className="micro">MIT licensed · no account needed to try it · nothing to cancel</p>
           </div>
+
+          <Shot
+            priority
+            src="/shots/public-site.png"
+            alt="A photographer's home page: the name top left, a headline reading 'Pictures of places that are about to change', a supporting line, two buttons, and a row of three project cards below."
+            caption="A site built with it. Every band on this page is a block its owner arranged — and the whole page is one of the six themes, unmodified."
+          />
         </div>
       </Band>
 
@@ -166,6 +173,12 @@ export default function Home() {
       <Band rail="Features" sunken>
         <div className="stack stack--loose">
           <h2 className="title">What it does today</h2>
+
+          <Shot
+            src="/shots/page-builder.png"
+            alt="The Pages screen in the admin. One page listed, 'Home page', marked Live with ten blocks, expanded to show its title, its address, a visibility control and the list of blocks."
+            caption="The same page in the editor. No code, no redeploy, and the address bar never leaves your own site."
+          />
 
           <div className="grid">
             <div className="card">

@@ -90,6 +90,11 @@ portfolio online and run it without opening a file.
   write with `EACCES: mkdir '/app/.opb'`. Every test passed throughout, because
   every test ran with that variable unset. There is now one function and a test
   that sets it.
+- **Try it in a browser tab.** The marketing site carries a demo of the admin
+  and the published site with nothing behind them — no account, no server,
+  nothing saved. Seven professions and six themes, switchable, and it imports
+  the product's real blocks, themes and editor forms rather than imitating
+  them.
 - **A marketing site, a help centre and developer docs**, in `site/` — a
   separate application that builds to a static export. Every claim it makes
   about another product carries a source link and the date it was read, and

@@ -22,11 +22,11 @@ and your content stays in your own database.
 Built for people who need a portfolio but should not have to learn a framework
 to keep one: students, designers, developers, photographers, writers.
 
-<img src="docs/images/public-site.png" alt="A portfolio home page built from blocks: a headline, a supporting line, two buttons, and a row of figures." width="100%">
+<img src="docs/images/public-site.png" alt="A photographer's home page: the name top left, a headline reading 'Pictures of places that are about to change', a supporting line, two buttons, and a row of three project cards below." width="100%">
 
-<p align="center"><em>The site a visitor sees — every band on it is a block its owner arranged.</em></p>
+<p align="center"><em>The site a visitor sees — every band on it is a block its owner arranged, in one of the six themes, unmodified.</em></p>
 
-<img src="docs/images/page-builder.png" alt="The Pages screen in the admin, showing the home page with three blocks listed: Hero, Numbers and Cards, each with controls to hide, delete or open it." width="100%">
+<img src="docs/images/page-builder.png" alt="The Pages screen in the admin. One page listed, marked Live with ten blocks, expanded to show its title, its address, a visibility control and the list of blocks." width="100%">
 
 <p align="center"><em>The same page in the editor. No code, no redeploy, and the address bar never leaves your own site.</em></p>
 
@@ -86,6 +86,13 @@ We have not checked whether Netlify's free tier carries an equivalent clause, so
 do not read its presence here as an endorsement of it for commercial sites.
 
 ## Try it without installing anything
+
+The marketing site carries a demo of the admin and the published site that runs
+entirely in your browser — no account, no server, nothing saved. Seven
+professions and six themes, and it renders with the product's real blocks and
+themes rather than with screenshots.
+
+For the full thing, with real saving, uploads and email:
 
 ```bash
 docker compose -f docker-compose.demo.yml up
