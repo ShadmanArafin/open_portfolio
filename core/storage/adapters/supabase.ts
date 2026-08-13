@@ -104,8 +104,9 @@ const media: MediaAdapter = {
 
   async remove(key) {
     const res = await fetch(storageUrl(key), { method: 'DELETE', headers: authHeaders() });
-    // 404 means the caller's intent is already satisfied.
-    if (!res.ok && res.status !== 404) {
+    // Already gone means the caller's intent is satisfied. See `tolerated` —
+    // Supabase reports that as HTTP 400 with a 404 in the body.
+    if (!res.ok && !(await tolerated(res, 404))) {
       throw new Error(`Supabase Storage could not delete ${key} (${res.status}).`);
     }
   },
@@ -140,6 +141,35 @@ function publicUrl(key: string): string {
   return `${base}/storage/v1/object/public/${BUCKET}/${encodeURI(key)}`;
 }
 
+/**
+ * Whether a failed Storage response really means `expected`.
+ *
+ * **Supabase Storage does not put its semantic status in the HTTP status.** A
+ * duplicate bucket and a missing object both come back as **HTTP 400**, with
+ * the real code inside the JSON body:
+ *
+ *   creating a bucket twice → 400 `{"statusCode":"409","code":"BucketAlreadyExists"}`
+ *   deleting a missing key  → 400 `{"statusCode":"404","code":"NoSuchKey"}`
+ *
+ * Two separate call sites here checked `res.status !== 409` and
+ * `res.status !== 404`, so neither ever matched and both threw on the case they
+ * were written to tolerate. The bucket one was the serious one: `provision()`
+ * runs once per process, so on a serverless host it runs on every cold start —
+ * a Supabase site worked on its first boot and then failed on every one after
+ * it, the whole adapter rejecting rather than just uploads.
+ *
+ * Both survived because the Supabase conformance suite had never been run
+ * against a live service. A local `supabase start` found both within a minute.
+ * Centralised because a third call site would otherwise make the same
+ * assumption, and the assumption is invisible until something is actually
+ * running.
+ */
+async function tolerated(res: Response, expected: 404 | 409): Promise<boolean> {
+  if (res.status === expected) return true;
+  const body = await res.text();
+  return new RegExp(`"statusCode"\\s*:\\s*"?${expected}"?`).test(body);
+}
+
 /** Creates the media bucket. Safe to call repeatedly. */
 async function ensureBucket(): Promise<void> {
   const base = requireEnv('SUPABASE_URL').replace(/\/$/, '');
@@ -148,10 +178,9 @@ async function ensureBucket(): Promise<void> {
     headers: { ...authHeaders(), 'Content-Type': 'application/json' },
     body: JSON.stringify({ id: BUCKET, name: BUCKET, public: true }),
   });
-  // 409 is "already there", which is the desired end state.
-  if (!res.ok && res.status !== 409) {
-    throw new Error(`Could not create the ${BUCKET} bucket (${res.status}): ${await res.text()}`);
-  }
+
+  if (res.ok || (await tolerated(res, 409))) return;
+  throw new Error(`Could not create the ${BUCKET} bucket (${res.status}).`);
 }
 
 export const supabaseAdapter: StorageAdapter = {
