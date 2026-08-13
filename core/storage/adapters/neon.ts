@@ -119,7 +119,7 @@ const media: MediaAdapter = {
 export const neonAdapter: StorageAdapter = {
   id: 'neon',
   displayName: 'Neon Postgres + Vercel Blob',
-  docsUrl: 'https://github.com/ShadmanArafin/open_portfolio#choose-your-backend',
+  docsUrl: 'https://getopenportfolio.vercel.app/docs/self-hosting',
 
   capabilities: {
     durable: true,

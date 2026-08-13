@@ -51,8 +51,19 @@ Setting `TEST_POSTGRES_URL` without the container running is worse than not
 setting it: the Postgres tests stop skipping and start failing, so a stopped
 container reads as 90 broken tests.
 
-One observed flake, recorded because it will happen to you and not because it
-is understood: the **first** run immediately after `docker start opb-pg` once
+Two observed flakes, recorded because they will happen to you and not because
+they are understood.
+
+The **first run after files change** has twice reported a handful of failures
+— 2 once, 3 another time — that no re-run reproduced. Both times the next run
+was clean and stayed clean across five or more repeats, including with
+`node_modules/.vite` deleted to force a cold transform. Neither time were the
+failing test names captured, which is the thing to fix: if it happens to you,
+save the whole output before re-running. Transform time on those runs was
+30s+, so a timeout under load is the obvious suspicion and nothing more
+than that.
+
+The other: the **first** run immediately after `docker start opb-pg` once
 showed a single failure, which no subsequent run reproduced — not on a re-run,
 and not after `docker restart` either. Most likely the first connection landing
 while Postgres was still coming up. If a lone Postgres test fails on a cold
@@ -194,19 +205,19 @@ smaller and named in "What is not built" below.
 
 Ordered by how much a user would notice.
 
-| Gap                                  | Notes                                                                                                                                                                                                                                              |
-| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **The newsletter cannot send**       | By design. It collects, confirms and exports; broadcasting is a different product. It also needs SMTP configured, or sign-ups fail honestly with a 503                                                                                             |
-| **No mobile admin layout**           | It installs and works on a phone; the editing screens were drawn for a desktop. The research sizes this at 10–20 days and calls it retention, not acquisition                                                                                      |
-| **No push notifications**            | Needs VAPID and a real device. The service worker must carve out `/admin` first — see the Serwist trap below                                                                                                                                       |
-| **The marketing site has no home**   | Built, in `site/`, and it builds to a static export. It is not deployed and there is no domain — see "What to do next"                                                                                                                             |
-| **No hosted demo**                   | Less pressing than it was: `/demo/try` on the marketing site runs the admin and the site client-side, importing the product's real blocks and themes. A hosted `OPB_DEMO_MODE` instance would add real saving, uploads and email                   |
-| **Only three screenshots**           | `site/public/shots/` has the public site, the page builder and the block outline, all of the real product with the photographer persona. None of them contains an actual photograph — every image slot in the demo content is an empty placeholder |
-| **24 block types**                   | Literal: `hero richText image gallery stats cards ctaBanner contactForm faq video split quote newsletter socialRow services download separator`. Record-placing: `collection writingList timeline logoWall testimonials skills steps`              |
-| **5 storage backends unbuilt**       | Firebase, Convex, Cloudflare D1+R2, PocketBase, Appwrite. Not advertised in the README. Each needs an emulator — do not ship one you have not run                                                                                                  |
-| **Passphrase auth only**             | No passkeys, no email OTP                                                                                                                                                                                                                          |
-| **Themes change tokens, not layout** | Six of them, and they do not rearrange a page. Less true than it was, since a page of record-placing blocks follows the records rather than fixed copy, but a theme still cannot change the arrangement itself                                     |
-| **Tailwind 4**                       | Deferred, not blocked. PR #7 is closed and Dependabot ignores the major line; tracked in issue #9, which lists the missing test first — nothing here asserts the built CSS, so the breakage would produce a green build and an unstyled site       |
+| Gap                                         | Notes                                                                                                                                                                                                                                                                                             |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **The newsletter cannot send**              | By design. It collects, confirms and exports; broadcasting is a different product. It also needs SMTP configured, or sign-ups fail honestly with a 503                                                                                                                                            |
+| **No mobile admin layout**                  | It installs and works on a phone; the editing screens were drawn for a desktop. The research sizes this at 10–20 days and calls it retention, not acquisition                                                                                                                                     |
+| **No push notifications**                   | Needs VAPID and a real device. The service worker must carve out `/admin` first — see the Serwist trap below                                                                                                                                                                                      |
+| **The marketing site does not auto-deploy** | Live at <https://getopenportfolio.vercel.app>, but as a prebuilt static upload — a snapshot of one build, not of `main`. Connect the repo in Vercel with Root Directory `site` and "Include files outside the Root Directory" on; the demo imports the product's real blocks from `../../../core` |
+| **No hosted demo**                          | Less pressing than it was: `/demo/try` on the marketing site runs the admin and the site client-side, importing the product's real blocks and themes. A hosted `OPB_DEMO_MODE` instance would add real saving, uploads and email                                                                  |
+| **Only three screenshots**                  | `site/public/shots/` has the public site, the page builder and the block outline, all of the real product with the photographer persona. None of them contains an actual photograph — every image slot in the demo content is an empty placeholder                                                |
+| **24 block types**                          | Literal: `hero richText image gallery stats cards ctaBanner contactForm faq video split quote newsletter socialRow services download separator`. Record-placing: `collection writingList timeline logoWall testimonials skills steps`                                                             |
+| **5 storage backends unbuilt**              | Firebase, Convex, Cloudflare D1+R2, PocketBase, Appwrite. Not advertised in the README. Each needs an emulator — do not ship one you have not run                                                                                                                                                 |
+| **Passphrase auth only**                    | No passkeys, no email OTP                                                                                                                                                                                                                                                                         |
+| **Themes change tokens, not layout**        | Six of them, and they do not rearrange a page. Less true than it was, since a page of record-placing blocks follows the records rather than fixed copy, but a theme still cannot change the arrangement itself                                                                                    |
+| **Tailwind 4**                              | Deferred, not blocked. PR #7 is closed and Dependabot ignores the major line; tracked in issue #9, which lists the missing test first — nothing here asserts the built CSS, so the breakage would produce a green build and an unstyled site                                                      |
 
 ---
 
@@ -383,12 +394,23 @@ its phone editor, but they do abandon one they cannot fix a typo in from a
 train. It installs to a home screen already; the screens themselves were drawn
 for a desktop.
 
-**4. Deploy the marketing site and the demo.** The site is built and it exports
-to static files; it has never been deployed and there is no domain. It is a
-second Vercel project on the same repository with **Root Directory** set to
-`site` and `SITE_URL` set to whatever the domain turns out to be. The demo is a
-third deployment of the _product_ with `OPB_DEMO_MODE=1`; until it exists,
-`/demo` says so rather than offering a button that does nothing.
+**4. Connect the marketing site to git, and deploy the demo.** The site is
+**live at <https://getopenportfolio.vercel.app>**, in the Vercel project
+`open_portfolio` — but as a prebuilt static upload, so it is a snapshot of one
+build rather than of `main`. To make it follow pushes: connect the repository,
+set **Root Directory** to `site`, and turn on **"Include files outside the Root
+Directory"** — required, because the demo imports the product's real blocks and
+themes from `../../../core`. `SITE_URL` defaults to the live address and should
+be set in the environment if a domain is ever bought; note it is read at build
+time, so a prebuilt upload needs it set locally.
+
+Vercel Authentication must stay **off** for this project. It defaults to
+`all_except_custom_domains`, which silently 302s every alias to an SSO login
+while the auto-generated domain keeps working — so the site looks fine on one
+address and is unreachable on the one you published.
+
+The demo is a third deployment of the _product_ with `OPB_DEMO_MODE=1`; until
+it exists, `/demo` says so rather than offering a button that does nothing.
 
 **5. More screenshots, and some photography.** Three exist — the public site,
 the page builder and the block outline — all of the real product with the

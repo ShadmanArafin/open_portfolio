@@ -428,7 +428,7 @@ const subscribers: SubscribersAdapter = {
 export const localAdapter: StorageAdapter = {
   id: 'local',
   displayName: 'Local filesystem',
-  docsUrl: 'https://github.com/ShadmanArafin/open_portfolio#choose-your-backend',
+  docsUrl: 'https://getopenportfolio.vercel.app/docs/self-hosting',
 
   capabilities: {
     durable: true,

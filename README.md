@@ -11,6 +11,9 @@ and your content stays in your own database.
 [![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
+**[getopenportfolio.vercel.app](https://getopenportfolio.vercel.app)** — the site, the docs,
+and a demo you can use in your browser without installing anything.
+
 [Deploy your own](#deploy-your-own) · [Run it locally](#run-it-locally) ·
 [Choose a backend](#choose-a-backend) · [Contributing](CONTRIBUTING.md) ·
 [Roadmap](#roadmap)
@@ -329,9 +332,14 @@ discover them after typing in a portfolio:
 
 ### Documentation
 
-There are two sets, for two different people, and they live in
-[site/](site/) — a separate application in this repository that builds to a
-static export. It is not part of what you deploy.
+Both sets are published at
+**[getopenportfolio.vercel.app](https://getopenportfolio.vercel.app)** —
+[help centre](https://getopenportfolio.vercel.app/help) and
+[developer docs](https://getopenportfolio.vercel.app/docs).
+
+They are written for two different people, and live in [site/](site/) — a
+separate application in this repository that builds to a static export. It is
+not part of what you deploy.
 
 - **Help centre** (`site/content/help/`) — for anyone with a portfolio to run.
   Never shows a terminal command; where a task needs one it links across.

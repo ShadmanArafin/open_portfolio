@@ -127,7 +127,7 @@ const media: MediaAdapter = {
 export const postgresAdapter: StorageAdapter = {
   id: 'postgres',
   displayName: 'Postgres (any host)',
-  docsUrl: 'https://github.com/ShadmanArafin/open_portfolio#choose-your-backend',
+  docsUrl: 'https://getopenportfolio.vercel.app/docs/self-hosting',
 
   capabilities: {
     durable: true,
