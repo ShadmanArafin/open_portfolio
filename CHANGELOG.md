@@ -7,7 +7,7 @@ of stored content is stable, but screens and options are not settled yet.
 Anyone who reported or suggested something is credited by name. That is the
 whole point of the Help & feedback screen in the admin.
 
-## 0.5.0 — unreleased
+## 0.5.0 — 2026-08-13
 
 The first release worth deploying. Somebody non-technical can now put a
 portfolio online and run it without opening a file.

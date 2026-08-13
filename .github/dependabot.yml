@@ -37,6 +37,18 @@ updates:
       - dependency-name: tailwindcss
         update-types: ['version-update:semver-major']
 
+      # ESLint 10 and TypeScript 7 are pinned out, not merely deferred. There
+      # is no eslint-plugin-jsx-a11y compatible with ESLint 10, and TypeScript
+      # 7 falls outside typescript-eslint's peer range. The group bump was
+      # merged once and reverted in 518752b; it has been proposed and refused
+      # twice since. Remove these when upstream catches up.
+      - dependency-name: eslint
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@eslint/js'
+        update-types: ['version-update:semver-major']
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
+
   - package-ecosystem: github-actions
     directory: /
     schedule:
