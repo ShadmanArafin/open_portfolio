@@ -37,7 +37,7 @@ Each page has a switch for it. Useful for a page you send to one client. Note wh
 
 ## What the dashboard is telling you
 
-Sixteen checks over your published site. The ones that matter most for being found:
+It checks your published site for what is missing. The ones that matter most for being found:
 
 - **No search description** — the grey paragraph is being guessed from your page.
 - **Description too long** — it will be cut off mid-sentence.

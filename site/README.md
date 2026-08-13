@@ -48,27 +48,39 @@ Without it the default in `lib/site.ts` is used.
 
 ## How it is put together
 
-| Path                         | What it holds                                                                         |
-| ---------------------------- | ------------------------------------------------------------------------------------- |
-| `app/`                       | Routes. One file per page; nothing clever.                                            |
-| `content/help/*.md`          | The help centre. Plain Markdown, four lines of frontmatter.                           |
-| `content/docs/*.md`          | The developer docs. Same.                                                             |
-| `lib/facts.ts`               | **Every claim about another product, with a source URL and the date it was checked.** |
-| `lib/alternatives.ts`        | The four comparison pages, as data.                                                   |
-| `lib/content.ts`             | Reads the Markdown at build time and builds the navigation from the files.            |
-| `app/globals.css`            | The whole design, and the reasoning behind it.                                        |
-| `scripts/check-contrast.mjs` | Reads the tokens out of the stylesheet and fails the build below 4.5:1.               |
-| `lib/demo/`                  | The seven invented personas behind `/demo/try`, and the bridge to the product.        |
-| `components/demo/`           | The interactive demo: the admin shell, the generated field editor, the live preview.  |
-| `public/shots/`              | Product screenshots. One persona throughout — see below.                              |
+| Path                         | What it holds                                                                                          |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `app/`                       | Routes. One file per page; nothing clever.                                                             |
+| `content/help/*.md`          | The help centre. Plain Markdown, four lines of frontmatter.                                            |
+| `content/docs/*.md`          | The developer docs. Same.                                                                              |
+| `lib/facts.ts`               | **Every claim about another product, with a source URL and the date it was checked.**                  |
+| `lib/alternatives.ts`        | The four comparison pages, as data.                                                                    |
+| `lib/content.ts`             | Reads the Markdown at build time and builds the navigation from the files.                             |
+| `app/globals.css`            | The whole design, and the reasoning behind it.                                                         |
+| `scripts/check-contrast.mjs` | Reads the tokens out of the stylesheet and fails the build below 4.5:1.                                |
+| `lib/demo/`                  | The seven invented personas behind `/demo/try`, and the bridge to the product.                         |
+| `components/demo/`           | The interactive demo: the admin shell, thirteen screens, the generated field editor, the live preview. |
+| `public/shots/`              | Product screenshots. One persona throughout — see below.                                               |
 
 ## The demo imports the product
 
 `/demo/try` runs the admin and the published site in the browser with nothing
 behind them. It is not a mock-up: the blocks, the block renderer, the theme
-token generator, the profession vocabulary, the editor's field metadata and the
-content warnings are all imported from `../core` and `../src/cms`. A block added
-to the product appears in the demo with no work here.
+token generator, the profession vocabulary, the editor's field metadata, the
+content warnings, the dashboard's checks (`analyseContent`), the contrast audit
+(`auditContrast`) and the newsletter's CSV (`toCsv`) are all imported from
+`../core` and `../src/cms`. A block added to the product appears in the demo
+with no work here.
+
+That is worth the coupling for a reason beyond fidelity: **running the
+product's own functions against seeded content falsifies stale copy.** It
+immediately caught two sentences repeated across this site and the README —
+a check count that had changed, and a colour refusal that mostly does not
+happen because the token layer clamps first.
+
+Three screens cannot exist without a server and say so when opened: uploading
+a file, saving a service password, and reporting a bug through GitHub under
+your own account.
 
 Two build settings make that possible and they are easy to get backwards:
 

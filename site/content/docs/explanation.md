@@ -43,6 +43,24 @@ A layout guard does not protect a route handler. A handler is a public HTTP endp
 
 So every handler calls `requireOwner()` itself, and a test walks the syntax tree of `app/api/**` and fails the build on any exported HTTP handler that does not, unless it is on an allowlist with a written reason. The allowlist is the mechanism: reviewing a one-line diff that claims "anyone may call this" is a decision somebody has to make out loud.
 
+## Why the marketing site imports the product
+
+The demo at `/demo/try` renders with this repository's real blocks, real theme
+tokens, real content checks and real editor metadata rather than a copy. That
+couples two applications that are otherwise independent, and it is worth it for
+two reasons.
+
+A reproduction drifts silently. Change a block and the imitation still looks
+fine — it is just now showing a product that does not exist.
+
+And running the real functions against seeded content **falsifies stale
+prose**. Two claims repeated across the README, the help centre and the
+homepage were wrong the moment the demo executed them: the dashboard's check
+count varies with content rather than being sixteen, and an unreadable palette
+is usually prevented by clamping at token generation rather than refused at
+publish. Tests did not catch either, because neither is a behaviour anybody had
+written a test about — they were sentences.
+
 ## What the tests are for, and what they are not
 
 Six hundred and fifty-five of them, and the honest position is that **they have never once caught the bug that mattered most that week.**

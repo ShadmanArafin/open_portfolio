@@ -29,9 +29,15 @@ The owner's own values sit on top of the theme, and the rule is one sentence: **
 
 So switching theme never discards a colour somebody chose deliberately, and clearing a field returns it to the theme rather than to white.
 
-## Contrast is a gate, not a warning
+## Contrast: clamped first, gated second
 
-Publishing runs a contrast audit over the resolved palette and **refuses** a combination nobody could read. Enforced at the endpoint rather than only in the dashboard, because a client that skips the warning — or a direct call — must not be able to put unreadable text in front of visitors.
+The order matters and it is easy to describe backwards.
+
+**`generateTokens` clamps.** Text, border and link roles are derived from the background actually given, and each is enforced to a readable ratio at generation. So most unreadable palettes never exist — even a neon accent yields usable subtle, link and border roles.
+
+**`auditContrast` gates what survives.** Publishing runs it over the resolved palette and **refuses** a combination nobody could read. Enforced at the endpoint rather than only in the dashboard, because a client that skips the warning — or a direct call — must not be able to put unreadable text in front of visitors.
+
+The practical consequence, which the marketing site's demo made obvious: you cannot easily provoke the refusal by picking a bad accent, because clamping gets there first. Do not write copy promising that you can.
 
 Scoped to contrast on purpose. The health report marks other things "blocking" that are judgement calls; refusing every one of them would make publishing feel broken rather than careful.
 

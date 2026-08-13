@@ -223,7 +223,7 @@ Every step is skippable. None of it is permanent.
   restored. Capped at 20 so storage stays flat.
 - **Colour contrast is checked before publishing.** A palette nobody could read
   is refused, not warned about.
-- **A dashboard that tells you what is missing** — sixteen checks over the
+- **A dashboard that tells you what is missing** — a run of checks over the
   published content, each linking to the screen that fixes it.
 
 ### Run

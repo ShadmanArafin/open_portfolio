@@ -49,4 +49,4 @@ You now have a live site with example content in it. Replace the examples whenev
 
 ## Knowing what is unfinished
 
-The dashboard answers that. It runs sixteen checks over your published site and each links to the screen that fixes it — a project still in draft, an image with no description, a search description too long to display, an enquiry nobody answered.
+The dashboard answers that. It checks your published site and each finding links to the screen that fixes it — a project still in draft, an image with no description, a search description too long to display, an enquiry nobody answered.

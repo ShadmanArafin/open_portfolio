@@ -92,10 +92,10 @@ export default function DemoPage() {
               </p>
             </div>
             <div className="card">
-              <h3 className="head">Add a page and stack blocks on it</h3>
+              <h3 className="head">Reorder the blocks on the page</h3>
               <p>
-                Add a hero, then &ldquo;Your work&rdquo;, then a contact form. Reorder them. Hide
-                one. This is the part that decides whether the tool is for you.
+                Move the contact form above the work, hide the numbers, watch the preview follow.
+                This is the part that decides whether the tool is for you.
               </p>
             </div>
             <div className="card">
@@ -106,10 +106,11 @@ export default function DemoPage() {
               </p>
             </div>
             <div className="card">
-              <h3 className="head">Try to break the colours</h3>
+              <h3 className="head">Try to make it unreadable</h3>
               <p>
-                Set a pale accent on a pale background and press publish. It is refused, and the
-                message names the two colours.
+                Open Appearance and pick a terrible accent. Every text, border and link colour is
+                derived from your background and clamped before it is drawn, so it is harder than
+                you expect — and a publish-time check catches what clamping cannot.
               </p>
             </div>
           </div>
@@ -138,8 +139,9 @@ export default function DemoPage() {
               server, so pressing Publish moves one array in your browser to another.
             </p>
             <p>
-              <strong>Absent:</strong> the other twenty-two admin screens. You get the page builder,
-              because it is the one that decides whether the tool is for you.
+              <strong>Absent:</strong> three screens that cannot exist without a server, and each
+              says so when you open it — uploading a file, saving a service password, and reporting
+              a bug through GitHub under your own account.
             </p>
           </div>
           <div className="cta-row">

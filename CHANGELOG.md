@@ -90,16 +90,24 @@ portfolio online and run it without opening a file.
   write with `EACCES: mkdir '/app/.opb'`. Every test passed throughout, because
   every test ran with that variable unset. There is now one function and a test
   that sets it.
-- **Try it in a browser tab.** The marketing site carries a demo of the admin
-  and the published site with nothing behind them — no account, no server,
-  nothing saved. Seven professions and six themes, switchable, and it imports
-  the product's real blocks, themes and editor forms rather than imitating
-  them.
+- **Try the whole admin in a browser tab.** The marketing site carries a demo
+  with nothing behind it — no account, no server, nothing saved. Thirteen
+  screens: the dashboard, the page builder, your work, writing, clients,
+  experience, the inbox, the newsletter, appearance, search settings, the
+  media library and version history. Seven professions and six themes,
+  switchable, and it imports the product's real blocks, themes, checks and
+  editor forms rather than imitating them.
 - **A marketing site, a help centre and developer docs**, in `site/` — a
   separate application that builds to a static export. Every claim it makes
   about another product carries a source link and the date it was read, and
   every comparison page names at least two things the other product does
   better.
+- **Two claims corrected by building the demo**, which is what a demo is for.
+  The dashboard does not run "sixteen checks" — the number varies with what
+  you have, and the demo's own content produced nineteen. And an unreadable
+  palette is usually _prevented_ rather than refused: every text, border and
+  link colour is derived from the background and clamped before it is drawn,
+  and the publish-time refusal is the backstop for what clamping cannot fix.
 - 676 tests, or 772 with a database and a mail server attached.
 
 ### Known gaps

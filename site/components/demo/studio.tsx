@@ -12,6 +12,20 @@ import { THEMES, blockContentFor, vocabulary } from '@/lib/demo/render';
 import type { PageBlock } from '@/lib/demo/types';
 import { DEVICES, SitePreview, type DeviceId } from './site-preview';
 import { FieldList } from './fields';
+import { demoState } from '@/lib/demo/state';
+import {
+  Appearance,
+  Dashboard,
+  History,
+  Media,
+  Messages,
+  Newsletter,
+  NotHere,
+  Screen,
+  Seo,
+  WorkList,
+  WritingList,
+} from './screens';
 
 /**
  * The whole product, running in a browser tab with nothing behind it.
@@ -36,11 +50,65 @@ import { FieldList } from './fields';
 type Screen = 'signin' | 'wizard' | 'studio';
 type Channel = 'draft' | 'live';
 
-const SIDEBAR = [
-  { group: 'Overview', items: ['Dashboard', 'Analytics', 'Homepage', 'Pages', 'Writing'] },
-  { group: 'Content', items: ['Selected work', 'Clients', 'Experience', 'Capabilities'] },
-  { group: 'Inbox', items: ['Messages', 'Newsletter'] },
-  { group: 'Configuration', items: ['Navigation', 'Appearance', 'SEO', 'Services', 'History'] },
+/**
+ * The admin's own navigation, and every entry goes somewhere.
+ *
+ * It used to be a static list, which made the demo look like the product had
+ * one screen. Most of these are a list and a form over content the demo already
+ * holds; the three that genuinely cannot exist without a server say so when you
+ * open them, which is better than not being there.
+ */
+type ScreenId =
+  | 'dashboard'
+  | 'pages'
+  | 'writing'
+  | 'work'
+  | 'clients'
+  | 'experience'
+  | 'messages'
+  | 'newsletter'
+  | 'appearance'
+  | 'seo'
+  | 'media'
+  | 'history'
+  | 'services'
+  | 'help';
+
+const SIDEBAR: { group: string; items: { id: ScreenId; label: string }[] }[] = [
+  {
+    group: 'Overview',
+    items: [
+      { id: 'dashboard', label: 'Dashboard' },
+      { id: 'pages', label: 'Pages' },
+      { id: 'writing', label: 'Writing' },
+    ],
+  },
+  {
+    group: 'Content',
+    items: [
+      { id: 'work', label: 'Selected work' },
+      { id: 'clients', label: 'Clients' },
+      { id: 'experience', label: 'Experience' },
+      { id: 'media', label: 'Media library' },
+    ],
+  },
+  {
+    group: 'Inbox',
+    items: [
+      { id: 'messages', label: 'Messages' },
+      { id: 'newsletter', label: 'Newsletter' },
+    ],
+  },
+  {
+    group: 'Configuration',
+    items: [
+      { id: 'appearance', label: 'Appearance' },
+      { id: 'seo', label: 'SEO' },
+      { id: 'services', label: 'Services' },
+      { id: 'history', label: 'Version history' },
+      { id: 'help', label: 'Help & feedback' },
+    ],
+  },
 ];
 
 export function Studio() {
@@ -62,6 +130,11 @@ export function Studio() {
   const [channel, setChannel] = useState<Channel>('draft');
 
   const [device, setDevice] = useState<DeviceId>('desktop');
+  const [screenId, setScreenId] = useState<ScreenId>('pages');
+  const [accent, setAccent] = useState('');
+  const [background, setBackground] = useState('');
+  const [seoTitle, setSeoTitle] = useState('');
+  const [seoDescription, setSeoDescription] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [justPublished, setJustPublished] = useState(false);
 
@@ -76,6 +149,10 @@ export function Studio() {
     setLive(next.blocks);
     setSelectedId(null);
     setChannel('draft');
+    setAccent('');
+    setBackground('');
+    setSeoTitle('');
+    setSeoDescription('');
   };
 
   if (screen === 'signin') {
@@ -95,6 +172,9 @@ export function Studio() {
   }
 
   const blocks = channel === 'draft' ? draft : live;
+  // A whole content document, so the dashboard can run the product's real
+  // checks against it and every list screen has something true to show.
+  const state = demoState({ ...persona, blocks: draft }, themeId);
   const selected = draft.find((block) => block.id === selectedId) ?? null;
   const definition = selected ? getBlockDefinition(selected.type) : null;
 
@@ -117,6 +197,102 @@ export function Studio() {
     setChannel('live');
     setJustPublished(true);
     setTimeout(() => setJustPublished(false), 2600);
+  };
+
+  const words = vocabulary(persona);
+
+  const renderScreen = () => {
+    switch (screenId) {
+      case 'dashboard':
+        return <Dashboard state={state} onGo={(next) => setScreenId(next as ScreenId)} />;
+      case 'writing':
+        return <WritingList state={state} />;
+      case 'work':
+        return <WorkList state={state} label={words.work} />;
+      case 'clients':
+        return (
+          <Screen
+            title={words.brands}
+            hint="Logos for the strip on your page. A block places them; this is where they live."
+          >
+            <ul className="screen__rows">
+              {state.brands.map((brand) => (
+                <li key={brand.id}>
+                  <span className="screen__rowmain">
+                    <strong>{brand.name}</strong>
+                    <em>No logo uploaded — the block will show the name instead.</em>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </Screen>
+        );
+      case 'experience':
+        return (
+          <Screen title="Experience" hint="One timeline, placed by a block wherever you want it.">
+            <ul className="screen__rows">
+              {state.experience.map((entry) => (
+                <li key={entry.id}>
+                  <span className="screen__num">{entry.period}</span>
+                  <span className="screen__rowmain">
+                    <strong>
+                      {entry.role} · {entry.company}
+                    </strong>
+                    <em>{entry.summary}</em>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </Screen>
+        );
+      case 'messages':
+        return <Messages state={state} />;
+      case 'newsletter':
+        return <Newsletter />;
+      case 'appearance':
+        return (
+          <Appearance
+            themeId={themeId}
+            onTheme={setThemeId}
+            accent={accent}
+            background={background}
+            onAccent={setAccent}
+            onBackground={setBackground}
+          />
+        );
+      case 'seo':
+        return (
+          <Seo
+            persona={persona}
+            title={seoTitle}
+            description={seoDescription}
+            onTitle={setSeoTitle}
+            onDescription={setSeoDescription}
+          />
+        );
+      case 'media':
+        return <Media />;
+      case 'history':
+        return <History state={state} />;
+      case 'services':
+        return (
+          <NotHere
+            title="Services"
+            what="Connect a mail server, analytics or spam filtering — from the admin, with no environment variables and no redeploy. Press Test and it tells you what is wrong in plain words."
+            why="Not in this demo, and not in the hosted one either. Service passwords are encrypted and stored, and there is nothing here to store them in — or to keep them from the next visitor."
+          />
+        );
+      case 'help':
+        return (
+          <NotHere
+            title="Help & feedback"
+            what="Report a bug or ask for a feature without leaving your admin. It searches what has already been reported first, tells you whether it is already fixed in a newer version, and attaches your version and setup so nobody has to ask."
+            why="Not in this demo: it signs in to GitHub with the device flow and opens the issue under your own account, so you are credited when it lands. There is no account here to open it from."
+          />
+        );
+      default:
+        return null;
+    }
   };
 
   return (
@@ -202,108 +378,117 @@ export function Studio() {
               <h3>{section.group}</h3>
               <ul>
                 {section.items.map((item) => (
-                  <li key={item} aria-current={item === 'Homepage' ? 'page' : undefined}>
-                    {item === 'Selected work' ? vocabulary(persona).work : item}
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      aria-current={item.id === screenId ? 'page' : undefined}
+                      onClick={() => setScreenId(item.id)}
+                    >
+                      {item.id === 'work' ? vocabulary(persona).work : item.label}
+                    </button>
                   </li>
                 ))}
               </ul>
             </div>
           ))}
-          <p className="studio__navnote">
-            One screen of twenty-three. The rest work the same way — a list, and a form.
-          </p>
         </nav>
 
-        <div className="studio__outline">
-          <h3>Home page</h3>
-          <p className="studio__hint">
-            {draft.length} blocks. Select one to edit it, and watch the preview.
-          </p>
-          <ol>
-            {draft.map((block, index) => {
-              const def = getBlockDefinition(block.type);
-              const warnings = warningsFor(block, persona);
-              return (
-                <li key={block.id} data-selected={block.id === selectedId ? 'true' : 'false'}>
-                  <button type="button" onClick={() => setSelectedId(block.id)}>
-                    <span className="studio__blocklabel">{def?.label ?? block.type}</span>
-                    {block.hidden && <span className="studio__flag">Hidden</span>}
-                    {warnings.length > 0 && (
-                      <span className="studio__flag studio__flag--warn" title={warnings[0]}>
-                        Check
-                      </span>
-                    )}
-                  </button>
-                  <span className="studio__rowbtns">
-                    <button
-                      type="button"
-                      onClick={() => move(block.id, -1)}
-                      disabled={index === 0}
-                      aria-label="Move up"
-                    >
-                      ↑
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => move(block.id, 1)}
-                      disabled={index === draft.length - 1}
-                      aria-label="Move down"
-                    >
-                      ↓
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => mutate(block.id, (b) => ({ ...b, hidden: !b.hidden }))}
-                      aria-label={block.hidden ? 'Show' : 'Hide'}
-                    >
-                      {block.hidden ? '◌' : '●'}
-                    </button>
-                  </span>
-                </li>
-              );
-            })}
-          </ol>
-
-          <details className="studio__palette">
-            <summary>Add a block</summary>
-            <p className="studio__hint">
-              {listBlockDefinitions().length} types. Adding is switched off here so the demo stays
-              the shape it started in.
-            </p>
-            <ul>
-              {listBlockDefinitions().map((def) => (
-                <li key={def.type}>{def.label}</li>
-              ))}
-            </ul>
-          </details>
-        </div>
-
-        <div className="studio__panel">
-          {selected && definition ? (
-            <>
-              <h3>{definition.label}</h3>
-              <p className="studio__hint">{definition.description}</p>
-              {warningsFor(selected, persona).map((warning) => (
-                <p className="studio__warn" key={warning}>
-                  {warning}
-                </p>
-              ))}
-              <FieldList
-                fields={definition.fields}
-                props={selected.props}
-                onChange={(props) => mutate(selected.id, (b) => ({ ...b, props }))}
-              />
-            </>
-          ) : (
-            <>
-              <h3>Nothing selected</h3>
+        {screenId === 'pages' ? (
+          <>
+            <div className="studio__outline">
+              <h3>Home page</h3>
               <p className="studio__hint">
-                Choose a block on the left. Every block describes its own form, which is why there
-                are twenty-four blocks and one editor.
+                {draft.length} blocks. Select one to edit it, and watch the preview.
               </p>
-            </>
-          )}
-        </div>
+              <ol>
+                {draft.map((block, index) => {
+                  const def = getBlockDefinition(block.type);
+                  const warnings = warningsFor(block, persona);
+                  return (
+                    <li key={block.id} data-selected={block.id === selectedId ? 'true' : 'false'}>
+                      <button type="button" onClick={() => setSelectedId(block.id)}>
+                        <span className="studio__blocklabel">{def?.label ?? block.type}</span>
+                        {block.hidden && <span className="studio__flag">Hidden</span>}
+                        {warnings.length > 0 && (
+                          <span className="studio__flag studio__flag--warn" title={warnings[0]}>
+                            Check
+                          </span>
+                        )}
+                      </button>
+                      <span className="studio__rowbtns">
+                        <button
+                          type="button"
+                          onClick={() => move(block.id, -1)}
+                          disabled={index === 0}
+                          aria-label="Move up"
+                        >
+                          ↑
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => move(block.id, 1)}
+                          disabled={index === draft.length - 1}
+                          aria-label="Move down"
+                        >
+                          ↓
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => mutate(block.id, (b) => ({ ...b, hidden: !b.hidden }))}
+                          aria-label={block.hidden ? 'Show' : 'Hide'}
+                        >
+                          {block.hidden ? '◌' : '●'}
+                        </button>
+                      </span>
+                    </li>
+                  );
+                })}
+              </ol>
+
+              <details className="studio__palette">
+                <summary>Add a block</summary>
+                <p className="studio__hint">
+                  {listBlockDefinitions().length} types. Adding is switched off here so the demo
+                  stays the shape it started in.
+                </p>
+                <ul>
+                  {listBlockDefinitions().map((def) => (
+                    <li key={def.type}>{def.label}</li>
+                  ))}
+                </ul>
+              </details>
+            </div>
+
+            <div className="studio__panel">
+              {selected && definition ? (
+                <>
+                  <h3>{definition.label}</h3>
+                  <p className="studio__hint">{definition.description}</p>
+                  {warningsFor(selected, persona).map((warning) => (
+                    <p className="studio__warn" key={warning}>
+                      {warning}
+                    </p>
+                  ))}
+                  <FieldList
+                    fields={definition.fields}
+                    props={selected.props}
+                    onChange={(props) => mutate(selected.id, (b) => ({ ...b, props }))}
+                  />
+                </>
+              ) : (
+                <>
+                  <h3>Nothing selected</h3>
+                  <p className="studio__hint">
+                    Choose a block on the left. Every block describes its own form, which is why
+                    there are twenty-four blocks and one editor.
+                  </p>
+                </>
+              )}
+            </div>
+          </>
+        ) : (
+          <div className="studio__screen">{renderScreen()}</div>
+        )}
 
         <div className="studio__preview">
           <div className="studio__previewbar">

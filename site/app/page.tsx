@@ -54,8 +54,12 @@ export default function Home() {
             <p className="micro">MIT licensed · no account needed to try it · nothing to cancel</p>
           </div>
 
+          {/*
+            Not `priority`. It sits below the headline and the buttons, so
+            preloading it competes with the text that is actually the largest
+            paint — and the browser warns that the preload went unused.
+          */}
           <Shot
-            priority
             src="/shots/public-site.png"
             alt="A photographer's home page: the name top left, a headline reading 'Pictures of places that are about to change', a supporting line, two buttons, and a row of three project cards below."
             caption="A site built with it. Every band on this page is a block its owner arranged — and the whole page is one of the six themes, unmodified."
@@ -214,8 +218,8 @@ export default function Home() {
               <p>
                 A contact form that actually delivers, an inbox inside the admin so a message is
                 never lost if email is misconfigured, and optional SMTP so you are notified. A
-                dashboard that runs sixteen checks over your published site, each linking to the
-                screen that fixes it.
+                dashboard that checks your published site for what is missing, each finding linking
+                to the screen that fixes it.
               </p>
             </div>
             <div className="card">

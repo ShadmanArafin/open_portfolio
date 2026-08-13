@@ -87,7 +87,7 @@ development.
 | Phase 2 primitives, ESLint bans, publish gate | Nothing external needed                                                     |
 | Phase 5 blocks, pages, `draftMode()` preview  | Nothing external needed                                                     |
 | Phase 7 admin: MediaPicker, builder polish    | Nothing external needed                                                     |
-| Phase 9 docs site and launch checklist        | Nothing external needed                                                     |
+| Phase 9 launch checklist                      | Nothing external needed                                                     |
 | Postgres / Supabase / Neon **database** half  | `postgres:16` — already wired; with Mailpit takes the suite from 655 to 751 |
 | Supabase **Storage** half                     | `supabase start` runs the real `storage-api` container                      |
 | Email send path                               | `axllent/mailpit` — already wired                                           |
@@ -134,8 +134,10 @@ Four things, and only four:
 4. **Phase 8 adapters** — five files, each against its own local emulator.
 5. **Phase 8 integrations registry + vault** — now with two real consumers
    (SMTP and Turnstile) to design the abstraction against, rather than none.
-6. ~~**Phase 9 writing, themes, presets, newsletter**~~ — done. What is left of
-   the phase is the docs site and the launch checklist.
+6. ~~**Phase 9 writing, themes, presets, newsletter, docs**~~ — done, including
+   the marketing site, the help centre, the developer docs and an interactive
+   demo. What is left of the phase is the launch checklist, and deploying any
+   of it.
 7. **Only then:** one cloud pass covering all four items above at once.
 
 ---
@@ -1076,10 +1078,25 @@ _Honest scoping:_ Vercel Marketplace can only auto-provision Marketplace-native 
 >   already subscribed" is a way to test, one query at a time, whether a given
 >   person is on somebody's list.
 >
-> **Remaining in this phase:** the docs site and the launch checklist. The
-> Tiptap rich-text editor and Giscus comments were not built — writing uses the
-> same block editor as pages, which means every block added later works there
-> without anyone doing anything, and comments on a portfolio were judged a
+> **Also done, and not as specified.** The marketing site, a nine-page help
+> centre and eight pages of developer docs, in `site/` — a separate application
+> that builds to a static export. Fumadocs was installed and removed: the
+> research picked it, and the same research insists the help centre look like
+> the marketing site, which a second design system in one deployment cannot do.
+> Plain Markdown with four-line frontmatter instead, nav and search generated
+> from the directory.
+>
+> **And an interactive demo**, which the plan did not ask for at all. `/demo/try`
+> runs thirteen admin screens and the published site in the browser with no
+> server, importing this repository's real blocks, themes, content checks and
+> editor metadata. It paid for itself immediately by falsifying two sentences
+> that had been repeated across the README, the help centre and the homepage —
+> see the note on stale copy in [HANDOVER.md](HANDOVER.md).
+>
+> **Remaining in this phase:** the launch checklist, and deploying any of it.
+> The Tiptap rich-text editor and Giscus comments were not built — writing uses
+> the same block editor as pages, which means every block added later works
+> there without anyone doing anything, and comments on a portfolio were judged a
 > moderation obligation rather than a feature.
 
 Tiptap blog (structured JSON so posts render through token primitives in all 6 themes; markdown import/export so nobody is locked in). **Scheduling is a query predicate**, not a cron job — `status='published' OR (status='scheduled' AND published_at <= now())` applied everywhere, so a post appears within the cache window on any host with zero scheduler. RSS + JSON Feed + sitemap + Giscus. Newsletter capture with double opt-in, hashed tokens, RFC 8058 one-click unsubscribe, CSV/Buttondown export. Themes 2–6 (pure token files by now). 7 fully authored presets. Docs site (Fumadocs, integration pages **generated from the registry** so they can't drift). Security review, a11y pass, Lighthouse budgets, 1.0.

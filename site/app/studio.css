@@ -467,3 +467,406 @@
   line-height: 1.4;
   color: var(--ink-3);
 }
+
+/* ------------------------------------------------------- the other screens */
+
+/*
+ * Everything in the admin that is not the page builder: the dashboard, the
+ * record lists, the inbox, appearance, search settings, the media library and
+ * version history.
+ *
+ * One pane rather than three, because none of them needs an outline and a form
+ * side by side — they are a list, or a form, or both stacked. The preview stays
+ * where it is, so changing a theme or a colour is visible without navigating.
+ */
+
+.studio__screen {
+  grid-column: span 2;
+  border-right: 1px solid var(--rule);
+  padding: 1.25rem;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+@media (max-width: 62rem) {
+  .studio__screen {
+    grid-column: span 1;
+  }
+}
+
+.screen {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+  max-width: 46rem;
+}
+
+.screen__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.screen__metrics {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(9rem, 100%), 1fr));
+}
+
+.screen__metrics > div {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--card);
+}
+
+.screen__metrics strong {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: var(--ink);
+}
+
+.screen__metrics span {
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: var(--ink-3);
+}
+
+.screen__rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--rule);
+}
+
+.screen__rows > li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.9rem;
+  align-items: center;
+  padding-block: 0.7rem;
+  border-bottom: 1px solid var(--rule);
+  font-size: 0.85rem;
+}
+
+.screen__rows > li[data-selected='true'] {
+  background: var(--seal-wash);
+}
+
+.screen__rows > li > button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  padding: 0;
+  min-height: 2.25rem;
+}
+
+.screen__rowmain {
+  flex: 1 1 16rem;
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.screen__rowmain strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.screen__rowmain em {
+  font-style: normal;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--ink-3);
+}
+
+.screen__num {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--ink-3);
+  min-width: 4.5rem;
+}
+
+.screen__sev {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.1rem 0.35rem;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  min-width: 5rem;
+  text-align: center;
+}
+
+.screen__sev--blocking,
+.screen__sev--error {
+  color: var(--stamp);
+}
+
+.screen__sev--warning {
+  color: var(--ink-2);
+}
+
+.screen__sev--info,
+.screen__sev--suggestion {
+  color: var(--ink-3);
+}
+
+.screen__rows button:not(.screen__rows > li > button) {
+  border: 1px solid var(--rule-strong);
+  border-radius: 2px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.75rem;
+  min-height: 2rem;
+  padding-inline: 0.7rem;
+  cursor: pointer;
+}
+
+.screen__field {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.screen__field input {
+  min-height: 2.5rem;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--rule-strong);
+  border-radius: 2px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 400;
+  font-size: 0.85rem;
+}
+
+.screen__field input[type='color'] {
+  padding: 0.2rem;
+  height: 2.5rem;
+}
+
+.screen__field em {
+  font-style: normal;
+  font-weight: 400;
+  font-size: 0.73rem;
+  color: var(--ink-3);
+}
+
+.screen__pair {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(11rem, 100%), 1fr));
+}
+
+.screen__themes {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(12rem, 100%), 1fr));
+}
+
+.screen__themes button {
+  display: grid;
+  gap: 0.15rem;
+  align-content: start;
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--rule-strong);
+  border-radius: 2px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+  min-height: 3.25rem;
+}
+
+.screen__themes button[aria-pressed='true'] {
+  border-color: var(--seal);
+  background: var(--seal-wash);
+}
+
+.screen__themes strong {
+  font-size: 0.85rem;
+}
+
+.screen__themes span {
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--ink-3);
+}
+
+/* The publish gate, shown the way publishing shows it. */
+.screen__refusal {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  border-left: 3px solid var(--stamp);
+  background: var(--stamp-wash);
+  border-radius: 2px;
+  font-size: 0.8rem;
+  color: var(--ink);
+}
+
+.screen__refusal ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.screen__refusal p {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--ink-2);
+}
+
+.screen__pass {
+  margin: 0;
+  padding: 0.6rem 0.85rem;
+  border-left: 3px solid var(--seal);
+  background: var(--seal-wash);
+  border-radius: 2px;
+  font-size: 0.8rem;
+  color: var(--ink);
+}
+
+.screen__warn {
+  margin: 0;
+  padding: 0.6rem 0.85rem;
+  border-left: 3px solid var(--stamp);
+  background: var(--stamp-wash);
+  border-radius: 2px;
+  font-size: 0.8rem;
+  color: var(--ink);
+}
+
+.screen__off {
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  border: 1px dashed var(--rule-strong);
+  border-radius: 2px;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+
+.screen__split {
+  display: grid;
+  gap: 1rem;
+}
+
+.screen__reading {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--card);
+  font-size: 0.85rem;
+}
+
+.screen__reading em {
+  font-style: normal;
+  font-size: 0.75rem;
+  color: var(--ink-3);
+}
+
+.screen__reading p {
+  margin: 0;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+.screen__csv {
+  margin: 0;
+  padding: 0.75rem;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--card);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  line-height: 1.6;
+  overflow-x: auto;
+  color: var(--ink-2);
+}
+
+/* Roughly a search result, so a description that is too long looks too long. */
+.screen__serp {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--card);
+  max-width: 34rem;
+}
+
+.screen__serp span {
+  font-size: 0.72rem;
+  color: var(--ink-3);
+}
+
+.screen__serp strong {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--seal);
+}
+
+.screen__serp em {
+  font-style: normal;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.screen__gallery {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr));
+}
+
+.screen__gallery > div {
+  aspect-ratio: 4 / 3;
+  border: 1px dashed var(--rule-strong);
+  border-radius: 2px;
+  background: var(--paper-sunken);
+}
+
+/* The sidebar entries are buttons now, because every one of them goes somewhere. */
+.studio__nav li > button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--ink-2);
+  cursor: pointer;
+  padding: 0.3rem 0;
+  min-height: 2rem;
+}
+
+.studio__nav li > button[aria-current='page'] {
+  color: var(--seal);
+  font-weight: 600;
+}
+
+.studio__nav li > button:hover {
+  color: var(--ink);
+}

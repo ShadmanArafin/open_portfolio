@@ -116,27 +116,27 @@ All optional except where noted. Full list with commentary in
 
 Everything below was run, not reasoned about.
 
-|                                | Verified by                                                                                                                                                                                                 |
-| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Deploy → claim → login         | Fresh install, full HTTP walkthrough                                                                                                                                                                        |
-| Second claim refused           | Same walkthrough                                                                                                                                                                                            |
-| Build a page from blocks       | Browser: add block, reorder, edit, publish                                                                                                                                                                  |
-| **Home page from blocks**      | Browser: outline becomes h1 hero → h2 cards → h3 items                                                                                                                                                      |
-| Media picker                   | Browser: chose from library, filled `src` and `alt` together                                                                                                                                                |
-| Publish reaches visitors       | `curl` of the public HTML after publishing                                                                                                                                                                  |
-| Draft preview                  | Preview showed the draft title; public showed the published one                                                                                                                                             |
-| Contact form → inbox           | HTTP round trip                                                                                                                                                                                             |
-| Contact form → email           | Real message delivered to Mailpit with correct headers                                                                                                                                                      |
-| SMTP configured from the admin | Browser: entered settings, pressed Test, got a real connection                                                                                                                                              |
-| Storage conformance            | 21 assertions against real Postgres in Docker, in CI                                                                                                                                                        |
-| Revisions and conflicts        | Two racing conditional writes; exactly one wins                                                                                                                                                             |
-| Docker self-host               | Container destroyed and recreated; owner and content survived                                                                                                                                               |
-| Uploads (local filesystem)     | HTTP upload, file on disk, served back                                                                                                                                                                      |
-| Uploads (Docker + Postgres)    | Upload through the admin, file on the mounted volume, served back at 200                                                                                                                                    |
-| Newsletter, end to end         | Sign up → Mailpit → confirm → CSV → one-click unsubscribe, on both the filesystem and Postgres                                                                                                              |
-| The browser demo               | Driven in a browser: sign in, wizard, editing a headline with the preview following, switching persona (content, theme, vocabulary and sidebar labels change together), light and dark, three device widths |
-| Marketing site, 31 pages       | Static export served and walked in a browser: light and dark, 390px and 1280px, one h1, no skipped heading levels, no horizontal scroll                                                                     |
-| Its own contrast rule          | `npm run check:contrast` in `site/`, wired into its build. Caught a muted grey at 4.04:1 that had already shipped into every eyebrow and table header                                                       |
+|                                | Verified by                                                                                                                                                                                                                                     |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Deploy → claim → login         | Fresh install, full HTTP walkthrough                                                                                                                                                                                                            |
+| Second claim refused           | Same walkthrough                                                                                                                                                                                                                                |
+| Build a page from blocks       | Browser: add block, reorder, edit, publish                                                                                                                                                                                                      |
+| **Home page from blocks**      | Browser: outline becomes h1 hero → h2 cards → h3 items                                                                                                                                                                                          |
+| Media picker                   | Browser: chose from library, filled `src` and `alt` together                                                                                                                                                                                    |
+| Publish reaches visitors       | `curl` of the public HTML after publishing                                                                                                                                                                                                      |
+| Draft preview                  | Preview showed the draft title; public showed the published one                                                                                                                                                                                 |
+| Contact form → inbox           | HTTP round trip                                                                                                                                                                                                                                 |
+| Contact form → email           | Real message delivered to Mailpit with correct headers                                                                                                                                                                                          |
+| SMTP configured from the admin | Browser: entered settings, pressed Test, got a real connection                                                                                                                                                                                  |
+| Storage conformance            | 21 assertions against real Postgres in Docker, in CI                                                                                                                                                                                            |
+| Revisions and conflicts        | Two racing conditional writes; exactly one wins                                                                                                                                                                                                 |
+| Docker self-host               | Container destroyed and recreated; owner and content survived                                                                                                                                                                                   |
+| Uploads (local filesystem)     | HTTP upload, file on disk, served back                                                                                                                                                                                                          |
+| Uploads (Docker + Postgres)    | Upload through the admin, file on the mounted volume, served back at 200                                                                                                                                                                        |
+| Newsletter, end to end         | Sign up → Mailpit → confirm → CSV → one-click unsubscribe, on both the filesystem and Postgres                                                                                                                                                  |
+| The browser demo               | Driven in a browser: sign in, the wizard, all thirteen screens rendering, editing a headline with the preview following, switching persona (content, theme, vocabulary and sidebar labels change together), light and dark, three device widths |
+| Marketing site, 31 pages       | Static export served and walked in a browser: light and dark, 390px and 1280px, one h1, no skipped heading levels, no horizontal scroll                                                                                                         |
+| Its own contrast rule          | `npm run check:contrast` in `site/`, wired into its build. Caught a muted grey at 4.04:1 that had already shipped into every eyebrow and table header                                                                                           |
 
 ### The one thing that matters and is not verified
 
@@ -265,6 +265,16 @@ patch: spreading it over an object removes the key, merging it as jsonb drops it
 before it reaches the database and the old value survives — so clearing a spent
 confirmation token worked on one backend and silently did not on the other.
 Clearing is now an empty string, and the conformance suite asserts it.
+
+**Copy goes stale in a way tests cannot see.** The marketing site's demo runs
+the product's own `analyseContent` and `auditContrast` against seeded content,
+and doing that immediately falsified two sentences that had been repeated
+across the README, the help centre and the homepage. The dashboard does not run
+"sixteen checks" — the count varies with the content, and the demo's produced
+nineteen. And an unreadable palette is mostly _prevented_ by clamping at token
+generation rather than refused at publish, so "set a pale accent and watch it be
+refused" does not happen. Both had been true once. **If a sentence states a
+number or a behaviour, something should exercise it.**
 
 **A default that is only wrong when configured.** The Postgres adapter and the
 media route each carried their own `path.join(process.cwd(), '.opb', 'media')`

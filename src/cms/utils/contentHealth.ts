@@ -1,5 +1,8 @@
 import { CMSState } from '../types/cms';
-import { auditContrast, describeFailure } from '@/core/theme/audit';
+// Relative rather than aliased, for the same reason `core/blocks/content.ts`
+// is: an alias only resolves under the build that defines it, and the
+// marketing site's demo runs these very checks against its own seeded state.
+import { auditContrast, describeFailure } from '../../../core/theme/audit';
 
 /**
  * What the dashboard can honestly tell you.
