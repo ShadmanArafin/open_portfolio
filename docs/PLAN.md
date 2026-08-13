@@ -122,7 +122,8 @@ Four things, and only four:
 
 1. ~~**Phase 2 remainder**~~ — the publish-time contrast gate shipped, and so
    did the primitives. **Tailwind 4 is now argued against rather than merely
-   deferred**: PR #7 is a version bump carrying none of the migration — the
+   deferred**, and PR #7 is closed in favour of issue #9: it was a version bump
+   carrying none of the migration — the
    PostCSS plugin moved, the `@tailwind` directives are gone and
    `tailwind.config.js` is no longer read, so every `bg-bg` and
    `text-text-primary` would compile to nothing — and v4 requires Safari 16.4+,
@@ -444,8 +445,11 @@ _Risk: theme hydration mismatch → keep the blocking script verbatim, `suppress
 > - Fonts are still applied client-side by `loadGoogleFonts`, so the family name
 >   is right only after hydration. Server-rendering them means getting the font
 >   catalogue onto the server without dragging `react-icons` with it.
-> - **Tailwind 4 — PR #7 is open and deliberately held.** It replaces the JS
->   config with CSS-first `@theme`. The tokens now exist, so this is unblocked.
+> - **Tailwind 4 — PR #7 is closed; tracked in issue #9.** It replaces the JS
+>   config with CSS-first `@theme`, and `tailwind.config.js` stops being read,
+>   so every token-backed utility would compile to nothing. Nothing here would
+>   catch that: no test asserts the built CSS, and missing utilities emit
+>   nothing rather than failing a build. The test comes first.
 >
 > The content core (schema, dates, health, listOps) was **not** moved into
 > `core/` — it still lives under `src/cms/`. It works; tidy it when convenient.
