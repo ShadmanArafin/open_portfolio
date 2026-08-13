@@ -19,9 +19,10 @@ export const REPO = 'https://github.com/ShadmanArafin/open_portfolio';
  * does not resolve.
  *
  * Set `SITE_URL` in the deployment's environment when a domain is bought, and
- * every one of those follows — there is nothing else to change. Note that the
- * site is currently deployed as a prebuilt static export, so it has to be set
- * at build time, not only in the Vercel project.
+ * every one of those follows — there is nothing else to change. It is set in
+ * the Vercel project across all three environments, and the site now builds on
+ * Vercel from `main`, so that is enough; it no longer has to be set locally the
+ * way a prebuilt upload required.
  */
 export const SITE_URL = (process.env.SITE_URL ?? 'https://getopenportfolio.vercel.app').replace(
   /\/$/,

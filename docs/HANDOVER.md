@@ -212,19 +212,19 @@ smaller and named in "What is not built" below.
 
 Ordered by how much a user would notice.
 
-| Gap                                         | Notes                                                                                                                                                                                                                                                                                                                                                               |
-| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **The newsletter cannot send**              | By design. It collects, confirms and exports; broadcasting is a different product. It also needs SMTP configured, or sign-ups fail honestly with a 503                                                                                                                                                                                                              |
-| **No mobile admin layout**                  | It installs and works on a phone; the editing screens were drawn for a desktop. The research sizes this at 10–20 days and calls it retention, not acquisition                                                                                                                                                                                                       |
-| **No push notifications**                   | Needs VAPID and a real device. The service worker must carve out `/admin` first — see the Serwist trap below                                                                                                                                                                                                                                                        |
-| **The marketing site does not auto-deploy** | Live at <https://getopenportfolio.vercel.app>, but as a prebuilt static upload — a snapshot of one build, not of `main`. Connect the repo in Vercel with Root Directory `site` and "Include files outside the Root Directory" on; the demo imports the product's real blocks from `../../../core`                                                                   |
-| **No hosted demo, and none planned**        | Decided, not outstanding. `/demo/try` runs the admin and the site client-side from the product's real blocks and themes, and `docker compose -f docker-compose.demo.yml up` runs the full thing with real saving, uploads and email. A hosted instance would add nothing those two do not cover, and every hand-maintained demo in the research was dead or retired |
-| **Only three screenshots**                  | `site/public/shots/` has the public site, the page builder and the block outline, all of the real product with the photographer persona. None of them contains an actual photograph — every image slot in the demo content is an empty placeholder                                                                                                                  |
-| **24 block types**                          | Literal: `hero richText image gallery stats cards ctaBanner contactForm faq video split quote newsletter socialRow services download separator`. Record-placing: `collection writingList timeline logoWall testimonials skills steps`                                                                                                                               |
-| **5 storage backends unbuilt**              | Firebase, Convex, Cloudflare D1+R2, PocketBase, Appwrite. Not advertised in the README. Each needs an emulator — do not ship one you have not run                                                                                                                                                                                                                   |
-| **Passphrase auth only**                    | No passkeys, no email OTP                                                                                                                                                                                                                                                                                                                                           |
-| **Themes change tokens, not layout**        | Six of them, and they do not rearrange a page. Less true than it was, since a page of record-placing blocks follows the records rather than fixed copy, but a theme still cannot change the arrangement itself                                                                                                                                                      |
-| **Tailwind 4**                              | Deferred, not blocked. PR #7 is closed and Dependabot ignores the major line; tracked in issue #9, which lists the missing test first — nothing here asserts the built CSS, so the breakage would produce a green build and an unstyled site                                                                                                                        |
+| Gap                                        | Notes                                                                                                                                                                                                                                                                                                                                                               |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **The newsletter cannot send**             | By design. It collects, confirms and exports; broadcasting is a different product. It also needs SMTP configured, or sign-ups fail honestly with a 503                                                                                                                                                                                                              |
+| **No mobile admin layout**                 | It installs and works on a phone; the editing screens were drawn for a desktop. The research sizes this at 10–20 days and calls it retention, not acquisition                                                                                                                                                                                                       |
+| **No push notifications**                  | Needs VAPID and a real device. The service worker must carve out `/admin` first — see the Serwist trap below                                                                                                                                                                                                                                                        |
+| **The marketing site is deployed by hand** | No longer true — it builds from `main`. Kept as a row only because the first git-triggered build has not been watched end to end yet                                                                                                                                                                                                                                |
+| **No hosted demo, and none planned**       | Decided, not outstanding. `/demo/try` runs the admin and the site client-side from the product's real blocks and themes, and `docker compose -f docker-compose.demo.yml up` runs the full thing with real saving, uploads and email. A hosted instance would add nothing those two do not cover, and every hand-maintained demo in the research was dead or retired |
+| **Only three screenshots**                 | `site/public/shots/` has the public site, the page builder and the block outline, all of the real product with the photographer persona. None of them contains an actual photograph — every image slot in the demo content is an empty placeholder                                                                                                                  |
+| **24 block types**                         | Literal: `hero richText image gallery stats cards ctaBanner contactForm faq video split quote newsletter socialRow services download separator`. Record-placing: `collection writingList timeline logoWall testimonials skills steps`                                                                                                                               |
+| **5 storage backends unbuilt**             | Firebase, Convex, Cloudflare D1+R2, PocketBase, Appwrite. Not advertised in the README. Each needs an emulator — do not ship one you have not run                                                                                                                                                                                                                   |
+| **Passphrase auth only**                   | No passkeys, no email OTP                                                                                                                                                                                                                                                                                                                                           |
+| **Themes change tokens, not layout**       | Six of them, and they do not rearrange a page. Less true than it was, since a page of record-placing blocks follows the records rather than fixed copy, but a theme still cannot change the arrangement itself                                                                                                                                                      |
+| **Tailwind 4**                             | Deferred, not blocked. PR #7 is closed and Dependabot ignores the major line; tracked in issue #9, which lists the missing test first — nothing here asserts the built CSS, so the breakage would produce a green build and an unstyled site                                                                                                                        |
 
 ---
 
@@ -403,15 +403,14 @@ its phone editor, but they do abandon one they cannot fix a typo in from a
 train. It installs to a home screen already; the screens themselves were drawn
 for a desktop.
 
-**4. Connect the marketing site to git.** The site is **live at
-<https://getopenportfolio.vercel.app>**, in the Vercel project `open_portfolio` —
-but as a prebuilt static upload, so it is a snapshot of one build rather than of
-`main`. To make it follow pushes: connect the repository, set **Root Directory**
-to `site`, and turn on **"Include files outside the Root Directory"** — required,
-because the demo imports the product's real blocks and themes from
-`../../../core`. `SITE_URL` defaults to the live address and should be set in the
-environment if a domain is ever bought; note it is read at build time, so a
-prebuilt upload needs it set locally.
+**4. Watch the first git-triggered build.** The site is **live at
+<https://getopenportfolio.vercel.app>** and now **builds from `main`** — the
+Vercel project `open_portfolio` is connected to the repository with Root
+Directory `site`, "Include files outside the Root Directory" on (required: the
+demo imports the product's real blocks and themes from `../../../core`), and
+`SITE_URL` set in all three environments. What has not happened yet is a build
+of this repository _by Vercel_ rather than an upload of one built here, so the
+first push after the connection is worth watching.
 
 Every package the site can reach — including everything it pulls out of `core/`
 and `src/cms/` — is in `site/package.json`, so a build that installs only in the
@@ -419,19 +418,24 @@ root directory resolves. That was checked by walking the import graph, not
 assumed: it currently reaches `lucide-react`, `marked`, `next`, `react` and
 `zod`, and nothing else.
 
-Until that is connected, deploy with **`cd site && npm run deploy`**. It builds,
-stages `out/` and uploads. Do not upload `out/` by hand: a pre-built upload has
-framework detection off, and with it off `cleanUrls` is not implied, so every
-deep link 404s while the homepage looks perfect. `site/vercel.static.json` is
-what supplies it — along with a `Content-Type` for `/opengraph-image`, which the
-export writes as an extension-less file and Vercel would otherwise serve as
-`application/octet-stream`.
+**`cd site && npm run deploy` still works** and is the way to push a build
+without a commit. It builds, stages `out/` and uploads. Do not upload `out/` by
+hand: a pre-built upload has framework detection off, and with it off
+`cleanUrls` is not implied, so every deep link 404s while the homepage looks
+perfect. `site/vercel.static.json` is what supplies it — along with a
+`Content-Type` for `/opengraph-image`, which the export writes as an
+extension-less file and Vercel would otherwise serve as
+`application/octet-stream`. None of that applies to a git build, where Vercel
+detects Next.js and handles both itself.
 
-A deploy does **not** move the public address. `getopenportfolio.vercel.app` is
-an alias and stays on whatever it last pointed at, so finish with
-`npx vercel alias set <the-new-deployment> getopenportfolio.vercel.app`. Skipping
-it is silent: the CLI reports success, the new build is live on its own URL, and
-the address you gave people still serves the old one.
+**Both public addresses are project domains now, so production follows
+automatically.** `getopenportfolio.vercel.app` used to be a per-deployment alias
+while `opb-site.vercel.app` was a project domain — meaning a deploy moved one and
+left the other on the old build, silently: the CLI reports success, the new build
+is live, and the address you gave people still serves the previous one. Both are
+attached to the project, so `npx vercel alias set` is no longer part of
+deploying. If a third address is ever added, attach it as a **project domain**
+rather than aliasing a deployment, or the same trap returns.
 
 Vercel Authentication must stay **off** for this project. It defaults to
 `all_except_custom_domains`, which silently 302s every alias to an SSO login
