@@ -32,9 +32,11 @@ const nextConfig: NextConfig = {
    * Note what is *not* here: an alias pointing `react` and `zod` at this
    * application's copies. `core/**` resolves its bare imports from the
    * repository root's `node_modules`, exactly as it does on a developer's
-   * machine, and the Vercel project's install command installs both trees so
-   * that it can. Aliasing was tried first and Turbopack rejects an absolute
-   * path in `resolveAlias` without saying so usefully.
+   * machine, and the Vercel project's install command — `cd .. && npm ci && cd
+   * site && npm ci` — installs both trees so that it can, dev dependencies
+   * included, because `core/primitives` needs `@types/react` to type-check and
+   * types are dev dependencies. Aliasing was tried first and Turbopack rejects
+   * an absolute path in `resolveAlias` without saying so usefully.
    */
   turbopack: { root: import.meta.dirname },
   outputFileTracingRoot: path.join(import.meta.dirname, '..'),
