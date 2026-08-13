@@ -30,7 +30,7 @@ So the homepage has to do something no other page does: carry the creative promi
 
 **H1: "Build a portfolio site you own outright."**
 
-**Sub-headline:** "Open Portfolio Builder is a free, open-source website builder for portfolios — a self-hosted alternative to Adobe Portfolio, Squarespace, Wix and Framer. Edit every word, image and colour from an admin panel. Your content lives in your database, on your domain, and it stays there when you stop paying anybody."
+**Sub-headline:** "Open Portfolio is a free, open-source website builder for portfolios — a self-hosted alternative to Adobe Portfolio, Squarespace, Wix and Framer. Edit every word, image and colour from an admin panel. Your content lives in your database, on your domain, and it stays there when you stop paying anybody."
 
 **Why this line:**
 
@@ -115,7 +115,7 @@ Twelve sections plus nav and footer. Order follows the modal skeleton observed a
 
 > # Build a portfolio site you own outright.
 >
-> Open Portfolio Builder is a free, open-source website builder for portfolios — a self-hosted alternative to Adobe Portfolio, Squarespace, Wix and Framer. Edit every word, image and colour from an admin panel. Your content lives in your database, on your domain, and it stays there when you stop paying anybody.
+> Open Portfolio is a free, open-source website builder for portfolios — a self-hosted alternative to Adobe Portfolio, Squarespace, Wix and Framer. Edit every word, image and colour from an admin panel. Your content lives in your database, on your domain, and it stays there when you stop paying anybody.
 >
 > **[ Open the live demo ]** **[ Deploy your own — free ]**
 >
@@ -524,7 +524,7 @@ Everything below is publishable copy. Facts are drawn from [Market §1.9] and [M
 
 ---
 
-> # Adobe Portfolio vs Open Portfolio Builder: what happens when you stop paying
+> # Adobe Portfolio vs Open Portfolio: what happens when you stop paying
 >
 > _Written by ⟨name⟩, 12 August 2026. Prices checked 12 August 2026 at [behance.net/pro](https://www.behance.net/pro). Adobe's own Creative Cloud pricing pages returned errors to us on that date, so every Creative Cloud figure below is third-party and is labelled as such._
 >
@@ -534,7 +534,7 @@ Everything below is publishable copy. Facts are drawn from [Market §1.9] and [M
 >
 > ## At a glance
 >
-> |                                                                                      | Adobe Portfolio                                                                                                                                                                                                                                                                                                             | Open Portfolio Builder                                                        |
+> |                                                                                      | Adobe Portfolio                                                                                                                                                                                                                                                                                                             | Open Portfolio                                                                |
 > | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
 > | **Cheapest way to publish** — the least you can pay and have a live site             | Requires a paid Adobe subscription. Cheapest verified route: **Behance Pro, US$11.49/month** ([behance.net/pro](https://www.behance.net/pro), 12 Aug 2026)                                                                                                                                                                  | **$0.** Free hosting tiers, or a server you already own                       |
 > | **A free tier that publishes** — can strangers see your site without you paying      | **No.** An active paid subscription is required to publish and stay live                                                                                                                                                                                                                                                    | Yes                                                                           |
@@ -816,7 +816,7 @@ All demo assets must stay obviously invented. The repository's existing `public/
 | 12  | **The media library** with the picker open                          | That images come from a library, not a file dialogue every time                                                                                                                         | Help centre; homepage §4                                   |
 | 13  | **GitHub social preview**, 1280×640, under 1 MB                     | Product name, the one-line description, and one recognisable screenshot. Without one, shared links expand to "basic information about the repository and the owner's avatar" [SEO §4.1] | GitHub repository settings                                 |
 | 14  | **Root OG image**                                                   | Headline option C — "Professional portfolio websites. Without the rent." — plus the product name                                                                                        | `app/opengraph-image.tsx`                                  |
-| 15  | **Per-comparison OG images**                                        | "⟨Brand⟩ vs Open Portfolio Builder" on a consistent template                                                                                                                            | Nested `opengraph-image.tsx`, which overrides the ancestor |
+| 15  | **Per-comparison OG images**                                        | "⟨Brand⟩ vs Open Portfolio" on a consistent template                                                                                                                                    | Nested `opengraph-image.tsx`, which overrides the ancestor |
 
 ### 8.3 Rules for every shot
 

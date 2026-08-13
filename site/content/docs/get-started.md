@@ -34,12 +34,12 @@ App and Postgres together, on `http://localhost:3000`. Change `OPB_SETUP_TOKEN` 
 The app alone, against a database you already run:
 
 ```bash
-docker build -t open-portfolio-builder .
+docker build -t open-portfolio .
 docker run -p 3000:3000 -v opb-data:/data \
   -e OPB_POSTGRES_URL="postgres://…" \
   -e OPB_SETUP_TOKEN="a long phrase you invent" \
   -e OPB_SECRET_KEY="a different long phrase" \
-  open-portfolio-builder
+  open-portfolio
 ```
 
 **The volume matters.** `/data` holds uploads, and holds content too if no database is configured. Without it, replacing the container deletes the site. With it, the container is disposable — which is exactly what updating does.
@@ -62,7 +62,7 @@ npm run dev
 ## Running the tests
 
 ```bash
-npm test          # 676 passing, 7 skipped
+npm test          # 686 passing, 7 skipped
 ```
 
 The skipped ones need containers:

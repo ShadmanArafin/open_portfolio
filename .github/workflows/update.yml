@@ -1,4 +1,4 @@
-# Brings the newest release of Open Portfolio Builder into this copy of it.
+# Brings the newest release of Open Portfolio into this copy of it.
 #
 # Why this exists: the Deploy button *copies* the project into your GitHub
 # account rather than forking it, so GitHub's "Sync fork" button is not there.
@@ -84,7 +84,7 @@ jobs:
           TAG="${{ steps.upstream.outputs.tag }}"
           BRANCH="update/${TAG}"
 
-          git config user.name  "Open Portfolio Builder"
+          git config user.name  "Open Portfolio"
           git config user.email "noreply@github.com"
           git checkout -B "$BRANCH"
 

@@ -35,10 +35,10 @@ export default function Home() {
               you own outright.
             </h1>
             <p className="lede">
-              {PRODUCT} is a free, open-source website builder for portfolios — a self-hosted
-              alternative to Adobe Portfolio, Squarespace, Wix and Framer. Edit every word, image
-              and colour from an admin panel. Your content lives in your database, on your domain,
-              and it stays there when you stop paying anybody.
+              {PRODUCT} is a free, open-source portfolio website builder — a self-hosted alternative
+              to Adobe Portfolio, Squarespace, Wix and Framer. Edit every word, image and colour
+              from an admin panel. Your content lives in your database, on your domain, and it stays
+              there when you stop paying anybody.
             </p>
           </div>
 

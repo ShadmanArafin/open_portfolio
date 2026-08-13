@@ -800,7 +800,7 @@ know that. Nor should anyone tell them "nobody enforces it" — we do not know
 that either.
 
 **Not affected at all:** our software. This is a restriction on a Vercel plan,
-not on Open Portfolio Builder. The problem is narrower and entirely ours: **our
+not on Open Portfolio. The problem is narrower and entirely ours: **our
 README steers a freelancer towards a plan whose terms their intended use appears
 to breach, without telling them.**
 

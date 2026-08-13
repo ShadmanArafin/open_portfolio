@@ -1,4 +1,5 @@
 import { ImageResponse } from 'next/og';
+import { PRODUCT } from '@/lib/site';
 
 // Rendered once at build time. Without this, `output: 'export'` treats it as a
 // request-time route and refuses.
@@ -6,7 +7,7 @@ export const dynamic = 'force-static';
 
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
-export const alt = 'Open Portfolio Builder — build a portfolio site you own outright';
+export const alt = `${PRODUCT} — build a portfolio site you own outright`;
 
 /**
  * The card that appears when somebody pastes the address into Slack or a
@@ -34,8 +35,12 @@ export default function Image() {
         fontFamily: 'sans-serif',
       }}
     >
+      {/* Upper-cased here rather than written out, so the name has exactly one
+          source. Spelling it literally is how this card kept the old name after
+          everything else had changed: a grep for the name in its normal casing
+          does not find a shouted one. */}
       <div style={{ display: 'flex', fontSize: 26, letterSpacing: 2, color: '#6fcb9f' }}>
-        OPEN PORTFOLIO BUILDER
+        {PRODUCT.toUpperCase()}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>

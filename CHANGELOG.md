@@ -7,6 +7,36 @@ of stored content is stable, but screens and options are not settled yet.
 Anyone who reported or suggested something is credited by name. That is the
 whole point of the Help & feedback screen in the admin.
 
+## Unreleased
+
+### Changed
+
+- **The product is now called Open Portfolio**, not Open Portfolio Builder. The
+  name matches the repository and the address; the sentence under it still says
+  "portfolio website builder", which is the phrase people actually search with
+  and is worth more in a description than in a name.
+
+  Nothing you have to do. Your content, your database and your deploy are
+  untouched, and exported backups still carry the `open-portfolio-builder`
+  format identifier on purpose — it is matched exactly on import, so renaming it
+  would have meant older backups needing a compatibility entry to load.
+
+  The local Docker build tag in the docs changed from `open-portfolio-builder`
+  to `open-portfolio`. If you follow an older copy of the README, the tag you
+  build and the tag you run just have to match each other.
+
+### Fixed
+
+- The social preview card served as `application/octet-stream` while declaring
+  itself a PNG, and had kept the old product name because it spelled it in
+  capitals — which a search for the name in its normal casing does not find. It
+  now takes the name from the same constant as everything else.
+
+- Two test counts in these notes and in the developer docs were 10 short of what
+  the suite actually runs. They were wrong when written rather than gone stale:
+  no tests have been added since. It is 686, or 782 with a database and a mail
+  server attached.
+
 ## 0.5.0 — 2026-08-13
 
 The first release worth deploying. Somebody non-technical can now put a
@@ -125,7 +155,7 @@ portfolio online and run it without opening a file.
   palette is usually _prevented_ rather than refused: every text, border and
   link colour is derived from the background and clamped before it is drawn,
   and the publish-time refusal is the backstop for what clamping cannot fix.
-- 676 tests, or 772 with a database and a mail server attached.
+- 686 tests, or 782 with a database and a mail server attached.
 
 ### Known gaps
 

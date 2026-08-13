@@ -28,7 +28,15 @@ export const SITE_URL = (process.env.SITE_URL ?? 'https://getopenportfolio.verce
   ''
 );
 
-export const PRODUCT = 'Open Portfolio Builder';
+/**
+ * The product's name.
+ *
+ * "Builder" lives in the tagline and the description rather than the name.
+ * The name matches the repository and the address; the sentence under it still
+ * says "portfolio website builder", which is the phrase both audiences
+ * actually search with — see DESCRIPTION above.
+ */
+export const PRODUCT = 'Open Portfolio';
 
 /** Version of the product this site describes. Bump with a release. */
 export const VERSION = '0.5.0';

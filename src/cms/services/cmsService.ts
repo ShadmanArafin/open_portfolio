@@ -17,7 +17,15 @@ const SAVE_DEBOUNCE_MS = 400;
 /** Version history is capped so stored content can't grow without bound. */
 const MAX_VERSIONS = 20;
 
-/** Written by every new export. */
+/**
+ * Written by every new export.
+ *
+ * Keeps the pre-rename spelling on purpose. The product is called "Open
+ * Portfolio" now, but this string is a wire identifier that has been written
+ * into every backup anybody has taken, and it is matched exactly on import.
+ * Renaming it to follow the product buys nothing a reader will ever see and
+ * costs a third entry in the compat list below.
+ */
 const BUNDLE_FORMAT = 'open-portfolio-builder';
 
 /**

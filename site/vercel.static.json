@@ -1,0 +1,16 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "headers": [
+    {
+      "source": "/opengraph-image",
+      "headers": [{ "key": "Content-Type", "value": "image/png" }]
+    },
+    {
+      "source": "/(.*)/opengraph-image",
+      "headers": [{ "key": "Content-Type", "value": "image/png" }]
+    }
+  ]
+}

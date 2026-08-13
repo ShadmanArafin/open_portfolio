@@ -1,8 +1,8 @@
 <div align="center">
 
-# Open Portfolio Builder
+# Open Portfolio
 
-**A self-hosted portfolio site with a visual editor built in.**
+**An open source, self-hosted portfolio website builder.**
 Change any word, image or colour from an admin panel — no code, no redeploy,
 and your content stays in your own database.
 
@@ -125,8 +125,8 @@ Postgres database together; change `OPB_SETUP_TOKEN` and `OPB_SECRET_KEY` in
 Just the app, against a database you already have:
 
 ```bash
-docker build -t open-portfolio-builder .
-docker run -p 3000:3000 -v opb-data:/data   -e OPB_POSTGRES_URL="postgres://…"   -e OPB_SETUP_TOKEN="a long phrase you invent"   -e OPB_SECRET_KEY="a different long phrase"   open-portfolio-builder
+docker build -t open-portfolio .
+docker run -p 3000:3000 -v opb-data:/data   -e OPB_POSTGRES_URL="postgres://…"   -e OPB_SETUP_TOKEN="a long phrase you invent"   -e OPB_SECRET_KEY="a different long phrase"   open-portfolio
 ```
 
 **The volume matters.** `/data` is where uploads and — if you are not using a

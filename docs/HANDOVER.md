@@ -26,7 +26,7 @@ JavaScript bundle. None of that remains.
 ```bash
 npm ci                          # ci, not install — see "Traps" below
 npm run dev                     # http://localhost:3000
-npm test                        # 676 passing, 7 skipped
+npm test                        # 686 passing, 7 skipped
 npm run typecheck && npm run lint && npm run build
 ```
 
@@ -44,7 +44,7 @@ docker run -d --name opb-mail -p 1025:1025 -p 8025:8025 axllent/mailpit
 # ECONNREFUSED. Both look like code bugs and neither is.
 
 TEST_POSTGRES_URL="postgres://postgres:postgres@localhost:55432/opb_test" \
-TEST_MAILPIT_URL="http://localhost:8025" npm test    # 772 passing, 2 skipped
+TEST_MAILPIT_URL="http://localhost:8025" npm test    # 782 passing, 2 skipped
 ```
 
 Setting `TEST_POSTGRES_URL` without the container running is worse than not
@@ -363,17 +363,19 @@ that are not part of the project. `.opb` and `.superpowers` are already there.
 
 ## Decisions already made — do not silently reverse these
 
-| Decision                                                   | Why                                                                                                                                                                                                                                                                                                                                                                                     |
-| ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Astryx, not shadcn**                                     | The plan said rebuild the admin on shadcn. `CLAUDE.md` names Astryx as the admin's design system, and rewriting a working admin in a second library buys nothing a user sees                                                                                                                                                                                                            |
-| **Snapshot-level revisions, not per-record writes**        | Solves lost updates, which is real today. The 400-post problem is not, and designing the record surface now means rebuilding Phase 7 against it later. Moved to Phase 9 with the blog                                                                                                                                                                                                   |
-| **Reorder in an outline, not drag on a canvas**            | Buttons work with a keyboard and on a phone, and can be tested                                                                                                                                                                                                                                                                                                                          |
-| **Blocks describe their editor as data**                   | `BlockField[]`, one generic form. A per-block editor makes the 30th block a React file too                                                                                                                                                                                                                                                                                              |
-| **Heading level passed down, not from context**            | Context needs a Client Component, which would ship the whole content surface as JavaScript. It also returned HTTP 500                                                                                                                                                                                                                                                                   |
-| **Feedback via GitHub device flow, not an intake service** | An intake service means zero GitHub visits — and makes us the publisher of anonymous text, with forgeable attribution. See [IN-ADMIN-COMMUNITY.md](research/IN-ADMIN-COMMUNITY.md)                                                                                                                                                                                                      |
-| **Unknown blocks quarantined, never dropped**              | Round-tripped verbatim, so an older build cannot destroy a newer build's content                                                                                                                                                                                                                                                                                                        |
-| **Tailwind 3, not 4 — until the second theme**             | PR #7 is a version bump with none of the migration: the PostCSS plugin moved, the `@tailwind` directives are gone, and `tailwind.config.js` is no longer read, so every `bg-bg` and `text-text-primary` would compile to nothing. v4 also requires Safari 16.4+, which decides who can see a site built with this. PR #7 closed, Dependabot ignores the major line, tracked in issue #9 |
-| **Content checks advise, schemas refuse**                  | A block is added before it is filled in. "Not finished" is advice; "not valid" is refusal                                                                                                                                                                                                                                                                                               |
+| Decision                                                    | Why                                                                                                                                                                                                                                                                                                                                                                                     |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Astryx, not shadcn**                                      | The plan said rebuild the admin on shadcn. `CLAUDE.md` names Astryx as the admin's design system, and rewriting a working admin in a second library buys nothing a user sees                                                                                                                                                                                                            |
+| **Snapshot-level revisions, not per-record writes**         | Solves lost updates, which is real today. The 400-post problem is not, and designing the record surface now means rebuilding Phase 7 against it later. Moved to Phase 9 with the blog                                                                                                                                                                                                   |
+| **Reorder in an outline, not drag on a canvas**             | Buttons work with a keyboard and on a phone, and can be tested                                                                                                                                                                                                                                                                                                                          |
+| **Blocks describe their editor as data**                    | `BlockField[]`, one generic form. A per-block editor makes the 30th block a React file too                                                                                                                                                                                                                                                                                              |
+| **Heading level passed down, not from context**             | Context needs a Client Component, which would ship the whole content surface as JavaScript. It also returned HTTP 500                                                                                                                                                                                                                                                                   |
+| **Feedback via GitHub device flow, not an intake service**  | An intake service means zero GitHub visits — and makes us the publisher of anonymous text, with forgeable attribution. See [IN-ADMIN-COMMUNITY.md](research/IN-ADMIN-COMMUNITY.md)                                                                                                                                                                                                      |
+| **Unknown blocks quarantined, never dropped**               | Round-tripped verbatim, so an older build cannot destroy a newer build's content                                                                                                                                                                                                                                                                                                        |
+| **Tailwind 3, not 4 — until the second theme**              | PR #7 is a version bump with none of the migration: the PostCSS plugin moved, the `@tailwind` directives are gone, and `tailwind.config.js` is no longer read, so every `bg-bg` and `text-text-primary` would compile to nothing. v4 also requires Safari 16.4+, which decides who can see a site built with this. PR #7 closed, Dependabot ignores the major line, tracked in issue #9 |
+| **Content checks advise, schemas refuse**                   | A block is added before it is filled in. "Not finished" is advice; "not valid" is refusal                                                                                                                                                                                                                                                                                               |
+| **Called "Open Portfolio"; "builder" lives in the tagline** | The name matches the repository and the address. The sentence under it still reads "portfolio website builder" because that is the phrase the research found people actually search with, and it is worth more in a description than in a name. `site/lib/site.ts` holds it once — do not write it out anywhere else                                                                    |
+| **`BUNDLE_FORMAT` keeps the old spelling**                  | `open-portfolio-builder` is written into every backup anybody has taken and matched exactly on import. Renaming it to follow the product costs a third entry in `ACCEPTED_BUNDLE_FORMATS` and buys nothing a reader sees                                                                                                                                                                |
 
 ---
 
@@ -403,6 +405,20 @@ Directory"** — required, because the demo imports the product's real blocks an
 themes from `../../../core`. `SITE_URL` defaults to the live address and should
 be set in the environment if a domain is ever bought; note it is read at build
 time, so a prebuilt upload needs it set locally.
+
+Until that is connected, deploy with **`cd site && npm run deploy`**. It builds,
+stages `out/` and uploads. Do not upload `out/` by hand: a pre-built upload has
+framework detection off, and with it off `cleanUrls` is not implied, so every
+deep link 404s while the homepage looks perfect. `site/vercel.static.json` is
+what supplies it — along with a `Content-Type` for `/opengraph-image`, which the
+export writes as an extension-less file and Vercel would otherwise serve as
+`application/octet-stream`.
+
+A deploy does **not** move the public address. `getopenportfolio.vercel.app` is
+an alias and stays on whatever it last pointed at, so finish with
+`npx vercel alias set <the-new-deployment> getopenportfolio.vercel.app`. Skipping
+it is silent: the CLI reports success, the new build is live on its own URL, and
+the address you gave people still serves the old one.
 
 Vercel Authentication must stay **off** for this project. It defaults to
 `all_except_custom_domains`, which silently 302s every alias to an SSO login

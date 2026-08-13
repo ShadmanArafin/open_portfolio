@@ -1,12 +1,12 @@
-# Open Portfolio Builder, as a container.
+# Open Portfolio, as a container.
 #
 # Why this exists: without it, "self-hosted" means "hosted on Vercel", which is
 # not the same thing and is not what the licence promises. This image runs the
 # same commit on a VPS, a home server or a Raspberry Pi, with no account
 # anywhere and no platform to be turned off by.
 #
-# Build:  docker build -t open-portfolio-builder .
-# Run:    docker run -p 3000:3000 -v opb-data:/data open-portfolio-builder
+# Build:  docker build -t open-portfolio .
+# Run:    docker run -p 3000:3000 -v opb-data:/data open-portfolio
 #
 # For a complete setup with a database, use `docker compose up` instead.
 

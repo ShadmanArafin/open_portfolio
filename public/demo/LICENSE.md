@@ -1,7 +1,7 @@
 # Demo assets
 
 Everything in `public/demo/` is placeholder content that ships with Open
-Portfolio Builder so a fresh install has something to render.
+Portfolio so a fresh install has something to render.
 
 **Licence: CC0 1.0 Universal (public domain dedication).** Use, modify or
 delete any of it without attribution.
