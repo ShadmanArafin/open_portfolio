@@ -24,6 +24,19 @@ updates:
       production:
         dependency-type: production
 
+    ignore:
+      # Tailwind 4 is a migration, not a bump, and it is tracked as an issue
+      # rather than as a permanently-red pull request. v4 moves the PostCSS
+      # plugin, drops the `@tailwind` directives, and stops reading
+      # tailwind.config.js — so every `bg-bg` and `text-text-primary` in this
+      # codebase would compile to nothing. Nothing here would catch that: no
+      # test looks at the built CSS, and missing utilities do not fail a build.
+      #
+      # Without this rule Dependabot reopens the same PR on every v4 release
+      # and the reasoning has to be written again each time.
+      - dependency-name: tailwindcss
+        update-types: ['version-update:semver-major']
+
   - package-ecosystem: github-actions
     directory: /
     schedule:
