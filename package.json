@@ -18,23 +18,23 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@astryxdesign/core": "^0.3.0",
-    "@astryxdesign/theme-neutral": "^0.3.0",
+    "@astryxdesign/core": "^0.5.0",
+    "@astryxdesign/theme-neutral": "^0.5.0",
     "@stylexjs/stylex": "^0.19.0",
-    "@vercel/blob": "^2.7.0",
+    "@vercel/blob": "^2.8.0",
     "clsx": "^2.1.1",
-    "framer-motion": "^13.0.0",
-    "lucide-react": "^1.30.0",
-    "next": "^16.3.0",
-    "nodemailer": "^9.0.5",
+    "framer-motion": "^13.1.1",
+    "lucide-react": "^1.35.0",
+    "next": "^16.3.3",
+    "nodemailer": "^9.0.6",
     "postgres": "^3.4.9",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-icons": "^5.7.0",
-    "react-router-dom": "^7.18.2",
+    "react-router-dom": "^7.18.3",
     "server-only": "^0.0.1",
     "tailwind-merge": "^3.6.0",
-    "zod": "^4.4.3"
+    "zod": "^4.5.1"
   },
   "devDependencies": {
     "@astryxdesign/cli": "^0.3.0",
