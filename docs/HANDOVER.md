@@ -514,3 +514,59 @@ Claims in this repository are expected to be backed by something you ran.
 CI runs typecheck, lint, build, the personal-data denylist, gitleaks over full
 history, and the storage conformance suite against a real Postgres service
 container. It has caught two failures this project would otherwise have shipped.
+
+---
+
+## Remaining work (16 October 2026, pushed as `c67c3bf`)
+
+Everything below was verified working and pushed. What is left, in order, and
+why each item is shaped the way it is:
+
+**1. Cloudflare live media-proxy proof — closest to done.** Conformance proves
+`readBytes` returns correct bytes, but the live claim → upload → anonymous
+fetch run through the new `readBytes` branch of
+`app/api/media/[...key]/route.ts` never completed — the test server kept dying
+between shells. Retry it in one invocation (boot, claim with
+`OPB_SETUP_TOKEN`, POST an upload to `/api/admin/media` with the session
+cookie, anonymous GET the result). Nothing in the code is suspected; it is
+purely an un-run verification.
+
+**2. Convex backend — blocked on signup, not code.** There is no local
+emulator, only `convex dev` against an account. Same playbook as the last
+four backends when an account exists: one file in
+`core/storage/adapters/`, one registry line, env inference, green
+conformance run, CI job, docs. It is the only one of nine not built.
+
+**3. Per-record readers + blog.** The `records` surface (collections,
+revisions, cursors, singletons) is implemented on all eight backends with a
+conformance section — but nothing reads through it yet. Build the blog
+against it (per-post storage, pagination, RSS over records), which is also
+what settles the access patterns the surface was deliberately left open for.
+
+**4. Axe full multiplication (variants × 6 themes × breakpoints).** The static
+seed (`core/blocks/__tests__/a11y.test.tsx`) and the browser matrix
+(`e2e/axe.spec.ts`: 4 routes × dark/light, real CSS so contrast runs) are
+green and caught seven real bugs. What remains needs theme-switching
+infrastructure that does not exist yet.
+
+**5. Admin rewrite (27 screens, SPA → App Router).** Deliberately not started:
+the screens share one SPA context with no per-screen seam, so any partial
+migration forks the admin into two systems — worse than one working one. It
+needs its own epic with a screen-by-screen harness. The route-guard AST test
+already guarantees its API boundary in the meantime.
+
+**6. Cloudflare Workers REST binding.** The shipped adapter is the D1 SQLite
+engine + R2 API embedded via Miniflare and persisted to disk — verifiable
+with no account. A binding that talks to a real Cloudflare account needs an
+account to verify and is not built; `CLOUDFLARE_ACCOUNT_ID` and friends
+select the local engine, never the cloud, by design.
+
+**7. Watch CI.** The pushed workflow runs the Appwrite compose stack (with a
+scripted console/team/project/key bootstrap) and a much heavier suite for the
+first time. If the Appwrite steps flake on a cold runner, the Postgres
+connection-ceiling override (`docker/docker-compose.appwrite.test.yml`) is
+the pattern to extend.
+
+Local dev-instance note: an early passkey test overwrote `.opb/state/owner.json`
+with a fake. Content in `.opb/content` is untouched — delete
+`.opb/state/owner.json` (and any `kv-session*` files) and re-claim at `/setup`.
