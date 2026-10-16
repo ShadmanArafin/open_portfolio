@@ -2,7 +2,7 @@
 
 import { Badge } from '@astryxdesign/core/Badge';
 import { DEFAULT_THEME_ID, THEME_PRESETS } from '@/core/theme/presets';
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Selector, TextArea, TextInput } from '../components/AdminFields';
 import { VStack, HStack } from '@astryxdesign/core/Layout';
 import { Grid } from '@astryxdesign/core/Grid';
@@ -39,6 +39,7 @@ import {
   RotateCcw,
   AlertTriangle,
   HardDrive,
+  KeyRound,
 } from 'lucide-react';
 import { inputClass, textareaClass } from '../utils/listOps';
 
@@ -244,6 +245,8 @@ const GeneralPanel: React.FC = () => {
       </AstryxCard>
 
       <BackupPanel storeName={storeName} />
+
+      <PasskeyPanel />
     </>
   );
 };
@@ -365,6 +368,157 @@ const BackupPanel: React.FC<{ storeName: string }> = ({ storeName }) => {
           disabled={busy}
         >
           Reset to Defaults
+        </AstryxButton>
+      </div>
+
+      {status && <p className="text-xs text-accent">{status}</p>}
+    </AstryxCard>
+  );
+};
+
+/* =================================================================== */
+/* PASSKEYS — enroll this device, list, remove                         */
+/* =================================================================== */
+
+interface EnrolledPasskey {
+  id: string;
+  deviceName: string;
+  createdAt: string;
+  lastUsedAt: string | null;
+}
+
+/**
+ * Enrollment lives here rather than on the sign-in page because creating a
+ * credential that signs in as the owner requires already being the owner.
+ * The sign-in page only *uses* passkeys; this screen is the only place that
+ * makes them.
+ */
+const PasskeyPanel: React.FC = () => {
+  const [credentials, setCredentials] = useState<EnrolledPasskey[]>([]);
+  const [deviceName, setDeviceName] = useState('');
+  const [status, setStatus] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const refresh = async () => {
+    const body = await (
+      await fetch('/api/auth/passkey/list').catch(() => null as unknown as Response)
+    )
+      ?.json()
+      .catch(() => null);
+    if (body?.ok) setCredentials(body.credentials);
+  };
+
+  useEffect(() => {
+    void refresh();
+  }, []);
+
+  const supported = typeof window !== 'undefined' && !!window.PublicKeyCredential;
+
+  const handleRegister = async () => {
+    if (!supported) {
+      setStatus(
+        'This browser cannot use passkeys. Try a current phone, laptop or password manager.'
+      );
+      return;
+    }
+    setBusy(true);
+    setStatus(null);
+    try {
+      const { startRegistration } = await import('@simplewebauthn/browser');
+      const start = await (
+        await fetch('/api/auth/passkey/register/start', { method: 'POST' })
+      ).json();
+      if (!start.ok) {
+        setStatus(start.error ?? 'Could not start enrollment.');
+        return;
+      }
+      const attestation = await startRegistration({ optionsJSON: start.options });
+      const finish = await (
+        await fetch('/api/auth/passkey/register/finish', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            challengeId: start.challengeId,
+            response: attestation,
+            deviceName: deviceName.trim() || undefined,
+          }),
+        })
+      ).json();
+      setStatus(
+        finish.ok
+          ? 'Passkey enrolled. It works on the sign-in page from now on.'
+          : (finish.error ?? 'Enrollment failed.')
+      );
+      setDeviceName('');
+      await refresh();
+    } catch (err) {
+      setStatus(
+        err instanceof Error && err.name === 'NotAllowedError'
+          ? 'Cancelled — nothing was enrolled.'
+          : 'Enrollment failed. Try again.'
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleRemove = async (id: string) => {
+    if (!window.confirm('Remove this passkey? Your passphrase still signs in.')) return;
+    await fetch(`/api/auth/passkey/${encodeURIComponent(id)}`, { method: 'DELETE' });
+    await refresh();
+  };
+
+  return (
+    <AstryxCard variant="default" density="balanced" className="space-y-5">
+      <SectionTitle icon={KeyRound} text="Passkeys" />
+
+      <p className="text-sm text-text-secondary leading-relaxed">
+        A fingerprint, face or hardware key instead of a typed passphrase. Enroll this device here;
+        use it on the sign-in page. Removing every passkey is safe — your passphrase still works.
+      </p>
+
+      {credentials.length > 0 && (
+        <ul className="space-y-2">
+          {credentials.map((c) => (
+            <li
+              key={c.id}
+              className="flex items-center justify-between gap-3 rounded-lg border border-[var(--color-border)] px-4 py-2"
+            >
+              <div>
+                <p className="text-sm text-text-primary">{c.deviceName}</p>
+                <p className="text-xs text-text-secondary">
+                  Added {new Date(c.createdAt).toLocaleDateString()}
+                  {c.lastUsedAt
+                    ? ` · used ${new Date(c.lastUsedAt).toLocaleDateString()}`
+                    : ' · never used'}
+                </p>
+              </div>
+              <AstryxButton
+                variant="secondary"
+                onClick={() => void handleRemove(c.id)}
+                disabled={busy}
+              >
+                Remove
+              </AstryxButton>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <div className="flex flex-wrap items-end gap-3">
+        <TextInput
+          label="Name this device (optional)"
+          value={deviceName}
+          onChange={(value) => setDeviceName(value)}
+          width="100%"
+        />
+        <AstryxButton
+          variant="primary"
+          icon={KeyRound}
+          onClick={() => void handleRegister()}
+          disabled={busy}
+        >
+          Enroll this device
         </AstryxButton>
       </div>
 

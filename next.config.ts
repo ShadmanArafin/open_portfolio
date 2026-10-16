@@ -4,17 +4,42 @@ import type { NextConfig } from 'next';
  * Security headers.
  *
  * Set here so they apply on every host, not only Vercel — a self-hoster behind
- * nginx gets the same defaults as someone clicking Deploy. CSP is deliberately
- * absent for now: the theme script in the root layout is inline, and adding a
- * policy without a nonce would break it. That lands with the auth work, where
- * middleware can mint a per-request nonce.
+ * nginx gets the same defaults as someone clicking Deploy.
+ *
+ * CSP is a baseline, not a strict nonce policy: the root layout ships a
+ * blocking inline theme script (no flash of the wrong theme) and Next.js App
+ * Router emits its own inline flight scripts. A `script-src 'self'`-only policy
+ * would break both. What this policy still buys: no plugins/objects, no
+ * framing except same-origin (admin device preview needs it), restricted
+ * frame targets for the video facade, and `base-uri`/`form-action` locked to
+ * self. A per-request nonce policy is the follow-up, not today's change.
  */
+const contentSecurityPolicy = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "img-src 'self' data: blob: https:",
+  "font-src 'self' data: https://fonts.gstatic.com",
+  "connect-src 'self' https:",
+  "frame-src 'self' https://www.youtube-nocookie.com https://player.vimeo.com",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  'upgrade-insecure-requests',
+].join('; ');
+
 const securityHeaders = [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   // SAMEORIGIN, not DENY: the admin's device preview iframes the site.
   { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+  { key: 'Content-Security-Policy', value: contentSecurityPolicy },
+  // 2 years, subdomains included. Browsers only honour this over HTTPS, so
+  // plain-HTTP dev is unaffected.
+  { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
+  { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
+  { key: 'Origin-Agent-Cluster', value: '?1' },
 ];
 
 const nextConfig: NextConfig = {
@@ -32,6 +57,15 @@ const nextConfig: NextConfig = {
    * the same commit runs on Vercel, on a VPS, and on a Raspberry Pi.
    */
   output: 'standalone',
+
+  /*
+   * Miniflare ships a platform-native workerd binary (plus READMEs and other
+   * non-JS files) that no bundler can trace through: Turbopack fails the
+   * build on it. External keeps it a runtime `require()` instead, resolved
+   * from `node_modules` — which is why the Dockerfile copies those two
+   * packages into the runner image explicitly.
+   */
+  serverExternalPackages: ['miniflare', '@cloudflare/workerd-*'],
 
   async headers() {
     return [

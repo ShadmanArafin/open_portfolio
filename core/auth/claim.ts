@@ -1,7 +1,7 @@
 import 'server-only';
 import { timingSafeEqual } from 'node:crypto';
 import { getStorageAdapter } from '@/core/storage/registry';
-import { checkPassphraseStrength, hashPassphrase } from './passphrase';
+import { checkPassphraseStrength, hashPassphrase, isBreachedPassphrase } from './passphrase';
 import { createSession } from './session';
 
 /**
@@ -88,6 +88,19 @@ export async function claimInstance(
 
   const strength = checkPassphraseStrength(input.passphrase);
   if (!strength.ok) return { ok: false, error: strength.reason ?? 'Choose a stronger passphrase.' };
+
+  // Refused when it has appeared in a breach (k-anonymity: only a 5-char hash
+  // prefix leaves this machine). Fail-open when the check itself is
+  // unreachable — the hash and rate limits still hold, and an offline API must
+  // not brick first-run setup.
+  const { breached } = await isBreachedPassphrase(input.passphrase);
+  if (breached) {
+    return {
+      ok: false,
+      error:
+        'That passphrase has appeared in a data breach. Choose one you have not used elsewhere.',
+    };
+  }
 
   // Re-checked immediately before the write, so two people submitting at the
   // same moment cannot both come away believing they own the site.

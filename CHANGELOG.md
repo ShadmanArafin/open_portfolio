@@ -189,8 +189,7 @@ portfolio online and run it without opening a file.
 Said plainly, because they are the kind you should not discover after typing in
 a portfolio:
 
-- **Uploads have not been run against Vercel Blob or Supabase Storage with real
-  credentials.** They work on the local filesystem and share the same code path.
+- **Uploads verified on both hosted stores**, end to end (admin upload → anonymous fetch). Supabase and Vercel Blob.
 - **The newsletter collects addresses; it does not send them anything.** The
   export is the exit. Sign-ups also need a mail server connected, because
   confirming means emailing somebody a link.

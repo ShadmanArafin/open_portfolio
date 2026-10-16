@@ -72,6 +72,8 @@ if (TEST_URL) {
       writeOwner: (owner) => pg.writeOwner(sql(), owner),
       kv: pg.makeKvAdapter(sql),
       subscribers: pg.makeSubscribersAdapter(sql),
+      passkeys: pg.makePasskeysAdapter(sql),
+      records: pg.makeRecordsAdapter(sql),
       media: {
         put: async () => {
           throw new Error('not part of the SQL engine');
@@ -90,7 +92,7 @@ if (TEST_URL) {
     const { getSql, provisionSchema } = await import('../adapters/_shared/postgres');
     const sql = getSql(TEST_URL);
     await provisionSchema(sql);
-    await sql`TRUNCATE opb_content, opb_owner, opb_kv, opb_messages, opb_subscribers`;
+    await sql`TRUNCATE opb_content, opb_owner, opb_kv, opb_messages, opb_subscribers, opb_passkeys, opb_records, opb_singletons`;
     const { rm } = await import('node:fs/promises');
     const path = await import('node:path');
     await rm(path.join(process.cwd(), '.opb', 'media'), { recursive: true, force: true });
@@ -104,7 +106,7 @@ if (TEST_URL) {
       const { getSql, provisionSchema } = await import('../adapters/_shared/postgres');
       const sql = getSql(TEST_URL);
       await provisionSchema(sql);
-      await sql`TRUNCATE opb_content, opb_owner, opb_kv, opb_messages, opb_subscribers`;
+      await sql`TRUNCATE opb_content, opb_owner, opb_kv, opb_messages, opb_subscribers, opb_passkeys, opb_records, opb_singletons`;
     },
     { skipMedia: true }
   );

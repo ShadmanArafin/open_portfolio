@@ -34,7 +34,7 @@ export async function POST(req: Request) {
         error:
           'That is a lot of reports in one hour. Take a break — and if you have found that many things, one issue listing them is easier to act on.',
       },
-      { status: 429 }
+      { status: 429, headers: { 'Retry-After': String(limit.retryAfterSeconds) } }
     );
   }
 

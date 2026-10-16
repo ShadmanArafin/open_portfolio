@@ -6,6 +6,8 @@ import {
   health,
   makeKvAdapter,
   makeMessagesAdapter,
+  makePasskeysAdapter,
+  makeRecordsAdapter,
   makeSubscribersAdapter,
   provisionSchema,
   readOwner,
@@ -225,4 +227,6 @@ export const supabaseAdapter: StorageAdapter = {
   media,
   messages: makeMessagesAdapter(sql),
   subscribers: makeSubscribersAdapter(sql),
+  passkeys: makePasskeysAdapter(sql),
+  records: makeRecordsAdapter(sql),
 };

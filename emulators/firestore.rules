@@ -1,0 +1,11 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Server-only access through the Admin SDK, which bypasses rules
+    // entirely. These exist so a misconfigured production project fails
+    // closed if a client SDK is ever pointed at it by mistake.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

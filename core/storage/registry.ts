@@ -3,7 +3,11 @@ import { demoAdapter } from './adapters/demo';
 import 'server-only';
 import { AdapterConfigError, type AdapterId, type StorageAdapter } from './contract';
 import { localAdapter } from './adapters/local';
+import { appwriteAdapter } from './adapters/appwrite';
+import { cloudflareAdapter } from './adapters/cloudflare';
+import { firebaseAdapter } from './adapters/firebase';
 import { neonAdapter } from './adapters/neon';
+import { pocketbaseAdapter } from './adapters/pocketbase';
 import { postgresAdapter } from './adapters/postgres';
 import { supabaseAdapter } from './adapters/supabase';
 
@@ -24,8 +28,12 @@ const REGISTERED: Partial<Record<AdapterId, () => StorageAdapter>> = {
   supabase: () => supabaseAdapter,
   neon: () => neonAdapter,
   postgres: () => postgresAdapter,
-  // cloudflare, firebase, convex, pocketbase and appwrite register here as they
-  // land. Each is one file plus one line — that is the point of the contract.
+  pocketbase: () => pocketbaseAdapter,
+  firebase: () => firebaseAdapter,
+  appwrite: () => appwriteAdapter,
+  cloudflare: () => cloudflareAdapter,
+  // convex registers here when it lands. One file plus one line — that is
+  // the point of the contract.
 };
 
 /** Hosts where the filesystem is read-only or discarded between requests. */
@@ -47,7 +55,7 @@ function inferAdapterId(): AdapterId {
     candidates.push('neon');
   }
   if (process.env.CONVEX_DEPLOYMENT) candidates.push('convex');
-  if (process.env.FIREBASE_SERVICE_ACCOUNT) candidates.push('firebase');
+  if (process.env.FIREBASE_PROJECT_ID) candidates.push('firebase');
   if (process.env.CLOUDFLARE_ACCOUNT_ID && process.env.D1_DATABASE_ID)
     candidates.push('cloudflare');
   if (process.env.POCKETBASE_URL) candidates.push('pocketbase');

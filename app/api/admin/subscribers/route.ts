@@ -45,6 +45,7 @@ export async function GET(req: Request) {
         // Never cached anywhere. A list of email addresses behind a shared
         // cache is a list of email addresses without a session check.
         'Cache-Control': 'no-store, private',
+        'X-Content-Type-Options': 'nosniff',
       },
     });
   }

@@ -181,7 +181,7 @@ reaches the public site. The draft preview runs in an iframe — a separate
 document — so it always shows the site's own typography and brand colour, not
 the editor's.
 
-The admin is being rebuilt on shadcn/ui; see Phase 7 in [docs/PLAN.md](docs/PLAN.md).
+The admin is built on Astryx; see Phase 7 in [docs/PLAN.md](docs/PLAN.md) (the shadcn rebuild was cancelled).
 
 ---
 

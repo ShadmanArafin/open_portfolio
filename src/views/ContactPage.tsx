@@ -161,15 +161,16 @@ export const ContactPage: React.FC = () => {
 
               <div className="space-y-4">
                 {/* Email Copy Box */}
-                {/* A real <button>, so Enter and Space work without hand-rolling
-                    key handlers and screen readers announce it correctly. */}
+                {/* A real <button> whose accessible name comes from its
+                    contents, so the visible label is trivially part of it
+                    (WCAG 2.5.3). An aria-label here would have to repeat every
+                    visible word to say the same thing. */}
                 <button
                   type="button"
                   onClick={() => handleCopyEmail()}
-                  aria-label={`Copy email address ${settings.email}`}
                   className="w-full text-left p-6 rounded-2xl border border-border bg-surface-primary space-y-3 cursor-pointer hover:border-text-primary/30 transition-all duration-200 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none select-none group"
                 >
-                  <span className="text-xs font-medium uppercase tracking-wider text-text-muted block flex items-center justify-between font-body">
+                  <span className="text-xs font-medium uppercase tracking-wider text-text-secondary block flex items-center justify-between font-body">
                     <span>DIRECT EMAIL</span>
                     <Mail className="w-3.5 h-3.5 text-text-muted group-hover:text-accent transition-colors" />
                   </span>
@@ -224,15 +225,19 @@ export const ContactPage: React.FC = () => {
                   </div>
                 </button>
 
-                {/* WhatsApp Action Button (42px Height) */}
+                {/* WhatsApp Action Button (42px Height).
+                    Token colours, not brand green: white on #25D366 is ~2.5:1
+                    and no theme can fix a hardcoded pair. The icon carries the
+                    brand; the contrast carries the readability. No aria-label
+                    for the same 2.5.3 reason as the copy button above — the
+                    visible words are the name. */}
                 <a
                   href={settings.whatsappUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label="Contact via WhatsApp"
-                  className="w-full h-[42px] px-6 rounded-full bg-[#25D366] text-white font-body text-xs sm:text-[13px] font-medium uppercase tracking-wider hover:bg-[#20bd5a] transition-all duration-250 shadow-sm hover:-translate-y-[1px] inline-flex items-center justify-center gap-2 group cursor-pointer select-none"
+                  className="w-full h-[42px] px-6 rounded-full bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] font-body text-xs sm:text-[13px] font-medium uppercase tracking-wider transition-all duration-250 shadow-sm hover:-translate-y-[1px] inline-flex items-center justify-center gap-2 group cursor-pointer select-none"
                 >
-                  <FaWhatsapp className="w-4 h-4 text-white transition-transform duration-200 group-hover:scale-105" />
+                  <FaWhatsapp className="w-4 h-4 transition-transform duration-200 group-hover:scale-105" />
                   <span>CONTACT ON WHATSAPP ({settings.whatsappFormatted})</span>
                 </a>
               </div>

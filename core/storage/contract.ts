@@ -68,6 +68,16 @@ export interface MediaAdapter {
   resolveUrl(key: string): Promise<string | null>;
   remove(key: string): Promise<void>;
   list(): Promise<MediaRecord[]>;
+  /**
+   * Raw bytes for the same-origin proxy (`/api/media/[...key]`), for backends
+   * whose files are not on the local disk and have no public URL — R2 behind
+   * a private bucket, a bucket on an internal hostname. Optional so the four
+   * adapters that resolve to a URL or a disk path never think about it; the
+   * media route prefers a remote URL, then this, then the disk.
+   */
+  readBytes?(
+    key: string
+  ): Promise<{ data: Uint8Array<ArrayBuffer>; mimeType: string; sizeBytes: number } | null>;
 }
 
 export interface MessageListOptions {
@@ -139,6 +149,42 @@ export interface SubscribersAdapter {
   remove(id: string): Promise<void>;
 }
 
+/**
+ * A registered WebAuthn credential for the single owner.
+ *
+ * Storage only — the registration/authentication ceremonies (challenge,
+ * attestation/assertion verification) live in `core/auth/passkey.ts` and are
+ * the next slice, not this one. What this surface guarantees today: a
+ * credential enrolled on one machine is visible to verification on every
+ * backend, survives restarts on durable stores, and is never part of a content
+ * export or backup (auth state must not travel with content).
+ *
+ * `publicKey` is the COSE-encoded credential public key as base64. The raw
+ * credential ID is `id` (base64url, unique). `counter` is the authenticator's
+ * signature counter for clone detection; `transports` hints how to reach the
+ * authenticator again.
+ */
+export interface PasskeyCredential {
+  id: string;
+  publicKey: string;
+  counter: number;
+  transports: string[];
+  deviceName: string;
+  createdAt: string;
+  lastUsedAt: string | null;
+  backedUp: boolean;
+}
+
+export interface PasskeysAdapter {
+  list(): Promise<PasskeyCredential[]>;
+  get(id: string): Promise<PasskeyCredential | null>;
+  /** Insert or replace by id. There is exactly one owner, so no namespacing. */
+  put(credential: PasskeyCredential): Promise<void>;
+  /** Shallow merge of counter/lastUsedAt/deviceName. Unknown ids are ignored. */
+  update(id: string, patch: Partial<PasskeyCredential>): Promise<void>;
+  remove(id: string): Promise<void>;
+}
+
 export interface HealthReport {
   ok: boolean;
   detail: string;
@@ -177,6 +223,94 @@ export interface KvAdapter {
   incr(ns: KvNamespace, key: string, ttlSeconds: number): Promise<number>;
   /** Drops every key in a namespace — "sign out everywhere". */
   clear(ns: KvNamespace): Promise<void>;
+}
+
+/**
+ * One record inside a named collection — the authoring path the snapshot
+ * cannot serve. A 400-post blog cannot live in one JSON document, and
+ * per-record autosave has nothing conditional to write into. Collections hold
+ * records; records carry their own revision, so two editors on two devices get
+ * a conflict instead of a silent loss.
+ *
+ * Collection and record ids are lowercase slugs (`[a-z0-9-_]{1,64}`), enforced
+ * by `assertRecordAddress`: the same string becomes a filename, a table key, a
+ * document id and a URL segment on different backends, and one shared rule
+ * keeps all four safe.
+ */
+export interface StoredRecord {
+  id: string;
+  /** Starts at 1 on first write; every conditional write moves it. */
+  revision: number;
+  data: unknown;
+  updatedAt: string;
+}
+
+export interface RecordListOptions {
+  limit?: number;
+  /** Opaque cursor from a previous page; absent starts at the beginning. */
+  cursor?: string | null;
+}
+
+export interface RecordPage {
+  records: StoredRecord[];
+  /** Pass back as `cursor` for the next page; null when exhausted. */
+  nextCursor: string | null;
+}
+
+export interface RecordsAdapter {
+  /** Newest `updatedAt` first. Offset-based cursors: stable for admin lists
+      and small blogs, documented as lossy under concurrent writes. */
+  list(collection: string, options?: RecordListOptions): Promise<RecordPage>;
+  get(collection: string, id: string): Promise<StoredRecord | null>;
+  /**
+   * Writes a record and returns it with its new revision. With
+   * `expectedRevision` the write lands only on a match and throws
+   * `RevisionConflictError` otherwise; an absent record counts as revision 0.
+   */
+  put(
+    collection: string,
+    id: string,
+    data: unknown,
+    expectedRevision?: number
+  ): Promise<StoredRecord>;
+  remove(collection: string, id: string): Promise<void>;
+  /** Every collection that holds at least one record. For exports. */
+  collections(): Promise<string[]>;
+  /** A single document per collection (settings, theme overrides). No revision. */
+  getSingleton(collection: string): Promise<unknown | null>;
+  putSingleton(collection: string, data: unknown): Promise<void>;
+}
+
+const RECORD_ADDRESS = /^[a-z0-9-_]{1,64}$/;
+
+/** Throws `AdapterConfigError` with a human message for bad addresses. */
+export function assertRecordAddress(collection: string, id?: string): void {
+  if (!RECORD_ADDRESS.test(collection)) {
+    throw new AdapterConfigError(
+      `Collection names look like "posts": lowercase letters, numbers, dashes, up to 64 characters. Got "${collection.slice(0, 80)}".`
+    );
+  }
+  if (id !== undefined && !RECORD_ADDRESS.test(id)) {
+    throw new AdapterConfigError(
+      `Record ids look like "hello-world": lowercase letters, numbers, dashes, up to 64 characters. Got "${id.slice(0, 80)}".`
+    );
+  }
+}
+
+/**
+ * Offset cursors, shared so every backend encodes them identically. Opaque to
+ * callers by convention only — the format is documented here so a cursor
+ * minted by one version still decodes in the next.
+ */
+export function encodeRecordCursor(offset: number): string {
+  return `o:${offset}`;
+}
+
+export function decodeRecordCursor(cursor: string | null | undefined): number {
+  if (!cursor) return 0;
+  const match = /^o:(\d+)$/.exec(cursor);
+  if (!match) return 0;
+  return Number(match[1]);
 }
 
 /**
@@ -234,6 +368,9 @@ export interface StorageAdapter {
   readonly media: MediaAdapter;
   readonly messages: MessagesAdapter;
   readonly subscribers: SubscribersAdapter;
+  readonly passkeys: PasskeysAdapter;
+  /** Per-record collections + singletons: the authoring path. */
+  readonly records: RecordsAdapter;
 }
 
 /** Thrown when a backend is named but not usable, with a message for a human. */

@@ -4,6 +4,10 @@ import { randomBytes } from 'node:crypto';
 import path from 'node:path';
 import type { CMSState, ContactMessage } from '@/cms/types/cms';
 import type {
+  PasskeyCredential,
+  PasskeysAdapter,
+  RecordsAdapter,
+  StoredRecord,
   SubscribersAdapter,
   Channel,
   HealthReport,
@@ -15,7 +19,12 @@ import type {
   OwnerRecord,
   StorageAdapter,
 } from '../contract';
-import { RevisionConflictError } from '../contract';
+import {
+  assertRecordAddress,
+  decodeRecordCursor,
+  encodeRecordCursor,
+  RevisionConflictError,
+} from '../contract';
 import { migrateSnapshotMessages } from './_shared/migrate-messages';
 import { dataRoot } from './_shared/data-dir';
 
@@ -425,6 +434,243 @@ const subscribers: SubscribersAdapter = {
   },
 };
 
+/**
+ * Per-record collections, one file per record.
+ *
+ * `records/<collection>/<id>.json` holds `{revision, data, updatedAt}`, so a
+ * 400-post blog is 400 small files rather than one document rewritten on
+ * every keystroke. The collection and record ids are validated up front —
+ * they become path segments — and the whole read-compare-write runs inside
+ * the per-path queue, so it is atomic against every other write in this
+ * process, which is all of them on a single machine's disk.
+ */
+const RECORDS_DIR = path.join(ROOT, 'records');
+const SINGLETONS_DIR = path.join(ROOT, 'singletons');
+
+function recordPath(collection: string, id: string): string {
+  const resolved = path.resolve(RECORDS_DIR, collection, `${id}.json`);
+  if (resolved !== RECORDS_DIR && !resolved.startsWith(RECORDS_DIR + path.sep)) {
+    throw new Error(`Refusing to touch a record path outside the store: ${collection}/${id}`);
+  }
+  return resolved;
+}
+
+function singletonPath(collection: string): string {
+  const resolved = path.resolve(SINGLETONS_DIR, `${collection}.json`);
+  if (resolved !== SINGLETONS_DIR && !resolved.startsWith(SINGLETONS_DIR + path.sep)) {
+    throw new Error(`Refusing to touch a singleton path outside the store: ${collection}`);
+  }
+  return resolved;
+}
+
+interface StoredFile {
+  revision: number;
+  data: unknown;
+  updatedAt: string;
+}
+
+const records: RecordsAdapter = {
+  async list(collection, options) {
+    assertRecordAddress(collection);
+    let files: string[] = [];
+    try {
+      files = (await readdir(path.join(RECORDS_DIR, collection))).filter((f) =>
+        f.endsWith('.json')
+      );
+    } catch {
+      return { records: [], nextCursor: null };
+    }
+    const all = (
+      await Promise.all(
+        files.map(async (file): Promise<StoredRecord | null> => {
+          try {
+            const stored = JSON.parse(
+              await readFile(path.join(RECORDS_DIR, collection, file), 'utf8')
+            ) as StoredFile;
+            return {
+              id: file.slice(0, -'.json'.length),
+              revision: stored.revision,
+              data: stored.data,
+              updatedAt: stored.updatedAt,
+            };
+          } catch {
+            return null;
+          }
+        })
+      )
+    )
+      .filter((r): r is StoredRecord => r !== null)
+      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+    const offset = decodeRecordCursor(options?.cursor);
+    const limit = options?.limit ?? 500;
+    const page = all.slice(offset, offset + limit);
+    return {
+      records: page,
+      nextCursor: offset + limit < all.length ? encodeRecordCursor(offset + limit) : null,
+    };
+  },
+
+  async get(collection, id) {
+    assertRecordAddress(collection, id);
+    try {
+      const stored = JSON.parse(await readFile(recordPath(collection, id), 'utf8')) as StoredFile;
+      return { id, revision: stored.revision, data: stored.data, updatedAt: stored.updatedAt };
+    } catch {
+      return null;
+    }
+  },
+
+  async put(collection, id, data, expectedRevision) {
+    assertRecordAddress(collection, id);
+    return runQueued(recordPath(collection, id), async () => {
+      const current = await records.get(collection, id);
+      const currentRevision = current?.revision ?? 0;
+      if (expectedRevision !== undefined && expectedRevision !== currentRevision) {
+        throw new RevisionConflictError(expectedRevision, currentRevision);
+      }
+      const stored: StoredRecord = {
+        id,
+        revision: currentRevision + 1,
+        data,
+        updatedAt: new Date().toISOString(),
+      };
+      await mkdir(path.join(RECORDS_DIR, collection), { recursive: true });
+      await writeAtomically(
+        recordPath(collection, id),
+        JSON.stringify(
+          {
+            revision: stored.revision,
+            data: stored.data,
+            updatedAt: stored.updatedAt,
+          } satisfies StoredFile,
+          null,
+          2
+        )
+      );
+      return stored;
+    });
+  },
+
+  async remove(collection, id) {
+    assertRecordAddress(collection, id);
+    try {
+      await unlink(recordPath(collection, id));
+    } catch {
+      // Already absent.
+    }
+  },
+
+  async collections() {
+    try {
+      const entries = await readdir(RECORDS_DIR, { withFileTypes: true });
+      const names = await Promise.all(
+        entries
+          .filter((entry) => entry.isDirectory())
+          .map(async (entry) => {
+            try {
+              const files = await readdir(path.join(RECORDS_DIR, entry.name));
+              return files.some((f) => f.endsWith('.json')) ? entry.name : null;
+            } catch {
+              return null;
+            }
+          })
+      );
+      return names.filter((name): name is string => name !== null).sort();
+    } catch {
+      return [];
+    }
+  },
+
+  async getSingleton(collection) {
+    assertRecordAddress(collection);
+    try {
+      return JSON.parse(await readFile(singletonPath(collection), 'utf8')) as unknown;
+    } catch {
+      return null;
+    }
+  },
+
+  async putSingleton(collection, data) {
+    assertRecordAddress(collection);
+    await mkdir(SINGLETONS_DIR, { recursive: true });
+    await atomicWrite(singletonPath(collection), JSON.stringify(data, null, 2));
+  },
+};
+
+/**
+ * Passkey credentials, one file each.
+ *
+ * Same shape as messages and subscribers: enrolment is rare and reads are by
+ * id, so a file per credential needs no index and no migration. The id is a
+ * base64url credential ID (filename-safe by construction), still resolved
+ * against the directory so a crafted value cannot escape it.
+ */
+const PASSKEYS_DIR = path.join(ROOT, 'passkeys');
+
+function passkeyPath(id: string): string {
+  const resolved = path.resolve(PASSKEYS_DIR, `${id}.json`);
+  if (resolved !== PASSKEYS_DIR && !resolved.startsWith(PASSKEYS_DIR + path.sep)) {
+    throw new Error(`Refusing to touch a passkey path outside the store: ${id}`);
+  }
+  return resolved;
+}
+
+const passkeys: PasskeysAdapter = {
+  async list() {
+    try {
+      const files = (await readdir(PASSKEYS_DIR)).filter((f) => f.endsWith('.json'));
+      const all = await Promise.all(
+        files.map(async (file) => {
+          try {
+            return JSON.parse(await readFile(path.join(PASSKEYS_DIR, file), 'utf8'));
+          } catch {
+            return null;
+          }
+        })
+      );
+      return (all.filter(Boolean) as PasskeyCredential[]).sort((a, b) =>
+        a.createdAt.localeCompare(b.createdAt)
+      );
+    } catch {
+      return [];
+    }
+  },
+
+  async get(id) {
+    try {
+      return JSON.parse(await readFile(passkeyPath(id), 'utf8')) as PasskeyCredential;
+    } catch {
+      return null;
+    }
+  },
+
+  async put(credential) {
+    await mkdir(PASSKEYS_DIR, { recursive: true });
+    await atomicWrite(passkeyPath(credential.id), JSON.stringify(credential, null, 2));
+  },
+
+  async update(id, patch) {
+    const target = passkeyPath(id);
+    await runQueued(target, async () => {
+      try {
+        const existing = JSON.parse(await readFile(target, 'utf8')) as PasskeyCredential;
+        const { id: _ignored, ...rest } = patch;
+        await writeAtomically(target, JSON.stringify({ ...existing, ...rest, id }, null, 2));
+      } catch {
+        // Unknown id. Ignored rather than an error, per the contract.
+      }
+    });
+  },
+
+  async remove(id) {
+    try {
+      await unlink(passkeyPath(id));
+    } catch {
+      // Already gone is the outcome the caller wanted.
+    }
+  },
+};
+
 export const localAdapter: StorageAdapter = {
   id: 'local',
   displayName: 'Local filesystem',
@@ -465,6 +711,9 @@ export const localAdapter: StorageAdapter = {
     await mkdir(MEDIA_DIR, { recursive: true });
     await mkdir(STATE_DIR, { recursive: true });
     await mkdir(MESSAGES_DIR, { recursive: true });
+    await mkdir(PASSKEYS_DIR, { recursive: true });
+    await mkdir(RECORDS_DIR, { recursive: true });
+    await mkdir(SINGLETONS_DIR, { recursive: true });
     await migrateSnapshotMessages({
       readSnapshot: (channel) => localAdapter.readSnapshot(channel),
       writeSnapshot: (channel, state) => localAdapter.writeSnapshot(channel, state),
@@ -522,4 +771,6 @@ export const localAdapter: StorageAdapter = {
   media,
   messages,
   subscribers,
+  passkeys,
+  records,
 };

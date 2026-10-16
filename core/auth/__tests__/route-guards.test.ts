@@ -43,6 +43,11 @@ const PUBLIC_ROUTES: Record<string, string> = {
   'newsletter/unsubscribe':
     'Leaving a list. Authorised by the emailed token, and reachable by a mail provider under RFC 8058.',
   'media/[...key]': 'Serves published assets to visitors.',
+  'auth/passkey/login/start': 'Signing in cannot require being signed in.',
+  'auth/passkey/login/finish': 'Signing in cannot require being signed in.',
+  'auth/otp/request': 'Account recovery, for someone who has lost their way in.',
+  'auth/otp/verify': 'Account recovery. Authorised by the emailed code, not a session.',
+  health: 'Liveness for orchestrators. Adapter id and a boolean only, never error text.',
   'preview/end':
     'Turning your own preview off grants nothing. Requiring a session here would strand someone in preview when it expired.',
 };

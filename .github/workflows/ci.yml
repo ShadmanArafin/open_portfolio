@@ -47,7 +47,7 @@ jobs:
   storage-conformance:
     name: Storage conformance against real Postgres
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
 
     # Supabase and Neon share one SQL engine, so exercising it against a genuine
     # Postgres verifies most of both without needing an account for either.
@@ -80,11 +80,77 @@ jobs:
 
       - run: npm ci
 
+      - name: Start PocketBase
+        run: |
+          curl -sSfL https://github.com/pocketbase/pocketbase/releases/download/v0.40.5/pocketbase_0.40.5_linux_amd64.zip -o /tmp/pb.zip
+          unzip -q -o /tmp/pb.zip -d /tmp/pbtest
+          /tmp/pbtest/pocketbase superuser upsert test@example.com testtest1234 --dir /tmp/pbdata
+          /tmp/pbtest/pocketbase serve --http 127.0.0.1:8090 --dir /tmp/pbdata &
+          for i in $(seq 1 30); do
+            curl -sSf http://127.0.0.1:8090/api/health && break || sleep 1
+          done
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Start Firebase emulators
+        run: |
+          npx firebase emulators:start --only firestore,storage --project opb-test &
+          timeout 120 bash -c 'until (echo > /dev/tcp/127.0.0.1/8080) 2>/dev/null; do sleep 2; done'
+          timeout 60 bash -c 'until (echo > /dev/tcp/127.0.0.1/9199) 2>/dev/null; do sleep 2; done'
+
+      - name: Start Appwrite
+        run: |
+          mkdir -p /tmp/awstack
+          curl -sSfL https://raw.githubusercontent.com/appwrite/appwrite/2.5.0/docker-compose.yml -o /tmp/awstack/docker-compose.yml
+          curl -sSfL https://raw.githubusercontent.com/appwrite/appwrite/2.5.0/.env -o /tmp/awstack/.env
+          # Test-only values over the stock template: unprivileged ports and a
+          # known secret. Nothing here leaves the runner.
+          sed -i 's/^_APP_OPENSSL_KEY_V1=.*/_APP_OPENSSL_KEY_V1=ci-test-secret-key/' /tmp/awstack/.env
+          sed -i 's/^_APP_DOMAIN=.*/_APP_DOMAIN=localhost/' /tmp/awstack/.env
+          printf '\n_APP_HTTP_PORT=8081\n_APP_HTTPS_PORT=8443\n' >> /tmp/awstack/.env
+          cp docker/docker-compose.appwrite.test.yml /tmp/awstack/docker-compose.test.yml
+          docker compose -f /tmp/awstack/docker-compose.yml -f /tmp/awstack/docker-compose.test.yml -p opbappwrite up -d
+          timeout 300 bash -c 'until curl -sSf http://localhost:8081/v1/health/version >/dev/null 2>&1; do sleep 5; done'
+
+      - name: Bootstrap Appwrite project and key
+        run: |
+          # Console user, team, project and API key — the same clicks the web
+          # installer performs, scripted. A project must belong to a team, and
+          # the key id is explicit so this is re-runnable.
+          COOKIE_JAR=$(mktemp)
+          curl -sSf -c "$COOKIE_JAR" -H 'X-Appwrite-Project: console' -H 'Content-Type: application/json' \
+            -d '{"userId":"ciadmin","email":"ci@test.local","password":"testtest1234","name":"ci"}' \
+            http://localhost:8081/v1/account >/dev/null
+          curl -sSf -b "$COOKIE_JAR" -c "$COOKIE_JAR" -H 'X-Appwrite-Project: console' -H 'Content-Type: application/json' \
+            -d '{"email":"ci@test.local","password":"testtest1234"}' \
+            http://localhost:8081/v1/account/sessions/email >/dev/null
+          curl -sSf -b "$COOKIE_JAR" -H 'X-Appwrite-Project: console' -H 'Content-Type: application/json' \
+            -d '{"teamId":"opbteam","name":"opbtest"}' \
+            http://localhost:8081/v1/teams >/dev/null
+          curl -sSf -b "$COOKIE_JAR" -H 'X-Appwrite-Project: console' -H 'Content-Type: application/json' \
+            -d '{"projectId":"opbtest","name":"opbtest","teamId":"opbteam"}' \
+            http://localhost:8081/v1/projects >/dev/null
+          SECRET=$(curl -sSf -b "$COOKIE_JAR" -H 'X-Appwrite-Project: console' -H 'Content-Type: application/json' \
+            -d '{"keyId":"opbtestkey","name":"opb-test","scopes":["databases.read","databases.write","collections.read","collections.write","attributes.read","attributes.write","indexes.read","indexes.write","documents.read","documents.write","files.read","files.write","buckets.read","buckets.write"]}' \
+            http://localhost:8081/v1/projects/opbtest/keys | jq -r .secret)
+          echo "APPWRITE_TEST_API_KEY=$SECRET" >> "$GITHUB_ENV"
+
       - name: Run the conformance suite
         run: npm run test
         env:
           TEST_POSTGRES_URL: postgres://postgres:postgres@localhost:5432/opb_test
           TEST_MAILPIT_URL: http://localhost:8025
+          POCKETBASE_TEST_URL: http://127.0.0.1:8090
+          POCKETBASE_TEST_ADMIN_EMAIL: test@example.com
+          POCKETBASE_TEST_ADMIN_PASSWORD: testtest1234
+          FIREBASE_TEST_PROJECT: opb-test
+          FIRESTORE_EMULATOR_HOST: 127.0.0.1:8080
+          STORAGE_EMULATOR_HOST: http://127.0.0.1:9199
+          APPWRITE_TEST_ENDPOINT: http://localhost:8081/v1
+          APPWRITE_TEST_PROJECT_ID: opbtest
 
   content-safety:
     name: No personal or client-owned content

@@ -1,7 +1,7 @@
 import 'server-only';
 
 /**
- * Both messages this project sends.
+ * The messages this project sends.
  *
  * Plain text is written first and carries everything; the HTML is a courtesy.
  * No tracking pixels, no remote images, no link wrapping — a portfolio's
@@ -122,4 +122,37 @@ export function confirmSubscription(input: ConfirmSubscriptionInput) {
   ].join('');
 
   return { subject: `Confirm your subscription to ${input.siteName}`, text, html };
+}
+
+export interface SignInCodeInput {
+  siteName: string;
+  code: string;
+  expiresMinutes: number;
+}
+
+/**
+ * A one-time sign-in code for the owner.
+ *
+ * Goes to exactly one address — the owner's — so unlike the subscription
+ * confirmation it needs no stranger-facing apology paragraph. The code is
+ * short enough to retype from a phone notification and expires in minutes,
+ * which is what makes reply-to guessing worthless.
+ */
+export function signInCode(input: SignInCodeInput) {
+  const text = [
+    `Your sign-in code for ${input.siteName} is:`,
+    '',
+    input.code,
+    '',
+    `It works once, within ${input.expiresMinutes} minutes. If this was not you,`,
+    'nothing has changed and you can ignore this email.',
+  ].join('\n');
+
+  const html = [
+    `<p>Your sign-in code for ${escapeHtml(input.siteName)} is:</p>`,
+    `<p style="font-size: 24px; letter-spacing: 4px;"><strong>${escapeHtml(input.code)}</strong></p>`,
+    `<p>It works once, within ${input.expiresMinutes} minutes. If this was not you, nothing has changed and you can ignore this email.</p>`,
+  ].join('');
+
+  return { subject: `Your ${input.siteName} sign-in code`, text, html };
 }

@@ -1,0 +1,12 @@
+rules_version = '2';
+service firebase.storage {
+  // Media is public by design: <img> tags resolve without a session, exactly
+  // like the public Supabase bucket and the public PocketBase file rule.
+  // Everything else the adapter stores lives in Firestore, locked above.
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}

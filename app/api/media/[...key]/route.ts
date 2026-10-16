@@ -47,9 +47,28 @@ export async function GET(_req: Request, ctx: { params: Promise<{ key: string[] 
 
   // Ask the adapter first: a hosted backend answers with its own URL and the
   // browser never comes back here.
-  const remote = await (await getStorageAdapter()).media.resolveUrl(relative);
+  const adapter = await getStorageAdapter();
+  const remote = await adapter.media.resolveUrl(relative);
   if (remote && /^https?:\/\//i.test(remote)) {
     return NextResponse.redirect(remote);
+  }
+
+  // Backends whose files live outside both a CDN and this disk (a private R2
+  // bucket, an internal hostname) stream through here instead. Same guards as
+  // the disk path below: sniff-proof type, SVG never inline.
+  if (typeof adapter.media.readBytes === 'function') {
+    const stored = await adapter.media.readBytes(relative).catch(() => null);
+    if (!stored) return new NextResponse('Not found', { status: 404 });
+    const storedExt = path.extname(relative).toLowerCase();
+    const storedSvg = stored.mimeType === 'image/svg+xml' || storedExt === '.svg';
+    return new NextResponse(stored.data, {
+      headers: {
+        'Content-Type': storedSvg ? 'image/svg+xml' : stored.mimeType,
+        'X-Content-Type-Options': 'nosniff',
+        'Content-Disposition': storedSvg ? 'attachment' : 'inline',
+        'Cache-Control': 'public, max-age=3600',
+      },
+    });
   }
 
   let bytes: Buffer;

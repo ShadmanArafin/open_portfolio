@@ -51,13 +51,6 @@ export const Footer: React.FC = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleKeyDownEmail = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      handleCopyEmail();
-    }
-  };
-
   const socialLinks = (data.socialLinks || [])
     .filter((s) => s.visible !== false)
     .sort((a, b) => a.sortOrder - b.sortOrder);
@@ -88,9 +81,12 @@ export const Footer: React.FC = () => {
               </div>
 
               <div>
-                <h3 className="font-display font-medium text-xl sm:text-2xl text-text-primary">
+                {/* Identity, not a section: the footer CTA below is the h2, so
+                    a heading here would either skip a level (h3 after h1) or
+                    duplicate it. Size comes from the classes. */}
+                <p className="font-display font-medium text-xl sm:text-2xl text-text-primary">
                   {data.settings.fullName}
-                </h3>
+                </p>
                 <span className="text-xs sm:text-sm font-mono text-accent">
                   {data.settings.role}
                 </span>
@@ -177,18 +173,17 @@ export const Footer: React.FC = () => {
               })}
             </div>
 
-            {/* Email Copy Card */}
+            {/* Email Copy Card.
+                A plain container around one real button: an earlier version
+                made the whole card a div-button wrapping a second button,
+                which nests interactive controls (WCAG 4.1.2) and announces
+                twice. One control, one announcement. */}
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.45 }}
-              onClick={(e) => handleCopyEmail(e)}
-              onKeyDown={handleKeyDownEmail}
-              tabIndex={0}
-              role="button"
-              aria-label="Copy email address"
-              className="p-5 rounded-[22px] bg-surface-primary border border-border flex flex-col justify-between gap-3 hover:border-text-primary/30 transition-all cursor-pointer select-none group"
+              className="p-5 rounded-[22px] bg-surface-primary border border-border flex flex-col justify-between gap-3 hover:border-text-primary/30 transition-all group"
             >
               <div className="flex items-center gap-2 text-[11px] font-medium text-text-muted font-body">
                 <Mail className="w-3.5 h-3.5 text-text-muted group-hover:text-accent transition-colors" />
@@ -203,9 +198,9 @@ export const Footer: React.FC = () => {
                 <motion.button
                   type="button"
                   onClick={(e) => {
-                    e.stopPropagation();
                     handleCopyEmail(e);
                   }}
+                  aria-label={`Copy email address ${data.settings.email}`}
                   className={cn(
                     'px-3.5 py-1.5 rounded-xl border font-body transition-all duration-300 flex items-center gap-1.5 flex-shrink-0 cursor-pointer',
                     copied
@@ -237,8 +232,10 @@ export const Footer: React.FC = () => {
         {/* Renders nothing at all unless the owner switched it on. */}
         <NewsletterSignup />
 
-        {/* FOOTER LOWER META AREA */}
-        <div className="flex items-center justify-center py-6 border-t border-border text-xs text-text-muted font-body font-normal text-center w-full">
+        {/* FOOTER LOWER META AREA.
+            Secondary, not muted: 12px muted fails 4.5:1 in light mode and the
+            matrix caught it. Fine print still has to be readable. */}
+        <div className="flex items-center justify-center py-6 border-t border-border text-xs text-text-secondary font-body font-normal text-center w-full">
           <span>
             {isShippedCopyright(data.settings.copyrightText)
               ? `Handmade with care ✦ © ${new Date().getFullYear()} ${data.settings.fullName}`

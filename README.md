@@ -37,7 +37,7 @@ to keep one: students, designers, developers, photographers, writers.
 > **Status: alpha (0.5).** The site, the editor and publishing all work, the
 > admin has real server-side authentication, and uploads are now verified
 > end to end against both hosted object stores. The gaps are real and specific —
-> the admin is not laid out for a phone, and five of the nine planned backends
+> the admin is not laid out for a phone, and one of the nine planned backends
 > are not built. Read [What does not work yet](#what-does-not-work-yet) before
 > using this for anything you depend on.
 
@@ -140,15 +140,13 @@ like: that is exactly what updating does, and your content is untouched.
 
 ## Run it locally
 
-**Requirements:** Node.js 20 or newer, and npm. Nothing else — no database is
+**Requirements:** Node.js 20.9 or newer, and npm. Nothing else — no database is
 needed to try it, and no account anywhere.
-
-Node 20.9 or newer. No account, no API key, nothing to sign up for.
 
 ```bash
 git clone https://github.com/ShadmanArafin/open_portfolio.git
 cd open_portfolio
-npm install
+npm ci
 npm run dev
 ```
 
@@ -260,15 +258,19 @@ Every step is skippable. None of it is permanent.
 | **Supabase**            | 500MB database, 1GB files | yes                     | one account for everything; free projects pause after ~1 week idle |
 | **Neon + Vercel Blob**  | 0.5GB database, 1GB blob  | yes                     | deploying on Vercel; resumes instantly after idling                |
 | **Postgres (any host)** | depends on your host      | no                      | Railway, Render, Fly, Coolify, or a database you already run       |
+| **PocketBase**          | free forever, self-hosted | no                      | one binary for database + files on your own server                 |
+| **Firebase**            | Spark plan free           | no                      | Firestore + Storage when you already live in Google's console      |
+| **Appwrite**            | free, self-hosted/Cloud   | no                      | documents + files with a full console when you want one            |
+| **Cloudflare D1+R2**    | free, local engine        | no                      | D1 SQLite + R2 objects on your own server, no account              |
 
 You do not choose in advance. Whichever service's environment variables are
 present is the one that gets used, so provisioning a database is the only step.
 See [.env.example](.env.example).
 
 Adding another backend is one file implementing `StorageAdapter`, one line in the
-registry, and a green run of the conformance suite — 21 tests covering
-round-tripping, concurrent writes, expiry, namespace isolation, and the rule that
-auth state never travels inside a content export.
+registry, and a green run of the conformance suite — ~50 assertions covering
+round-tripping, concurrent writes, expiry, namespace isolation, passkey
+storage, and the rule that auth state never travels inside a content export.
 
 ## What does not work yet
 
@@ -304,9 +306,9 @@ discover them after typing in a portfolio:
   obligations — so the export is deliberately the exit: a CSV in the shape
   Buttondown, Mailchimp and the rest import. Sign-ups also need SMTP
   configured, because confirming means sending somebody a link.
-- **Five of the nine planned backends are not built.** Firebase, Convex,
-  Cloudflare, PocketBase and Appwrite. The four that exist are the four the
-  README offers.
+- **One of the nine planned backends is not built.** Convex, which needs an
+  account rather than an emulator and is therefore blocked on signup, not code.
+  The eight that exist are the eight the README offers.
 
 ## Tech stack
 

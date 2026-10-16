@@ -24,7 +24,10 @@ export const dynamic = 'force-dynamic';
 async function handle(req: Request): Promise<NextResponse> {
   const limit = await rateLimit(`newsletter-unsub:${await clientKey()}`, 30, 60 * 60);
   if (!limit.allowed) {
-    return NextResponse.json({ ok: false, error: 'Too many attempts.' }, { status: 429 });
+    return NextResponse.json(
+      { ok: false, error: 'Too many attempts.' },
+      { status: 429, headers: { 'Retry-After': String(limit.retryAfterSeconds) } }
+    );
   }
 
   const url = new URL(req.url);

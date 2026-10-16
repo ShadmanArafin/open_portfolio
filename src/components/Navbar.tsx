@@ -98,7 +98,7 @@ export const Navbar: React.FC = () => {
 
               <Link
                 href="/contact"
-                aria-label={`Contact ${fullName}`}
+                aria-label={`Let's talk with ${fullName}`}
                 className="inline-flex items-center justify-center gap-2 h-[42px] px-5 sm:px-6 rounded-full text-xs sm:text-[13px] font-medium uppercase tracking-wider font-body bg-text-primary text-bg hover:opacity-90 transition-all duration-250 hover:-translate-y-[1px] group cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
               >
                 <span>LET'S TALK</span>

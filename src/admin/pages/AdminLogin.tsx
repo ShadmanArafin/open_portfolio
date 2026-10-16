@@ -21,6 +21,11 @@ export const AdminLogin: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [passkeyBusy, setPasskeyBusy] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [otpBusy, setOtpBusy] = useState(false);
+  const [otpStatus, setOtpStatus] = useState<string | null>(null);
 
   const { login } = useCMS();
   const navigate = useNavigate();
@@ -39,6 +44,88 @@ export const AdminLogin: React.FC = () => {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePasskey = async () => {
+    setError(null);
+    if (typeof window === 'undefined' || !window.PublicKeyCredential) {
+      setError('This browser cannot use passkeys.');
+      return;
+    }
+    setPasskeyBusy(true);
+    try {
+      const { startAuthentication } = await import('@simplewebauthn/browser');
+      const start = await (await fetch('/api/auth/passkey/login/start', { method: 'POST' })).json();
+      if (!start.ok) {
+        setError(start.error ?? 'Passkey sign-in failed.');
+        return;
+      }
+      const assertion = await startAuthentication({ optionsJSON: start.options });
+      const finish = await (
+        await fetch('/api/auth/passkey/login/finish', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ challengeId: start.challengeId, response: assertion }),
+        })
+      ).json();
+      if (finish.ok) {
+        navigate('/');
+      } else {
+        setError(finish.error ?? 'Passkey sign-in failed.');
+      }
+    } catch (err) {
+      if (!(err instanceof Error && err.name === 'NotAllowedError')) {
+        setError('Passkey sign-in failed.');
+      }
+    } finally {
+      setPasskeyBusy(false);
+    }
+  };
+
+  const handleOtpRequest = async () => {
+    setOtpStatus(null);
+    setError(null);
+    if (!email.trim()) {
+      setOtpStatus('Enter your email above first.');
+      return;
+    }
+    setOtpBusy(true);
+    try {
+      await fetch('/api/auth/otp/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      // Always "sent": the endpoint answers identically whether or not the
+      // address owns this site, so this screen cannot leak that either.
+      setOtpSent(true);
+      setOtpStatus(
+        'If email is connected, a code is on its way. It works once, within 10 minutes.'
+      );
+    } finally {
+      setOtpBusy(false);
+    }
+  };
+
+  const handleOtpVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setOtpBusy(true);
+    try {
+      const res = await (
+        await fetch('/api/auth/otp/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email.trim(), code: otpCode }),
+        })
+      ).json();
+      if (res.ok) {
+        navigate('/');
+      } else {
+        setOtpStatus(res.error ?? 'That code is not right.');
+      }
+    } finally {
+      setOtpBusy(false);
     }
   };
 
@@ -94,6 +181,53 @@ export const AdminLogin: React.FC = () => {
                 isLoading={loading}
                 width="100%"
               />
+
+              <Button
+                label={passkeyBusy ? 'Waiting for your key' : 'Sign in with a passkey'}
+                type="button"
+                variant="secondary"
+                size="lg"
+                width="100%"
+                onClick={() => void handlePasskey()}
+              />
+
+              {!otpSent ? (
+                <Center>
+                  <Link
+                    href="/admin/login"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      void handleOtpRequest();
+                    }}
+                  >
+                    {otpBusy ? 'Sending…' : 'Email me a sign-in code instead'}
+                  </Link>
+                </Center>
+              ) : (
+                <form onSubmit={(e) => void handleOtpVerify(e)}>
+                  <VStack gap={3}>
+                    <TextInput
+                      label="6-digit code"
+                      value={otpCode}
+                      onChange={(value) => setOtpCode(value)}
+                      width="100%"
+                    />
+                    <Button
+                      label={otpBusy ? 'Checking' : 'Use this code'}
+                      type="submit"
+                      variant="secondary"
+                      size="lg"
+                      isLoading={otpBusy}
+                      width="100%"
+                    />
+                  </VStack>
+                </form>
+              )}
+              {otpStatus && (
+                <Text type="supporting" display="block">
+                  {otpStatus}
+                </Text>
+              )}
 
               <Center>
                 {/* A plain <a>, not router-aware — Astryx's Link has no

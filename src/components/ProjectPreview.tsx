@@ -77,14 +77,17 @@ export const ProjectPreview: React.FC<ProjectPreviewProps> = ({ project }) => {
                   else on the site did, so /work/:slug was only reachable from
                   another project's "next project" link, which you could not get
                   to in the first place. */}
-              <h3 className="font-display text-2xl sm:text-3xl lg:text-4xl font-medium tracking-tight text-text-primary mb-4 leading-tight">
+              {/* h2: on /work this follows the page h1, and on the home page it
+                  sits beside the section h2 — both valid outlines, where h3
+                  skipped a level on /work. Size comes from the classes. */}
+              <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-medium tracking-tight text-text-primary mb-4 leading-tight">
                 <Link
                   href={`/work/${project.slug}`}
                   className="hover:text-accent transition-colors"
                 >
                   {project.title}
                 </Link>
-              </h3>
+              </h2>
 
               {/* 2 Concise Editorial Paragraphs */}
               <div className="space-y-3.5 text-sm sm:text-base text-text-secondary leading-relaxed mb-8 font-body font-normal">

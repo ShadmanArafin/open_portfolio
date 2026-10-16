@@ -94,3 +94,54 @@ export function checkPassphraseStrength(passphrase: string): { ok: boolean; reas
   }
   return { ok: true };
 }
+
+async function sha1Hex(value: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(value));
+  return [...new Uint8Array(digest)]
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+    .toUpperCase();
+}
+
+/**
+ * HaveIBeenPwned k-anonymity check.
+ *
+ * Only the first 5 hex chars of the SHA-1 ever leave this machine; the API
+ * returns every suffix with that prefix and the comparison happens here. A
+ * passphrase seen in a breach is refused outright — length cannot save
+ * `correct horse battery staple` once it is in a wordlist.
+ *
+ * Fail-open on network trouble (offline dev, blocked egress, slow API): the
+ * scrypt hash, rate limits and 12-char floor still hold, and refusing every
+ * passphrase change because a third party is unreachable would be the outage,
+ * not the protection. Callers that need to know used `breachUnknown`.
+ */
+export async function isBreachedPassphrase(
+  passphrase: string,
+  fetchImpl: typeof fetch = fetch
+): Promise<{ breached: boolean; breachUnknown: boolean }> {
+  try {
+    const full = await sha1Hex(passphrase.normalize('NFKC'));
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 3000);
+    let res: Response;
+    try {
+      res = await fetchImpl(`https://api.pwnedpasswords.com/range/${full.slice(0, 5)}`, {
+        signal: controller.signal,
+        headers: { 'Add-Padding': 'true' },
+      });
+    } finally {
+      clearTimeout(timer);
+    }
+    if (!res.ok) return { breached: false, breachUnknown: true };
+    const text = await res.text();
+    const suffix = full.slice(5);
+    for (const line of text.split('\n')) {
+      const [hash] = line.trim().split(':');
+      if (hash?.toUpperCase() === suffix) return { breached: true, breachUnknown: false };
+    }
+    return { breached: false, breachUnknown: false };
+  } catch {
+    return { breached: false, breachUnknown: true };
+  }
+}

@@ -2,7 +2,12 @@ import 'server-only';
 import { createHash, randomBytes } from 'node:crypto';
 import { cookies } from 'next/headers';
 import { getStorageAdapter } from '@/core/storage/registry';
-import { SESSION_COOKIE } from './constants';
+import {
+  SESSION_COOKIE,
+  SESSION_COOKIE_SECURE,
+  activeSessionCookie,
+  shouldUseSecureCookies,
+} from './constants';
 
 /**
  * Server-side sessions.
@@ -18,7 +23,7 @@ import { SESSION_COOKIE } from './constants';
  * without a revocation list — which is a session store with extra steps.
  */
 
-export { SESSION_COOKIE };
+export { SESSION_COOKIE, SESSION_COOKIE_SECURE, activeSessionCookie, shouldUseSecureCookies };
 
 const SESSION_TTL_SECONDS = 30 * 24 * 60 * 60; // 30 days
 const ABSOLUTE_TTL_MS = 90 * 24 * 60 * 60 * 1000; // 90 days
@@ -50,9 +55,11 @@ function hashToken(token: string): string {
  * the operator; sending a header is not.
  */
 function shouldUseSecureCookie(): boolean {
-  if (process.env.NODE_ENV !== 'production') return false;
-  if (process.env.OPB_ALLOW_INSECURE_COOKIES === '1') return false;
-  return true;
+  return shouldUseSecureCookies();
+}
+
+function cookieName(): string {
+  return activeSessionCookie();
 }
 
 export async function createSession(email: string, epoch: number): Promise<void> {
@@ -67,7 +74,7 @@ export async function createSession(email: string, epoch: number): Promise<void>
   );
 
   const store = await cookies();
-  store.set(SESSION_COOKIE, token, {
+  store.set(cookieName(), token, {
     httpOnly: true,
     secure: shouldUseSecureCookie(),
     sameSite: 'lax',
@@ -76,8 +83,12 @@ export async function createSession(email: string, epoch: number): Promise<void>
   });
 }
 
+function readToken(store: Awaited<ReturnType<typeof cookies>>): string | undefined {
+  return store.get(SESSION_COOKIE_SECURE)?.value ?? store.get(SESSION_COOKIE)?.value ?? undefined;
+}
+
 export async function readSession(): Promise<SessionRecord | null> {
-  const token = (await cookies()).get(SESSION_COOKIE)?.value;
+  const token = readToken(await cookies());
   if (!token) return null;
 
   const adapter = await getStorageAdapter();
@@ -101,11 +112,12 @@ export async function readSession(): Promise<SessionRecord | null> {
 
 export async function destroySession(): Promise<void> {
   const store = await cookies();
-  const token = store.get(SESSION_COOKIE)?.value;
+  const token = readToken(store);
   if (token) {
     await (await getStorageAdapter()).kv.del('session', hashToken(token));
   }
   store.delete(SESSION_COOKIE);
+  store.delete(SESSION_COOKIE_SECURE);
 }
 
 /** Signs out every device by moving the owner's epoch past all existing sessions. */

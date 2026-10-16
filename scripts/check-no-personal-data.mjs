@@ -104,6 +104,10 @@ const ALLOWED = new Map([
     'src/cms/services/storage/localStore.ts',
     'reads the pre-rename database and localStorage keys once, so existing content survives the upgrade',
   ],
+  [
+    'core/backup/bundle.ts',
+    'accepts the pre-rename server backup format so old backups still import',
+  ],
 ]);
 
 const violations = [];

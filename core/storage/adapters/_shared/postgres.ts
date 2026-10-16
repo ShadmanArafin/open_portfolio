@@ -10,9 +10,16 @@ import type {
   KvNamespace,
   MessagesAdapter,
   OwnerRecord,
+  PasskeyCredential,
+  PasskeysAdapter,
+  RecordListOptions,
+  RecordPage,
+  RecordsAdapter,
   SnapshotRead,
+  StoredRecord,
   SubscribersAdapter,
 } from '../../contract';
+import { assertRecordAddress, decodeRecordCursor, encodeRecordCursor } from '../../contract';
 
 /**
  * Content, owner and short-lived state over plain SQL.
@@ -121,6 +128,40 @@ export async function provisionSchema(sql: Sql): Promise<void> {
       id           text PRIMARY KEY,
       received_at  timestamptz NOT NULL,
       data         jsonb NOT NULL
+    )
+  `;
+
+  // Passkey credentials for the single owner. One row per credential; the
+  // ceremonies that read and write them land after this table, so enrolment
+  // never has to migrate anything — the store is already there.
+  await sql`
+    CREATE TABLE IF NOT EXISTS opb_passkeys (
+      id            text PRIMARY KEY,
+      updated_at    timestamptz NOT NULL DEFAULT now(),
+      data          jsonb NOT NULL
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS opb_records (
+      collection  text NOT NULL,
+      id          text NOT NULL,
+      data        jsonb NOT NULL,
+      revision    integer NOT NULL DEFAULT 0,
+      updated_at  timestamptz NOT NULL DEFAULT now(),
+      PRIMARY KEY (collection, id)
+    )
+  `;
+
+  await sql`
+    CREATE INDEX IF NOT EXISTS opb_records_updated_idx
+      ON opb_records (collection, updated_at DESC)
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS opb_singletons (
+      collection  text PRIMARY KEY,
+      data        jsonb NOT NULL
     )
   `;
 
@@ -369,6 +410,193 @@ export function makeMessagesAdapter(getConnection: () => Sql): MessagesAdapter {
     async remove(id) {
       const sql = getConnection();
       await sql`DELETE FROM opb_messages WHERE id = ${id}`;
+    },
+  };
+}
+
+/**
+ * Passkey credentials.
+ *
+ * One row per credential, upserted by id: re-registering the same
+ * authenticator replaces rather than duplicates. Counter updates ride the
+ * same `||` merge as messages and subscribers, so a concurrent sign-in cannot
+ * clobber a rename.
+ */
+export function makePasskeysAdapter(getConnection: () => Sql): PasskeysAdapter {
+  return {
+    async list() {
+      const sql = getConnection();
+      const rows = await sql<{ data: PasskeyCredential }[]>`
+        SELECT data FROM opb_passkeys ORDER BY data->>'createdAt' ASC
+      `;
+      return rows.map((row) => row.data);
+    },
+
+    async get(id) {
+      const sql = getConnection();
+      const rows = await sql<{ data: PasskeyCredential }[]>`
+        SELECT data FROM opb_passkeys WHERE id = ${id}
+      `;
+      return rows[0]?.data ?? null;
+    },
+
+    async put(credential) {
+      const sql = getConnection();
+      await sql`
+        INSERT INTO opb_passkeys (id, updated_at, data)
+        VALUES (${credential.id}, now(), ${sql.json(credential as never)})
+        ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data, updated_at = now()
+      `;
+    },
+
+    async update(id, patch) {
+      const sql = getConnection();
+      const { id: _ignored, ...rest } = patch;
+      await sql`
+        UPDATE opb_passkeys
+           SET data = data || ${sql.json(rest as never)}, updated_at = now()
+         WHERE id = ${id}
+      `;
+    },
+
+    async remove(id) {
+      const sql = getConnection();
+      await sql`DELETE FROM opb_passkeys WHERE id = ${id}`;
+    },
+  };
+}
+
+/**
+ * Per-record collections plus singletons.
+ *
+ * One table for every collection rather than one table per collection: the set
+ * of collections grows with the product (posts today, more tomorrow), and a
+ * migration per collection is how schema drift starts. Conditional writes use
+ * the same single-statement CTE shape as snapshots — an `INSERT ... ON
+ * CONFLICT` cannot express "only when the revision still matches", because
+ * guarding the insert leaves no row to conflict with.
+ */
+export function makeRecordsAdapter(getConnection: () => Sql): RecordsAdapter {
+  return {
+    async list(collection, options?: RecordListOptions) {
+      assertRecordAddress(collection);
+      const sql = getConnection();
+      const limit = options?.limit ?? 500;
+      const offset = decodeRecordCursor(options?.cursor);
+      const rows = await sql<{ id: string; revision: number; data: unknown; updated_at: Date }[]>`
+        SELECT id, revision, data, updated_at FROM opb_records
+         WHERE collection = ${collection}
+         ORDER BY updated_at DESC
+         LIMIT ${limit + 1} OFFSET ${offset}
+      `;
+      const page = rows.slice(0, limit);
+      return {
+        records: page.map((row): StoredRecord => ({
+          id: row.id,
+          revision: row.revision,
+          data: row.data,
+          updatedAt: new Date(row.updated_at).toISOString(),
+        })),
+        nextCursor: rows.length > limit ? encodeRecordCursor(offset + limit) : null,
+      };
+    },
+
+    async get(collection, id) {
+      assertRecordAddress(collection, id);
+      const sql = getConnection();
+      const rows = await sql<{ revision: number; data: unknown; updated_at: Date }[]>`
+        SELECT revision, data, updated_at FROM opb_records
+         WHERE collection = ${collection} AND id = ${id}
+      `;
+      const row = rows[0];
+      if (!row) return null;
+      return {
+        id,
+        revision: row.revision,
+        data: row.data,
+        updatedAt: new Date(row.updated_at).toISOString(),
+      };
+    },
+
+    async put(collection, id, data, expectedRevision) {
+      assertRecordAddress(collection, id);
+      const sql = getConnection();
+      if (expectedRevision === undefined) {
+        const rows = await sql<{ revision: number; updated_at: Date }[]>`
+          INSERT INTO opb_records (collection, id, data, revision, updated_at)
+          VALUES (${collection}, ${id}, ${sql.json(data as never)}, 1, now())
+          ON CONFLICT (collection, id) DO UPDATE
+            SET data = EXCLUDED.data, revision = opb_records.revision + 1, updated_at = now()
+          RETURNING revision, updated_at
+        `;
+        return {
+          id,
+          revision: rows[0].revision,
+          data,
+          updatedAt: new Date(rows[0].updated_at).toISOString(),
+        };
+      }
+
+      const rows = await sql<{ revision: number; updated_at: Date }[]>`
+        WITH updated AS (
+          UPDATE opb_records
+             SET data = ${sql.json(data as never)}, revision = revision + 1, updated_at = now()
+           WHERE collection = ${collection} AND id = ${id} AND revision = ${expectedRevision}
+         RETURNING revision, updated_at
+        ), inserted AS (
+          INSERT INTO opb_records (collection, id, data, revision, updated_at)
+          SELECT ${collection}, ${id}, ${sql.json(data as never)}, 1, now()
+           WHERE ${expectedRevision} = 0
+             AND NOT EXISTS (SELECT 1 FROM opb_records WHERE collection = ${collection} AND id = ${id})
+         RETURNING revision, updated_at
+        )
+        SELECT revision, updated_at FROM updated UNION ALL SELECT revision, updated_at FROM inserted
+      `;
+      if (rows.length === 0) {
+        const current = await sql<{ revision: number }[]>`
+          SELECT revision FROM opb_records WHERE collection = ${collection} AND id = ${id}
+        `;
+        throw new RevisionConflictError(expectedRevision, current[0]?.revision ?? 0);
+      }
+      return {
+        id,
+        revision: rows[0].revision,
+        data,
+        updatedAt: new Date(rows[0].updated_at).toISOString(),
+      };
+    },
+
+    async remove(collection, id) {
+      assertRecordAddress(collection, id);
+      const sql = getConnection();
+      await sql`DELETE FROM opb_records WHERE collection = ${collection} AND id = ${id}`;
+    },
+
+    async collections() {
+      const sql = getConnection();
+      const rows = await sql<{ collection: string }[]>`
+        SELECT DISTINCT collection FROM opb_records ORDER BY collection ASC
+      `;
+      return rows.map((row) => row.collection);
+    },
+
+    async getSingleton(collection) {
+      assertRecordAddress(collection);
+      const sql = getConnection();
+      const rows = await sql<{ data: unknown }[]>`
+        SELECT data FROM opb_singletons WHERE collection = ${collection}
+      `;
+      return rows[0]?.data ?? null;
+    },
+
+    async putSingleton(collection, data) {
+      assertRecordAddress(collection);
+      const sql = getConnection();
+      await sql`
+        INSERT INTO opb_singletons (collection, data)
+        VALUES (${collection}, ${sql.json(data as never)})
+        ON CONFLICT (collection) DO UPDATE SET data = EXCLUDED.data
+      `;
     },
   };
 }

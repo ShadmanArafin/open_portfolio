@@ -16,21 +16,21 @@
 
 ## Status at a glance
 
-| Phase                       | State              | What it means                                                              |
-| --------------------------- | ------------------ | -------------------------------------------------------------------------- |
-| 0 — Repo publishable        | **Done, verified** | MIT, no personal data, CI, guards                                          |
-| 1 — Next.js + SEO           | **Done, verified** | Server-rendered, real metadata, sitemap, 404                               |
-| 2 — Tokens + primitives     | **Partially done** | Tokens, gate, primitives done. Tailwind 4 remains                          |
-| 3 — Storage contract        | **Done, verified** | Contract, local adapter, registry, server read                             |
-| 4 — Auth                    | **Done, verified** | Passphrase + sessions. **Passkeys/OTP not built**                          |
-| 5 — Write path              | **Done**           | Publish, contact, blocks, pages, preview, revisions                        |
-| 6 — Hosted adapters         | **Done, verified** | Supabase, Neon, Postgres. **Uploads unverified**                           |
-| 7 — Admin (Astryx)          | **In progress**    | Page builder and media picker work. **Settings merge, block home remain**  |
-| 8 — Adapters + integrations | **Partially done** | Registry, vault, SMTP-from-admin done. **5 backends, OTP missing**         |
-| 9 — Blog, themes, presets   | **Barely started** | Only profession vocabulary packs                                           |
-| Community + updates         | **Done**           | Reports, dedupe, update workflow, `UPDATING.md`. **Blocked: repo private** |
-| Self-hosting (Docker)       | **Done, verified** | `docker compose up`, volume survives container replacement                 |
-| 10 — Launch                 | **Researched**     | Four dossiers written. **Nothing built: no site, no demo, no PWA**         |
+| Phase                       | State                | What it means                                                              |
+| --------------------------- | -------------------- | -------------------------------------------------------------------------- |
+| 0 — Repo publishable        | **Done, verified**   | MIT, no personal data, CI, guards                                          |
+| 1 — Next.js + SEO           | **Done, verified**   | Server-rendered, real metadata, sitemap, 404                               |
+| 2 — Tokens + primitives     | **Partially done**   | Tokens, gate, primitives done. Tailwind 4 remains                          |
+| 3 — Storage contract        | **Done, verified**   | Contract, local adapter, registry, server read                             |
+| 4 — Auth                    | **Done, verified**   | Passphrase + sessions. **Passkeys/OTP not built**                          |
+| 5 — Write path              | **Done**             | Publish, contact, blocks, pages, preview, revisions                        |
+| 6 — Hosted adapters         | **Done, verified**   | Supabase, Neon, Postgres. **Uploads verified on both hosted stores**       |
+| 7 — Admin (Astryx)          | **In progress**      | Page builder and media picker work. **Settings merge, block home remain**  |
+| 8 — Adapters + integrations | **Done**             | Vault, SMTP, OTP, 8 backends. **Convex blocked on signup, not code**       |
+| 9 — Blog, themes, presets   | **Mostly done**      | 6 themes, 7 presets, writing+RSS, newsletter, site, demo                   |
+| Community + updates         | **Done**             | Reports, dedupe, update workflow, `UPDATING.md`. **Blocked: repo private** |
+| Self-hosting (Docker)       | **Done, verified**   | `docker compose up`, volume survives container replacement                 |
+| 10 — Launch                 | **Site + demo live** | Marketing site deployed, demo + PWA shipped; checklist remains             |
 
 **Where to start:** make the repository public and tag `v0.5.0`. It takes
 minutes, has no dependencies, and is the only thing in this document on a clock
@@ -205,16 +205,14 @@ Four things, and only four:
 
 ### The load-bearing idea: two read paths
 
-> **STATUS — only one of the two paths exists.** The public snapshot path is
-> built and proven. The authoring path is not: the contract has no per-record
-> content surface at all — no `list`/`get`/`put`/`remove`/`bulkPut`, no
-> `getSingleton`/`putSingleton`. Content is read and written as one whole
-> document. (`media` and `messages` have their own list/put/remove, but those
-> are separate surfaces, not this one.)
->
-> That is fine for a portfolio and **not** fine for what Phase 9 needs: a
-> 400-post blog cannot live in one JSON document, and per-record autosave has
-> nothing to save into. Build this before the blog, not after.
+> **STATUS — both paths exist.** The public snapshot path is built and proven.
+> The authoring path is built too: the contract carries a `records` surface
+> (`list/get/put/remove/collections` with per-record revisions and offset
+> cursors, plus `getSingleton/putSingleton`) on all eight backends, covered by
+> a conformance section (CRUD, conditional-write races, pagination, address
+> validation, snapshot isolation). What _reads_ through it — the blog — does
+> not exist yet, and that is the correct order: the access patterns that
+> justify the surface arrive with the reader, not before it.
 
 - **Authoring path — normalised records.** Admin reads/writes one record at a time with pagination and optimistic concurrency (`revision`). Makes a 400-post blog and per-record autosave possible.
 - **Public path — one denormalised snapshot.** Publish rebuilds a single JSON blob under one key. Every public render is **one** adapter read, identical on all 8 backends, trivially cacheable. Snapshot excludes full post bodies (posts paginate separately) so it stays bounded.
@@ -245,21 +243,19 @@ Adapter auth is an identity **verifier**, never the session mechanism — so all
 
 ### Five mechanisms so an unprotected `/admin` is impossible
 
-> **STATUS — two of these five exist. Measured, not assumed.**
+> **STATUS — four of these five exist. Measured, not assumed.**
 >
-> | #   | Mechanism                                      | Built?                                                                                                                                |
-> | --- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-> | 1   | `app/admin/(protected)/` route group           | **No.** The admin is one client-side catch-all; there is no server route group to guard by existence                                  |
-> | 2   | Every handler calls `requireOwner()`           | **Yes** — all three of `api/admin/{media,messages,publish}`. `api/media/[...key]` is deliberately open: it is the public image server |
-> | 3   | CI AST guard (`tests/guarded-actions.test.ts`) | **No**                                                                                                                                |
-> | 4   | `instrumentation.ts` boot assertion            | **No**                                                                                                                                |
-> | 5   | Middleware redirect + `noindex`                | **Yes**                                                                                                                               |
+> | #   | Mechanism                                      | Built?                                                                                                               |
+> | --- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+> | 1   | `app/admin/(protected)/` route group           | **No.** The admin is one client-side catch-all; there is no server route group to guard by existence                 |
+> | 2   | Every handler calls `requireOwner()`           | **Yes** — every `app/api/admin/**` handler. `api/media/[...key]` is deliberately open: it is the public image server |
+> | 3   | CI AST guard (`tests/guarded-actions.test.ts`) | **Yes** — landed as `core/auth/__tests__/route-guards.test.ts`, walking `app/api/**` with a reasoned allowlist       |
+> | 4   | `instrumentation.ts` boot assertion            | **Yes** — `instrumentation.ts` fails fast on local-on-ephemeral in production and warns on missing setup/vault keys  |
+> | 5   | Middleware redirect + `noindex`                | **Yes**                                                                                                              |
 >
-> **Mechanism 3 is the one to build next.** Mechanism 2 currently holds by
-> diligence rather than by construction — nothing stops the next admin route
-> shipping unguarded, which is precisely the failure the AST guard exists to
-> make impossible. When it is written, `app/api/media/[...key]` belongs on its
-> allowlist.
+> **Mechanism 1 is the one to build next.** It arrives with the App Router admin
+> rewrite — a new page inside the group is guarded by existence, which is the
+> only protection that cannot be forgotten.
 
 1. `app/admin/(protected)/layout.tsx` calls `await requireOwner()` — a new page inside the group is guarded by existence.
 2. **Every** server action and route handler calls `requireOwner()` independently. Server Actions are publicly-callable HTTP endpoints; layout guards do not protect them. _This is the most common App Router security mistake._
@@ -500,12 +496,27 @@ _`generateStaticParams` must never fail the build_ — try/catch → `[]`, so a 
 > does not keep a session they already held.
 >
 > **DEVIATION FROM A LOCKED DECISION:** the plan chose _passkey first, email OTP
-> as recovery_. Neither is implemented — authentication is passphrase-only.
+> as recovery_. Neither ceremony is implemented — authentication is passphrase-only.
 > This was a deliberate scope call rather than an oversight: passphrase auth
 > already closes the bundled-secret hole, and WebAuthn plus an email provider is
 > a phase of its own. **The session machinery is built to carry them** — add a
 > verifier that returns an identity and call `createSession()`. For passkeys,
 > `@simplewebauthn/server` and `@simplewebauthn/browser`.
+>
+> **Storage for passkeys is ready and the ceremonies are built:** every adapter
+> exposes a `passkeys` surface, and `core/auth/passkey.ts` implements
+> registration + authentication on `@simplewebauthn/server` v14 (single-use
+> five-minute challenges in the `otp` kv namespace, rpID from `OPB_SITE_URL`
+> with request-host fallback, clone detection on the signature counter, one
+> failure message for every login failure). Four routes —
+> `register/start|finish` (owner-only) and `login/start|finish` (public,
+> rate-limited) — plus `list` and `[id]` for the settings screen, all covered
+> by the route-guard AST test. The sign-in page offers all three methods and
+> settings enrolls devices. **Email OTP recovery is built too**
+> (`core/auth/otp.ts`, six digits, ten minutes, five guesses, hash-only
+> storage, uniform responses), with `otp/request|verify` routes and a code
+> form on the sign-in page. The locked decision — passkey first, email OTP as
+> recovery, passphrase as the last resort — is now what ships.
 >
 > **Fixed on the way:** a **Host-header auth bypass I introduced** — the claim
 > flow treated `Host: localhost` as proof the request was loopback, so a
@@ -629,9 +640,14 @@ Passkey + OTP + sessions + claim + CSRF + rate limiting + CSP/headers. `requireO
 >
 > **Remaining in this phase:**
 >
-> - The kitchen-sink CI matrix. It needs more than one theme and an axe run, so
->   it belongs with Phase 9's themes rather than here. The render tests in
->   `core/blocks/__tests__/render.test.tsx` are its seed.
+> - The kitchen-sink CI matrix, two phases of it. The static seed
+>   (`core/blocks/__tests__/a11y.test.tsx`: every block from defaults and
+>   filled, plus a composed page) and the browser half (`e2e/axe.spec.ts`:
+>   four routes × dark/light, real CSS so contrast runs) both run in CI, and
+>   the browser half has already paid out — a skipped heading level, two
+>   2.5.3 label mismatches, a nested interactive, and three contrast failures
+>   across both modes, all fixed. What remains is the multiplication the plan
+>   describes: every variant × 6 themes × breakpoints.
 > - The remaining ~22 block types.
 > - Authoring. Until Phase 7 there is no UI to create a page, so the seeded
 >   example page is the only one — shipped as a draft, so nothing appears on a
@@ -793,11 +809,42 @@ Supabase (built-in auth, presigned storage) and Neon+Vercel Blob (SQL, **no** bu
 > `sessionEpoch`, so a forced reset signs out every session the attacker (or
 > the owner, on another device) already held.
 >
-> **Adapters missing:** Firebase, Convex, Cloudflare D1+R2, PocketBase,
-> Appwrite. Each is now genuinely one file — the contract, the shared SQL engine
-> and the conformance suite all exist. Register it in
-> `core/storage/registry.ts`, add inference for its environment variables, and
-> ship a green conformance run.
+> **Adapters missing:** Convex alone — and it is blocked on signup, not code:
+> there is no local emulator, only `convex dev` against an account.
+> **PocketBase, Firebase, Appwrite and Cloudflare are built.** PocketBase (`core/storage/adapters/pocketbase.ts`,
+> raw REST over the superuser API, no SDK): all seven collections provisioned
+> from code, conditional writes serialised per target in-process, media public
+> by `viewRule` with everything else superuser-only, 53/53 conformance green
+> plus an anonymous-fetch proof, CI runs it from the Linux binary.
+> Firebase (`core/storage/adapters/firebase.ts`, Admin SDK against the emulator
+> suite locally): Firestore documents keyed by application id, transactions for
+> conditional writes and counters (safe multi-instance, unlike the file and
+> PocketBase adapters), redundant top-level timestamp fields for ordering,
+> public-read storage rules for media only, 53/53 conformance green plus an
+> anonymous-fetch proof, CI boots both emulators.
+> Appwrite (`core/storage/adapters/appwrite.ts`, raw REST, no SDK): seven
+> collections plus a bucket provisioned from code, snapshots sharded across
+> 60 KB chunk documents with a manifest written last (atomicity without
+> transactions), conditional writes serialised per target in-process, media
+> public by bucket permission, 54/54 conformance green plus an anonymous-fetch
+> proof, CI runs the official compose stack with a scripted console/project/key
+> bootstrap and a raised Postgres connection ceiling for the fifty-at-once
+> tests. Cloudflare (`core/storage/adapters/cloudflare.ts`, Miniflare-embedded
+> D1 SQLite engine + R2 API persisted to disk, no account): fresh SQLite DDL,
+> per-target write queues, media through a new optional `readBytes` contract
+> surface served by the same-origin media route, 54/54 conformance green with
+> no emulator to boot — the one suite with no `if (ENV)` gate. The Workers REST
+> binding against a real account is a separate slice needing an account to
+> verify. The last adapter is now genuinely one file — the contract and the
+> conformance suite exist. Register it in `core/storage/registry.ts`, add
+> inference for its environment variables, and ship a green conformance run.
+>
+> Three PocketBase behaviours worth knowing before writing the next adapter:
+> filter expressions must contain no spaces (an unparseable filter is silently
+> ignored and returns unfiltered rows); a number field written as null reads
+> back as 0; and comparisons against a missing field answer true. All three
+> were found by the conformance suite, all three are commented at the code that
+> works around them.
 >
 > **The integrations registry does not exist at all.** None of the ~25 services
 > are wired: no analytics beyond the existing env-var reader in

@@ -20,6 +20,7 @@ import { deeper } from '../primitives/heading-level';
 import { ContactForm, NewsletterForm, VideoFacade } from './forms';
 import type { BlockField } from './fields';
 import type { BlockDefinition } from './schema';
+import { sanitizeHref } from '@/core/security/urls';
 
 /**
  * The blocks every mainstream builder ships, and this one did not.
@@ -660,33 +661,37 @@ const socialRow: BlockDefinition<SocialRowProps> = {
               specifically. A named link is also what a screen reader announces
               either way. */}
           <Row gap={3}>
-            {content.socialLinks.map((link) => (
-              <a
-                key={link.id}
-                href={link.url}
-                target="_blank"
-                rel="me noopener noreferrer"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 'var(--space-2)',
-                  minHeight: 'var(--control-height)',
-                  paddingInline: 'var(--space-5)',
-                  borderRadius: 'var(--radius-full)',
-                  border: 'var(--hairline) solid var(--border-color)',
-                  background: 'var(--surface-primary)',
-                  fontFamily: 'var(--font-body)',
-                  fontSize: 'var(--text-sm)',
-                  color: 'var(--text-primary)',
-                  textDecoration: 'none',
-                }}
-              >
-                <span>{link.label}</span>
-                {props.showHandles && link.name && (
-                  <span style={{ color: 'var(--text-muted)' }}>{link.name}</span>
-                )}
-              </a>
-            ))}
+            {content.socialLinks.map((link) => {
+              const safeUrl = sanitizeHref(link.url);
+              if (!safeUrl) return null;
+              return (
+                <a
+                  key={link.id}
+                  href={safeUrl}
+                  target="_blank"
+                  rel="me noopener noreferrer"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 'var(--space-2)',
+                    minHeight: 'var(--control-height)',
+                    paddingInline: 'var(--space-5)',
+                    borderRadius: 'var(--radius-full)',
+                    border: 'var(--hairline) solid var(--border-color)',
+                    background: 'var(--surface-primary)',
+                    fontFamily: 'var(--font-body)',
+                    fontSize: 'var(--text-sm)',
+                    color: 'var(--text-primary)',
+                    textDecoration: 'none',
+                  }}
+                >
+                  <span>{link.label}</span>
+                  {props.showHandles && link.name && (
+                    <span style={{ color: 'var(--text-muted)' }}>{link.name}</span>
+                  )}
+                </a>
+              );
+            })}
           </Row>
         </Stack>
       </Band>
@@ -947,6 +952,8 @@ const download: BlockDefinition<DownloadProps> = {
   ],
   Render: ({ props, frame, headingLevel }) => {
     if (!props.file.trim()) return null;
+    const safeFile = sanitizeHref(props.file);
+    if (!safeFile) return null;
 
     return (
       <Band frame={frame}>
@@ -962,7 +969,7 @@ const download: BlockDefinition<DownloadProps> = {
                 PDF opens in the browser's viewer, which on a phone is a
                 different and usually worse outcome than the button promised. */}
             <a
-              href={props.file}
+              href={safeFile}
               download
               style={{
                 display: 'inline-flex',

@@ -30,6 +30,9 @@ Thumbs.db
 
 # Local screenshots and browser-automation artefacts
 .playwright-mcp/
+test-results/
+playwright-report/
+playwright/.cache/
 
 # Next.js
 .next/

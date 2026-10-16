@@ -34,7 +34,10 @@ export async function POST(req: Request) {
 
   const limit = await rateLimit(`publish:${await clientKey()}`, 60, 60 * 60);
   if (!limit.allowed) {
-    return NextResponse.json({ ok: false, error: 'Too many publishes.' }, { status: 429 });
+    return NextResponse.json(
+      { ok: false, error: 'Too many publishes.' },
+      { status: 429, headers: { 'Retry-After': String(limit.retryAfterSeconds) } }
+    );
   }
 
   const body = (await req.json().catch(() => null)) as {

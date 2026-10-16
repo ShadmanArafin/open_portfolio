@@ -1,0 +1,123 @@
+// @vitest-environment jsdom
+import { describe, expect, it } from 'vitest';
+import { renderToStaticMarkup } from 'react-dom/server';
+import axe from 'axe-core';
+import { BlockList, listBlockDefinitions, parsePage } from '../registry';
+
+/**
+ * The axe seed of the kitchen-sink matrix.
+ *
+ * `render.test.tsx` proved every block renders; this proves the result is
+ * navigable by assistive technology — one h1, labelled controls, alt text
+ * decisions, no empty links. Today it runs every block from its own defaults
+ * in one theme; the Phase 9 matrix multiplies this file out (every variant × 6
+ * themes × light/dark × breakpoints), it does not replace it.
+ *
+ * `color-contrast` is off here on purpose: static markup carries no
+ * stylesheets, so axe cannot compute real contrast and every check comes back
+ * inconclusive. Contrast is enforced where the colours live instead — the
+ * token generator clamps to 4.5:1 and the publish gate refuses the rest.
+ */
+
+function htmlOf(type: string, props: unknown): string {
+  return renderToStaticMarkup(<BlockList blocks={parsePage([{ id: type, type, v: 1, props }])} />);
+}
+
+async function violationsOf(html: string) {
+  // Blocks always render inside the site's `<main id="main">` (see
+  // `app/(site)/layout.tsx`), so the harness reproduces that. Without it
+  // axe's `region` rule fails every block for having no landmark — a fact
+  // about the harness, not the product.
+  document.body.innerHTML = `<main>${html}</main>`;
+  const results = await axe.run(document.body, {
+    rules: { 'color-contrast': { enabled: false } },
+  });
+  document.body.innerHTML = '';
+  return results.violations;
+}
+
+describe('blocks are accessible from defaults', () => {
+  it.each(listBlockDefinitions().map((d) => [d.type] as const))(
+    '%s has no axe violations',
+    async (type) => {
+      const definition = listBlockDefinitions().find((d) => d.type === type);
+      const violations = await violationsOf(htmlOf(type, definition?.defaults() ?? {}));
+      expect(violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.html).join(' | ')}`)).toEqual(
+        []
+      );
+    }
+  );
+
+  it('filled blocks introduce no new violations', async () => {
+    // Defaults prove the "just added" state; filled props prove the lived-in
+    // one — links with destinations, images with sources, forms with fields.
+    const filled: [string, unknown][] = [
+      [
+        'hero',
+        {
+          headline: 'Pictures of places that are about to change',
+          subhead: 'A photographer in Lisbon.',
+          cta: [{ label: 'See the work', href: '/work' }],
+        },
+      ],
+      [
+        'image',
+        {
+          media: { src: '/api/media/photo.jpg', alt: 'Harbour at dusk', decorative: false },
+        },
+      ],
+      ['video', { url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', title: 'A talk' }],
+      ['faq', { items: [{ q: 'How soon?', a: 'Two weeks.' }] }],
+      ['quote', { quote: 'The best camera is the one you have.', name: 'A photographer' }],
+      ['newsletter', { heading: 'Occasional updates' }],
+      ['contactForm', { heading: 'Say hello' }],
+      ['stats', { items: [{ value: '12', label: 'Years' }] }],
+      ['cards', { heading: 'Work', items: [{ title: 'An item', text: 'Done in 2024.' }] }],
+      [
+        'gallery',
+        {
+          images: [
+            { src: '/api/media/a.jpg', alt: 'First', decorative: false },
+            { src: '/api/media/b.jpg', alt: 'Second', decorative: false },
+          ],
+        },
+      ],
+      [
+        'split',
+        {
+          heading: 'About',
+          paragraphs: ['One.'],
+          media: { src: '/api/media/c.jpg', alt: 'Portrait', decorative: false },
+        },
+      ],
+      ['ctaBanner', { heading: 'Hire me', cta: [{ label: 'Contact', href: '/contact' }] }],
+    ];
+    for (const [type, props] of filled) {
+      const violations = await violationsOf(htmlOf(type, props));
+      expect(
+        violations.map((v) => `${type}/${v.id}: ${v.nodes.map((n) => n.html).join(' | ')}`)
+      ).toEqual([]);
+    }
+  });
+
+  it('a composed page keeps one h1 and ordered headings', async () => {
+    const html = renderToStaticMarkup(
+      <BlockList
+        blocks={parsePage([
+          { id: 'one', type: 'hero', v: 1, props: { headline: 'First' } },
+          { id: 'two', type: 'faq', v: 1, props: { items: [{ q: 'Q?', a: 'A.' }] } },
+          {
+            id: 'three',
+            type: 'video',
+            v: 1,
+            props: { url: 'https://vimeo.com/123', title: 'A talk' },
+          },
+        ])}
+      />
+    );
+    const violations = await violationsOf(html);
+    expect(violations.map((v) => v.id)).toEqual([]);
+    const levels = [...html.matchAll(/<h([1-6])[\s>]/g)].map((m) => Number(m[1]));
+    expect(levels.filter((l) => l === 1)).toHaveLength(1);
+  });
+});

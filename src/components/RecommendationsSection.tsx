@@ -60,9 +60,12 @@ export const RecommendationsSection: React.FC = () => {
                   />
                 )}
                 <div>
-                  <h4 className="font-display font-medium text-base text-text-primary">
+                  {/* h3, not h4: the section title above is an h2, and skipping
+                      a level breaks the outline for screen-reader navigation.
+                      Size comes from the classes, not the element. */}
+                  <h3 className="font-display font-medium text-base text-text-primary">
                     {rec.name}
-                  </h4>
+                  </h3>
                   <p className="font-body text-xs text-text-muted">
                     {rec.role && <>{rec.role} — </>}
                     <span className="text-accent">{rec.company}</span>

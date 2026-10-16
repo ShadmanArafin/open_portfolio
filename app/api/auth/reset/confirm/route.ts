@@ -3,7 +3,11 @@ import { getStorageAdapter } from '@/core/storage/registry';
 import { assertSameOrigin } from '@/core/auth/guard';
 import { clientKey, rateLimit } from '@/core/auth/ratelimit';
 import { consumeResetToken } from '@/core/auth/reset';
-import { checkPassphraseStrength, hashPassphrase } from '@/core/auth/passphrase';
+import {
+  checkPassphraseStrength,
+  hashPassphrase,
+  isBreachedPassphrase,
+} from '@/core/auth/passphrase';
 import { createSession } from '@/core/auth/session';
 
 export const dynamic = 'force-dynamic';
@@ -17,7 +21,10 @@ export async function POST(req: Request) {
 
   const limit = await rateLimit(`reset-confirm:${await clientKey()}`, 10, 60 * 60);
   if (!limit.allowed) {
-    return NextResponse.json({ ok: false, error: 'Too many attempts.' }, { status: 429 });
+    return NextResponse.json(
+      { ok: false, error: 'Too many attempts.' },
+      { status: 429, headers: { 'Retry-After': String(limit.retryAfterSeconds) } }
+    );
   }
 
   const body = (await req.json().catch(() => null)) as {
@@ -30,6 +37,13 @@ export async function POST(req: Request) {
   const strength = checkPassphraseStrength(passphrase);
   if (!strength.ok) {
     return NextResponse.json({ ok: false, error: strength.reason }, { status: 400 });
+  }
+
+  if ((await isBreachedPassphrase(passphrase)).breached) {
+    return NextResponse.json(
+      { ok: false, error: 'That passphrase has appeared in a data breach. Choose another.' },
+      { status: 400 }
+    );
   }
 
   const email = await consumeResetToken(token);

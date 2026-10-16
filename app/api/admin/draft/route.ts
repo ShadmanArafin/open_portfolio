@@ -60,7 +60,10 @@ export async function POST(req: Request) {
   // Higher than publishing's allowance: this is autosave, not a decision.
   const limit = await rateLimit(`draft:${await clientKey()}`, 600, 60 * 60);
   if (!limit.allowed) {
-    return NextResponse.json({ ok: false, error: 'Too many saves.' }, { status: 429 });
+    return NextResponse.json(
+      { ok: false, error: 'Too many saves.' },
+      { status: 429, headers: { 'Retry-After': String(limit.retryAfterSeconds) } }
+    );
   }
 
   const body = (await req.json().catch(() => null)) as {

@@ -26,7 +26,10 @@ export async function POST(req: Request) {
   // force — it stops somebody using the endpoint as a free oracle.
   const limit = await rateLimit(`newsletter-confirm:${await clientKey()}`, 20, 60 * 60);
   if (!limit.allowed) {
-    return NextResponse.json({ ok: false, error: 'Too many attempts.' }, { status: 429 });
+    return NextResponse.json(
+      { ok: false, error: 'Too many attempts.' },
+      { status: 429, headers: { 'Retry-After': String(limit.retryAfterSeconds) } }
+    );
   }
 
   const body = (await req.json().catch(() => null)) as { token?: unknown } | null;

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { sanitizeMediaSrc } from '@/core/security/urls';
 
 /**
  * The interactive parts of three blocks, in one Client Component file.
@@ -345,6 +346,8 @@ export function VideoFacade({ embedUrl, title, poster, ratio }: VideoFacadeProps
         title={title}
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
+        sandbox="allow-scripts allow-same-origin allow-presentation"
+        referrerPolicy="no-referrer"
         style={{
           display: 'block',
           width: '100%',
@@ -357,6 +360,7 @@ export function VideoFacade({ embedUrl, title, poster, ratio }: VideoFacadeProps
     );
   }
 
+  const safePoster = poster ? sanitizeMediaSrc(poster) : null;
   return (
     <button
       type="button"
@@ -371,8 +375,8 @@ export function VideoFacade({ embedUrl, title, poster, ratio }: VideoFacadeProps
         border: 'var(--hairline) solid var(--border-color)',
         borderRadius: 'var(--radius-md)',
         overflow: 'hidden',
-        background: poster
-          ? `center / cover no-repeat url("${poster}")`
+        background: safePoster
+          ? `center / cover no-repeat url("${safePoster}")`
           : 'var(--surface-secondary)',
         cursor: 'pointer',
       }}

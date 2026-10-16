@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { SESSION_COOKIE } from '@/core/auth/constants';
+import { SESSION_COOKIE, SESSION_COOKIE_SECURE } from '@/core/auth/constants';
 import { DEMO_SESSION_COOKIE, DEMO_TTL_SECONDS } from '@/core/demo/config';
 
 /**
@@ -15,7 +15,21 @@ import { DEMO_SESSION_COOKIE, DEMO_TTL_SECONDS } from '@/core/demo/config';
  */
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const hasSessionCookie = Boolean(req.cookies.get(SESSION_COOKIE)?.value);
+
+  // Every response carries the request id it was served under, so a log line
+  // and a bug report can be joined without guessing. Respect an inbound id
+  // from a proxy (truncated, it is correlation not auth); otherwise mint one.
+  const inbound = req.headers.get('x-request-id')?.slice(0, 64);
+  const requestId = inbound && /^[A-Za-z0-9_-]+$/.test(inbound) ? inbound : crypto.randomUUID();
+
+  const withId = (res: NextResponse): NextResponse => {
+    res.headers.set('x-request-id', requestId);
+    return res;
+  };
+
+  const hasSessionCookie = Boolean(
+    req.cookies.get(SESSION_COOKIE_SECURE)?.value ?? req.cookies.get(SESSION_COOKIE)?.value
+  );
 
   /*
    * Demo mode: give each visitor their own sandbox.
@@ -31,13 +45,15 @@ export function middleware(req: NextRequest) {
    */
   if (process.env.OPB_DEMO_MODE === '1' && !req.cookies.get(DEMO_SESSION_COOKIE)?.value) {
     const response = NextResponse.next();
+    const secure = process.env.NODE_ENV === 'production';
     response.cookies.set(DEMO_SESSION_COOKIE, crypto.randomUUID(), {
       httpOnly: true,
+      secure,
       sameSite: 'lax',
       path: '/',
       maxAge: DEMO_TTL_SECONDS,
     });
-    return response;
+    return withId(response);
   }
 
   if (pathname.startsWith('/admin')) {
@@ -53,18 +69,18 @@ export function middleware(req: NextRequest) {
       url.pathname = '/admin/login';
       // Where to return to once they are signed in.
       url.searchParams.set('next', pathname);
-      return NextResponse.redirect(url);
+      return withId(NextResponse.redirect(url));
     }
 
     if (hasSessionCookie && isLoginPage) {
       const url = req.nextUrl.clone();
       url.pathname = '/admin';
       url.search = '';
-      return NextResponse.redirect(url);
+      return withId(NextResponse.redirect(url));
     }
   }
 
-  return NextResponse.next();
+  return withId(NextResponse.next());
 }
 
 export const config = {

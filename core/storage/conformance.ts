@@ -671,6 +671,249 @@ export function runConformanceSuite(
       });
     });
 
+    describe('passkeys', () => {
+      const credential = (id: string, counter = 0) => ({
+        id,
+        publicKey: Buffer.from(`cose-key-for-${id}`).toString('base64'),
+        counter,
+        transports: ['internal'],
+        deviceName: `Device ${id}`,
+        createdAt: '2026-01-01T00:00:00.000Z',
+        lastUsedAt: null as string | null,
+        backedUp: false,
+      });
+
+      it('is empty on a fresh instance', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+        expect(await adapter.passkeys.list()).toEqual([]);
+        expect(await adapter.passkeys.get('never-existed')).toBeNull();
+      });
+
+      it('round-trips a credential', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        await adapter.passkeys.put(credential('cred-a'));
+        expect(await adapter.passkeys.get('cred-a')).toEqual(credential('cred-a'));
+      });
+
+      it('replaces on re-put and merges counter updates', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        await adapter.passkeys.put(credential('cred-a'));
+        await adapter.passkeys.put({ ...credential('cred-a'), counter: 7 });
+        expect((await adapter.passkeys.list()).filter((c) => c.id === 'cred-a').length).toBe(1);
+
+        await adapter.passkeys.update('cred-a', {
+          counter: 8,
+          lastUsedAt: '2026-02-01T00:00:00.000Z',
+        });
+        expect(await adapter.passkeys.get('cred-a')).toEqual({
+          ...credential('cred-a'),
+          counter: 8,
+          lastUsedAt: '2026-02-01T00:00:00.000Z',
+        });
+      });
+
+      it('ignores unknown ids and removes cleanly', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        await adapter.passkeys.put(credential('cred-a'));
+        await adapter.passkeys.update('never-existed', { counter: 1 });
+        await adapter.passkeys.remove('never-existed');
+        expect((await adapter.passkeys.list()).map((c) => c.id)).toEqual(['cred-a']);
+
+        await adapter.passkeys.remove('cred-a');
+        await adapter.passkeys.remove('cred-a');
+        expect(await adapter.passkeys.list()).toEqual([]);
+      });
+
+      it('never lets credential material into the content snapshot', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        await adapter.passkeys.put(credential('cred-a'));
+        await adapter.writeSnapshot('published', makeTestContent('site'));
+
+        const snapshot = JSON.stringify(await adapter.readSnapshot('published'));
+        expect(snapshot.includes('cred-a')).toBe(false);
+        expect(snapshot.includes(Buffer.from('cose-key-for-cred-a').toString('base64'))).toBe(
+          false
+        );
+      });
+    });
+
+    describe('records', () => {
+      it('is empty on a fresh collection', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        expect((await adapter.records.list('posts')).records).toEqual([]);
+        expect((await adapter.records.list('posts')).nextCursor).toBeNull();
+        expect(await adapter.records.get('posts', 'hello')).toBeNull();
+        expect(await adapter.records.collections()).toEqual([]);
+      });
+
+      it('round-trips a record with revision 1', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        const written = await adapter.records.put('posts', 'hello', { title: 'Hello' });
+        expect(written.id).toBe('hello');
+        expect(written.revision).toBe(1);
+        expect(typeof written.updatedAt).toBe('string');
+        expect(await adapter.records.get('posts', 'hello')).toEqual(written);
+      });
+
+      it('counts revisions and enforces conditional writes', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        const first = await adapter.records.put('posts', 'hello', { n: 1 });
+        const second = await adapter.records.put('posts', 'hello', { n: 2 }, first.revision);
+        expect(second.revision).toBe(first.revision + 1);
+        expect(second.data).toEqual({ n: 2 });
+
+        let conflicted = false;
+        try {
+          await adapter.records.put('posts', 'hello', { n: 3 }, first.revision);
+        } catch (err) {
+          conflicted = err instanceof RevisionConflictError;
+        }
+        expect(conflicted).toBe(true);
+        expect(await adapter.records.get('posts', 'hello')).toEqual(second);
+      });
+
+      it('treats an absent record as revision 0', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        const written = await adapter.records.put('posts', 'hello', { n: 1 }, 0);
+        expect(written.revision).toBe(1);
+      });
+
+      it('lets exactly one of two racing conditional writes win', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        const first = await adapter.records.put('posts', 'hello', { n: 1 });
+        const results = await Promise.allSettled([
+          adapter.records.put('posts', 'hello', { n: 2 }, first.revision),
+          adapter.records.put('posts', 'hello', { n: 3 }, first.revision),
+        ]);
+        const won = results.filter((r) => r.status === 'fulfilled').length;
+        const lost = results.filter(
+          (r) => r.status === 'rejected' && r.reason instanceof RevisionConflictError
+        ).length;
+        expect(won).toBe(1);
+        expect(lost).toBe(1);
+        expect(
+          ((await adapter.records.get('posts', 'hello')) as { revision: number }).revision
+        ).toBe(first.revision + 1);
+      });
+
+      it('paginates newest first', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        for (let i = 0; i < 5; i++) {
+          await adapter.records.put('posts', `p${i}`, { n: i });
+        }
+        const page1 = await adapter.records.list('posts', { limit: 2 });
+        expect(page1.records.length).toBe(2);
+        expect(typeof page1.nextCursor).toBe('string');
+        const page2 = await adapter.records.list('posts', { limit: 2, cursor: page1.nextCursor });
+        expect(page2.records.length).toBe(2);
+        const page3 = await adapter.records.list('posts', { limit: 2, cursor: page2.nextCursor });
+        expect(page3.records.length).toBe(1);
+        expect(page3.nextCursor).toBeNull();
+        const ids = [...page1.records, ...page2.records, ...page3.records].map((r) => r.id);
+        expect([...ids].sort()).toEqual(['p0', 'p1', 'p2', 'p3', 'p4']);
+      });
+
+      it('removes, and removing twice is not an error', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        await adapter.records.put('posts', 'hello', { n: 1 });
+        await adapter.records.remove('posts', 'hello');
+        await adapter.records.remove('posts', 'hello');
+        expect(await adapter.records.get('posts', 'hello')).toBeNull();
+      });
+
+      it('rejects addresses that cannot be files, keys and URL segments at once', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        for (const [collection, id] of [
+          ['Posts', 'hello'],
+          ['posts', 'Hello'],
+          ['posts', '../owner'],
+          ['', 'hello'],
+        ] as const) {
+          let threw = false;
+          try {
+            await adapter.records.put(collection, id, {});
+          } catch {
+            threw = true;
+          }
+          expect(threw).toBe(true);
+        }
+      });
+
+      it('round-trips singletons apart from records', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        expect(await adapter.records.getSingleton('settings')).toBeNull();
+        await adapter.records.putSingleton('settings', { theme: 'editorial' });
+        expect(await adapter.records.getSingleton('settings')).toEqual({ theme: 'editorial' });
+        await adapter.records.putSingleton('settings', { theme: 'terminal' });
+        expect(await adapter.records.getSingleton('settings')).toEqual({ theme: 'terminal' });
+      });
+
+      it('lists collections that hold records', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        await adapter.records.put('posts', 'a', {});
+        await adapter.records.put('pages', 'b', {});
+        expect((await adapter.records.collections()).sort()).toEqual(['pages', 'posts']);
+        await adapter.records.remove('posts', 'a');
+        expect(await adapter.records.collections()).toEqual(['pages']);
+      });
+
+      it('never lets records into the content snapshot', async () => {
+        await reset();
+        const adapter = await getAdapter();
+        await adapter.provision();
+
+        await adapter.records.put('posts', 'hello', { title: 'Hello' });
+        await adapter.writeSnapshot('published', makeTestContent('site'));
+
+        const snapshot = JSON.stringify(await adapter.readSnapshot('published'));
+        expect(snapshot.includes('Hello')).toBe(false);
+      });
+    });
+
     describe('owner', () => {
       it('is null before the site is claimed', async () => {
         await reset();

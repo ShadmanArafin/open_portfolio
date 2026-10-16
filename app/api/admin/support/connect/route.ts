@@ -60,6 +60,7 @@ export async function POST(req: Request) {
       { ok: false, error: 'Too many attempts. Wait a few minutes.' },
       {
         status: 429,
+        headers: { 'Retry-After': String(limit.retryAfterSeconds) },
       }
     );
   }

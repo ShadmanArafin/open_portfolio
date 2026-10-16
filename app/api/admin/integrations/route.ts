@@ -177,7 +177,7 @@ export async function POST(req: Request) {
   if (!limit.allowed) {
     return NextResponse.json(
       { ok: false, error: 'Too many tests in a row. Wait a few minutes.' },
-      { status: 429 }
+      { status: 429, headers: { 'Retry-After': String(limit.retryAfterSeconds) } }
     );
   }
 

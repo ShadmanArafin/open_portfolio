@@ -21,11 +21,18 @@ import type {
   MessageListOptions,
   MessagesAdapter,
   OwnerRecord,
+  PasskeyCredential,
+  PasskeysAdapter,
+  RecordListOptions,
+  RecordPage,
+  RecordsAdapter,
   SnapshotRead,
   StorageAdapter,
+  StoredRecord,
   SubscribersAdapter,
 } from '../contract';
 import { RevisionConflictError } from '../contract';
+import { assertRecordAddress, decodeRecordCursor, encodeRecordCursor } from '../contract';
 
 /**
  * A sandbox per visitor, in memory, thrown away after an hour.
@@ -45,6 +52,9 @@ import { RevisionConflictError } from '../contract';
 
 interface Sandbox {
   subscribers: Subscriber[];
+  passkeys: PasskeyCredential[];
+  records: Map<string, StoredRecord>;
+  singletons: Map<string, unknown>;
   published: { state: CMSState; revision: number } | null;
   draft: { state: CMSState; revision: number } | null;
   owner: OwnerRecord | null;
@@ -64,6 +74,27 @@ const sandboxes = new Map<string, Sandbox>();
  * leak somebody discovers by making a thousand requests.
  */
 const MAX_SANDBOXES = 500;
+
+/**
+ * Serialises conditional writes per key. JavaScript is single-threaded but
+ * not atomic across awaits: two `put`s with the same expected revision would
+ * otherwise both read N and both write N+1. Same shape as the filesystem
+ * adapter's queue, minus the files.
+ */
+const writeQueues = new Map<string, Promise<void>>();
+
+function runQueued<T>(target: string, fn: () => Promise<T>): Promise<T> {
+  const previous = writeQueues.get(target) ?? Promise.resolve();
+  const run = previous.catch(() => {}).then(fn);
+  const settled = run.then(
+    () => {},
+    () => {}
+  );
+  writeQueues.set(target, settled);
+  return run.finally(() => {
+    if (writeQueues.get(target) === settled) writeQueues.delete(target);
+  });
+}
 
 function sweep(): void {
   const cutoff = Date.now() - DEMO_TTL_SECONDS * 1000;
@@ -100,6 +131,9 @@ async function freshSandbox(): Promise<Sandbox> {
     },
     messages: [],
     subscribers: [],
+    passkeys: [],
+    records: new Map(),
+    singletons: new Map(),
     kv: new Map(),
     touchedAt: Date.now(),
   };
@@ -195,6 +229,101 @@ const subscribers: SubscribersAdapter = {
   },
 };
 
+const records: RecordsAdapter = {
+  async list(collection, options?: RecordListOptions): Promise<RecordPage> {
+    assertRecordAddress(collection);
+    const prefix = `${collection}:`;
+    const all: StoredRecord[] = [];
+    for (const [key, record] of (await current()).records) {
+      if (key.startsWith(prefix)) all.push(record);
+    }
+    all.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+    const offset = decodeRecordCursor(options?.cursor);
+    const limit = options?.limit ?? 500;
+    const page = all.slice(offset, offset + limit);
+    return {
+      records: page,
+      nextCursor: offset + limit < all.length ? encodeRecordCursor(offset + limit) : null,
+    };
+  },
+
+  async get(collection, id) {
+    assertRecordAddress(collection, id);
+    return (await current()).records.get(`${collection}:${id}`) ?? null;
+  },
+
+  async put(collection, id, data, expectedRevision) {
+    assertRecordAddress(collection, id);
+    return runQueued(`records:${collection}:${id}`, async () => {
+      const sandbox = await current();
+      const key = `${collection}:${id}`;
+      const existing = sandbox.records.get(key);
+      const currentRevision = existing?.revision ?? 0;
+      if (expectedRevision !== undefined && expectedRevision !== currentRevision) {
+        throw new RevisionConflictError(expectedRevision, currentRevision);
+      }
+      const stored: StoredRecord = {
+        id,
+        revision: currentRevision + 1,
+        data,
+        updatedAt: new Date().toISOString(),
+      };
+      sandbox.records.set(key, stored);
+      return stored;
+    });
+  },
+
+  async remove(collection, id) {
+    assertRecordAddress(collection, id);
+    (await current()).records.delete(`${collection}:${id}`);
+  },
+
+  async collections() {
+    const names = new Set<string>();
+    for (const key of (await current()).records.keys()) {
+      names.add(key.slice(0, key.indexOf(':')));
+    }
+    return [...names].sort();
+  },
+
+  async getSingleton(collection) {
+    assertRecordAddress(collection);
+    return (await current()).singletons.get(collection) ?? null;
+  },
+
+  async putSingleton(collection, data) {
+    assertRecordAddress(collection);
+    (await current()).singletons.set(collection, data);
+  },
+};
+
+const passkeys: PasskeysAdapter = {
+  async list() {
+    return [...(await current()).passkeys].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  },
+  async get(id) {
+    return (await current()).passkeys.find((c) => c.id === id) ?? null;
+  },
+  async put(credential) {
+    const sandbox = await current();
+    const index = sandbox.passkeys.findIndex((c) => c.id === credential.id);
+    if (index >= 0) sandbox.passkeys[index] = credential;
+    else sandbox.passkeys.push(credential);
+  },
+  async update(id, patch) {
+    const sandbox = await current();
+    const index = sandbox.passkeys.findIndex((c) => c.id === id);
+    if (index >= 0) {
+      const { id: _ignored, ...rest } = patch;
+      sandbox.passkeys[index] = { ...sandbox.passkeys[index], ...rest, id };
+    }
+  },
+  async remove(id) {
+    const sandbox = await current();
+    sandbox.passkeys = sandbox.passkeys.filter((c) => c.id !== id);
+  },
+};
+
 const kv: KvAdapter = {
   async get<T>(ns: KvNamespace, key: string): Promise<T | null> {
     const entry = (await current()).kv.get(`${ns}:${key}`);
@@ -274,6 +403,8 @@ export const demoAdapter: StorageAdapter = {
   media,
   messages,
   subscribers,
+  passkeys,
+  records,
 };
 
 /** Test seam. Never called in production. */

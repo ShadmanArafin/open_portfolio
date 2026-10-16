@@ -1,6 +1,7 @@
 import React from 'react';
 import { resolveFrame, SPACING_STYLE, SURFACE_STYLE, WIDTH_STYLE, type BlockFrame } from './frame';
 import { clampLevel, type HeadingLevel as Level } from './heading-level';
+import { sanitizeHref, sanitizeMediaSrc } from '@/core/security/urls';
 
 /**
  * The closed set of primitives every block composes from.
@@ -378,9 +379,11 @@ export function Media({
   // backend at deploy time cannot do. Explicit aspect-ratio prevents the layout
   // shift that is the main thing next/image would have bought here; real
   // optimisation is its own task.
+  const safeSrc = sanitizeMediaSrc(src);
+  if (!safeSrc) return null;
   return (
     <img
-      src={src}
+      src={safeSrc}
       alt={decorative ? '' : alt}
       role={decorative ? 'presentation' : undefined}
       // Lazy by default; `priority` opts the one above-the-fold image out.
@@ -435,11 +438,18 @@ export function Button({
   // A real anchor when it navigates, a real button when it acts. Never a div:
   // that is how keyboard and screen-reader support is lost.
   if (href) {
-    return (
-      <a href={href} style={style}>
-        {children}
-      </a>
-    );
+    // Stored content can arrive via import/restore, so an allowlisted href is
+    // enforced here rather than trusting the prop. Unsafe targets render as
+    // text, never as a clickable `javascript:` link.
+    const safe = sanitizeHref(href);
+    if (safe) {
+      return (
+        <a href={safe} style={style}>
+          {children}
+        </a>
+      );
+    }
+    return <span style={style}>{children}</span>;
   }
   return (
     <button type={type ?? 'button'} onClick={onClick} style={style}>
