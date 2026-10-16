@@ -91,6 +91,18 @@ describe('blocks are accessible from defaults', () => {
         },
       ],
       ['ctaBanner', { heading: 'Hire me', cta: [{ label: 'Contact', href: '/contact' }] }],
+      ['embed', { url: 'https://cal.com/you/intro', title: 'Book a time' }],
+      [
+        'comments',
+        {
+          heading: 'Discussion',
+          repo: 'owner/name',
+          repoId: 'R_kgD0',
+          category: 'Announcements',
+          categoryId: 'DIC_kwD0',
+          mapping: 'pathname',
+        },
+      ],
     ];
     for (const [type, props] of filled) {
       const violations = await violationsOf(htmlOf(type, props));

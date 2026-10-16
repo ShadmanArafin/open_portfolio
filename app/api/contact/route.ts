@@ -3,6 +3,7 @@ import { getStorageAdapter } from '@/core/storage/registry';
 import { assertSameOrigin } from '@/core/auth/guard';
 import { clientKey, rateLimit } from '@/core/auth/ratelimit';
 import { MAX_EMAIL_LENGTH, sendMail } from '@/core/email/send';
+import { verifyTurnstileToken } from '@/core/integrations/turnstile';
 import { enquiryNotification } from '@/core/email/templates';
 import type { ContactMessage } from '@/cms/types/cms';
 
@@ -65,6 +66,14 @@ export async function POST(req: Request) {
   const trap = [body.honeypot, body.website].find((v) => typeof v === 'string' && v.trim() !== '');
   if (trap) {
     return NextResponse.json({ ok: true });
+  }
+
+  // The human check, when the owner configured one. After the honeypot so
+  // dumb bots never cost a verification call, and answered honestly either
+  // way: a missing challenge names the fix instead of failing silently.
+  const human = await verifyTurnstileToken(body.turnstileToken);
+  if (!human.ok) {
+    return NextResponse.json({ ok: false, error: human.error }, { status: 403 });
   }
 
   const name = clean(body.name, MAX.name);
@@ -137,6 +146,16 @@ export async function POST(req: Request) {
     await adapter.messages.update(entry.id, { notifiedAt: new Date().toISOString() });
   } else if (sent.reason !== 'not-configured') {
     await adapter.messages.update(entry.id, { notifyError: sent.detail });
+  }
+
+  // The owner's buzz. Best-effort and fail-silent by design: the enquiry is
+  // already stored, and email already had its chance — a push service having
+  // a bad day must never turn the contact form into an error.
+  try {
+    const { notifyEnquiry } = await import('@/core/notify/push');
+    await notifyEnquiry();
+  } catch {
+    /* The inbox carries the message either way. */
   }
 
   return NextResponse.json({ ok: true });

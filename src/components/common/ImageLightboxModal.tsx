@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { resolveAssetUrl } from '../../cms/utils/mediaUrls';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { X, ZoomIn } from 'lucide-react';
 
 interface ImageLightboxModalProps {
@@ -45,11 +45,51 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
+  // A dialog that leaves focus behind strands keyboard users on the page
+  // underneath. Focus the close control on open, trap Tab inside, and hand
+  // focus back to whatever opened the lightbox on close.
+  const dialogRef = React.useRef<HTMLDivElement>(null);
+  const closeRef = React.useRef<HTMLButtonElement>(null);
+  const openerRef = React.useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    openerRef.current = document.activeElement as HTMLElement | null;
+    closeRef.current?.focus();
+    const trapTab = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab' || !dialogRef.current) return;
+      const items = Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter((el) => !el.hasAttribute('disabled'));
+      if (items.length === 0) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    window.addEventListener('keydown', trapTab);
+    return () => {
+      window.removeEventListener('keydown', trapTab);
+      openerRef.current?.focus?.();
+    };
+  }, [isOpen]);
+
   if (!isOpen || !imageSrc) return null;
 
   return (
     <AnimatePresence>
       <motion.div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title || imageAlt || 'Image preview'}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -59,6 +99,7 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
       >
         {/* Close Button Top Right */}
         <button
+          ref={closeRef}
           onClick={onClose}
           aria-label="Close Lightbox Preview"
           className="absolute top-6 right-6 p-3 rounded-full bg-white/10 text-white border border-white/20 hover:bg-white/20 hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer z-10"

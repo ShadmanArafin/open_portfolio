@@ -9,6 +9,10 @@ import 'server-only';
  */
 
 import './definitions/smtp';
+import './definitions/turnstile';
+import './definitions/umami';
+import './definitions/plausible';
+import './definitions/giscus';
 
 export * from './registry';
 export {

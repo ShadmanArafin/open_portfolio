@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import React from 'react';
 import { getBlockDefinition, parsePage } from '../registry';
 import { EMPTY_BLOCK_CONTENT, type BlockContent } from '../content';
-import { toEmbedUrl } from '../standard';
+import { toEmbedUrl, toSchedulingUrl } from '../standard';
 import type { BlockDefinition } from '../schema';
 
 /**
@@ -106,6 +106,95 @@ describe('a pasted video link', () => {
     // Rendering nothing is right and invisible. The author is the one person
     // who cannot see that it is missing, because they know what they meant.
     expect(warnings.length).toBe(1);
+  });
+});
+
+describe('a pasted booking link', () => {
+  it('keeps Cal.com and Calendly addresses, rebuilt from their own host', () => {
+    expect(toSchedulingUrl('https://cal.com/you/intro')).toEqual({
+      url: 'https://cal.com/you/intro',
+      provider: 'Cal.com',
+    });
+    expect(toSchedulingUrl('https://calendly.com/you/30min?month=2026-10')?.url).toBe(
+      'https://calendly.com/you/30min'
+    );
+  });
+
+  it('refuses anything that is not a booking host, however it is dressed', () => {
+    for (const link of [
+      '',
+      'not a url',
+      'https://example.com/cal.com/you',
+      'https://evil-cal.com/you',
+      'https://cal.com.evil.example/you',
+      'javascript:alert(1)',
+      'https://cal.com/',
+      'https://calendly.com/',
+    ]) {
+      expect(toSchedulingUrl(link)).toBeNull();
+    }
+  });
+});
+
+describe('the booking block', () => {
+  it('renders nothing at all rather than an empty calendar', () => {
+    expect(renderBlock('embed', { url: '', title: 'Book a time' })).toBe('');
+  });
+
+  it('invites without contacting the provider until asked', () => {
+    const html = renderBlock('embed', {
+      url: 'https://cal.com/you/intro',
+      title: 'Book a time',
+    });
+    expect(html).toContain('Book a time');
+    expect(html).toContain('Cal.com');
+    expect(html).not.toContain('<iframe');
+    expect(html).not.toContain('cal.com/you/intro');
+  });
+
+  it('warns in the editor when the link will not work', () => {
+    const definition = definitionFor('embed');
+    const warnings = (definition.checks ?? [])
+      .map((check) =>
+        check.run({ url: 'https://example.com/you', title: 'Book a time' }, EMPTY_BLOCK_CONTENT)
+      )
+      .filter(Boolean);
+    expect(warnings.length).toBe(1);
+  });
+});
+
+describe('the comments block', () => {
+  const configured = {
+    heading: 'Discussion',
+    repo: 'owner/name',
+    repoId: 'R_kgD0',
+    category: 'Announcements',
+    categoryId: 'DIC_kwD0',
+    mapping: 'pathname',
+  };
+
+  it('renders nothing at all rather than phoning GitHub with nowhere to file it', () => {
+    expect(renderBlock('comments', { heading: 'Discussion' })).toBe('');
+  });
+
+  it('invites without contacting GitHub until asked', () => {
+    const html = renderBlock('comments', configured);
+    expect(html).toContain('Show comments');
+    expect(html).toContain('Discussion');
+    expect(html).not.toContain('giscus.app/client.js');
+    expect(html).not.toContain('github.com');
+  });
+
+  it('warns in the editor when there is no repository, and on a malformed one', () => {
+    const definition = definitionFor('comments');
+    const warnings = (definition.checks ?? [])
+      .map((check) => check.run({ repo: '' }, EMPTY_BLOCK_CONTENT))
+      .filter(Boolean);
+    expect(warnings.length).toBe(1);
+    const malformed = (definition.checks ?? [])
+      .map((check) => check.run({ repo: 'not a repo' }, EMPTY_BLOCK_CONTENT))
+      .filter(Boolean);
+    expect(malformed.length).toBe(1);
   });
 });
 

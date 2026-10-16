@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { assertSameOrigin } from '@/core/auth/guard';
 import { clientKey, rateLimit } from '@/core/auth/ratelimit';
 import { MAX_EMAIL_LENGTH, sendMail } from '@/core/email/send';
+import { verifyTurnstileToken } from '@/core/integrations/turnstile';
 import { confirmSubscription } from '@/core/email/templates';
 import { getNewsletterSettings } from '@/core/newsletter/read';
 import { PENDING_TTL_DAYS } from '@/core/newsletter/schema';
@@ -53,6 +54,13 @@ export async function POST(req: Request) {
   // it was spotted is free information for whoever wrote it.
   const trap = [body.honeypot, body.website].find((v) => typeof v === 'string' && v.trim() !== '');
   if (trap) return NextResponse.json({ ok: true, message: settings.pendingMessage });
+
+  // Same gate as the contact form: honeypot first so dumb bots never cost a
+  // verification call, then the human check when one is configured.
+  const human = await verifyTurnstileToken(body.turnstileToken);
+  if (!human.ok) {
+    return NextResponse.json({ ok: false, error: human.error }, { status: 403 });
+  }
 
   const raw = typeof body.email === 'string' ? body.email.slice(0, MAX_EMAIL_LENGTH) : '';
 

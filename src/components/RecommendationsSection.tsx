@@ -5,7 +5,7 @@ import { Section } from './common/Section';
 import { Container } from './common/Container';
 import { SectionLabel } from './common/SectionLabel';
 import { Reveal } from './common/Reveal';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { useCMS } from '../cms/context/CMSContext';
 import { CMSImage } from './common/CMSImage';
 

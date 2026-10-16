@@ -73,7 +73,7 @@ export const WorkPage: React.FC = () => {
                     onClick={() => setActiveCategory(cat)}
                     aria-pressed={activeCategory === cat}
                     className={cn(
-                      'h-[38px] px-4 rounded-full text-xs font-medium uppercase tracking-wider font-body transition-all duration-200 border cursor-pointer select-none',
+                      'h-[44px] px-4 rounded-full text-xs font-medium uppercase tracking-wider font-body transition-all duration-200 border cursor-pointer select-none',
                       activeCategory === cat
                         ? 'bg-text-primary text-bg border-transparent shadow-sm'
                         : 'bg-surface-primary text-text-secondary border-border hover:border-text-primary/40'
@@ -92,7 +92,7 @@ export const WorkPage: React.FC = () => {
                 <ProjectPreview key={project.id} project={project} index={idx} />
               ))
             ) : (
-              <div className="py-20 text-center text-text-muted font-body">
+              <div className="py-20 text-center text-text-muted font-body" role="status">
                 {projects.length === 0
                   ? 'No projects have been published yet.'
                   : `No projects found under “${activeCategory}”.`}

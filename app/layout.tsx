@@ -4,7 +4,8 @@ import { getPublishedContent } from '@/core/content/read';
 import { buildThemeStylesheet } from '@/core/theme/tokens';
 import { buildLayoutStylesheet } from '@/core/theme/layout-tokens';
 import { flattenAppearance, resolveAppearance } from '@/core/theme/resolve';
-import { fontHref } from '@/core/theme/presets';
+import { ALL_FONT_VARIABLES, SELF_HOSTED_FONTS } from '@/core/theme/fonts';
+import { resolveAnalytics } from '@/core/integrations/analytics';
 import { THEME_STORAGE_KEY } from '@/context/themeConstants';
 
 /*
@@ -68,27 +69,69 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     buildLayoutStylesheet(appearance.layout) +
     buildThemeStylesheet(flattenAppearance(content.appearance));
 
-  // Only the families this theme actually uses. Loading every font any theme
-  // might want is a download every visitor pays for and nobody sees.
-  const fonts = fontHref(appearance.preset);
+  // The typefaces, self-hosted. Every catalogue family ships its files with
+  // the build (see core/theme/fonts.ts), so no request leaves for Google —
+  // remote font CSS leaks visitor IPs. Only catalogue names resolve: anything
+  // else falls back to a generic stack, which also closes the door on a
+  // crafted family name reaching this stylesheet verbatim.
+  const pickFont = (name: string | undefined, fallback: string): string =>
+    name && SELF_HOSTED_FONTS[name] ? name : fallback;
+  const displayFont = pickFont(content.appearance.displayFontFamily, appearance.fonts.display);
+  const bodyFont = pickFont(content.appearance.bodyFontFamily, appearance.fonts.body);
+  const monoFont = content.appearance.monoFontFamily
+    ? pickFont(content.appearance.monoFontFamily, '')
+    : '';
+  const fontStack = (name: string, generic: string): string => {
+    const known = SELF_HOSTED_FONTS[name];
+    return known ? `var(${known.variable}), '${name}', ${known.generic}` : generic;
+  };
+  const fontStyles = [
+    `--font-display:${fontStack(displayFont, 'Georgia, serif')}`,
+    `--font-sans:${fontStack(bodyFont, 'system-ui, sans-serif')}`,
+    `--font-body:${fontStack(bodyFont, 'system-ui, sans-serif')}`,
+    monoFont
+      ? `--font-mono:${fontStack(monoFont, 'monospace')}`
+      : `--font-mono:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace`,
+  ].join(';');
+
+  // Audience counting, resolved at request time rather than at build time:
+  // an OPB_* variable wins, then the Services screen vault, then the legacy
+  // NEXT_PUBLIC_* variables. Embedded as JSON (escaped against </script>)
+  // so the client tracker reads the same answer with no extra request — and
+  // every value here is public by design (script URL, site id, share link).
+  const analytics = await resolveAnalytics();
+  const analyticsJson = JSON.stringify({
+    provider: analytics.provider,
+    scriptSrc: analytics.scriptSrc,
+    websiteId: analytics.websiteId,
+    domain: analytics.domain,
+    shareUrl: analytics.shareUrl,
+  }).replace(/</g, '\\u003c');
 
   return (
     // suppressHydrationWarning: the script above mutates <html> before React
     // sees it, so the server and client markup differ here by design.
-    <html lang="en" data-theme="dark" className="dark" suppressHydrationWarning>
+    <html
+      lang="en"
+      data-theme="dark"
+      className={`dark ${ALL_FONT_VARIABLES}`}
+      suppressHydrationWarning
+    >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-        {/* Values are all generated from parsed colours — nothing a user typed
-            reaches this string verbatim. Covered by a test in
+        {/* Colours are generated from parsed values and family names resolve
+            through the self-hosted catalogue — nothing a user typed reaches
+            either string verbatim. Covered by a test in
             core/theme/__tests__/tokens.test.ts. */}
         <style dangerouslySetInnerHTML={{ __html: themeTokens }} />
-        {fonts && (
-          <>
-            <link rel="preconnect" href="https://fonts.googleapis.com" />
-            <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-            <link href={fonts} rel="stylesheet" />
-          </>
-        )}
+        {/* The family's own name follows its variable so an unknown future
+            value still names a real family before falling back to generic. */}
+        <style dangerouslySetInnerHTML={{ __html: `:root{${fontStyles}}` }} />
+        <script
+          id="opb-analytics-config"
+          type="application/json"
+          dangerouslySetInnerHTML={{ __html: analyticsJson }}
+        />
       </head>
       {/* No `selection:` utilities here. `accent` resolves to a bare `var()`,
           which Tailwind cannot apply an opacity modifier to, so

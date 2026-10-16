@@ -432,8 +432,8 @@ export default function Home() {
             items={[
               {
                 label: 'Uploads on hosted object stores',
-                note: 'Never run against Vercel Blob or Supabase Storage with real credentials. The code path is the one the local filesystem backend uses and the conformance suite covers the interface — which is not the same as having done it.',
-                stamp: <span className="stamp stamp--unverified">Unverified</span>,
+                note: 'Verified end to end on both Supabase Storage and Vercel Blob: upload through the admin, then an anonymous fetch of the result. Supabase cost two real bugs that would have broken every Supabase deployment after its first boot.',
+                stamp: <span className="stamp stamp--plain">Tested</span>,
               },
               {
                 label: 'The admin on a phone',
@@ -441,8 +441,8 @@ export default function Home() {
                 stamp: <span className="stamp stamp--unverified">Not built</span>,
               },
               {
-                label: 'Five of nine backends',
-                note: 'Firebase, Convex, Cloudflare, PocketBase and Appwrite are planned and unbuilt. The four that exist are the four we offer.',
+                label: 'One of nine backends',
+                note: 'Local filesystem, Postgres, Supabase, Neon + Vercel Blob, Firebase, Cloudflare D1+R2, PocketBase and Appwrite are built. Convex needs an account rather than an emulator, so it is blocked on signup, not code.',
                 stamp: <span className="stamp stamp--unverified">Not built</span>,
               },
               {
@@ -452,8 +452,8 @@ export default function Home() {
               },
               {
                 label: 'Sign-in',
-                note: 'An email and a passphrase. No passkeys, no one-time codes.',
-                stamp: <span className="stamp stamp--unverified">Not built</span>,
+                note: 'An email and a passphrase — plus passkeys enrolled in Settings and emailed one-time codes. All three are offered on the sign-in page.',
+                stamp: <span className="stamp stamp--plain">Shipped</span>,
               },
               {
                 label: 'Sending a newsletter',

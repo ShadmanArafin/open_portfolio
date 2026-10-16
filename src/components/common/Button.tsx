@@ -26,7 +26,7 @@ export const Button: React.FC<ButtonProps> = ({
 }) => {
   // Global Button Height: EXACTLY 42px across desktop, tablet, and mobile
   const baseStyles =
-    'inline-flex items-center justify-center gap-2 h-[42px] px-5 sm:px-6 rounded-full font-sans text-[13px] sm:text-sm font-medium uppercase tracking-wider transition-all duration-250 ease-out whitespace-nowrap group cursor-pointer select-none';
+    'inline-flex items-center justify-center gap-2 h-[42px] px-5 sm:px-6 rounded-full font-sans text-[13px] sm:text-sm font-medium uppercase tracking-wider transition-all duration-250 ease-out whitespace-nowrap group cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent';
 
   const variants = {
     primary: 'bg-text-primary text-bg hover:opacity-90 shadow-sm hover:-translate-y-[1px]',
@@ -34,7 +34,11 @@ export const Button: React.FC<ButtonProps> = ({
       'bg-transparent text-text-primary border border-border hover:border-text-primary/40 hover:bg-surface-primary hover:-translate-y-[1px]',
     outline:
       'bg-transparent text-text-secondary border border-border hover:text-text-primary hover:border-text-primary/40',
-    whatsapp: 'bg-[#25D366] text-white hover:bg-[#20bd5a] shadow-sm hover:-translate-y-[1px]',
+    // Token colours, not brand green: white on #25D366 is ~2.5:1 and no theme
+    // can fix a hardcoded pair. The icon carries the brand (see call sites);
+    // the contrast carries the readability.
+    whatsapp:
+      'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] shadow-sm hover:-translate-y-[1px]',
   };
 
   const content = (

@@ -17,6 +17,7 @@ import { Mail, Trash2, Reply } from 'lucide-react';
 import { useCMS } from '../../cms/context/CMSContext';
 import { ContactMessage } from '../../cms/types/cms';
 import { AstryxHeader } from '../components/astryx/AstryxComponents';
+import { PushNotifications } from '../components/PushNotifications';
 
 /**
  * Inbox: a dense list of enquiries beside a reading pane.
@@ -47,6 +48,10 @@ export const AdminMessagesInbox: React.FC = () => {
         title={`Messages (${messages.length})`}
         subtitle="Enquiries sent through the contact form. Reply opens your email client."
       />
+
+      {/* Permission timing: offered once there is something to notify about,
+          not on install — asking early is how it gets denied forever. */}
+      {messages.length > 0 ? <PushNotifications /> : null}
 
       {messages.length === 0 ? (
         <EmptyState

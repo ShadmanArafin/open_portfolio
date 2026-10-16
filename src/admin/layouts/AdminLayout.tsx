@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Outlet, Navigate, useLocation } from 'react-router-dom';
 import { AppShell } from '@astryxdesign/core/AppShell';
 import { TopNav } from '@astryxdesign/core/TopNav';
@@ -36,6 +36,19 @@ export const AdminLayout: React.FC = () => {
   const [publishing, setPublishing] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+
+  // The palette previously only opened from the Search button — a command
+  // palette without its keyboard shortcut defeats its own purpose.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setCommandPaletteOpen((open) => !open);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   // The session is an httpOnly cookie, so whether we are signed in is only
   // knowable after asking the server. Redirecting before that answer arrives
@@ -114,6 +127,7 @@ export const AdminLayout: React.FC = () => {
             variant="ghost"
             size="sm"
             icon={<Search aria-hidden />}
+            tooltip="Jump to a screen (Ctrl/⌘+K)"
             onClick={() => setCommandPaletteOpen(true)}
           />
           <IconButton

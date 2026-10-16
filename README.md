@@ -277,11 +277,12 @@ storage, and the rule that auth state never travels inside a content export.
 Being direct about this, because the gaps are structural and you should not
 discover them after typing in a portfolio:
 
-- **Email is optional; without it there is no notification and no reset.**
+- **Email is optional; without it there is no notification.**
   Enquiries always reach your inbox inside the admin. Configure SMTP (see
   [.env.example](.env.example)) and the owner is also emailed when one
   arrives, and a forgotten passphrase can be reset from `/admin/login` instead
-  of deleting the owner record. There is still no OTP.
+  of deleting the owner record. Emailed one-time codes also work as a sign-in
+  method.
 - ~~Uploads unverified on the hosted stores.~~ **Both are now verified**, each
   end to end: upload through the admin, then an anonymous fetch of the result.
   Supabase cost two real bugs that would have broken every Supabase deployment
@@ -299,7 +300,7 @@ discover them after typing in a portfolio:
 - **The admin is not laid out for a phone yet.** It installs to a home screen
   and works on a small screen, but the editing screens were designed for a
   desktop. Notifications are not built.
-- **Sign-in is an email and a passphrase.** No passkeys, no one-time codes.
+- **Sign-in is an email and a passphrase — plus passkeys and emailed one-time codes.** Passkeys enroll in Settings; all three methods are offered on the sign-in page.
 - **The newsletter collects addresses; it does not send.** Sign-up, double
   opt-in and export all work. Actually mailing your list means deliverability,
   bounce handling and list hygiene — a different product with different

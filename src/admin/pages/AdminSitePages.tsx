@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
@@ -15,6 +15,7 @@ import { AdminRecord, AdminRecordList } from '../components/AdminRecord';
 import { AstryxHeader, AstryxSection } from '../components/astryx/AstryxComponents';
 import { BlockFields } from '../components/BlockFields';
 import { Selector, TextArea, TextInput } from '../components/AdminFields';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import {
   checkSlug,
   createHomePage,
@@ -72,6 +73,7 @@ const newId = (prefix: string) => `${prefix}_${Date.now().toString(36)}_${++idCo
 export const AdminSitePages: React.FC = () => {
   const { draftData, updateDraft, uploadMedia } = useCMS();
   const [openPageId, setOpenPageId] = useState<string | null>(null);
+  const [pageToDelete, setPageToDelete] = useState<PageRecord | null>(null);
 
   const stored = draftData.pages ?? [];
   // Home first, always. It is the page every visitor sees and the one somebody
@@ -115,8 +117,26 @@ export const AdminSitePages: React.FC = () => {
     return item?.url ?? null;
   };
 
+  const deletePage = (id: string) => {
+    updateDraft((draft) => {
+      draft.pages = (draft.pages ?? []).filter((p) => p.id !== id);
+    });
+    setPageToDelete(null);
+  };
+
   return (
     <VStack gap={6}>
+      <ConfirmDialog
+        isOpen={pageToDelete !== null}
+        title={pageToDelete ? `Delete "${pageToDelete.title || 'Untitled page'}"?` : 'Delete page?'}
+        description="Its blocks are removed from your draft. This cannot be undone without restoring a version."
+        confirmLabel="Delete page"
+        tone="danger"
+        onConfirm={() => {
+          if (pageToDelete) deletePage(pageToDelete.id);
+        }}
+        onClose={() => setPageToDelete(null)}
+      />
       <AstryxHeader
         title="Pages"
         subtitle="Pages you build from blocks, each at its own web address. Your home page and the Work, Case studies and Contact sections live under Homepage."
@@ -164,14 +184,7 @@ export const AdminSitePages: React.FC = () => {
               canMoveDown={!isHomePage(page) && index < pages.length - 1}
               // No delete for the home page. Removing it would silently revert
               // the site to a layout the owner may not remember choosing.
-              onRemove={
-                isHomePage(page)
-                  ? undefined
-                  : () =>
-                      updateDraft((draft) => {
-                        draft.pages = (draft.pages ?? []).filter((p) => p.id !== page.id);
-                      })
-              }
+              onRemove={isHomePage(page) ? undefined : () => setPageToDelete(page)}
               removeLabel="Delete page"
             >
               <PageEditor
@@ -201,6 +214,168 @@ function reorderPages(
     [pages[index], pages[target]] = [pages[target], pages[index]];
   });
 }
+
+/**
+ * A private address for a draft, for eyes that must not have accounts.
+ *
+ * One link per page: creating a new one replaces the old, and revoking leaves
+ * nothing behind. Anyone with the link sees the current draft — published or
+ * not — and nothing else changes about the page: it stays out of the sitemap,
+ * the navigation and search results.
+ */
+const ShareSection: React.FC<{ page: PageRecord }> = ({ page }) => {
+  const [status, setStatus] = useState<{
+    state: 'unknown' | 'none' | 'active';
+    expiresAt?: string;
+  }>({
+    state: 'unknown',
+  });
+  const [token, setToken] = useState<string | null>(null);
+  const [days, setDays] = useState('7');
+  const [busy, setBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    let live = true;
+    fetch(`/api/admin/share?pageId=${encodeURIComponent(page.id)}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { ok?: boolean; active?: boolean; expiresAt?: string } | null) => {
+        if (live && data?.ok)
+          setStatus(
+            data.active && data.expiresAt
+              ? { state: 'active', expiresAt: data.expiresAt }
+              : { state: 'none' }
+          );
+      })
+      .catch(() => {
+        if (live) setStatus({ state: 'none' });
+      });
+    return () => {
+      live = false;
+    };
+  }, [page.id]);
+
+  const link = token ? `${window.location.origin}/share/${token}` : null;
+
+  const create = async () => {
+    setBusy(true);
+    try {
+      const res = await fetch('/api/admin/share', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pageId: page.id, days: Number(days) || 7 }),
+      });
+      const data = (await res.json().catch(() => null)) as {
+        ok?: boolean;
+        token?: string;
+        expiresAt?: string;
+      } | null;
+      if (data?.ok && data.token) {
+        setToken(data.token);
+        setCopied(false);
+        setStatus(
+          data.expiresAt ? { state: 'active', expiresAt: data.expiresAt } : { state: 'none' }
+        );
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const revoke = async () => {
+    setBusy(true);
+    try {
+      await fetch(`/api/admin/share?pageId=${encodeURIComponent(page.id)}`, { method: 'DELETE' });
+      setToken(null);
+      setStatus({ state: 'none' });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const copy = async () => {
+    if (!link) return;
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* Clipboard needs a secure context; the link stays selectable below. */
+    }
+  };
+
+  return (
+    <AstryxSection title="Share preview">
+      <VStack gap={3}>
+        <Text type="supporting" display="block">
+          A private address for this draft — for a client, a stakeholder, anyone who must not need
+          an account. One link at a time: a new one replaces the old, and revoking leaves nothing
+          behind. Search engines are told not to index it.
+        </Text>
+
+        {status.state === 'active' && !token && (
+          <Text type="supporting" display="block">
+            Live until{' '}
+            {status.expiresAt
+              ? new Date(status.expiresAt).toLocaleDateString([], {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric',
+                })
+              : 'it expires'}
+            .
+          </Text>
+        )}
+
+        {link ? (
+          <>
+            <TextInput
+              label="Share link (shown once — copy it now)"
+              value={link}
+              onChange={() => {}}
+              width="100%"
+            />
+            <HStack gap={2}>
+              <Button
+                variant="secondary"
+                size="sm"
+                label={copied ? 'Copied' : 'Copy link'}
+                onClick={() => void copy()}
+                isDisabled={busy}
+              />
+              <Button
+                variant="ghost"
+                size="sm"
+                label="Revoke"
+                onClick={() => void revoke()}
+                isDisabled={busy}
+              />
+            </HStack>
+          </>
+        ) : (
+          <HStack gap={2} align="end">
+            <Selector
+              label="Link lasts"
+              value={days}
+              options={[
+                { value: '7', label: '7 days' },
+                { value: '30', label: '30 days' },
+              ]}
+              onChange={(value) => setDays(String(value))}
+            />
+            <Button
+              variant="secondary"
+              size="sm"
+              label={status.state === 'active' ? 'Replace link' : 'Create share link'}
+              onClick={() => void create()}
+              isLoading={busy}
+            />
+          </HStack>
+        )}
+      </VStack>
+    </AstryxSection>
+  );
+};
 
 const PageEditor: React.FC<{
   page: PageRecord;
@@ -420,6 +595,10 @@ const PageEditor: React.FC<{
           </Card>
         </VStack>
       </AstryxSection>
+
+      <Divider />
+
+      <ShareSection page={page} />
 
       <Divider />
 

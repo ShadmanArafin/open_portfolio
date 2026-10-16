@@ -6,7 +6,7 @@ import { SectionLabel } from '../components/common/SectionLabel';
 import { Reveal } from '../components/common/Reveal';
 import { MediaLightboxModal, GalleryMediaItem } from '../components/common/MediaLightboxModal';
 import { ArrowUpRight } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { useCMS } from '../cms/context/CMSContext';
 import { CMSImage } from '../components/common/CMSImage';
 
@@ -161,9 +161,9 @@ export const AboutPage: React.FC = () => {
                   </div>
 
                   <div className="md:col-span-5">
-                    <h3 className="font-display text-lg sm:text-xl lg:text-2xl font-normal text-text-primary leading-tight">
+                    <h2 className="font-display text-lg sm:text-xl lg:text-2xl font-normal text-text-primary leading-tight">
                       {edu.degree}
-                    </h3>
+                    </h2>
                   </div>
 
                   <div className="md:col-span-4 flex items-center justify-start md:justify-end">
@@ -213,28 +213,33 @@ export const AboutPage: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             <AnimatePresence>
               {filteredArtifacts.map((art) => (
-                <motion.div
+                <motion.button
                   key={art.id}
+                  type="button"
                   layout
                   initial={{ opacity: 0, scale: 0.96 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.96 }}
                   transition={{ duration: 0.4 }}
                   onClick={() => handleOpenArtifact(art)}
-                  className="aspect-[4/3] rounded-2xl overflow-hidden border border-border bg-surface-secondary relative group cursor-pointer"
+                  aria-label={`Expand artwork: ${art.alt || art.id}`}
+                  className="aspect-[4/3] rounded-2xl overflow-hidden border border-border bg-surface-secondary relative group cursor-pointer text-left w-full"
                 >
                   <CMSImage
                     src={art.src}
                     alt={art.alt}
                     className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                  <div
+                    aria-hidden
+                    className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity duration-300 flex items-center justify-center"
+                  >
                     <span className="h-10 px-4 rounded-full bg-white/20 backdrop-blur-md border border-white/40 text-white font-body text-xs uppercase tracking-wider flex items-center gap-2">
                       <span>Expand Artwork</span>
                       <ArrowUpRight className="w-3.5 h-3.5" />
                     </span>
                   </div>
-                </motion.div>
+                </motion.button>
               ))}
             </AnimatePresence>
           </div>

@@ -410,12 +410,15 @@ export function Button({
   children,
   onClick,
   type,
+  ariaLabel,
 }: {
   href?: string;
   variant?: 'primary' | 'secondary';
   children: React.ReactNode;
   onClick?: () => void;
   type?: 'button' | 'submit';
+  /** Names the control when its visible text is generic ("Read more"). */
+  ariaLabel?: string;
 }) {
   const style: React.CSSProperties = {
     display: 'inline-flex',
@@ -444,7 +447,7 @@ export function Button({
     const safe = sanitizeHref(href);
     if (safe) {
       return (
-        <a href={safe} style={style}>
+        <a href={safe} aria-label={ariaLabel} style={style}>
           {children}
         </a>
       );
@@ -452,7 +455,7 @@ export function Button({
     return <span style={style}>{children}</span>;
   }
   return (
-    <button type={type ?? 'button'} onClick={onClick} style={style}>
+    <button type={type ?? 'button'} onClick={onClick} aria-label={ariaLabel} style={style}>
       {children}
     </button>
   );

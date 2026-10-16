@@ -11,6 +11,7 @@ import { Text } from '@astryxdesign/core/Text';
 import { Button } from '@astryxdesign/core/Button';
 import { useCMS } from '../../cms/context/CMSContext';
 import { AdminRecord, AdminRecordList } from '../components/AdminRecord';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { AdminImageField } from '../components/AdminImageField';
 import { ProjectItem } from '../../cms/types/cms';
 import { AstryxHeader, AstryxCard, AstryxButton } from '../components/astryx/AstryxComponents';
@@ -24,6 +25,7 @@ const PARAGRAPH_BREAK = '\n\n';
 export const AdminProjectsCMS: React.FC = () => {
   const { draftData, updateDraft, uploadMedia } = useCMS();
   const [savedId, setSavedId] = useState<string | null>(null);
+  const [projectToDelete, setProjectToDelete] = useState<ProjectItem | null>(null);
 
   const projects = [...draftData.projects].sort((a, b) => a.sortOrder - b.sortOrder);
 
@@ -92,10 +94,10 @@ export const AdminProjectsCMS: React.FC = () => {
   };
 
   const handleDeleteProject = (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this project?')) return;
     updateDraft((draft) => {
       draft.projects = draft.projects.filter((p) => p.id !== id);
     });
+    setProjectToDelete(null);
   };
 
   const handleProjectFieldChange = (id: string, field: keyof ProjectItem, value: any) => {
@@ -170,6 +172,17 @@ export const AdminProjectsCMS: React.FC = () => {
 
   return (
     <VStack gap={6}>
+      <ConfirmDialog
+        isOpen={projectToDelete !== null}
+        title={projectToDelete ? `Delete "${projectToDelete.title}"?` : 'Delete project?'}
+        description="The project leaves your draft, wherever it was shown. This cannot be undone without restoring a version."
+        confirmLabel="Delete project"
+        tone="danger"
+        onConfirm={() => {
+          if (projectToDelete) handleDeleteProject(projectToDelete.id);
+        }}
+        onClose={() => setProjectToDelete(null)}
+      />
       {/* Astryx Header */}
       <AstryxHeader
         badgeText="Work"
@@ -202,7 +215,7 @@ export const AdminProjectsCMS: React.FC = () => {
               onMoveDown={() => moveProject(index, 'down')}
               canMoveUp={index > 0}
               canMoveDown={index < projects.length - 1}
-              onRemove={() => handleDeleteProject(proj.id)}
+              onRemove={() => setProjectToDelete(proj)}
               removeLabel="Delete project"
             >
               <Grid columns={{ minWidth: 280, repeat: 'fit' }} gap={4}>

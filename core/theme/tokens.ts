@@ -165,6 +165,12 @@ export function generateTokens(mode: ThemeMode, inputs: Partial<ThemeInputs> = {
   const accentHover = mix(accent, away, 0.15);
   const textOnAccent = readableForeground(accent, INK);
 
+  // Errors must read as red in both modes at body-text contrast. A hardcoded
+  // red-400 ships pink-on-pink in light mode at ~3:1, so danger derives like
+  // links do: a red seed walked toward the readable extreme until 4.5:1.
+  // The hue survives because the walk stops the moment it passes.
+  const dangerOnBg = enforceContrast(parseHex(mode === 'dark' ? '#FF6B6B' : '#C81E1E')!, bg);
+
   // Inverted button: the primary fill is the text colour, so it reads as the
   // strongest thing on the page in either mode.
   const btnPrimaryBg = textPrimary;
@@ -210,6 +216,9 @@ export function generateTokens(mode: ThemeMode, inputs: Partial<ThemeInputs> = {
     '--selection-bg': alpha(accent, 0.2),
     '--selection-text': toHex(accentOnBg),
     '--link-color': toHex(linkOnBg),
+
+    '--danger': toHex(dangerOnBg),
+    '--danger-subtle': alpha(dangerOnBg, 0.12),
 
     // Section bands. Small, deliberate steps rather than arbitrary hex values,
     // so a change of background carries the whole page with it.

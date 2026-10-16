@@ -82,7 +82,8 @@ export const SideSectionIndicator: React.FC = () => {
             onFocus={() => setHoveredId(sec.id)}
             onBlur={() => setHoveredId(null)}
             aria-label={`Go to ${sec.label}`}
-            className="group flex items-center justify-end gap-3 py-1 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent rounded"
+            aria-current={isActive ? true : undefined}
+            className="group flex items-center justify-end gap-3 py-1 px-2 -mx-2 min-h-[44px] min-w-[44px] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent rounded"
           >
             {/* Section Label Tooltip (Raleway 500, 12-13px) */}
             {(isHovered || isActive) && (

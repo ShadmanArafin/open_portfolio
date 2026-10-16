@@ -74,6 +74,8 @@ export interface IntegrationDefinition<C = Record<string, unknown>> {
   /** Hosts this integration needs to reach, for the Content-Security-Policy. */
   cspConnect?: string[];
   cspScript?: string[];
+  /** Framed hosts (challenge widgets), for `frame-src`. */
+  cspFrame?: string[];
 
   /**
    * Proves it works, from the server, now.

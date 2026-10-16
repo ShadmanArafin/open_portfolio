@@ -10,6 +10,7 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { RotateCcw, Check } from 'lucide-react';
 import { useCMS } from '../../cms/context/CMSContext';
 import { AstryxHeader } from '../components/astryx/AstryxComponents';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 
 /**
  * Snapshots are dense, read-mostly data, so they are rows rather than one card
@@ -18,26 +19,31 @@ import { AstryxHeader } from '../components/astryx/AstryxComponents';
 export const AdminVersionHistory: React.FC = () => {
   const { draftData, restoreVersion } = useCMS();
   const [restoredId, setRestoredId] = useState<string | null>(null);
+  const [versionToRestore, setVersionToRestore] = useState<string | null>(null);
 
   const versions = draftData.versions ?? [];
 
   const handleRestore = async (id: string) => {
-    if (
-      !window.confirm(
-        'Restore this snapshot into your working draft? Publish afterwards to make it live.'
-      )
-    )
-      return;
-
     const success = await restoreVersion(id);
     if (success) {
       setRestoredId(id);
       setTimeout(() => setRestoredId(null), 3000);
     }
+    setVersionToRestore(null);
   };
 
   return (
     <VStack gap={6}>
+      <ConfirmDialog
+        isOpen={versionToRestore !== null}
+        title="Restore this snapshot?"
+        description="It loads into your working draft, replacing what is there now. Publish afterwards to make it live."
+        confirmLabel="Restore snapshot"
+        onConfirm={() => {
+          if (versionToRestore) void handleRestore(versionToRestore);
+        }}
+        onClose={() => setVersionToRestore(null)}
+      />
       <AstryxHeader
         badgeText="History"
         title={`Version History (${versions.length})`}
@@ -65,7 +71,7 @@ export const AdminVersionHistory: React.FC = () => {
                     variant={isRestored ? 'primary' : 'secondary'}
                     size="sm"
                     icon={isRestored ? <Check aria-hidden /> : <RotateCcw aria-hidden />}
-                    onClick={() => void handleRestore(ver.id)}
+                    onClick={() => setVersionToRestore(ver.id)}
                   />
                 }
               />

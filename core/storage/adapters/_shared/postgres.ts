@@ -13,7 +13,6 @@ import type {
   PasskeyCredential,
   PasskeysAdapter,
   RecordListOptions,
-  RecordPage,
   RecordsAdapter,
   SnapshotRead,
   StoredRecord,

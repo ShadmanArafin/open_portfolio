@@ -58,6 +58,13 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
+# `serverExternalPackages` keeps miniflare + workerd as runtime require() calls
+# that the standalone trace cannot see (see next.config.ts). They are copied
+# explicitly so the Cloudflare adapter resolves in the runner instead of
+# throwing MODULE_NOT_FOUND.
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/miniflare ./node_modules/miniflare
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@cloudflare ./node_modules/@cloudflare
+
 # Where the `local` storage adapter keeps content, uploads and sessions. Mount
 # a volume here or everything written is lost when the container is replaced —
 # which is exactly the failure the adapter registry refuses to allow silently.

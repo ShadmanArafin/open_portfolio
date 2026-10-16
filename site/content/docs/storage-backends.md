@@ -9,7 +9,7 @@ order: 50
 
 ## The contract
 
-One interface, in `core/storage/contract.ts`. Four backends implement it today: local filesystem, Postgres, Supabase and Neon + Vercel Blob.
+One interface, in `core/storage/contract.ts`. Eight backends implement it today: local filesystem, any Postgres, Supabase, Neon + Vercel Blob, Firebase, Cloudflare D1+R2, PocketBase and Appwrite. Convex is planned — it needs an account rather than an emulator, so it is blocked on signup, not code.
 
 Surfaces:
 

@@ -26,6 +26,8 @@ export default {
           secondary: 'var(--surface-secondary)',
         },
         accent: 'var(--accent-color)',
+        danger: 'var(--danger)',
+        'danger-subtle': 'var(--danger-subtle)',
         text: {
           primary: 'var(--text-primary)',
           secondary: 'var(--text-secondary)',

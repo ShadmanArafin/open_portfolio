@@ -6,7 +6,7 @@ import { ProjectItem } from '../cms/types/cms';
 import { formatYearRange } from '../cms/utils/dates';
 import { CMSImage } from './common/CMSImage';
 import { ArrowUpRight } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { ImageLightboxModal } from './common/ImageLightboxModal';
 
 import Link from 'next/link';
@@ -184,13 +184,25 @@ export const ProjectPreview: React.FC<ProjectPreviewProps> = ({ project }) => {
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true, margin: '-5% 0px' }}
                   transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-                  data-cursor-text="VIEW ↗"
+                  data-cursor-text={hasRealUrl ? 'VIEW ↗' : undefined}
+                  role={hasRealUrl ? 'button' : undefined}
+                  tabIndex={hasRealUrl ? 0 : undefined}
+                  aria-label={
+                    hasRealUrl ? `Expand image: ${imgItem.alt || project.title}` : undefined
+                  }
                   onClick={() => {
                     if (hasRealUrl && imgItem.url) {
                       openLightbox(imgItem.url, imgItem.alt);
                     }
                   }}
-                  className={`w-full aspect-[16/10] rounded-2xl sm:rounded-3xl overflow-hidden border border-border bg-surface-secondary relative shadow-sm group ${hasRealUrl ? 'cursor-pointer' : ''}`}
+                  onKeyDown={(e) => {
+                    if (!hasRealUrl || !imgItem.url) return;
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      openLightbox(imgItem.url, imgItem.alt);
+                    }
+                  }}
+                  className={`w-full aspect-[16/10] rounded-2xl sm:rounded-3xl overflow-hidden border border-border bg-surface-secondary relative shadow-sm group ${hasRealUrl ? 'cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent' : ''}`}
                 >
                   {hasRealUrl && imgItem.url ? (
                     /* Clean Image Rendering without Floating Text Overlay Bars */

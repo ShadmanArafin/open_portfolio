@@ -19,9 +19,10 @@ import {
 import { FaWhatsapp } from 'react-icons/fa6';
 import { cn } from '../utils/cn';
 import { useToast } from '../context/ToastContext';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { useCMS } from '../cms/context/CMSContext';
 import { ContactMessage } from '../cms/types/cms';
+import { TurnstileWidget } from '@/core/blocks/forms';
 
 /**
  * Sends an enquiry to the server.
@@ -32,18 +33,18 @@ import { ContactMessage } from '../cms/types/cms';
  * context was indirection with no purpose.
  */
 async function postContactMessage(
-  msg: Omit<ContactMessage, 'id' | 'receivedAt' | 'status'>
-): Promise<boolean> {
+  msg: Omit<ContactMessage, 'id' | 'receivedAt' | 'status'> & { turnstileToken?: string }
+): Promise<{ stored: boolean; error?: string }> {
   try {
     const res = await fetch('/api/contact', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(msg),
     });
-    const data = (await res.json().catch(() => ({}))) as { ok?: boolean };
-    return Boolean(data.ok);
+    const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
+    return { stored: Boolean(data.ok), error: data.error };
   } catch {
-    return false;
+    return { stored: false };
   }
 }
 
@@ -65,6 +66,7 @@ export const ContactPage: React.FC = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [spamToken, setSpamToken] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
@@ -109,19 +111,21 @@ export const ContactPage: React.FC = () => {
     // notify about, so the confirmation below deliberately tells the sender to
     // email directly instead.
     trackEvent('Contact submitted');
-    const stored = await postContactMessage({
+    const result = await postContactMessage({
       name: formData.name.trim(),
       email: formData.email.trim(),
       company: formData.company.trim() || undefined,
       projectType: formData.projectType,
       message: formData.message.trim(),
+      turnstileToken: spamToken,
     });
 
     setIsSubmitting(false);
 
-    if (!stored) {
+    if (!result.stored) {
       setErrorMessage(
-        `Your message could not be saved. Please email me directly at ${settings.email}.`
+        result.error ||
+          `Your message could not be saved. Please email me directly at ${settings.email}.`
       );
       return;
     }
@@ -276,7 +280,7 @@ export const ContactPage: React.FC = () => {
 
                   {/* Error Notification */}
                   {errorMessage && (
-                    <div className="p-4 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 text-xs sm:text-sm font-body flex items-start gap-2.5">
+                    <div className="p-4 rounded-xl border border-danger bg-danger-subtle text-danger text-xs sm:text-sm font-body flex items-start gap-2.5">
                       <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
                       <span>{errorMessage}</span>
                     </div>
@@ -305,14 +309,14 @@ export const ContactPage: React.FC = () => {
                         className={cn(
                           'w-full px-5 py-3.5 rounded-2xl bg-surface-primary border text-text-primary font-body text-base outline-none transition-all duration-200',
                           errors.name
-                            ? 'border-red-500/80 focus:border-red-500'
+                            ? 'border-danger focus:border-danger'
                             : 'border-border focus:border-accent'
                         )}
                       />
                       {errors.name && (
                         <span
                           id="contact-name-error"
-                          className="text-xs text-red-400 mt-1 block font-body"
+                          className="text-xs text-danger mt-1 block font-body"
                         >
                           {errors.name}
                         </span>
@@ -340,14 +344,14 @@ export const ContactPage: React.FC = () => {
                         className={cn(
                           'w-full px-5 py-3.5 rounded-2xl bg-surface-primary border text-text-primary font-body text-base outline-none transition-all duration-200',
                           errors.email
-                            ? 'border-red-500/80 focus:border-red-500'
+                            ? 'border-danger focus:border-danger'
                             : 'border-border focus:border-accent'
                         )}
                       />
                       {errors.email && (
                         <span
                           id="contact-email-error"
-                          className="text-xs text-red-400 mt-1 block font-body"
+                          className="text-xs text-danger mt-1 block font-body"
                         >
                           {errors.email}
                         </span>
@@ -458,19 +462,24 @@ export const ContactPage: React.FC = () => {
                       className={cn(
                         'w-full px-5 py-4 rounded-2xl bg-surface-primary border text-text-primary font-body text-base outline-none transition-all duration-200 resize-none',
                         errors.message
-                          ? 'border-red-500/80 focus:border-red-500'
+                          ? 'border-danger focus:border-danger'
                           : 'border-border focus:border-accent'
                       )}
                     />
                     {errors.message && (
                       <span
                         id="contact-message-error"
-                        className="text-xs text-red-400 mt-1 block font-body"
+                        className="text-xs text-danger mt-1 block font-body"
                       >
                         {errors.message}
                       </span>
                     )}
                   </div>
+
+                  {/* Human check. Renders only when the owner configured bot
+                      protection; otherwise the honeypot above is the whole
+                      defence and this is nothing. */}
+                  <TurnstileWidget onToken={setSpamToken} />
 
                   {/* Submit Button (Strict 42px Height) */}
                   <button

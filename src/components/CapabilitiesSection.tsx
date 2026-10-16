@@ -6,7 +6,7 @@ import { Container } from './common/Container';
 import { SectionLabel } from './common/SectionLabel';
 import { Reveal } from './common/Reveal';
 import { ArrowUpRight } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { useCMS } from '../cms/context/CMSContext';
 
 export const CapabilitiesSection: React.FC = () => {

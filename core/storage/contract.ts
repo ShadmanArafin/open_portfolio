@@ -27,7 +27,6 @@ export type AdapterId =
   | 'supabase'
   | 'neon'
   | 'firebase'
-  | 'convex'
   | 'cloudflare'
   | 'pocketbase'
   | 'appwrite';
@@ -205,7 +204,7 @@ export interface HealthReport {
  * sessions do — a content export must not carry somebody's SMTP password, and a
  * backup restored onto another machine must not bring live credentials with it.
  */
-export type KvNamespace = 'session' | 'otp' | 'ratelimit' | 'config';
+export type KvNamespace = 'session' | 'otp' | 'ratelimit' | 'config' | 'share' | 'push';
 
 export interface KvAdapter {
   get<T>(ns: KvNamespace, key: string): Promise<T | null>;

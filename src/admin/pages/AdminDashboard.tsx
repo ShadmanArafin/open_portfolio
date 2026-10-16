@@ -1,7 +1,7 @@
 'use client';
 
 import { InstallPrompt } from '../components/InstallPrompt';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { VStack, HStack } from '@astryxdesign/core/Layout';
 import { Grid } from '@astryxdesign/core/Grid';
@@ -52,7 +52,16 @@ export const AdminDashboard: React.FC = () => {
     pendingChangeSummary,
     countMediaUsage,
     emailConfigured,
+    publishDraft,
   } = useCMS();
+  const [publishing, setPublishing] = useState(false);
+
+  const handlePublishNow = async () => {
+    if (publishing) return;
+    setPublishing(true);
+    await publishDraft();
+    setPublishing(false);
+  };
 
   // Checks run against published content — that is what visitors get.
   const report = useMemo(
@@ -103,11 +112,11 @@ export const AdminDashboard: React.FC = () => {
         subtitle="What is wrong with the site right now, and what to do about it."
       >
         <Button
-          label="Homepage builder"
+          label="Pages"
           variant="primary"
           icon={<FileText aria-hidden />}
           as={Link as never}
-          href="/homepage"
+          href="/pages"
         />
       </AstryxHeader>
 
@@ -159,7 +168,16 @@ export const AdminDashboard: React.FC = () => {
                 </Text>
               </VStack>
             </HStack>
-            <Badge variant="yellow" label="Draft only" />
+            <HStack gap={2} align="center">
+              <Badge variant="yellow" label="Draft only" />
+              <Button
+                label={publishing ? 'Publishing' : 'Publish now'}
+                variant="primary"
+                size="sm"
+                isLoading={publishing}
+                onClick={() => void handlePublishNow()}
+              />
+            </HStack>
           </HStack>
         </Card>
       )}

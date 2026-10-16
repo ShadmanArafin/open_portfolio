@@ -45,24 +45,6 @@ export interface ThemePreset {
   };
 }
 
-/**
- * The fonts each preset asks for, so the document can request exactly those.
- *
- * Kept beside the presets rather than hardcoded in the layout: adding a theme
- * that wants a different typeface should not mean editing the `<head>` too.
- */
-export const GOOGLE_FONT_FAMILIES: Record<string, string> = {
-  Geist: 'Geist:wght@300;400;500;600;700',
-  'Instrument Serif': 'Instrument+Serif:wght@400',
-  'Geist Mono': 'Geist+Mono:wght@400;500',
-  Inter: 'Inter:wght@400;500;600;700',
-  'Space Grotesk': 'Space+Grotesk:wght@400;500;600;700',
-  'IBM Plex Mono': 'IBM+Plex+Mono:wght@400;500',
-  'DM Serif Display': 'DM+Serif+Display:wght@400',
-  'Libre Baskerville': 'Libre+Baskerville:wght@400;700',
-  'JetBrains Mono': 'JetBrains+Mono:wght@400;500',
-};
-
 export const THEME_PRESETS: ThemePreset[] = [
   {
     id: 'editorial',
@@ -166,22 +148,4 @@ export function getThemePreset(id: string | undefined): ThemePreset {
     THEME_PRESETS.find((preset) => preset.id === id) ??
     THEME_PRESETS.find((preset) => preset.id === DEFAULT_THEME_ID)!
   );
-}
-
-/**
- * The Google Fonts URL for a preset, or null when it needs none.
- *
- * Requesting only what the chosen theme uses rather than every family any theme
- * might: a font file nobody's page renders is a download every visitor pays for.
- */
-export function fontHref(preset: ThemePreset): string | null {
-  const families = [preset.fonts.display, preset.fonts.body, preset.fonts.mono]
-    .filter(Boolean)
-    .map((family) => GOOGLE_FONT_FAMILIES[family])
-    .filter(Boolean);
-
-  const unique = [...new Set(families)];
-  if (unique.length === 0) return null;
-
-  return `https://fonts.googleapis.com/css2?${unique.map((f) => `family=${f}`).join('&')}&display=swap`;
 }

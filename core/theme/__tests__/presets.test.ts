@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_THEME_ID, THEME_PRESETS, fontHref, getThemePreset } from '../presets';
+import { DEFAULT_THEME_ID, THEME_PRESETS, getThemePreset } from '../presets';
+import { SELF_HOSTED_FONTS } from '../fonts';
 import { flattenAppearance, resolveAppearance } from '../resolve';
 import { auditContrast, describeFailure } from '../audit';
 import { INITIAL_CMS_STATE } from '@/cms/data/initialData';
@@ -39,12 +40,12 @@ describe.each(THEME_PRESETS.map((p) => [p.id, p] as const))('the %s theme', (id,
   });
 
   it('asks only for fonts we know how to load', () => {
-    const href = fontHref(preset);
+    // Self-hosted, not linked: every preset family must have a static loader
+    // in fonts.ts, or the layout falls back to generic stacks for it.
     for (const family of [preset.fonts.display, preset.fonts.body, preset.fonts.mono]) {
       if (!family) continue;
-      expect(href, `${family} is not in GOOGLE_FONT_FAMILIES`).toContain(
-        family.split(' ')[0].replace(/[^A-Za-z]/g, '')
-      );
+      expect(family, `${family} has no self-hosted loader`).toBeDefined();
+      expect(SELF_HOSTED_FONTS[family]).toBeDefined();
     }
   });
 });

@@ -22,6 +22,7 @@ const PAIRS: { fg: string; bg: string; label: string; size: TextSize }[] = [
   { fg: '--text-secondary', bg: '--bg-primary', label: 'Secondary text', size: 'body' },
   { fg: '--text-muted', bg: '--bg-primary', label: 'Muted text', size: 'body' },
   { fg: '--link-color', bg: '--bg-primary', label: 'Links', size: 'body' },
+  { fg: '--danger', bg: '--bg-primary', label: 'Error messages', size: 'body' },
   { fg: '--text-primary', bg: '--surface-primary', label: 'Text on cards', size: 'body' },
   {
     fg: '--text-on-accent',

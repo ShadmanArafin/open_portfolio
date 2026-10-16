@@ -4,7 +4,7 @@ import { isShippedCopyright } from '@/core/content/identity';
 import React, { useState } from 'react';
 import { trackEvent } from '../utils/analytics';
 import { Mail, Copy, Check, Download, ArrowUpRight } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { getSocialPlatform } from '../cms/data/socialPlatforms';
 import { Container } from './common/Container';
 import { useToast } from '../context/ToastContext';

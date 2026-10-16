@@ -86,14 +86,14 @@ Two build settings make that possible and they are easy to get backwards:
 
 - **`turbopack.root` stays at `site/`.** Move it up and Next decides the
   repository root is the workspace root and compiles the _product's_
-  `middleware.ts`, which fails naming a file this application has never heard of.
+  `proxy.ts`, which fails naming a file this application has never heard of.
 - **`outputFileTracingRoot` must be the repository root.** Leave it at `site/`
   and every relative import climbing out of this directory resolves to nothing,
   with the file plainly there on disk.
 
 A consequence worth recognising rather than fixing: `next build` prints
-`Proxy (Middleware)` because it finds the product's `middleware.ts` up there.
-A static export cannot emit middleware, and the export was checked — nothing
+`Proxy (Middleware)` because it finds the product's `proxy.ts` up there.
+A static export cannot emit a proxy, and the export was checked — nothing
 from it ships. It is noise, not a leak.
 
 ### It gets the whole window

@@ -3,7 +3,7 @@
 import React from 'react';
 import { ArrowUpRight } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa6';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { Container } from './common/Container';
 import { useCMS } from '../cms/context/CMSContext';
 import { CMSImage } from './common/CMSImage';
@@ -44,9 +44,9 @@ export const HeroSection: React.FC = () => {
             <span className="font-display font-medium text-[15px] sm:text-[16px] text-text-primary leading-tight">
               {data.settings.fullName}
             </span>
-            <span className="text-[13px] sm:text-[14px] font-normal font-body text-[#08A669] leading-none mt-1 flex items-center gap-1.5">
+            <span className="text-[13px] sm:text-[14px] font-normal font-body text-[var(--link-color)] leading-none mt-1 flex items-center gap-1.5">
               {data.settings.availableDotEnabled !== false && (
-                <span className="w-1.5 h-1.5 rounded-full bg-[#08A669] animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--link-color)] animate-pulse" />
               )}
               <span>{data.microcopy.availableForFreelance || 'Available for freelance work'}</span>
             </span>
@@ -57,7 +57,7 @@ export const HeroSection: React.FC = () => {
         {/* 2. MAIN HEADLINE                                                    */}
         {/* =================================================================== */}
         <div className="mb-7 sm:mb-8 max-w-[960px]">
-          <h1 className="font-display text-[38px] sm:text-[46px] md:text-[54px] lg:text-[64px] font-medium leading-[1.18] tracking-[-0.02em] text-text-primary">
+          <h1 className="font-display text-[var(--text-4xl)] md:text-[var(--text-5xl)] font-medium leading-[1.18] tracking-[-0.02em] text-text-primary">
             <div className="overflow-hidden py-2 -my-1">
               <motion.div
                 initial={{ y: '110%', opacity: 0 }}
@@ -111,7 +111,7 @@ export const HeroSection: React.FC = () => {
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-2.5 h-[42px] px-5 sm:px-6 rounded-full font-body text-xs sm:text-[13px] font-medium uppercase tracking-wider bg-surface-secondary text-text-primary border border-border hover:border-text-primary/40 hover:bg-surface-primary transition-all duration-250 shadow-sm hover:-translate-y-[1px] group cursor-pointer select-none"
           >
-            <FaWhatsapp className="w-4 h-4 text-[#25D366] flex-shrink-0" />
+            <FaWhatsapp className="w-4 h-4 text-[var(--link-color)] flex-shrink-0" />
             <span>{data.microcopy.connectOnWhatsapp || 'WHATSAPP DIRECT'}</span>
           </a>
         </motion.div>

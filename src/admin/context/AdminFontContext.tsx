@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useState } from 'react';
 
 /**
  * The typeface used by the admin panel itself.
@@ -15,8 +15,6 @@ export type AdminFont = 'figtree' | 'jakarta';
 interface AdminFontOption {
   id: AdminFont;
   label: string;
-  /** Google Fonts family segment, e.g. `Figtree:wght@400;500;600;700`. */
-  query: string;
   note: string;
 }
 
@@ -24,13 +22,11 @@ export const ADMIN_FONTS: AdminFontOption[] = [
   {
     id: 'figtree',
     label: 'Figtree',
-    query: 'Figtree:wght@400;500;600;700',
     note: 'Astryx neutral default',
   },
   {
     id: 'jakarta',
     label: 'Plus Jakarta Sans',
-    query: 'Plus+Jakarta+Sans:wght@400;500;600;700',
     note: 'Slightly wider, rounder',
   },
 ];
@@ -39,20 +35,12 @@ const STORAGE_KEY = 'opb.admin.font';
 const DEFAULT_FONT: AdminFont = 'figtree';
 
 /**
- * Both faces are fetched once when the admin mounts, so switching is instant
- * and never flashes an unstyled swap mid-session.
+ * Both faces ship with the build as self-hosted next/font variables on the
+ * root element (see core/theme/fonts.ts), so the family names in
+ * admin-theme.css resolve without any stylesheet injection. There is
+ * deliberately no loader here anymore: the previous one fetched Google CSS at
+ * admin mount, leaking the owner's IP on every sign-in.
  */
-function loadAdminFonts(): void {
-  const linkId = 'admin-font-loader';
-  if (document.getElementById(linkId)) return;
-
-  const families = ADMIN_FONTS.map((f) => `family=${f.query}`).join('&');
-  const link = document.createElement('link');
-  link.id = linkId;
-  link.rel = 'stylesheet';
-  link.href = `https://fonts.googleapis.com/css2?${families}&display=swap`;
-  document.head.appendChild(link);
-}
 
 function readStored(): AdminFont {
   try {
@@ -73,10 +61,6 @@ const AdminFontContext = createContext<AdminFontContextValue | undefined>(undefi
 
 export const AdminFontProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [font, setFontState] = useState<AdminFont>(readStored);
-
-  useEffect(() => {
-    loadAdminFonts();
-  }, []);
 
   const setFont = useCallback((next: AdminFont) => {
     setFontState(next);

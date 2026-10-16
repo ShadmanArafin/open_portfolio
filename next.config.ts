@@ -11,17 +11,20 @@ import type { NextConfig } from 'next';
  * Router emits its own inline flight scripts. A `script-src 'self'`-only policy
  * would break both. What this policy still buys: no plugins/objects, no
  * framing except same-origin (admin device preview needs it), restricted
- * frame targets for the video facade, and `base-uri`/`form-action` locked to
- * self. A per-request nonce policy is the follow-up, not today's change.
+ * frame targets for the video facade, the Turnstile challenge widget and the
+ * scheduling embeds (Cal.com, Calendly — both host-allowlisted by the embed
+ * block, so the CSP names the same two),
+ * and `base-uri`/`form-action` locked to self. A per-request nonce policy is
+ * the follow-up, not today's change.
  */
 const contentSecurityPolicy = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
-  "font-src 'self' data: https://fonts.gstatic.com",
+  "font-src 'self' data:",
   "connect-src 'self' https:",
-  "frame-src 'self' https://www.youtube-nocookie.com https://player.vimeo.com",
+  "frame-src 'self' https://www.youtube-nocookie.com https://player.vimeo.com https://challenges.cloudflare.com https://cal.com https://calendly.com",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

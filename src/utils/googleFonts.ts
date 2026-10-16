@@ -5,14 +5,16 @@ export interface GoogleFontOption {
   weights: string;
 }
 
+import { fontVariableFor } from '@/core/theme/font-names';
+
 /**
  * Fonts offered in Appearance.
  *
- * Every entry's family and weight list is verified against the Google Fonts
- * API. That matters because the loader requests the heading, body and label
- * families in ONE stylesheet call — a single unavailable weight makes Google
- * return 400 and none of the three would load. If you add a font, request only
- * weights it actually ships (e.g. Instrument Serif is 400 only).
+ * The files are self-hosted: each entry here has a matching static loader in
+ * `core/theme/fonts.ts` (regenerate with `node scripts/gen-fonts.mjs`), so the
+ * browser never requests a stylesheet from Google. If you add a font, add its
+ * loader too and request only weights it actually ships (e.g. Instrument
+ * Serif is 400 only) — the build fails naming an unknown family.
  */
 export const GOOGLE_FONTS_LIST: GoogleFontOption[] = [
   // --- Workhorse sans: safe for body text at any length -------------------
@@ -141,6 +143,18 @@ export const GOOGLE_FONTS_LIST: GoogleFontOption[] = [
     weights: 'wght@400;500;600;700',
   },
   { name: 'Lora', family: 'Lora', category: 'serif', weights: 'wght@400;500;600;700' },
+  {
+    name: 'DM Serif Display',
+    family: 'DM+Serif+Display',
+    category: 'serif',
+    weights: 'wght@400',
+  },
+  {
+    name: 'Libre Baskerville',
+    family: 'Libre+Baskerville',
+    category: 'serif',
+    weights: 'wght@400;700',
+  },
 
   // --- Mono: for the small caps labels ------------------------------------
   {
@@ -156,6 +170,12 @@ export const GOOGLE_FONTS_LIST: GoogleFontOption[] = [
     weights: 'wght@300;400;500;600;700',
   },
   { name: 'Space Mono', family: 'Space+Mono', category: 'monospace', weights: 'wght@400;700' },
+  {
+    name: 'IBM Plex Mono',
+    family: 'IBM+Plex+Mono',
+    category: 'monospace',
+    weights: 'wght@400;500',
+  },
 ];
 
 /** The stack used when no mono font is chosen - the site's original look. */
@@ -163,52 +183,46 @@ export const SYSTEM_MONO_STACK =
   "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace";
 
 export const loadGoogleFonts = (displayFont: string, bodyFont: string, monoFont?: string) => {
-  const displayConfig =
-    GOOGLE_FONTS_LIST.find((f) => f.name === displayFont) || GOOGLE_FONTS_LIST[0];
-  const bodyConfig = GOOGLE_FONTS_LIST.find((f) => f.name === bodyFont) || GOOGLE_FONTS_LIST[0];
-  const monoConfig = monoFont ? GOOGLE_FONTS_LIST.find((f) => f.name === monoFont) : undefined;
-
-  const fontFamiliesToLoad = Array.from(
-    new Set(
-      [
-        displayConfig.family + ':' + displayConfig.weights,
-        bodyConfig.family + ':' + bodyConfig.weights,
-        monoConfig ? monoConfig.family + ':' + monoConfig.weights : null,
-      ].filter(Boolean) as string[]
-    )
-  );
-
-  const linkId = 'google-fonts-dynamic-loader';
-  let linkEl = document.getElementById(linkId) as HTMLLinkElement | null;
-
-  const href = `https://fonts.googleapis.com/css2?${fontFamiliesToLoad.map((f) => `family=${f}`).join('&')}&display=swap`;
-
-  if (!linkEl) {
-    linkEl = document.createElement('link');
-    linkEl.id = linkId;
-    linkEl.rel = 'stylesheet';
-    document.head.appendChild(linkEl);
-  }
-
-  if (linkEl.href !== href) {
-    linkEl.href = href;
-  }
+  // Self-hosted since the next/font migration: the files ship with the build
+  // and every catalogue family is already on the page as a CSS variable (see
+  // core/theme/fonts.ts), so this only swaps which variable each role points
+  // at. No stylesheet is injected and no request leaves for Google — the old
+  // dynamic <link> is gone with the Munich ruling it risked. Unknown names
+  // fall back exactly the way the server layout does.
+  const displayName =
+    GOOGLE_FONTS_LIST.find((f) => f.name === displayFont)?.name ?? GOOGLE_FONTS_LIST[0].name;
+  const bodyName =
+    GOOGLE_FONTS_LIST.find((f) => f.name === bodyFont)?.name ?? GOOGLE_FONTS_LIST[0].name;
+  const monoName = monoFont
+    ? (GOOGLE_FONTS_LIST.find((f) => f.name === monoFont)?.name ?? null)
+    : null;
 
   // Generic fallback matches the font's own category, so a serif heading falls
   // back to a serif rather than a sans while the webfont loads.
-  const generic = (config: GoogleFontOption) =>
-    config.category === 'serif'
+  const generic = (name: string) => {
+    const config = GOOGLE_FONTS_LIST.find((f) => f.name === name);
+    return config?.category === 'serif'
       ? 'serif'
-      : config.category === 'monospace'
+      : config?.category === 'monospace'
         ? 'monospace'
         : 'sans-serif';
+  };
 
   const root = document.documentElement;
-  root.style.setProperty('--font-display', `'${displayConfig.name}', ${generic(displayConfig)}`);
-  root.style.setProperty('--font-sans', `'${bodyConfig.name}', ${generic(bodyConfig)}`);
-  root.style.setProperty('--font-body', `'${bodyConfig.name}', ${generic(bodyConfig)}`);
+  root.style.setProperty(
+    '--font-display',
+    `${fontVariableFor(displayName)}, '${displayName}', ${generic(displayName)}`
+  );
+  root.style.setProperty(
+    '--font-sans',
+    `${fontVariableFor(bodyName)}, '${bodyName}', ${generic(bodyName)}`
+  );
+  root.style.setProperty(
+    '--font-body',
+    `${fontVariableFor(bodyName)}, '${bodyName}', ${generic(bodyName)}`
+  );
   root.style.setProperty(
     '--font-mono',
-    monoConfig ? `'${monoConfig.name}', monospace` : SYSTEM_MONO_STACK
+    monoName ? `${fontVariableFor(monoName)}, '${monoName}', monospace` : SYSTEM_MONO_STACK
   );
 };

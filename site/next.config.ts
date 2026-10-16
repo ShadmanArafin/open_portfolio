@@ -20,7 +20,7 @@ const nextConfig: NextConfig = {
    *
    * `turbopack.root` stays at `site/`. Move it up and Next decides the
    * repository root is the workspace root and compiles the *product's*
-   * `middleware.ts`, which fails naming a file this application has never
+   * `proxy.ts`, which fails naming a file this application has never
    * heard of.
    *
    * `outputFileTracingRoot` is the repository root, and that is what lets the

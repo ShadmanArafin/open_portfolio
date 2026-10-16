@@ -52,8 +52,26 @@ export default async function WritingEntryPage({ params }: { params: Promise<{ s
 
   if (!settings.enabled || !resolved) notFound();
 
+  // Entity clarity, not decoration: JSON-LD tells search engines and AI
+  // citations what the page is (an Article, by whom, when) in a form that
+  // survives any theme. Google documents it as the recommended format.
+  const article = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: resolved.entry.title,
+    ...(resolved.entry.summary ? { description: resolved.entry.summary } : {}),
+    author: content.settings.fullName
+      ? { '@type': 'Person', name: content.settings.fullName }
+      : undefined,
+    ...(resolved.entry.publishedAt ? { datePublished: resolved.entry.publishedAt } : {}),
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(article) }}
+      />
       {channel === 'draft' && (
         <PreviewBanner
           status={resolved.entry.status === 'published' ? 'published' : 'draft'}

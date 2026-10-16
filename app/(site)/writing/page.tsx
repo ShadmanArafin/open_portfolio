@@ -16,7 +16,12 @@ import { getPublicWriting, getWritingSettings } from '@/core/writing/read';
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getWritingSettings(await currentChannel());
-  return buildMetadata({ title: settings.label, path: '/writing' });
+  return buildMetadata({
+    title: settings.label,
+    description: `Essays and notes filed under ${settings.label}.`,
+    path: '/writing',
+    rss: '/writing/feed.xml',
+  });
 }
 
 export default async function WritingIndex() {

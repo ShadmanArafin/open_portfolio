@@ -5,6 +5,7 @@ import { VStack, HStack } from '@astryxdesign/core/Layout';
 import { useCMS } from '../../cms/context/CMSContext';
 import { CMSImage } from '../../components/common/CMSImage';
 import { AstryxHeader, AstryxCard, AstryxBadge } from '../components/astryx/AstryxComponents';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { Trash2, FileDown, Upload, Copy, Check, AlertTriangle } from 'lucide-react';
 
 function formatSize(bytes: number): string {
@@ -16,6 +17,10 @@ export const AdminMediaLibrary: React.FC = () => {
   const { draftData, updateDraft, uploadMedia, deleteMediaItem, countMediaUsage } = useCMS();
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // A PDF upload is almost always a new résumé — but a case-study attachment
+  // must never hijack the CV link silently, so the choice is asked here.
+  const [pdfChoice, setPdfChoice] = useState<{ url: string; name: string } | null>(null);
+  const [assetToDelete, setAssetToDelete] = useState<{ id: string; name: string } | null>(null);
 
   const media = draftData.media;
   const totalBytes = media.reduce((sum, m) => sum + (m.sizeBytes || 0), 0);
@@ -27,19 +32,27 @@ export const AdminMediaLibrary: React.FC = () => {
 
     setBusy(true);
     try {
+      const uploaded: { url: string; name: string }[] = [];
       for (const file of files) {
         const item = await uploadMedia(file);
-        // A PDF upload is almost always a new résumé — point the site at it.
-        if (item && item.type === 'pdf') {
-          updateDraft((draft) => {
-            draft.settings.resumeUrl = item.url;
-            draft.settings.resumeFilename = file.name;
-          });
-        }
+        if (item && item.type === 'pdf') uploaded.push({ url: item.url, name: file.name });
       }
+      // One question for the batch, naming the newest: per-file interrogation
+      // turns a five-PDF upload into five modals.
+      if (uploaded.length > 0) setPdfChoice(uploaded[uploaded.length - 1]);
     } finally {
       setBusy(false);
     }
+  };
+
+  const usePdfAsResume = () => {
+    if (!pdfChoice) return;
+    const { url, name } = pdfChoice;
+    updateDraft((draft) => {
+      draft.settings.resumeUrl = url;
+      draft.settings.resumeFilename = name;
+    });
+    setPdfChoice(null);
   };
 
   const handleCopyRef = (url: string, id: string) => {
@@ -48,22 +61,47 @@ export const AdminMediaLibrary: React.FC = () => {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const handleDelete = async (id: string, name: string) => {
+  const handleDelete = async () => {
+    if (!assetToDelete) return;
+    await deleteMediaItem(assetToDelete.id);
+    setAssetToDelete(null);
+  };
+
+  const deleteWarning = (id: string, name: string) => {
     const uses = countMediaUsage(id);
-    const warning =
-      uses > 0
-        ? `"${name}" is used in ${uses} place${uses === 1 ? '' : 's'} on the site. Deleting it will leave those images blank.\n\nDelete anyway?`
-        : `Delete "${name}"? This cannot be undone.`;
-    if (!window.confirm(warning)) return;
-    await deleteMediaItem(id);
+    return uses > 0
+      ? `"${name}" is used in ${uses} place${uses === 1 ? '' : 's'} on the site. Deleting it will leave those images blank.`
+      : `Delete "${name}"? This cannot be undone.`;
   };
 
   return (
     <VStack gap={6}>
+      <ConfirmDialog
+        isOpen={pdfChoice !== null}
+        title={
+          pdfChoice ? `Use "${pdfChoice.name}" as your downloadable résumé?` : 'Use as résumé?'
+        }
+        description="Choosing No keeps it in the library without changing the current link."
+        confirmLabel="Use as résumé"
+        cancelLabel="Keep in library"
+        onConfirm={usePdfAsResume}
+        onClose={() => setPdfChoice(null)}
+      />
+      <ConfirmDialog
+        isOpen={assetToDelete !== null}
+        title={assetToDelete ? `Delete "${assetToDelete.name}"?` : 'Delete asset?'}
+        description={
+          assetToDelete ? deleteWarning(assetToDelete.id, assetToDelete.name) : undefined
+        }
+        confirmLabel="Delete asset"
+        tone="danger"
+        onConfirm={() => void handleDelete()}
+        onClose={() => setAssetToDelete(null)}
+      />
       <AstryxHeader
         badgeText="Assets"
         title={`Media Library (${media.length})`}
-        subtitle={`Images and PDFs used across the site. ${formatSize(totalBytes)} stored. Uploading a PDF also sets it as the downloadable résumé.`}
+        subtitle={`Images and PDFs used across the site. ${formatSize(totalBytes)} stored. You can set an uploaded PDF as the downloadable résumé when you upload it.`}
       >
         <label
           className={`h-[42px] px-5 rounded-full bg-accent text-bg text-xs font-medium hover:opacity-90 transition-all flex items-center gap-2 shadow-sm ${
@@ -156,7 +194,7 @@ export const AdminMediaLibrary: React.FC = () => {
                   </button>
 
                   <button
-                    onClick={() => void handleDelete(item.id, item.name)}
+                    onClick={() => setAssetToDelete({ id: item.id, name: item.name })}
                     className="p-2 rounded-xl border border-border text-text-muted hover:text-[var(--color-text-red)] hover:bg-surface-secondary cursor-pointer"
                     title="Delete asset"
                     aria-label="Delete asset"

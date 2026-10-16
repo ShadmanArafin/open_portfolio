@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { motion, useInView } from 'framer-motion';
+import { motion, useInView, useReducedMotion } from 'motion/react';
 
 interface RevealProps {
   children: React.ReactNode;
@@ -22,15 +22,21 @@ export const Reveal: React.FC<RevealProps> = ({
 }) => {
   const ref = React.useRef(null);
   const isInView = useInView(ref, { once: true, margin: '0px 0px' });
+  // Vestibular safety: when the OS asks for reduced motion, content appears
+  // immediately with no animation. This doubles as the stuck-invisible guard:
+  // if the observer never fires, reduced-motion users still get content.
+  const reduceMotion = useReducedMotion();
+  const show = isInView || reduceMotion === true;
+  const timing = (d: number) => (reduceMotion ? 0 : d);
 
   if (type === 'clip-headline') {
     return (
       <div ref={ref} className={`overflow-hidden py-1.5 -my-1.5 ${className}`} style={{ width }}>
         <motion.div
           initial={{ y: '110%', opacity: 0 }}
-          animate={isInView ? { y: '0%', opacity: 1 } : { y: '110%', opacity: 0 }}
+          animate={show ? { y: '0%', opacity: 1 } : { y: '110%', opacity: 0 }}
           transition={{
-            duration: duration,
+            duration: timing(duration),
             delay: delay,
             ease: [0.22, 1, 0.36, 1],
           }}
@@ -46,9 +52,9 @@ export const Reveal: React.FC<RevealProps> = ({
       <div ref={ref} className={`overflow-hidden ${className}`} style={{ width }}>
         <motion.div
           initial={{ scale: 1.04, opacity: 0 }}
-          animate={isInView ? { scale: 1, opacity: 1 } : { scale: 1.04, opacity: 0 }}
+          animate={show ? { scale: 1, opacity: 1 } : { scale: 1.04, opacity: 0 }}
           transition={{
-            duration: duration + 0.1,
+            duration: timing(duration + 0.1),
             delay: delay,
             ease: [0.16, 1, 0.3, 1],
           }}
@@ -64,9 +70,9 @@ export const Reveal: React.FC<RevealProps> = ({
       <div ref={ref} className={className} style={{ width }}>
         <motion.div
           initial={{ y: 8, opacity: 0 }}
-          animate={isInView ? { y: 0, opacity: 1 } : { y: 8, opacity: 0 }}
+          animate={show ? { y: 0, opacity: 1 } : { y: 8, opacity: 0 }}
           transition={{
-            duration: 0.5,
+            duration: timing(0.5),
             delay: delay,
             ease: [0.16, 1, 0.3, 1],
           }}
@@ -82,9 +88,9 @@ export const Reveal: React.FC<RevealProps> = ({
     <div ref={ref} className={className} style={{ width }}>
       <motion.div
         initial={{ y: 20, opacity: 0 }}
-        animate={isInView ? { y: 0, opacity: 1 } : { y: 20, opacity: 0 }}
+        animate={show ? { y: 0, opacity: 1 } : { y: 20, opacity: 0 }}
         transition={{
-          duration: duration,
+          duration: timing(duration),
           delay: delay,
           ease: [0.16, 1, 0.3, 1],
         }}

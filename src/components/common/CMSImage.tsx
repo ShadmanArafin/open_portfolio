@@ -22,5 +22,10 @@ type CMSImageProps = Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'src'> & {
 export const CMSImage: React.FC<CMSImageProps> = ({ src, hideWhenEmpty, alt = '', ...rest }) => {
   const resolved = resolveAssetUrl(src);
   if (!resolved && hideWhenEmpty) return null;
-  return <img src={resolved} alt={alt} {...rest} />;
+  // Lazy + async decode by default: below-fold CMS images must not block the
+  // first paint or shift layout work onto it. Callers rendering above-fold
+  // content pass their own loading/decoding through `rest`, which wins.
+  // (Full next/image migration with remotePatterns + sharp is the follow-up;
+  // every call site needs real dimensions first.)
+  return <img src={resolved} alt={alt} loading="lazy" decoding="async" {...rest} />;
 };

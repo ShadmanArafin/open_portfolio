@@ -4,11 +4,13 @@ import { join } from 'node:path';
 import {
   HOME_SLUG,
   MAX_SLUG_SEGMENTS,
+  RESERVED_LOCALE_PREFIXES,
   RESERVED_TOP_LEVEL,
   checkSlug,
   createHomePage,
   createPage,
   isHomePage,
+  isLocalePrefix,
   normaliseSlug,
   pageSchema,
   segmentsToSlug,
@@ -81,6 +83,31 @@ describe('checkSlug', () => {
   it('refuses an empty address and one that is too deep', () => {
     expect(checkSlug('')?.blocking).toBe(true);
     expect(checkSlug('a/b/c/d')?.message).toContain(`${MAX_SLUG_SEGMENTS} levels`);
+  });
+});
+
+describe('locale prefixes', () => {
+  it('holds two-letter language prefixes for future localized routes', () => {
+    // English-only through 1.0 — but a page at /fr today would have to move
+    // the day [lang] routing lands, breaking every link to it.
+    for (const prefix of ['en', 'fr', 'de', 'es', 'zh']) {
+      expect(RESERVED_LOCALE_PREFIXES).toContain(prefix);
+      expect(checkSlug(prefix)?.blocking).toBe(true);
+      expect(checkSlug(`${prefix}/prices`)?.blocking).toBe(true);
+    }
+  });
+
+  it('does not mistake short ordinary words for languages', () => {
+    // A generic two-letter ban would take good addresses with it.
+    for (const slug of ['go', 'me', 'up', 'my-work']) {
+      expect(isLocalePrefix(slug)).toBe(false);
+      if (slug !== 'go' && slug !== 'me' && slug !== 'up') expect(checkSlug(slug)).toBeNull();
+    }
+    expect(checkSlug('go')).toBeNull();
+  });
+
+  it('explains the hold instead of just refusing', () => {
+    expect(checkSlug('fr')?.message).toContain('future language versions');
   });
 });
 

@@ -21,7 +21,10 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({ className, showText = 
         'inline-flex items-center justify-center gap-2 h-[42px] px-4 sm:px-5 rounded-full font-body text-xs sm:text-[13px] font-medium uppercase tracking-wider transition-all duration-250 border border-border bg-surface-primary text-text-primary hover:border-text-primary/40 hover:bg-surface-secondary cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none',
         className
       )}
-      aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      aria-label={
+        isDark ? 'Dark mode is on. Switch to light mode' : 'Light mode is on. Switch to dark mode'
+      }
+      aria-pressed={isDark}
     >
       {isDark ? (
         <>

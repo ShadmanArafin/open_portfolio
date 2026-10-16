@@ -59,9 +59,9 @@ export const TokenAction: React.FC<{
         style={{
           fontFamily: 'var(--font-body)',
           fontSize: 'var(--text-lg)',
-          color: failed ? 'var(--text-muted)' : 'var(--text-primary)',
+          color: failed ? 'var(--danger)' : 'var(--text-primary)',
         }}
-        role="status"
+        role={failed ? 'alert' : 'status'}
       >
         {message}
       </p>

@@ -24,6 +24,12 @@ Change two values first:
 - `OPB_SETUP_TOKEN` — proves the site is yours on first run. Anything long.
 - `OPB_SECRET_KEY` — encrypts service credentials saved from the admin, such as SMTP passwords. Changing it later makes previously saved credentials unreadable, so they have to be re-entered.
 
+On an ARM machine such as a Raspberry Pi, build the image for both architectures so the same tag runs on x86 and ARM:
+
+```bash
+docker buildx build --platform linux/amd64,linux/arm64 -t open-portfolio .
+```
+
 ## Volumes, and why the app refuses some hosts
 
 `/data` — set as `OPB_DATA_DIR` — holds uploads, and holds content too when no database is configured.
@@ -62,6 +68,8 @@ Standard Next.js. Terminate TLS at the proxy and forward to port 3000.
 
 Two headers matter. Forward `X-Forwarded-Proto` so the app knows the request arrived over HTTPS — without it, session cookies marked `Secure` are set on what the app believes is a plain HTTP connection and sign-in silently fails. And set `OPB_SITE_URL` to the public address, because it is the only source used for links that arrive in email; a link built from a caller-supplied `Host` header is a way to mail somebody a valid token pointing at somebody else's domain.
 
+Rate limiting reads the client address from `X-Forwarded-For` / `X-Real-IP`, and those headers are self-asserted. Only set them at a proxy you control, and strip any inbound values first — otherwise an attacker rotates headers to walk around the login and one-time-code limits.
+
 ## Health
 
-`/api/auth/session` answers without a session and is a reasonable liveness probe. There is no separate health endpoint; a request that renders the home page is the honest check.
+`/api/health` answers 200 when the server is up and is what the container healthcheck hits. `/api/auth/session` answers without a session and is a reasonable liveness probe from outside.

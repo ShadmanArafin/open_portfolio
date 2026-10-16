@@ -17,7 +17,7 @@ import {
   resolveFrame,
 } from '../primitives';
 import { deeper } from '../primitives/heading-level';
-import { ContactForm, NewsletterForm, VideoFacade } from './forms';
+import { ContactForm, CommentsFacade, EmbedFacade, NewsletterForm, VideoFacade } from './forms';
 import type { BlockField } from './fields';
 import type { BlockDefinition } from './schema';
 import { sanitizeHref } from '@/core/security/urls';
@@ -383,19 +383,125 @@ const video: BlockDefinition<VideoProps> = {
   },
 };
 
-/* ------------------------------------------------------------------- split */
+/* ------------------------------------------------------------------- embed */
 
-const splitProps = z.object({
-  eyebrow: z.string().optional(),
+/**
+ * Turns a booking link somebody pasted into an embed address.
+ *
+ * Same rule as video: the **host** is checked, not the string, and the URL is
+ * rebuilt from the validated parts rather than passed through. Cal.com and
+ * Calendly are the two allowlisted hosts — a scheduling page anywhere else is
+ * a link, not an embed, and belongs in a button or a card.
+ */
+const SCHEDULING_HOSTS: Record<string, string> = {
+  'cal.com': 'Cal.com',
+  'www.cal.com': 'Cal.com',
+  'calendly.com': 'Calendly',
+  'www.calendly.com': 'Calendly',
+};
+
+export function toSchedulingUrl(raw: string): { url: string; provider: string } | null {
+  const value = raw.trim();
+  if (!value) return null;
+
+  let parsed: URL;
+  try {
+    parsed = new URL(value);
+  } catch {
+    return null;
+  }
+  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return null;
+
+  const provider = SCHEDULING_HOSTS[parsed.hostname.toLowerCase()];
+  if (!provider) return null;
+  if (parsed.pathname.replace(/\//g, '').length === 0) return null;
+
+  return { url: `https://${parsed.hostname.toLowerCase()}${parsed.pathname}`, provider };
+}
+
+const embedProps = z.object({
   heading: z.string().optional(),
-  paragraphs: z.array(z.string()).min(1),
-  media: mediaSchema,
-  cta: z
-    .array(z.object({ label: z.string(), href: z.string() }))
-    .max(1)
-    .optional(),
-  ratio: z.enum(['4 / 3', '1 / 1', '3 / 4']).optional(),
+  url: z.string(),
+  title: z.string().min(1),
+  ratio: z.enum(['1 / 1', '4 / 3', '3 / 4']).optional(),
 });
+type EmbedProps = z.infer<typeof embedProps>;
+
+const embed: BlockDefinition<EmbedProps> = {
+  type: 'embed',
+  version: 1,
+  label: 'Booking calendar',
+  description: 'A Cal.com or Calendly link. Nothing loads until a visitor presses book.',
+  group: 'conversion',
+  schema: embedProps,
+  defaults: () => ({ url: '', title: 'Book a time' }),
+  fields: [
+    headingField,
+    {
+      kind: 'text',
+      path: 'url',
+      label: 'Cal.com or Calendly link',
+      placeholder: 'https://cal.com/you/intro',
+      help: 'Paste the booking address from the browser bar. Anything else is a link, not an embed.',
+    },
+    {
+      kind: 'text',
+      path: 'title',
+      label: 'What is being booked',
+      help: 'Announced to anyone using a screen reader.',
+    },
+    {
+      kind: 'choice',
+      path: 'ratio',
+      label: 'Shape',
+      options: [
+        { value: '1 / 1', label: 'Square' },
+        { value: '4 / 3', label: 'Classic' },
+        { value: '3 / 4', label: 'Tall' },
+      ],
+    },
+  ],
+  checks: [
+    {
+      id: 'recognised',
+      run: (props) =>
+        props.url.trim() && !toSchedulingUrl(props.url)
+          ? 'That link is not a Cal.com or Calendly booking address, so nothing will appear here.'
+          : null,
+    },
+  ],
+  Render: ({ props, frame, headingLevel }) => {
+    const scheduling = toSchedulingUrl(props.url);
+    if (!scheduling) return null;
+
+    return (
+      <Band frame={frame}>
+        <Stack gap={5}>
+          {props.heading && <Heading level={headingLevel}>{props.heading}</Heading>}
+          <EmbedFacade
+            embedUrl={scheduling.url}
+            title={props.title}
+            provider={scheduling.provider}
+            ratio={props.ratio ?? '3 / 4'}
+          />
+        </Stack>
+      </Band>
+    );
+  },
+};
+
+/* ------------------------------------------------------------------- split */ const splitProps =
+  z.object({
+    eyebrow: z.string().optional(),
+    heading: z.string().optional(),
+    paragraphs: z.array(z.string()).min(1),
+    media: mediaSchema,
+    cta: z
+      .array(z.object({ label: z.string(), href: z.string() }))
+      .max(1)
+      .optional(),
+    ratio: z.enum(['4 / 3', '1 / 1', '3 / 4']).optional(),
+  });
 type SplitProps = z.infer<typeof splitProps>;
 
 const split: BlockDefinition<SplitProps> = {
@@ -611,7 +717,98 @@ const newsletter: BlockDefinition<NewsletterBlockProps> = {
   ),
 };
 
-/* --------------------------------------------------------------- socialRow */
+/* --------------------------------------------------------------- comments */
+
+const commentsProps = z.object({
+  heading: z.string().optional(),
+  repo: z.string().default(''),
+  repoId: z.string().default(''),
+  category: z.string().default(''),
+  categoryId: z.string().default(''),
+  mapping: z.enum(['pathname', 'url', 'title', 'og:title']).default('pathname'),
+});
+type CommentsBlockProps = z.infer<typeof commentsProps>;
+
+const comments: BlockDefinition<CommentsBlockProps> = {
+  type: 'comments',
+  version: 1,
+  label: 'Discussion',
+  description: 'Reader comments via GitHub Discussions. Nothing loads until a visitor asks.',
+  group: 'conversion',
+  schema: commentsProps,
+  defaults: () => ({
+    heading: 'Discussion',
+    repo: '',
+    repoId: '',
+    category: '',
+    categoryId: '',
+    mapping: 'pathname' as const,
+  }),
+  fields: [
+    headingField,
+    { kind: 'text', path: 'repo', label: 'Repository', placeholder: 'owner/name' },
+    {
+      kind: 'text',
+      path: 'repoId',
+      label: 'Repository ID',
+      help: 'Copy it from giscus.app — it is shown once a repository is chosen there.',
+    },
+    { kind: 'text', path: 'category', label: 'Discussion category', placeholder: 'Announcements' },
+    {
+      kind: 'text',
+      path: 'categoryId',
+      label: 'Category ID',
+      help: 'Also from giscus.app, next to the repository ID.',
+    },
+    {
+      kind: 'choice',
+      path: 'mapping',
+      label: 'Match discussions by',
+      options: [
+        { value: 'pathname', label: 'Page address' },
+        { value: 'url', label: 'Full URL' },
+        { value: 'title', label: 'Page title' },
+        { value: 'og:title', label: 'Share title' },
+      ],
+    },
+  ],
+  checks: [
+    {
+      id: 'comments-unconfigured',
+      run: (props) =>
+        !props.repo
+          ? 'No repository yet, so this block publishes nothing. Connect one under Services → Comments, or fill the fields above — giscus.app hands you every value.'
+          : !/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(props.repo)
+            ? 'That repository does not look like owner/name, so the thread cannot load.'
+            : null,
+    },
+  ],
+  Render: ({ props, frame, headingLevel }) => {
+    // Unfinished is advice in the editor, not a hole on the page: without a
+    // repository there is no thread to show and nothing may phone GitHub.
+    if (!props.repo) return null;
+    return (
+      <Band frame={frame}>
+        <Stack gap={5}>
+          {props.heading && (
+            <Heading level={headingLevel} size="md">
+              {props.heading}
+            </Heading>
+          )}
+          <CommentsFacade
+            repo={props.repo}
+            repoId={props.repoId}
+            category={props.category}
+            categoryId={props.categoryId}
+            mapping={props.mapping}
+          />
+        </Stack>
+      </Band>
+    );
+  },
+};
+
+/* ---------------------------------------------------------------- socialRow */
 
 const socialRowProps = z.object({
   heading: z.string().optional(),
@@ -1000,9 +1197,11 @@ export const STANDARD_DEFINITIONS = [
   contactForm,
   faq,
   video,
+  embed,
   split,
   quote,
   newsletter,
+  comments,
   socialRow,
   services,
   download,

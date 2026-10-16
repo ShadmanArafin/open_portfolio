@@ -518,7 +518,7 @@ const cards: BlockDefinition<CardsProps> = {
               </Heading>
               {item.body && <Text size="sm">{item.body}</Text>}
               {item.href && (
-                <Button href={item.href} variant="secondary">
+                <Button href={item.href} variant="secondary" ariaLabel={`Read more: ${item.title}`}>
                   Read more
                 </Button>
               )}

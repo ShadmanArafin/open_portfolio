@@ -52,7 +52,7 @@ export default function RightForYouPage() {
               },
               {
                 label: 'Your site is words, pictures and a contact form',
-                note: 'That is what this does well. Twenty-two blocks, six themes, real search metadata, an inbox that works.',
+                note: 'That is what this does well. Twenty-four blocks, six themes, real search metadata, an inbox that works.',
               },
               {
                 label: 'You have been burned by a subscription',
@@ -86,11 +86,6 @@ export default function RightForYouPage() {
                 label: 'Your work is hundreds of pieces',
                 note: 'The whole site is saved as one document on every change. Fine for a portfolio; not the shape for a four-hundred-post archive.',
                 stamp: <span className="stamp stamp--plain">Known limit</span>,
-              },
-              {
-                label: 'You need image uploads to a hosted object store, today',
-                note: 'Uploads work on the local filesystem and are verified there and in Docker. They have never been run against Vercel Blob or Supabase Storage with live credentials.',
-                stamp: <span className="stamp stamp--unverified">Unverified</span>,
               },
             ]}
           />

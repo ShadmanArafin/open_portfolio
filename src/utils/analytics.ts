@@ -12,15 +12,20 @@
  * provider and the data is real from that moment on; connect nothing and every
  * call is a no-op that costs a function call.
  *
- * Configure in `.env.local`:
- *   VITE_ANALYTICS_PROVIDER   plausible | umami | none   (default none)
- *   VITE_ANALYTICS_DOMAIN     the site domain registered with the provider
- *   VITE_ANALYTICS_SRC        script URL (self-hosted installs differ)
- *   VITE_ANALYTICS_WEBSITE_ID Umami only
- *   VITE_ANALYTICS_SHARE_URL  read-only dashboard URL, embedded under /admin/analytics
+ * Configure in Services (no redeploy), in `OPB_ANALYTICS_*` environment
+ * variables, or — for setups predating both — the legacy build-time
+ * `NEXT_PUBLIC_ANALYTICS_*` variables:
+ *   OPB_ANALYTICS_PROVIDER    umami | plausible
+ *   OPB_ANALYTICS_HOST        where it lives (Umami) / Plausible address
+ *   OPB_ANALYTICS_WEBSITE_ID  Umami website ID
+ *   OPB_ANALYTICS_DOMAIN      Plausible domain
+ *   OPB_ANALYTICS_SCRIPT_SRC  override for the tracking script URL
+ *   OPB_ANALYTICS_SHARE_URL   read-only dashboard URL, embedded under /admin/analytics
  *
- * Both supported providers are cookieless and need no consent banner in the
- * EU/UK, which is why they are the default suggestion rather than GA.
+ * The server layout resolves all three sources and embeds the answer as JSON,
+ * which is what `getAnalyticsConfig` reads. Both supported providers are
+ * cookieless and need no consent banner in the EU/UK, which is why they are
+ * the default suggestion rather than GA.
  */
 
 export type AnalyticsProvider = 'plausible' | 'umami' | 'none';
@@ -39,22 +44,41 @@ const DEFAULT_SRC: Record<Exclude<AnalyticsProvider, 'none'>, string> = {
 };
 
 export function getAnalyticsConfig(): AnalyticsConfig {
-  // Read as whole property accesses, never `env[name]`: Next inlines
-  // NEXT_PUBLIC_* at build time by static substitution, so a computed lookup
-  // silently resolves to undefined in a production build.
+  // The server layout embeds the resolved answer (env, then vault, then
+  // legacy variables) as JSON, so the client reads one source with no extra
+  // request. The build-time variables remain as the fallback for contexts
+  // without the embedded block. Read as whole property accesses, never
+  // `env[name]`: Next inlines NEXT_PUBLIC_* at build time by static
+  // substitution, so a computed lookup silently resolves to undefined in a
+  // production build.
+  const embedded = readEmbeddedConfig();
   const provider = (
-    process.env.NEXT_PUBLIC_ANALYTICS_PROVIDER ?? 'none'
+    embedded?.provider ??
+    process.env.NEXT_PUBLIC_ANALYTICS_PROVIDER ??
+    'none'
   ).toLowerCase() as AnalyticsProvider;
 
   return {
     provider: provider === 'plausible' || provider === 'umami' ? provider : 'none',
-    domain: process.env.NEXT_PUBLIC_ANALYTICS_DOMAIN ?? '',
+    domain: embedded?.domain ?? process.env.NEXT_PUBLIC_ANALYTICS_DOMAIN ?? '',
     scriptSrc:
+      embedded?.scriptSrc ??
       process.env.NEXT_PUBLIC_ANALYTICS_SRC ??
       (provider !== 'none' ? (DEFAULT_SRC[provider as 'plausible'] ?? '') : ''),
-    websiteId: process.env.NEXT_PUBLIC_ANALYTICS_WEBSITE_ID ?? '',
-    shareUrl: process.env.NEXT_PUBLIC_ANALYTICS_SHARE_URL ?? '',
+    websiteId: embedded?.websiteId ?? process.env.NEXT_PUBLIC_ANALYTICS_WEBSITE_ID ?? '',
+    shareUrl: embedded?.shareUrl ?? process.env.NEXT_PUBLIC_ANALYTICS_SHARE_URL ?? '',
   };
+}
+
+function readEmbeddedConfig(): Partial<AnalyticsConfig> | null {
+  if (typeof document === 'undefined') return null;
+  const el = document.getElementById('opb-analytics-config');
+  if (!el?.textContent) return null;
+  try {
+    return JSON.parse(el.textContent) as Partial<AnalyticsConfig>;
+  } catch {
+    return null;
+  }
 }
 
 export function isAnalyticsConfigured(): boolean {

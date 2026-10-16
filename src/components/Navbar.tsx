@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { ThemeToggle } from './common/ThemeToggle';
 import { ArrowUpRight, Menu, X } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { Container } from './common/Container';
 import { cn } from '../utils/cn';
 import { useCMS } from '../cms/context/CMSContext';
@@ -16,6 +16,7 @@ export const Navbar: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  const menuButtonRef = React.useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -33,6 +34,20 @@ export const Navbar: React.FC = () => {
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [pathname]);
+
+  // The overlay is a dialog: Escape closes it and focus returns to the
+  // hamburger that opened it, so keyboard users never lose their place.
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMobileMenuOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      menuButtonRef.current?.focus();
+    };
+  }, [mobileMenuOpen]);
 
   // Pages the owner marked "show in navigation" appear here alongside the
   // links set in Settings, so building a page is enough to make it reachable.
@@ -110,9 +125,12 @@ export const Navbar: React.FC = () => {
             <div className="flex lg:hidden items-center justify-end gap-3 justify-self-end">
               <ThemeToggle showText={false} />
               <button
+                ref={menuButtonRef}
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="w-[42px] h-[42px] rounded-full border border-border text-text-primary flex items-center justify-center cursor-pointer hover:border-text-primary/40 transition-colors"
-                aria-label="Toggle Navigation Menu"
+                aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+                aria-expanded={mobileMenuOpen}
+                aria-controls="mobile-menu"
               >
                 {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
@@ -125,6 +143,10 @@ export const Navbar: React.FC = () => {
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
+            id="mobile-menu"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Site menu"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}

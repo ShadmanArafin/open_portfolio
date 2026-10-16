@@ -12,6 +12,7 @@ import { cmsService } from '../../cms/services/cmsService';
 import { GOOGLE_FONTS_LIST } from '../../utils/googleFonts';
 import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core/SegmentedControl';
 import { AdminRecord, AdminRecordList } from '../components/AdminRecord';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { SocialLinkItem } from '../../cms/types/cms';
 import {
   SOCIAL_PLATFORMS,
@@ -259,6 +260,27 @@ const BackupPanel: React.FC<{ storeName: string }> = ({ storeName }) => {
   const fileInput = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Resetting wipes everything with no undo: typed gate, not just a question.
+  const [resetOpen, setResetOpen] = useState(false);
+  // Importing replaces everything too, so the file is read first and the
+  // question names it — no blind "continue?".
+  const [pendingImport, setPendingImport] = useState<{ name: string; text: string } | null>(null);
+
+  const runImport = async (text: string) => {
+    setBusy(true);
+    try {
+      const parsed = JSON.parse(text);
+      const result = await cmsService.importBundle(parsed);
+      setStatus(
+        result.ok ? 'Content restored from the bundle.' : (result.error ?? 'Import failed.')
+      );
+    } catch {
+      setStatus('That file could not be read as JSON.');
+    } finally {
+      setBusy(false);
+      setPendingImport(null);
+    }
+  };
 
   const handleExport = async () => {
     setBusy(true);
@@ -286,42 +308,17 @@ const BackupPanel: React.FC<{ storeName: string }> = ({ storeName }) => {
     e.target.value = '';
     if (!file) return;
 
-    if (!window.confirm('Importing replaces ALL current content and media. Continue?')) return;
-
-    setBusy(true);
-    try {
-      const parsed = JSON.parse(await file.text());
-      const result = await cmsService.importBundle(parsed);
-      setStatus(
-        result.ok ? 'Content restored from the bundle.' : (result.error ?? 'Import failed.')
-      );
-    } catch {
-      setStatus('That file could not be read as JSON.');
-    } finally {
-      setBusy(false);
-    }
+    setPendingImport({ name: file.name, text: await file.text() });
   };
 
   const handleReset = async () => {
-    if (
-      !window.confirm(
-        'This deletes all your edits and uploaded images, restoring the original built-in content. Continue?'
-      )
-    )
-      return;
-    if (
-      !window.confirm(
-        'Last chance — this cannot be undone. Export a backup first if you are unsure.'
-      )
-    )
-      return;
-
     setBusy(true);
     try {
       await cmsService.resetToSeed();
       setStatus('Content reset to the built-in defaults.');
     } finally {
       setBusy(false);
+      setResetOpen(false);
     }
   };
 
@@ -364,7 +361,7 @@ const BackupPanel: React.FC<{ storeName: string }> = ({ storeName }) => {
         <AstryxButton
           variant="danger"
           icon={RotateCcw}
-          onClick={() => void handleReset()}
+          onClick={() => setResetOpen(true)}
           disabled={busy}
         >
           Reset to Defaults
@@ -372,6 +369,29 @@ const BackupPanel: React.FC<{ storeName: string }> = ({ storeName }) => {
       </div>
 
       {status && <p className="text-xs text-accent">{status}</p>}
+
+      <ConfirmDialog
+        isOpen={pendingImport !== null}
+        title={`Import "${pendingImport?.name ?? ''}"?`}
+        description="Importing replaces ALL current content and media. Export a backup first if you are unsure."
+        confirmLabel="Import bundle"
+        tone="danger"
+        onConfirm={() => {
+          if (pendingImport) void runImport(pendingImport.text);
+        }}
+        onClose={() => setPendingImport(null)}
+      />
+
+      <ConfirmDialog
+        isOpen={resetOpen}
+        title="Reset everything?"
+        description="This deletes all your edits and uploaded images, restoring the original built-in content. It cannot be undone — export a backup first if you are unsure."
+        confirmLabel="Reset everything"
+        tone="danger"
+        requireText="RESET"
+        onConfirm={() => void handleReset()}
+        onClose={() => setResetOpen(false)}
+      />
     </AstryxCard>
   );
 };
@@ -462,14 +482,25 @@ const PasskeyPanel: React.FC = () => {
     }
   };
 
+  const [passkeyToRemove, setPasskeyToRemove] = useState<EnrolledPasskey | null>(null);
+
   const handleRemove = async (id: string) => {
-    if (!window.confirm('Remove this passkey? Your passphrase still signs in.')) return;
     await fetch(`/api/auth/passkey/${encodeURIComponent(id)}`, { method: 'DELETE' });
     await refresh();
   };
 
   return (
     <AstryxCard variant="default" density="balanced" className="space-y-5">
+      <ConfirmDialog
+        isOpen={passkeyToRemove !== null}
+        title={`Remove "${passkeyToRemove?.deviceName ?? 'this passkey'}"?`}
+        description="Your passphrase still signs in. You can enroll a passkey again at any time."
+        confirmLabel="Remove passkey"
+        onConfirm={() => {
+          if (passkeyToRemove) void handleRemove(passkeyToRemove.id);
+        }}
+        onClose={() => setPasskeyToRemove(null)}
+      />
       <SectionTitle icon={KeyRound} text="Passkeys" />
 
       <p className="text-sm text-text-secondary leading-relaxed">
@@ -495,7 +526,7 @@ const PasskeyPanel: React.FC = () => {
               </div>
               <AstryxButton
                 variant="secondary"
-                onClick={() => void handleRemove(c.id)}
+                onClick={() => setPasskeyToRemove(c)}
                 disabled={busy}
               >
                 Remove
@@ -784,8 +815,25 @@ const AppearancePanel: React.FC = () => {
    * button that appears to do nothing: the new theme is selected, every value it
    * wanted is shadowed by the old one, and the site looks identical. Clearing
    * them is what makes switching switch.
+   *
+   * The clear is confirmed first when there is anything to lose: switching with
+   * nine custom values and no warning is how an afternoon of tuning vanishes.
    */
-  const chooseTheme = (themeId: string) =>
+  const OVERRIDABLE = [
+    'accentDark',
+    'accentLight',
+    'backgroundDark',
+    'backgroundLight',
+    'strokeDark',
+    'strokeLight',
+    'displayFontFamily',
+    'bodyFontFamily',
+    'monoFontFamily',
+  ] as const;
+
+  const [themeToChoose, setThemeToChoose] = useState<{ id: string; kept: number } | null>(null);
+
+  const applyTheme = (themeId: string) =>
     updateDraft((draft) => {
       draft.appearance.themeId = themeId;
       draft.appearance.accentDark = '';
@@ -799,10 +847,36 @@ const AppearancePanel: React.FC = () => {
       draft.appearance.monoFontFamily = '';
     });
 
+  const chooseTheme = (themeId: string) => {
+    if (themeId !== (appearance?.themeId ?? DEFAULT_THEME_ID)) {
+      const kept = OVERRIDABLE.filter((field) => (appearance as any)?.[field]);
+      if (kept.length > 0) {
+        setThemeToChoose({ id: themeId, kept: kept.length });
+        return;
+      }
+    }
+    applyTheme(themeId);
+  };
+
   const currentTheme = appearance?.themeId ?? DEFAULT_THEME_ID;
 
   return (
     <>
+      <ConfirmDialog
+        isOpen={themeToChoose !== null}
+        title="Switch theme?"
+        description={
+          themeToChoose
+            ? `Switching clears your ${themeToChoose.kept} custom colour/font choice${themeToChoose.kept === 1 ? '' : 's'}.`
+            : undefined
+        }
+        confirmLabel="Switch theme"
+        tone="danger"
+        onConfirm={() => {
+          if (themeToChoose) applyTheme(themeToChoose.id);
+        }}
+        onClose={() => setThemeToChoose(null)}
+      />
       <AstryxCard variant="default" density="balanced" className="space-y-6">
         <SectionTitle icon={Palette} text="Theme" />
         <Text type="supporting" display="block">

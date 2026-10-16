@@ -46,7 +46,7 @@ if (TEST_URL) {
       const adapter = await load();
 
       const bytes = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
-      const record = await adapter.media.put('public.png', bytes, 'image/png');
+      await adapter.media.put('public.png', bytes, 'image/png');
       const url = (await adapter.media.resolveUrl('public.png')) as string;
       expect(typeof url).toBe('string');
 

@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Mail } from 'lucide-react';
 import { useCMS } from '../cms/context/CMSContext';
 import { NEWSLETTER_DEFAULTS } from '@/core/newsletter/schema';
+import { TurnstileWidget } from '@/core/blocks/forms';
 
 /**
  * "Send me updates."
@@ -22,6 +23,7 @@ export const NewsletterSignup: React.FC = () => {
 
   const [email, setEmail] = useState('');
   const [trap, setTrap] = useState('');
+  const [spamToken, setSpamToken] = useState('');
   const [state, setState] = useState<'idle' | 'sending' | 'done'>('idle');
   const [message, setMessage] = useState('');
   const [failed, setFailed] = useState(false);
@@ -40,6 +42,7 @@ export const NewsletterSignup: React.FC = () => {
         body: JSON.stringify({
           email: email.trim(),
           honeypot: trap,
+          turnstileToken: spamToken,
           source: typeof window === 'undefined' ? undefined : window.location.pathname,
         }),
       });
@@ -71,7 +74,7 @@ export const NewsletterSignup: React.FC = () => {
         <div className="flex-1 min-w-0">
           <label
             htmlFor="newsletter-email"
-            className="flex items-center gap-2 font-body text-[11px] font-medium text-text-muted mb-2"
+            className="flex items-center gap-2 font-body text-xs font-medium text-text-muted mb-2"
           >
             <Mail className="w-3.5 h-3.5" aria-hidden />
             <span>{settings.pitch || 'Occasional updates, straight to your inbox.'}</span>
@@ -111,8 +114,10 @@ export const NewsletterSignup: React.FC = () => {
         </button>
       </form>
 
+      <TurnstileWidget onToken={setSpamToken} />
+
       {failed && message && (
-        <p className="mt-3 font-body text-xs text-text-muted" role="alert">
+        <p className="mt-3 font-body text-xs text-danger" role="alert">
           {message}
         </p>
       )}

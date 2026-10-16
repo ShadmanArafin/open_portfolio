@@ -54,7 +54,12 @@ function inferAdapterId(): AdapterId {
   ) {
     candidates.push('neon');
   }
-  if (process.env.CONVEX_DEPLOYMENT) candidates.push('convex');
+  if (process.env.CONVEX_DEPLOYMENT)
+    throw new AdapterConfigError(
+      'CONVEX_DEPLOYMENT is set, but the Convex backend is not built yet — the ' +
+        'union only lists backends with a working adapter. Unset it or set OPB_ADAPTER ' +
+        'to a backend that exists.'
+    );
   if (process.env.FIREBASE_PROJECT_ID) candidates.push('firebase');
   if (process.env.CLOUDFLARE_ACCOUNT_ID && process.env.D1_DATABASE_ID)
     candidates.push('cloudflare');

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { VStack } from '@astryxdesign/core/Layout';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Card } from '@astryxdesign/core/Card';
@@ -65,6 +65,28 @@ export const AdminAnalytics: React.FC = () => {
   const config = getAnalyticsConfig();
   const connected = isAnalyticsConfigured();
 
+  // View counts, when the owner pasted an API key into the provider's
+  // settings. Absent means enquiry-only — never an error state.
+  const [audience, setAudience] = useState<{
+    provider: string;
+    visitors30d: number | null;
+    pageviews30d: number | null;
+    topPages: { path: string; views: number }[];
+  } | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    fetch('/api/admin/analytics/summary')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((body: { ok?: boolean; summary?: typeof audience } | null) => {
+        if (live && body?.ok && body.summary) setAudience(body.summary);
+      })
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, []);
+
   const stats = useMemo(() => enquiryStats(data.messages ?? []), [data.messages]);
 
   const published = data.projects.filter((p) => p.status === 'published');
@@ -128,6 +150,36 @@ export const AdminAnalytics: React.FC = () => {
             </Text>
           </VStack>
         </Card>
+
+        {audience && (
+          <>
+            <Card padding={4}>
+              <VStack gap={2} align="start">
+                <Text type="supporting">Visitors · last 30 days</Text>
+                <Heading level={2}>
+                  {audience.visitors30d === null ? '—' : String(audience.visitors30d)}
+                </Heading>
+                <Text type="supporting" display="block">
+                  {`from ${audience.provider}`}
+                </Text>
+              </VStack>
+            </Card>
+
+            <Card padding={4}>
+              <VStack gap={2} align="start">
+                <Text type="supporting">Page views · last 30 days</Text>
+                <Heading level={2}>
+                  {audience.pageviews30d === null ? '—' : String(audience.pageviews30d)}
+                </Heading>
+                <Text type="supporting" display="block">
+                  {audience.topPages.length > 0
+                    ? `${audience.topPages.length} busiest pages below`
+                    : 'No page breakdown available'}
+                </Text>
+              </VStack>
+            </Card>
+          </>
+        )}
       </Grid>
 
       <Grid columns={{ minWidth: 340, repeat: 'fit' }} gap={6} align="start">
@@ -154,6 +206,21 @@ export const AdminAnalytics: React.FC = () => {
             Counted from the contact form, so these are exact — every one is a message in your
             inbox.
           </Text>
+
+          {audience && audience.topPages.length > 0 && (
+            <VStack gap={2}>
+              <Heading level={3}>Busiest pages · last 30 days</Heading>
+              <List hasDividers density="compact">
+                {audience.topPages.map((page) => (
+                  <ListItem
+                    key={page.path}
+                    label={page.path}
+                    endContent={<Badge variant="neutral" label={`${page.views}`} />}
+                  />
+                ))}
+              </List>
+            </VStack>
+          )}
         </VStack>
 
         <VStack gap={3}>
@@ -182,7 +249,7 @@ export const AdminAnalytics: React.FC = () => {
                 </Card>
               ) : (
                 <Text type="supporting" display="block">
-                  Add VITE_ANALYTICS_SHARE_URL with a read-only dashboard link to see the charts
+                  Add a read-only share link in the provider's Services settings to see the charts
                   here instead of on the provider's site.
                 </Text>
               )}
@@ -207,20 +274,16 @@ export const AdminAnalytics: React.FC = () => {
                   <Text type="label">Connecting one</Text>
                   <List density="compact">
                     <ListItem
-                      label="1. Pick a provider"
-                      description="Plausible or Umami. Both are cookieless, so no consent banner is needed in the UK or EU. Umami has a free tier and can be self-hosted."
+                      label="1. Pick a provider under Services"
+                      description="Umami self-hosted is the default suggestion; Plausible self-hosted is the alternative. Both are cookieless, so no consent banner is needed in the UK or EU."
                     />
                     <ListItem
-                      label="2. Add your domain there"
-                      description="You will get a site ID and a script URL back."
+                      label="2. Follow its numbered steps"
+                      description="Each integration carries its own setup guide and a Test button. No terminal, no redeploy."
                     />
                     <ListItem
-                      label="3. Put them in .env.local"
-                      description="VITE_ANALYTICS_PROVIDER=plausible and VITE_ANALYTICS_DOMAIN=yourdomain.com — then rebuild."
-                    />
-                    <ListItem
-                      label="4. Optional: embed the dashboard"
-                      description="Create a read-only share link and set VITE_ANALYTICS_SHARE_URL to see the charts on this page."
+                      label="3. Optionally embed the dashboard"
+                      description="Paste a read-only share link in the same screen to see the charts on this page."
                     />
                   </List>
                 </VStack>

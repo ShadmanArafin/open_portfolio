@@ -9,6 +9,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { firstSortOrder } from '../utils/listOps';
 import { useCMS } from '../../cms/context/CMSContext';
 import { AdminRecord, AdminRecordList } from '../components/AdminRecord';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { AdminImageField } from '../components/AdminImageField';
 import { CMSImage } from '../../components/common/CMSImage';
 import { CaseStudyItem } from '../../cms/types/cms';
@@ -20,6 +21,7 @@ const PUBLISH_STATUSES = ['draft', 'published', 'archived'];
 export const AdminCaseStudiesCMS: React.FC = () => {
   const { draftData, updateDraft, uploadMedia } = useCMS();
   const [savedId, setSavedId] = useState<string | null>(null);
+  const [caseStudyToDelete, setCaseStudyToDelete] = useState<CaseStudyItem | null>(null);
 
   const caseStudies = [...draftData.caseStudies].sort((a, b) => a.sortOrder - b.sortOrder);
 
@@ -125,10 +127,10 @@ export const AdminCaseStudiesCMS: React.FC = () => {
   };
 
   const handleDeleteCaseStudy = (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this case study?')) return;
     updateDraft((draft) => {
       draft.caseStudies = draft.caseStudies.filter((cs) => cs.id !== id);
     });
+    setCaseStudyToDelete(null);
   };
 
   const handleCSFieldChange = (csId: string, field: keyof CaseStudyItem, value: any) => {
@@ -208,6 +210,17 @@ export const AdminCaseStudiesCMS: React.FC = () => {
 
   return (
     <VStack gap={6}>
+      <ConfirmDialog
+        isOpen={caseStudyToDelete !== null}
+        title={caseStudyToDelete ? `Delete "${caseStudyToDelete.title}"?` : 'Delete case study?'}
+        description="The story leaves your draft, wherever it was shown. This cannot be undone without restoring a version."
+        confirmLabel="Delete case study"
+        tone="danger"
+        onConfirm={() => {
+          if (caseStudyToDelete) handleDeleteCaseStudy(caseStudyToDelete.id);
+        }}
+        onClose={() => setCaseStudyToDelete(null)}
+      />
       {/* Astryx Header */}
       <AstryxHeader
         badgeText="Case studies"
@@ -245,7 +258,7 @@ export const AdminCaseStudiesCMS: React.FC = () => {
               onMoveDown={() => moveCaseStudy(index, 'down')}
               canMoveUp={index > 0}
               canMoveDown={index < caseStudies.length - 1}
-              onRemove={() => handleDeleteCaseStudy(cs.id)}
+              onRemove={() => setCaseStudyToDelete(cs)}
               removeLabel="Delete case study"
             >
               <HStack gap={4} align="start" wrap="wrap">

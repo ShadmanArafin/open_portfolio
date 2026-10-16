@@ -13,7 +13,7 @@ import { DEMO_SESSION_COOKIE, DEMO_TTL_SECONDS } from '@/core/demo/config';
  * this only saves a signed-out visitor from watching the admin shell load
  * before it redirects them.
  */
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // Every response carries the request id it was served under, so a log line
@@ -34,7 +34,7 @@ export function middleware(req: NextRequest) {
   /*
    * Demo mode: give each visitor their own sandbox.
    *
-   * Middleware is the only place this can happen, because it is the only thing
+   * The proxy is the only place this can happen, because it is the only thing
    * that runs before a cached page is served — a cookie set from inside a route
    * would never be issued to the visitors who most need it, the ones landing on
    * the prerendered home page.

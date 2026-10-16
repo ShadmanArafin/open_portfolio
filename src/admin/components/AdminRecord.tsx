@@ -76,13 +76,16 @@ const ReorderArrows: React.FC<{
   canMoveDown: boolean;
   title: string;
 }> = ({ onMoveUp, onMoveDown, canMoveUp, canMoveDown, title }) => (
-  <div className="flex flex-col gap-0.5 text-text-muted flex-shrink-0">
+  // Each arrow is a full 44px target. A stacked pair is taller than the row
+  // it sits in, and that is the right trade: a reorder control nobody can
+  // reliably hit on a phone is decoration, not a control.
+  <div className="flex flex-col text-text-muted flex-shrink-0">
     <button
       onClick={onMoveUp}
       disabled={!canMoveUp}
       title={`Move ${title} up`}
       aria-label={`Move ${title} up`}
-      className="p-0.5 hover:text-text-primary disabled:opacity-30 cursor-pointer"
+      className="min-h-[44px] min-w-[44px] grid place-items-center hover:text-text-primary disabled:opacity-30 cursor-pointer"
     >
       <ChevronUp className="w-3.5 h-3.5" />
     </button>
@@ -91,7 +94,7 @@ const ReorderArrows: React.FC<{
       disabled={!canMoveDown}
       title={`Move ${title} down`}
       aria-label={`Move ${title} down`}
-      className="p-0.5 hover:text-text-primary disabled:opacity-30 cursor-pointer"
+      className="min-h-[44px] min-w-[44px] grid place-items-center hover:text-text-primary disabled:opacity-30 cursor-pointer"
     >
       <ChevronDown className="w-3.5 h-3.5" />
     </button>

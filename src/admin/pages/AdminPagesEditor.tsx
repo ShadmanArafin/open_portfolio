@@ -1,20 +1,19 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { TextArea, TextInput } from '../components/AdminFields';
-import { VStack, HStack } from '@astryxdesign/core/Layout';
+import { VStack } from '@astryxdesign/core/Layout';
+import { Banner } from '@astryxdesign/core/Banner';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Text } from '@astryxdesign/core/Text';
 import { useCMS } from '../../cms/context/CMSContext';
 import { SectionConfig } from '../../cms/types/cms';
 import { AdminRecord, AdminRecordList } from '../components/AdminRecord';
-import { AstryxHeader, AstryxButton } from '../components/astryx/AstryxComponents';
-import { Save, Check } from 'lucide-react';
+import { AstryxHeader } from '../components/astryx/AstryxComponents';
 
 export const AdminPagesEditor: React.FC = () => {
   const { draftData, updateDraft } = useCMS();
-  const [savedId, setSavedId] = useState<string | null>(null);
 
   // Orders at 100+ are standalone page headers (Work, Case Studies, Contact),
   // not homepage bands - they are editable but not reorderable.
@@ -63,12 +62,17 @@ export const AdminPagesEditor: React.FC = () => {
     });
   };
 
-  const handleExplicitSave = (id: string) => {
-    updateDraft((draft) => {
-      draft.lastSavedAt = new Date().toISOString();
-    });
-    setSavedId(id);
-    setTimeout(() => setSavedId(null), 2500);
+  // Anchor IDs become in-page links (#work, #contact). Two sections sharing
+  // one silently send every link to the first, and characters outside
+  // [a-z0-9-] never survive a URL intact — so both are checked here, as
+  // advice under the field, rather than refused at save time.
+  const anchorProblem = (anchorId: string): string | null => {
+    if (!anchorId.trim()) return 'Add an anchor ID — without one this section cannot be linked to.';
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(anchorId))
+      return 'Use lowercase letters, numbers and hyphens only, e.g. "selected-work".';
+    if (sections.filter((s) => s.anchorId === anchorId).length > 1)
+      return `Another section already uses "#${anchorId}" — links to it will land on the first one.`;
+    return null;
   };
 
   return (
@@ -83,7 +87,7 @@ export const AdminPagesEditor: React.FC = () => {
       {/* Sections List */}
       <AdminRecordList>
         {sections.map((section, index) => {
-          const isSaved = savedId === section.id;
+          const problem = anchorProblem(section.anchorId);
 
           return (
             <AdminRecord
@@ -158,15 +162,7 @@ export const AdminPagesEditor: React.FC = () => {
                 />
               </Grid>
 
-              <HStack justify="end">
-                <AstryxButton
-                  variant="primary"
-                  icon={isSaved ? Check : Save}
-                  onClick={() => handleExplicitSave(section.id)}
-                >
-                  {isSaved ? 'Saved' : 'Save section'}
-                </AstryxButton>
-              </HStack>
+              {problem && <Banner status="warning" title={problem} />}
             </AdminRecord>
           );
         })}

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 
 export const CustomCursor: React.FC = () => {
   const [position, setPosition] = useState({ x: -100, y: -100 });
@@ -9,6 +9,7 @@ export const CustomCursor: React.FC = () => {
   const [isHovered, setIsHovered] = useState(false);
   const [isPointer, setIsPointer] = useState(false);
   const [isTouch, setIsTouch] = useState(false);
+  const [reduceMotion, setReduceMotion] = useState(false);
 
   useEffect(() => {
     // Disable completely on touch/mobile devices
@@ -16,6 +17,13 @@ export const CustomCursor: React.FC = () => {
       setIsTouch(true);
       return;
     }
+
+    // A spring chasing the pointer is vestibular-hostile: when the OS asks
+    // for reduced motion, the native cursor alone is the correct cursor.
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setReduceMotion(media.matches);
+    const onChange = (e: MediaQueryListEvent) => setReduceMotion(e.matches);
+    media.addEventListener('change', onChange);
 
     const onMouseMove = (e: MouseEvent) => {
       setPosition({ x: e.clientX, y: e.clientY });
@@ -38,13 +46,17 @@ export const CustomCursor: React.FC = () => {
     };
 
     window.addEventListener('mousemove', onMouseMove);
-    return () => window.removeEventListener('mousemove', onMouseMove);
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      media.removeEventListener('change', onChange);
+    };
   }, []);
 
-  if (isTouch) return null;
+  if (isTouch || reduceMotion) return null;
 
   return (
     <motion.div
+      aria-hidden="true"
       className="fixed top-0 left-0 pointer-events-none z-[99999] hidden md:flex items-center justify-center rounded-full mix-blend-difference"
       animate={{
         x: position.x - (isHovered ? 40 : isPointer ? 16 : 6),

@@ -59,6 +59,8 @@ export interface PageMetaInput {
   path?: string;
   image?: string;
   type?: 'website' | 'article';
+  /** Feed path only, e.g. `/writing/feed.xml`. Advertised for autodiscovery. */
+  rss?: string;
 }
 
 export async function buildMetadata(input: PageMetaInput = {}): Promise<Metadata> {
@@ -101,7 +103,10 @@ export async function buildMetadata(input: PageMetaInput = {}): Promise<Metadata
 
   if (siteUrl) {
     meta.metadataBase = new URL(siteUrl);
-    meta.alternates = { canonical: url || siteUrl };
+    meta.alternates = {
+      canonical: url || siteUrl,
+      ...(input.rss ? { types: { 'application/rss+xml': input.rss } } : {}),
+    };
   }
 
   return meta;

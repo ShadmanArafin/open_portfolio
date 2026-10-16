@@ -67,7 +67,7 @@ export const ContactCTASection: React.FC = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Contact via WhatsApp"
-                  className="inline-flex items-center justify-center gap-2 h-[42px] px-6 rounded-full bg-[#25D366] text-white font-body text-xs sm:text-[13px] font-medium uppercase tracking-wider hover:bg-[#20bd5a] transition-all duration-250 hover:-translate-y-[1px] group cursor-pointer shadow-sm select-none"
+                  className="inline-flex items-center justify-center gap-2 h-[42px] px-6 rounded-full bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] font-body text-xs sm:text-[13px] font-medium uppercase tracking-wider transition-all duration-250 hover:-translate-y-[1px] group cursor-pointer shadow-sm select-none"
                 >
                   <FaWhatsapp className="w-4 h-4 text-white transition-transform duration-200 group-hover:scale-105 flex-shrink-0" />
                   <span>

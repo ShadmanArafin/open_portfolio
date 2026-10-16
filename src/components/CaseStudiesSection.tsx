@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { ArrowUpRight } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { Container } from './common/Container';
 import { Section } from './common/Section';
 import { SectionLabel } from './common/SectionLabel';

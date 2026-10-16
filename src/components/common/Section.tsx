@@ -13,10 +13,7 @@ export const Section = forwardRef<HTMLElement, SectionProps>(
       <section
         ref={ref}
         id={id}
-        className={cn(
-          'pt-20 sm:pt-24 lg:pt-28 xl:pt-32 pb-20 sm:pb-24 lg:pb-28 relative',
-          className
-        )}
+        className={cn('py-[var(--section-y)] relative', className)}
         {...props}
       >
         {children}

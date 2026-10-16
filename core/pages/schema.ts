@@ -34,6 +34,7 @@ export const RESERVED_TOP_LEVEL: readonly string[] = [
   'contact',
   'newsletter',
   'setup',
+  'share',
   'work',
   'writing',
   // Framework and platform paths that never reach our router.
@@ -45,6 +46,68 @@ export const RESERVED_TOP_LEVEL: readonly string[] = [
   'robots.txt',
   'sitemap.xml',
 ];
+
+/**
+ * Language prefixes held for future localized routes (`/[lang]/…`).
+ *
+ * English-only through 1.0, by decision — but a page saved today at `/fr` or
+ * `/de/prices` would own an address the future `[lang]` router needs, and
+ * moving it later breaks every link to it. So these are refused at write time,
+ * with a message that says why, even though no localized route exists yet.
+ *
+ * Explicit ISO 639-1 codes rather than "any two letters": refusing every
+ * two-letter slug would also take `go`, `me` or `up`, which are perfectly
+ * good page addresses. Dictionaries land later (next-intl is the 2026 pick);
+ * this list is the only part that has to exist now, because it protects URLs.
+ */
+export const RESERVED_LOCALE_PREFIXES: readonly string[] = [
+  'ar',
+  'bg',
+  'bn',
+  'cs',
+  'da',
+  'de',
+  'el',
+  'en',
+  'es',
+  'et',
+  'fa',
+  'fi',
+  'fr',
+  'he',
+  'hi',
+  'hr',
+  'hu',
+  'id',
+  'it',
+  'ja',
+  'ko',
+  'lt',
+  'lv',
+  'ms',
+  'nl',
+  'no',
+  'pl',
+  'pt',
+  'ro',
+  'ru',
+  'sk',
+  'sl',
+  'sv',
+  'ta',
+  'te',
+  'th',
+  'tr',
+  'uk',
+  'vi',
+  'zh',
+];
+
+/** True when the slug's first segment is a held language prefix. */
+export function isLocalePrefix(slug: string): boolean {
+  const first = slug.split('/')[0]?.toLowerCase();
+  return first !== undefined && RESERVED_LOCALE_PREFIXES.includes(first);
+}
 
 /**
  * The home page's slug.
@@ -182,6 +245,13 @@ export function checkSlug(
     return {
       blocking: true,
       message: `"${segments[0]}" is already used by this site, so a page there would never open. Try something like "my-${segments[0]}".`,
+    };
+  }
+
+  if (isLocalePrefix(slug)) {
+    return {
+      blocking: true,
+      message: `"${segments[0]}" is held for future language versions of this site, so a page there would have to move later. Try something like "my-${segments[0]}".`,
     };
   }
 

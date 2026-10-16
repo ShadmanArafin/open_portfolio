@@ -1,17 +1,18 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useId, useState } from 'react';
 import { sanitizeMediaSrc } from '@/core/security/urls';
 
 /**
- * The interactive parts of three blocks, in one Client Component file.
+ * The interactive parts of five blocks, in one Client Component file.
  *
  * Almost every block in this project renders on the server and ships no
- * JavaScript. These three cannot: a form has state, and a video facade exists
- * precisely to *not* load a third party until somebody asks for it. Keeping
- * them together and importing them from the definitions means the client
- * boundary is one file somebody can read, rather than a `'use client'` sprinkled
- * through a 900-line block file where it is easy to add a fourth by accident.
+ * JavaScript. These five cannot: forms have state, and the video, comments
+ * and scheduling facades exist precisely to *not* load a third party until
+ * somebody asks for it. Keeping them together and importing them from the
+ * definitions means the client boundary is one file somebody can read, rather
+ * than a `'use client'` sprinkled through a 900-line block file where it is
+ * easy to add a sixth by accident.
  *
  * They take plain props and never read context. A block's Render is a Server
  * Component and cannot provide one, and these have to work identically inside
@@ -91,12 +92,128 @@ function Note({ children, tone }: { children: React.ReactNode; tone: 'ok' | 'bad
         margin: 0,
         fontFamily: 'var(--font-body)',
         fontSize: 'var(--text-sm)',
-        color: tone === 'bad' ? 'var(--text-primary)' : 'var(--text-secondary)',
+        color: tone === 'bad' ? 'var(--danger)' : 'var(--text-secondary)',
       }}
     >
       {children}
     </p>
   );
+}
+
+/* ------------------------------------------------------- turnstile widget */
+
+/**
+ * The human check, rendered only when the owner configured one.
+ *
+ * Fetches the public site key first: a 404 means bot protection is off and
+ * the form falls back to the honeypot alone, exactly as the integration's
+ * degradation text promises. The Cloudflare script loads lazily on first
+ * need rather than on every page view — most visitors never submit anything,
+ * and none of them should pay for a challenge they will never see.
+ */
+export function TurnstileWidget({ onToken }: { onToken: (token: string) => void }) {
+  const [siteKey, setSiteKey] = useState<string | null>(null);
+  const [off, setOff] = useState(false);
+  const boxRef = React.useRef<HTMLDivElement>(null);
+  const tokenRef = React.useRef(onToken);
+  useEffect(() => {
+    tokenRef.current = onToken;
+  });
+
+  useEffect(() => {
+    fetch('/api/spam/sitekey')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { siteKey?: string } | null) => {
+        if (data?.siteKey) setSiteKey(data.siteKey);
+        else setOff(true);
+      })
+      .catch(() => setOff(true));
+  }, []);
+
+  useEffect(() => {
+    if (!siteKey || !boxRef.current) return;
+    const target = boxRef.current;
+    let widgetId: string | undefined;
+    let cancelled = false;
+
+    const api = () => (window as unknown as { turnstile?: TurnstileApi }).turnstile ?? null;
+    const doRender = () => {
+      if (cancelled || widgetId !== undefined) return;
+      const client = api();
+      if (!client) return;
+      try {
+        widgetId = client.render(target, {
+          sitekey: siteKey,
+          callback: (token: string) => tokenRef.current(token),
+          'expired-callback': () => tokenRef.current(''),
+          'error-callback': () => tokenRef.current(''),
+        });
+      } catch {
+        widgetId = undefined;
+      }
+    };
+
+    if (api()) {
+      doRender();
+    } else if (!document.querySelector('script[data-turnstile-loader]')) {
+      const script = document.createElement('script');
+      script.dataset.turnstileLoader = 'true';
+      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+      script.async = true;
+      script.defer = true;
+      script.onload = () => {
+        doRender();
+      };
+      document.head.appendChild(script);
+    } else {
+      // Another instance is already loading the script (StrictMode mounts
+      // this effect twice in development): wait for it instead of adding a
+      // second copy that would render a second widget into this box.
+      const timer = setInterval(() => {
+        if (api()) {
+          clearInterval(timer);
+          clearTimeout(timeout);
+          doRender();
+        }
+      }, 100);
+      const timeout = setTimeout(() => clearInterval(timer), 8000);
+      return () => {
+        cancelled = true;
+        clearInterval(timer);
+        clearTimeout(timeout);
+        if (widgetId !== undefined) api()?.remove?.(widgetId);
+      };
+    }
+    return () => {
+      cancelled = true;
+      if (widgetId !== undefined) api()?.remove?.(widgetId);
+    };
+  }, [siteKey]);
+
+  if (off || siteKey === null) return null;
+  // Explicit footprint: the managed widget is 300×65 and Cloudflare will not
+  // paint into a collapsed box. An empty div is 0px tall, so without this the
+  // challenge loads and has nowhere to go.
+  return (
+    <div
+      ref={boxRef}
+      data-testid="turnstile-box"
+      style={{ minHeight: 65, width: 300, maxWidth: '100%' }}
+    />
+  );
+}
+
+interface TurnstileApi {
+  render: (
+    element: HTMLElement,
+    options: {
+      sitekey: string;
+      callback?: (token: string) => void;
+      'expired-callback'?: () => void;
+      'error-callback'?: () => void;
+    }
+  ) => string;
+  remove?: (id: string) => void;
 }
 
 /* ----------------------------------------------------------- contact form */
@@ -132,8 +249,10 @@ export function ContactForm({
     message: '',
   });
   const [trap, setTrap] = useState('');
+  const [spamToken, setSpamToken] = useState('');
   const [state, setState] = useState<'idle' | 'sending' | 'sent'>('idle');
   const [error, setError] = useState('');
+  const errorId = useId();
 
   const set = (key: keyof typeof values) => (event: { target: { value: string } }) =>
     setValues((current) => ({ ...current, [key]: event.target.value }));
@@ -148,7 +267,7 @@ export function ContactForm({
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...values, honeypot: trap }),
+        body: JSON.stringify({ ...values, honeypot: trap, turnstileToken: spamToken }),
       });
       const body = (await res.json()) as { ok?: boolean; error?: string };
       if (body.ok) {
@@ -167,11 +286,18 @@ export function ContactForm({
   return (
     <form
       onSubmit={submit}
+      aria-describedby={error ? errorId : undefined}
       style={{ display: 'grid', gap: 'var(--space-4)', position: 'relative' }}
     >
       <label style={labelStyle}>
         Your name
-        <input required value={values.name} onChange={set('name')} style={fieldStyle} />
+        <input
+          required
+          autoComplete="name"
+          value={values.name}
+          onChange={set('name')}
+          style={fieldStyle}
+        />
       </label>
 
       <label style={labelStyle}>
@@ -220,11 +346,17 @@ export function ContactForm({
 
       <Honeypot value={trap} onChange={setTrap} />
 
+      <TurnstileWidget onToken={setSpamToken} />
+
       <button type="submit" disabled={state === 'sending'} style={buttonStyle}>
         {state === 'sending' ? 'Sending…' : submitLabel}
       </button>
 
-      {error && <Note tone="bad">{error}</Note>}
+      {error && (
+        <span id={errorId}>
+          <Note tone="bad">{error}</Note>
+        </span>
+      )}
     </form>
   );
 }
@@ -246,6 +378,7 @@ export interface NewsletterFormProps {
 export function NewsletterForm({ buttonLabel, placeholder }: NewsletterFormProps) {
   const [email, setEmail] = useState('');
   const [trap, setTrap] = useState('');
+  const [spamToken, setSpamToken] = useState('');
   const [state, setState] = useState<'idle' | 'sending' | 'done'>('idle');
   const [message, setMessage] = useState('');
   const [failed, setFailed] = useState(false);
@@ -262,6 +395,7 @@ export function NewsletterForm({ buttonLabel, placeholder }: NewsletterFormProps
         body: JSON.stringify({
           email: email.trim(),
           honeypot: trap,
+          turnstileToken: spamToken,
           source: typeof window === 'undefined' ? undefined : window.location.pathname,
         }),
       });
@@ -307,12 +441,192 @@ export function NewsletterForm({ buttonLabel, placeholder }: NewsletterFormProps
           style={{ ...fieldStyle, flex: '1 1 var(--measure-narrow)', width: 'auto' }}
         />
         <Honeypot value={trap} onChange={setTrap} />
+        <TurnstileWidget onToken={setSpamToken} />
         <button type="submit" disabled={state === 'sending'} style={buttonStyle}>
           {state === 'sending' ? 'Sending…' : buttonLabel}
         </button>
       </div>
       {failed && message && <Note tone="bad">{message}</Note>}
     </form>
+  );
+}
+
+/* -------------------------------------------------------------- comments */
+
+export interface CommentsFacadeProps {
+  repo: string;
+  repoId: string;
+  category: string;
+  categoryId: string;
+  mapping: 'pathname' | 'url' | 'title' | 'og:title';
+}
+
+/**
+ * A discussion that loads nothing until asked.
+ *
+ * Giscus renders inside an iframe served from giscus.app, backed by GitHub
+ * Discussions on the owner's repository. Embedding its script directly would
+ * contact both on every page view including every visitor who never scrolls
+ * this far — the same reason the video block is a facade. One press swaps the
+ * invitation for the thread.
+ */
+export function CommentsFacade({
+  repo,
+  repoId,
+  category,
+  categoryId,
+  mapping,
+}: CommentsFacadeProps) {
+  const [open, setOpen] = useState(false);
+  const boxRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open || !boxRef.current) return;
+    const target = boxRef.current;
+    const script = document.createElement('script');
+    script.src = 'https://giscus.app/client.js';
+    script.async = true;
+    script.crossOrigin = 'anonymous';
+    script.setAttribute('data-repo', repo);
+    script.setAttribute('data-repo-id', repoId);
+    script.setAttribute('data-category', category);
+    script.setAttribute('data-category-id', categoryId);
+    script.setAttribute('data-mapping', mapping);
+    script.setAttribute('data-strict', '0');
+    script.setAttribute('data-reactions-enabled', '1');
+    script.setAttribute('data-emit-metadata', '0');
+    script.setAttribute('data-input-position', 'bottom');
+    script.setAttribute('data-theme', 'preferred_color_scheme');
+    script.setAttribute('data-lang', 'en');
+    target.appendChild(script);
+    return () => {
+      target.innerHTML = '';
+    };
+  }, [open, repo, repoId, category, categoryId, mapping]);
+
+  if (!open) {
+    return (
+      <div
+        style={{
+          border: 'var(--hairline) solid var(--border-color)',
+          borderRadius: 'var(--radius-lg)',
+          padding: 'var(--space-6)',
+          display: 'grid',
+          gap: 'var(--space-3)',
+          justifyItems: 'start',
+          background: 'var(--surface-primary)',
+        }}
+      >
+        <p
+          style={{
+            margin: 0,
+            fontFamily: 'var(--font-body)',
+            fontSize: 'var(--text-sm)',
+            color: 'var(--text-secondary)',
+          }}
+        >
+          Discussion lives on GitHub, and nothing loads from there until you ask.
+        </p>
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          style={{
+            minHeight: 'var(--control-height)',
+            paddingInline: 'var(--space-6)',
+            borderRadius: 'var(--radius-full)',
+            border: 'var(--hairline) solid var(--btn-secondary-border)',
+            background: 'transparent',
+            color: 'var(--btn-secondary-text)',
+            fontFamily: 'var(--font-body)',
+            fontSize: 'var(--text-sm)',
+            fontWeight: 500,
+            cursor: 'pointer',
+          }}
+        >
+          Show comments
+        </button>
+      </div>
+    );
+  }
+
+  return <div ref={boxRef} />;
+}
+
+/* -------------------------------------------------------------- scheduling */
+
+export interface EmbedFacadeProps {
+  embedUrl: string;
+  title: string;
+  provider: string;
+  ratio: string;
+}
+
+/**
+ * A booking calendar that loads nothing until pressed.
+ *
+ * Same contract as the video facade: the iframe — and with it Cal.com or
+ * Calendly tracking state — appears only after an explicit press, announced
+ * by a real button with the provider named. A scheduling widget that loaded
+ * on page view would tax every visitor for the few who book.
+ */
+export function EmbedFacade({ embedUrl, title, provider, ratio }: EmbedFacadeProps) {
+  const [open, setOpen] = useState(false);
+
+  if (!open) {
+    return (
+      <div
+        style={{
+          border: 'var(--hairline) solid var(--border-color)',
+          borderRadius: 'var(--radius-lg)',
+          padding: 'var(--space-6)',
+          display: 'grid',
+          gap: 'var(--space-3)',
+          justifyItems: 'start',
+          background: 'var(--surface-primary)',
+        }}
+      >
+        <p
+          style={{
+            margin: 0,
+            fontFamily: 'var(--font-body)',
+            fontSize: 'var(--text-sm)',
+            color: 'var(--text-secondary)',
+          }}
+        >
+          Booking runs on {provider}, and nothing loads from there until you ask.
+        </p>
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label={`Book a time, loading ${provider}`}
+          style={{
+            minHeight: 'var(--control-height)',
+            paddingInline: 'var(--space-6)',
+            borderRadius: 'var(--radius-full)',
+            border: 'none',
+            background: 'var(--btn-primary-bg)',
+            color: 'var(--btn-primary-text)',
+            fontFamily: 'var(--font-body)',
+            fontSize: 'var(--text-sm)',
+            fontWeight: 500,
+            cursor: 'pointer',
+          }}
+        >
+          Book a time
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ position: 'relative', width: '100%', aspectRatio: ratio.replace(/\s+/g, '') }}>
+      <iframe
+        src={embedUrl}
+        title={title}
+        loading="lazy"
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }}
+      />
+    </div>
   );
 }
 
