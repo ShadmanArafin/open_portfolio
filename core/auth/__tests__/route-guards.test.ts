@@ -160,6 +160,62 @@ function exportedHandlers(source: ts.SourceFile): { method: string; node: ts.Nod
 
 const routeFiles = walk(API_ROOT);
 
+/**
+ * Server actions are publicly callable HTTP endpoints too — a layout guard
+ * does not protect them. So they get the same treatment: every exported
+ * async function under an `_actions` directory must reach `requireOwner()`.
+ */
+const ADMIN_ROOT = join(ROOT, 'app', 'admin');
+
+function actionFiles(): string[] {
+  const out: string[] = [];
+  const visit = (dir: string) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        visit(full);
+      } else if (entry.name.endsWith('.ts') || entry.name.endsWith('.tsx')) {
+        // Only files inside an `_actions` directory: pages and islands in
+        // the same tree are rendering, not mutating.
+        if (full.split(sep).includes('_actions')) out.push(full);
+      }
+    }
+  };
+  visit(ADMIN_ROOT);
+  return out;
+}
+
+/** Every exported async function in an action file, by name. */
+function exportedActions(source: ts.SourceFile): { name: string; node: ts.Node }[] {
+  const actions: { name: string; node: ts.Node }[] = [];
+  for (const statement of source.statements) {
+    const modifiers = ts.canHaveModifiers(statement) ? ts.getModifiers(statement) : undefined;
+    const exported = modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword);
+    if (!exported) continue;
+    const isAsync = modifiers?.some((m) => m.kind === ts.SyntaxKind.AsyncKeyword);
+
+    if (ts.isFunctionDeclaration(statement) && statement.name) {
+      if (isAsync) actions.push({ name: statement.name.text, node: statement });
+      continue;
+    }
+
+    // `export const restoreVersionAction = async (...) => {}` is the same.
+    if (ts.isVariableStatement(statement)) {
+      for (const decl of statement.declarationList.declarations) {
+        if (!ts.isIdentifier(decl.name) || !decl.initializer) continue;
+        if (ts.isArrowFunction(decl.initializer) || ts.isFunctionExpression(decl.initializer)) {
+          const fn = decl.initializer;
+          const fnAsync = fn.modifiers?.some((m) => m.kind === ts.SyntaxKind.AsyncKeyword);
+          if (fnAsync) actions.push({ name: decl.name.text, node: decl });
+        }
+      }
+    }
+  }
+  return actions;
+}
+
+const serverActionFiles = actionFiles();
+
 describe('route guards', () => {
   it('finds the API routes at all', () => {
     // A broken walk would make every assertion below vacuously pass, which is
@@ -210,4 +266,30 @@ describe('route guards', () => {
       expect(present.has(id), `PUBLIC_ROUTES lists "${id}", which no longer exists`).toBe(true);
     }
   });
+
+  it('finds the server actions at all', () => {
+    expect(serverActionFiles.length).toBeGreaterThan(0);
+  });
+
+  it.each(serverActionFiles.map((file) => [relative(ROOT, file), file] as const))(
+    '%s calls requireOwner(), with no public list',
+    (_id, file) => {
+      const source = ts.createSourceFile(
+        file,
+        readFileSync(file, 'utf8'),
+        ts.ScriptTarget.Latest,
+        true
+      );
+      const locals = localFunctions(source);
+      const actions = exportedActions(source);
+      expect(actions.length, `${file} exports no async action`).toBeGreaterThan(0);
+      for (const action of actions) {
+        expect(
+          callsRequireOwner(action.node, locals),
+          `${action.name} in ${file} does not call requireOwner(). Server actions are ` +
+            'publicly callable: a layout guard does not protect them.'
+        ).toBe(true);
+      }
+    }
+  );
 });

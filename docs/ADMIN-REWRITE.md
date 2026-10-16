@@ -5,10 +5,15 @@
 > prerequisites. The twenty-screen migration itself is post-1.0 work and is
 > tracked here, not hidden.
 
+> Update 2026-10-17 — slice 1 landed: the `(protected)` shell exists and five
+> screens are migrated (dashboard, messages, storage, history, your-site).
+> The rest serve from the legacy mount until their slice lands.
+
 ## Why
 
 The admin is one client-side React Router app inside a single Next.js route
-(`app/admin/[[...slug]]/admin-mount.tsx`, `ssr: false`) with ~25 lazy
+(`app/admin/[...slug]/admin-mount.tsx` — required catch-all since slice 1, so
+the `/admin` root belongs to the migrated dashboard — `ssr: false`) with ~25 lazy
 screens. Consequences, all known:
 
 - Zero server rendering: no skeletons from the server, no `aria-live` seeding,
@@ -50,6 +55,29 @@ screens. Consequences, all known:
 3. **Kill criteria**: last `react-router-dom` import deleted, `ssr: false`
    mount deleted, `motion` stays, Tailwind re-evaluated with the CSS-build
    test as the acceptance gate.
+
+### Slice 1 — landed 2026-10-17
+
+Shell + guard (`(protected)/layout.tsx`, 307 to `/admin/login?next=` when
+signed out, verified live), five migrated screens at unchanged URLs
+(specific routes win over the legacy catch-all):
+
+- `/admin` dashboard — readiness/issues/activity/views server-rendered,
+  `publishDraftAction` (contrast gate, version cap, revalidate)
+- `/admin/messages` — URL-selected reading pane, read/delete server actions,
+  push toggle island reused
+- `/admin/storage` — adapter status + guides, zero client JS
+- `/admin/history` — version list + `restoreVersionAction` (conflict-safe)
+- `/admin/your-site` — URL/platform/published state + copy island
+
+Supporting work: pure `core/content/changes.ts` (fingerprint, diff summary,
+media usage) with tests — the legacy `CMSService` copies stay until the old
+shell dies; the route-guard AST test now walks `_actions` too, so unguarded
+server actions fail the build.
+
+Still legacy (next slices): login/reset/welcome (public shell first),
+settings, pages builder, media library, collections, newsletter, analytics,
+writing, navigation/footer/microcopy/appearance/seo, integrations, help.
 
 ## Explicitly not in the rewrite
 

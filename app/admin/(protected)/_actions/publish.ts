@@ -1,0 +1,116 @@
+'use server';
+
+import { revalidatePath } from 'next/cache';
+import { getStorageAdapter } from '@/core/storage/registry';
+import { requireOwner } from '@/core/auth/guard';
+import { withoutEnquiries } from '@/core/content/sanitise';
+import { auditContrast, describeFailure } from '@/core/theme/audit';
+import { flattenAppearance } from '@/core/theme/resolve';
+import { looksLikeContent } from '@/core/content/validate';
+import { RevisionConflictError } from '@/core/storage/contract';
+import { describeChanges } from '@/core/content/changes';
+import type { CMSState, ContentVersion } from '@/cms/types/cms';
+
+export interface PublishResult {
+  ok: boolean;
+  error?: string;
+  conflict?: boolean;
+}
+
+const MAX_VERSIONS = 20;
+
+/**
+ * Publishing, as a server action.
+ *
+ * Same boundary as `POST /api/admin/publish`: contrast-gated (422 on an
+ * unreadable palette — advice lives in the dashboard, enforcement lives
+ * here), enquiries stripped before anything is written, one snapshot per
+ * publish capped at 20, activity capped at 100, cached renders dropped so the
+ * change is live immediately.
+ *
+ * Reads the draft on the server rather than trusting client-sent content —
+ * the one thing the action shape improves over the route it mirrors.
+ */
+export async function publishDraftAction(expectedRevision?: number): Promise<PublishResult> {
+  await requireOwner();
+
+  const adapter = await getStorageAdapter();
+  const draftMeta = await adapter.readSnapshotMeta('draft');
+  if (!draftMeta) return { ok: false, error: 'There is no draft to publish yet.' };
+  if (!looksLikeContent(draftMeta.state)) {
+    return { ok: false, error: 'That does not look like site content.' };
+  }
+
+  const draft = draftMeta.state as CMSState;
+  const publishedMeta = await adapter.readSnapshotMeta('published');
+
+  const contrast = auditContrast(flattenAppearance(draft.appearance));
+  if (!contrast.passes) {
+    return { ok: false, error: describeFailure(contrast.failures[0]) };
+  }
+
+  const now = new Date().toISOString();
+  const nextPublished = structuredClone(draft) as CMSState;
+  nextPublished.status = 'published';
+  nextPublished.lastPublishedAt = now;
+
+  // A snapshot holds content only. History, activity and the inbox stay out:
+  // each version nesting the last roughly doubled stored size, and a version
+  // holding the inbox would publish other people's names and addresses into
+  // the HTML of every public page.
+  const snapshot = structuredClone(nextPublished) as CMSState;
+  snapshot.versions = [];
+  snapshot.activityLogs = [];
+  snapshot.messages = [];
+
+  const summary = publishSummary(publishedMeta?.state as CMSState | undefined, nextPublished);
+  const version: ContentVersion = {
+    id: `v-${Date.now()}`,
+    timestamp: now,
+    editor: nextPublished.settings?.fullName || 'Admin',
+    action: 'Published Site Changes',
+    summary,
+    snapshot,
+  };
+
+  nextPublished.versions = [
+    version,
+    ...((publishedMeta?.state as CMSState | undefined)?.versions ?? []),
+  ].slice(0, MAX_VERSIONS);
+  nextPublished.activityLogs = [
+    {
+      id: `act-${Date.now()}`,
+      timestamp: now,
+      user: nextPublished.settings?.fullName || 'Admin',
+      action: 'Published Changes',
+      details: summary,
+    },
+    ...((publishedMeta?.state as CMSState | undefined)?.activityLogs ?? []),
+  ].slice(0, 100);
+
+  const merged = withoutEnquiries(nextPublished);
+
+  try {
+    await adapter.writeSnapshot('published', merged, expectedRevision);
+  } catch (err) {
+    if (err instanceof RevisionConflictError) {
+      return { ok: false, conflict: true, error: err.message };
+    }
+    throw err;
+  }
+
+  // The draft follows the publish, so the next save is a change, not a copy.
+  try {
+    await adapter.writeSnapshot('draft', merged);
+  } catch {
+    /* The publish landed; a stale draft is a reload, not a failure. */
+  }
+
+  revalidatePath('/', 'layout');
+  return { ok: true };
+}
+
+function publishSummary(from: CMSState | undefined, to: CMSState): string {
+  if (!from) return 'First publish.';
+  return describeChanges(from, to);
+}

@@ -832,13 +832,13 @@ computed contrast, zero console errors throughout).
 - [x] App Router admin rewrite (SSR, `(protected)` guard-by-existence,
       kill `react-router-dom`, `motion/react` migration, Tailwind 4
       re-evaluation with CSS-build assertion test). **Prerequisites DONE
-      2026-10-17, migration tracked:** `motion/react` migration complete
-      (16 files, `framer-motion` dep removed, typecheck green); CSS-build
-      assertion test lands the issue-#9 gate (fails first if the JS config
-      stops being read); `no-restricted-imports` fails any new
-      `react-router-dom` import outside the 9 existing files; sequencing +
-      kill criteria + non-goals in `docs/ADMIN-REWRITE.md`. The 20-screen
-      SSR migration itself stays post-1.0 — tracked, not hidden.
+      2026-10-17, migration tracked; slice 1 landed 2026-10-18:**
+      `(protected)` shell + guard-by-existence (307 to login, verified live),
+      5 screens migrated at unchanged URLs (dashboard with publish action,
+      messages, storage, history with restore action, your-site),
+      `core/content/changes.ts` pure helpers with tests, route-guard AST test
+      extended to `_actions`. Full 20-screen migration continues per
+      `docs/ADMIN-REWRITE.md`.
 
 ---
 
@@ -1550,14 +1550,14 @@ Turnstile free 2026` (splitforms 2026-07-12: "Turnstile free with
 
 Verified from `package-lock.json` (evidence, not memory), Oct 2026:
 
-| What                                                                                                                                                                                                                                               | License (lockfile)           | Verdict                                                                             |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | ----------------------------------------------------------------------------------- |
-| Project itself                                                                                                                                                                                                                                     | MIT (`packages[""].license`) | Free + OSI-approved                                                                 |
-| `@astryxdesign/core`, `/theme-neutral`, `/cli`                                                                                                                                                                                                     | MIT                          | Free + OSI-approved                                                                 |
+| What                                                                                                                                                                                                                                        | License (lockfile)           | Verdict                                                                                  |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | ---------------------------------------------------------------------------------------- |
+| Project itself                                                                                                                                                                                                                              | MIT (`packages[""].license`) | Free + OSI-approved                                                                      |
+| `@astryxdesign/core`, `/theme-neutral`, `/cli`                                                                                                                                                                                              | MIT                          | Free + OSI-approved                                                                      |
 | `next@16.3.0`, `react`, `react-dom`, `zod`, `clsx`, `tailwind-merge`, `motion`, `react-icons`, `react-router-dom`, `server-only`, `nodemailer`, `postgres`, `tailwindcss`, `typescript`, `eslint`, `prettier`, `vitest`, `postcss`, `jsdom` | MIT / ISC                    | Free + OSI-approved (`framer-motion@13` removed 2026-10-17, replaced by `motion@14` MIT) |
-| `@vercel/blob@2.7.0`, `firebase-admin@14.5.0`, `@cloudflare/workerd-*`, `firebase-tools`, `@electric-sql/pglite`                                                                                                                                   | Apache-2.0                   | Free + OSI-approved **SDKs** — but the _services_ behind two of them are commercial |
-| `@axe-core/playwright`, `axe-core`                                                                                                                                                                                                                 | MPL-2.0                      | Free + OSI-approved (copyleft, file-level — fine for testing dep)                   |
-| `lru-cache` (transitive)                                                                                                                                                                                                                           | BlueOak-1.0.0                | Free + OSI-approved                                                                 |
+| `@vercel/blob@2.7.0`, `firebase-admin@14.5.0`, `@cloudflare/workerd-*`, `firebase-tools`, `@electric-sql/pglite`                                                                                                                            | Apache-2.0                   | Free + OSI-approved **SDKs** — but the _services_ behind two of them are commercial      |
+| `@axe-core/playwright`, `axe-core`                                                                                                                                                                                                          | MPL-2.0                      | Free + OSI-approved (copyleft, file-level — fine for testing dep)                        |
+| `lru-cache` (transitive)                                                                                                                                                                                                                    | BlueOak-1.0.0                | Free + OSI-approved                                                                      |
 
 **Services (not code — policy applies):** `@vercel/blob` and `firebase-admin`
 are optional storage adapters only; Supabase/Neon/hosted-DB free tiers are

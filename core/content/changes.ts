@@ -1,0 +1,93 @@
+import type { CMSState } from '@/cms/types/cms';
+
+/**
+ * Pure content comparisons, shared by the App Router admin.
+ *
+ * These lived as methods on the legacy client's `CMSService`; the new admin
+ * reads state on the server and needs them without instantiating that class.
+ * The legacy copies stay until the old shell is deleted (see
+ * `docs/ADMIN-REWRITE.md`) — this module is the one that survives.
+ */
+
+/** Serialised content, minus everything that isn't editorial content. */
+export function contentFingerprint(state: CMSState): string {
+  const {
+    status: _status,
+    lastSavedAt: _lastSavedAt,
+    lastPublishedAt: _lastPublishedAt,
+    messages: _messages,
+    versions: _versions,
+    activityLogs: _activityLogs,
+    ...content
+  } = state;
+  return JSON.stringify(content);
+}
+
+/** True when the draft's *content* differs from what's published. */
+export function hasUnpublishedChanges(draft: CMSState, published: CMSState | null): boolean {
+  if (!published) return true;
+  return contentFingerprint(draft) !== contentFingerprint(published);
+}
+
+/** Plain-language summary of what changed, shown before publishing. */
+export function describeChanges(from: CMSState, to: CMSState): string {
+  const parts: string[] = [];
+
+  const countDiff = (key: keyof CMSState, label: string) => {
+    // Missing counts as empty. Collections added later are optional on
+    // `CMSState`, so the first page is a change from `undefined` — and
+    // bailing out on that reported "no content changes" for the one publish
+    // where something new appeared.
+    const a = (from[key] ?? []) as unknown[];
+    const b = (to[key] ?? []) as unknown[];
+    if (!Array.isArray(a) || !Array.isArray(b)) return;
+    if (JSON.stringify(a) !== JSON.stringify(b)) {
+      const delta = b.length - a.length;
+      const suffix = delta > 0 ? ` (+${delta})` : delta < 0 ? ` (${delta})` : '';
+      parts.push(`${label}${suffix}`);
+    }
+  };
+
+  const objDiff = (key: keyof CMSState, label: string) => {
+    if (JSON.stringify(from[key]) !== JSON.stringify(to[key])) parts.push(label);
+  };
+
+  objDiff('settings', 'site settings');
+  objDiff('microcopy', 'microcopy');
+  objDiff('appearance', 'appearance');
+  objDiff('seo', 'SEO');
+  objDiff('newsletter', 'newsletter');
+  objDiff('writingSettings', 'writing settings');
+  countDiff('sections', 'sections');
+  countDiff('pages', 'pages');
+  countDiff('writing', 'writing');
+  countDiff('projects', 'projects');
+  countDiff('caseStudies', 'case studies');
+  countDiff('brands', 'brands');
+  countDiff('experience', 'experience');
+  countDiff('education', 'education');
+  countDiff('processSteps', 'process steps');
+  countDiff('capabilityGroups', 'capabilities');
+  countDiff('recommendations', 'recommendations');
+  countDiff('artifacts', 'visual explorations');
+  countDiff('socialLinks', 'social links');
+  countDiff('navLinks', 'navigation');
+  countDiff('media', 'media');
+
+  if (parts.length === 0) return 'No content changes.';
+  return `Changed: ${parts.join(', ')}.`;
+}
+
+function makeIdbUrl(mediaId: string): string {
+  return `idb:${mediaId}`;
+}
+
+/** How many places in the content tree reference a given media item. */
+export function countMediaUsage(state: CMSState, mediaId: string): number {
+  // Match on the URL actually written into content. Uploads now carry
+  // `/api/media/<key>`; anything from before still carries `idb:<id>`.
+  const item = state.media.find((m) => m.id === mediaId);
+  const needle = item?.url ?? makeIdbUrl(mediaId);
+  const haystack = JSON.stringify({ ...state, media: [], versions: [] });
+  return haystack.split(`"${needle}"`).length - 1;
+}

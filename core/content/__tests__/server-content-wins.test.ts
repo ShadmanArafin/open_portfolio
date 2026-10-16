@@ -57,7 +57,7 @@ describe('the public site keeps what the server sent', () => {
   it('leaves the admin alone', () => {
     // The admin passes no initialData on purpose: its local draft is the thing
     // being edited, and it must keep loading it.
-    const adminApp = read('app', 'admin', '[[...slug]]', 'admin-app.tsx');
+    const adminApp = read('app', 'admin', '[...slug]', 'admin-app.tsx');
     expect(adminApp).toContain('<CMSProvider>');
     expect(adminApp).not.toContain('CMSProvider initialData');
   });

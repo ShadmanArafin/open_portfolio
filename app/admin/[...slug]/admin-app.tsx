@@ -17,6 +17,13 @@ import { startCollectingErrors } from '@/admin/utils/errorLog';
  * it is rebuilt on shadcn/ui, at which point React Router leaves the project
  * entirely.
  *
+ * Migration is incremental: specific routes in `app/admin/(protected)/` win
+ * over this catch-all, so migrated screens (dashboard, messages, storage,
+ * history, your-site) already serve from the App Router at unchanged URLs.
+ * The catch-all is required (`[...slug]`), not optional, so the bare `/admin`
+ * root belongs to the migrated dashboard rather than colliding with it.
+ * See `docs/ADMIN-REWRITE.md` for the sequencing and kill criteria.
+ *
  * Nothing here is server-rendered: this component is loaded with `ssr: false`
  * because every screen reads from IndexedDB, which only exists in a browser.
  */
