@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { MediaItem } from '@/cms/types/cms';
 import { getPath, setPath, type BlockField } from '@/core/blocks/fields';
 import { uploadMediaAction } from '../_actions/media';
+import { probeDimensions } from '../_components/probe-dimensions';
 
 /**
  * One form for every block type.
@@ -273,29 +274,6 @@ function OneField({
         />
       );
   }
-}
-
-/**
- * The image's own proportions, read in the browser so the library entry can
- * show them. The twin of this lives in the media library's uploader; the
- * server never decodes pixels for either.
- */
-function probeDimensions(file: File): Promise<string | null> {
-  if (!file.type.startsWith('image/')) return Promise.resolve(null);
-  return new Promise((resolve) => {
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    const finish = (value: string | null) => {
-      URL.revokeObjectURL(url);
-      resolve(value);
-    };
-    img.onload = () =>
-      finish(
-        img.naturalWidth && img.naturalHeight ? `${img.naturalWidth}x${img.naturalHeight}` : null
-      );
-    img.onerror = () => finish(null);
-    img.src = url;
-  });
 }
 
 /**

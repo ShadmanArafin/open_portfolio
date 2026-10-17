@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { MediaItem } from '@/cms/types/cms';
 import { deleteMediaAction, uploadMediaAction, updateResumeAction } from '../_actions/media';
+import { probeDimensions } from '../_components/probe-dimensions';
 
 /**
  * The library grid, from the legacy screen with the same behaviours: one
@@ -26,29 +27,6 @@ const danger = 'rounded-full bg-danger px-3 text-sm font-semibold text-bg disabl
 function formatSize(bytes: number): string {
   if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
   return `${(bytes / 1024).toFixed(1)} KB`;
-}
-
-/**
- * The image's own proportions, read in the browser — decoding pixels is the
- * one thing a server would need a real image library for, and the client can
- * do it for free while the upload is in flight.
- */
-function probeDimensions(file: File): Promise<string | null> {
-  if (!file.type.startsWith('image/')) return Promise.resolve(null);
-  return new Promise((resolve) => {
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    const finish = (value: string | null) => {
-      URL.revokeObjectURL(url);
-      resolve(value);
-    };
-    img.onload = () =>
-      finish(
-        img.naturalWidth && img.naturalHeight ? `${img.naturalWidth}x${img.naturalHeight}` : null
-      );
-    img.onerror = () => finish(null);
-    img.src = url;
-  });
 }
 
 export function MediaLibrary({

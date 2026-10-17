@@ -5,12 +5,12 @@
 > prerequisites. The twenty-screen migration itself is post-1.0 work and is
 > tracked here, not hidden.
 
-> Update 2026-10-18 — slices 1–6 landed: the `(protected)` shell exists with
-> sixteen screens migrated (dashboard, messages, storage, history, your-site,
+> Update 2026-10-18 — slices 1–7 landed: the `(protected)` shell exists with
+> eighteen screens migrated (dashboard, messages, storage, history, your-site,
 > analytics, newsletter, welcome, settings, footer, microcopy, appearance,
-> seo, pages, homepage, media), and the signed-out half (login, reset) now
-> serves from its own public shell. The rest serve from the legacy mount until
-> their slice lands.
+> seo, pages, homepage, media, projects, case-studies), and the signed-out
+> half (login, reset) now serves from its own public shell. The rest serve
+> from the legacy mount until their slice lands.
 
 ## Why
 
@@ -278,6 +278,62 @@ profile itself (`NotAllowedError: Write permission denied`); the fallback
 named the reference URL, which is the branch that matters when a browser
 denies the clipboard. `published.json` byte-identical throughout
 (`07f0f97f67ba7d83`).
+
+### Slice 7 — landed 2026-10-18
+
+The two work collections, at unchanged addresses:
+
+- `/admin/projects` and `/admin/case-studies` share one new shell
+  (`_components/collection-editor.tsx`): records in an order, each a small
+  form, add/duplicate/move/remove, and one Save that writes the whole list
+  revision-checked. The legacy admin rebuilt this shell once per screen —
+  which is how two sibling lists ended up with different delete flows — so
+  the second screen costs only its fields, and the seven small collections
+  of the next slice already have their scaffold.
+- The actions (`_actions/collections.ts`) validate every record field by
+  field against the interfaces the public site reads: a wrong type is
+  rejected, missing text reads as empty so a snapshot older than a field
+  keeps saving, slugs are normalised, `sortOrder` is reassigned from the
+  array order (the list as displayed is the list as stored), and two
+  records sharing a web address are refused. Story blocks round-trip
+  untouched — nothing edits them yet, and the story-blocks backlog item
+  will own their schema.
+- Three deliberate additions the legacy screen could not make: the web
+  address is editable (every legacy "Add" produced a date-stamped slug
+  nobody could change), the short name is editable (it labels "next
+  project" links and was frozen at "New project"), and a screenshot can be
+  described (the seed images carry alt text; no field let a person write
+  their own). Both records can also be marked featured — the collection
+  blocks' "featured only" rule had no way to be set from the admin, and the
+  block's own empty state already told people to "star a record".
+- Image slots upload through `uploadMediaAction`, so a screenshot added
+  here lands in the media library with its description and browser-read
+  dimensions. The shared `ImageField` and the one `probeDimensions` now
+  live in `_components/`; the media library and the block picker import the
+  same probe instead of keeping their own copies.
+
+Still legacy (next slices): the small collections (brands, experience,
+education, process, capabilities, recommendations, artifacts), writing,
+navigation, integrations, help.
+
+Verified live (browser tools and the authenticated backup endpoint):
+anonymous 307s on both addresses with `?next=`, server-rendered HTML in
+storage order with the record titles in the headers. Then the round trips:
+a project added (four empty image slots, `featured` on by default) and
+edited — title, slug with its hint rewritten, both year bounds, image
+description, status — saved as one revision-checked write; reordered with
+the renumbering visible in the stored draft; a duplicate created (status
+reset to draft) and deleted with the armed confirmation, the stored draft
+back to its seed order. A case study's key decisions were added, edited
+and removed — the stored draft kept the first and the edited third — and
+its status was flipped to archived with the change visible in the stored
+draft. An image uploaded from a project slot: bytes on disk, a library
+record with the slot's description and the browser-read dimensions, the
+URL written into the slot. A project pointed at another project's address
+was refused with the exact message before any write; an anonymous fetch of
+the added project's `/work/…` returned the draft's not-found state while
+the seeded published pages still render. `published.json` byte-identical
+throughout.
 
 ## Explicitly not in the rewrite
 
