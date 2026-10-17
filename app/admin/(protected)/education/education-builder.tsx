@@ -2,7 +2,8 @@
 
 import type { EducationItem } from '@/cms/types/cms';
 import { updateEducationAction } from '../_actions/collections';
-import { CheckField, CollectionEditor, Field, SelectField } from '../_components/collection-editor';
+import { CollectionEditor } from '../_components/collection-editor';
+import { CheckField, Field, SelectField } from '../_components/form-fields';
 import { newId } from '../_components/ids';
 
 const STATUSES = ['In Progress', 'Graduated', 'Completed', 'Paused'];

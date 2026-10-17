@@ -13,6 +13,7 @@ import type {
   CMSState,
   EducationItem,
   ExperienceItem,
+  NavLinkItem,
   ProcessStepItem,
   ProjectApproachStep,
   ProjectImageItem,
@@ -85,6 +86,13 @@ export interface ArtifactsResult {
   error?: string;
   conflict?: boolean;
   artifacts?: VisualArtifactItem[];
+}
+
+export interface NavLinksResult {
+  ok: boolean;
+  error?: string;
+  conflict?: boolean;
+  links?: NavLinkItem[];
 }
 
 /**
@@ -696,12 +704,16 @@ export async function updateCaseStudiesAction(caseStudies: unknown): Promise<Cas
 /* ---------------------------------------------------- the small collections */
 
 /**
- * Seven shorter lists share one shape: an `id`, a `sortOrder`, a `visible`
+ * Eight shorter lists share one shape: an `id`, a `sortOrder`, a `visible`
  * flag, and nothing else structural. They get one saver that enforces what
  * they have in common — a bounded list, unique ids, the same position rule
  * as the work collections — and each keeps its own cleaner next to the
  * interface it mirrors. The public site reads these lists positioned by
  * `sortOrder` and filtered by `visible !== false`.
+ *
+ * The eighth is the header menu's links, landed with slice 10: two text
+ * fields where the others have their own, and the same position and
+ * visibility rules as the rest.
  */
 
 const BRAND_SIZES = ['small', 'default', 'wide'] as const;
@@ -983,6 +995,20 @@ function cleanArtifact(raw: unknown): VisualArtifactItem | null {
   return { id, category, src, alt, sortOrder: 0, visible };
 }
 
+/** The header menu's links. A label, a path, and whether it is in the bar. */
+function cleanNavLink(raw: unknown): NavLinkItem | null {
+  const entry = object(raw);
+  if (!entry) return null;
+
+  const id = idField(entry.id);
+  const label = text(entry.label, 200);
+  const path = text(entry.path, 1000);
+  const visible = flag(entry.visible, true);
+  if (!id || label === null || path === null || visible === null) return null;
+
+  return { id, label, path, sortOrder: 0, visible };
+}
+
 /**
  * Education entries number themselves from their position, the way
  * `sortOrder` does. The legacy screen wrote "0" + list length at creation,
@@ -1103,4 +1129,25 @@ export async function updateArtifactsAction(artifacts: unknown): Promise<Artifac
     '/admin/artifacts'
   );
   return { ok, error, conflict, artifacts: items };
+}
+
+/**
+ * The header menu. Same saver as the collections: the list as displayed is
+ * the list as stored. An unknown address is a warning on the screen, not a
+ * refusal — the legacy screen saved those too, and a link the owner typed on
+ * purpose is not the admin's call.
+ */
+export async function updateNavLinksAction(links: unknown): Promise<NavLinksResult> {
+  await requireOwner();
+  const { ok, error, conflict, items } = await saveCollection(
+    links,
+    'Those navigation links are not usable.',
+    cleanNavLink,
+    stampOrder,
+    (draft, list) => {
+      draft.navLinks = list;
+    },
+    '/admin/navigation'
+  );
+  return { ok, error, conflict, links: items };
 }

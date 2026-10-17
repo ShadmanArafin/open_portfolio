@@ -5,13 +5,14 @@
 > prerequisites. The twenty-screen migration itself is post-1.0 work and is
 > tracked here, not hidden.
 
-> Update 2026-10-18 — slices 1–9 landed: the `(protected)` shell exists with
-> twenty-six screens migrated (dashboard, messages, storage, history, your-site,
-> analytics, newsletter, welcome, settings, footer, microcopy, appearance,
-> seo, pages, writing, homepage, media, projects, case-studies, brands,
-> experience, education, process, capabilities, recommendations, artifacts),
-> and the signed-out half (login, reset) now serves from its own public shell.
-> The rest serve from the legacy mount until their slice lands.
+> Update 2026-10-18 — slices 1–10 landed: the `(protected)` shell exists with
+> twenty-seven screens migrated (dashboard, messages, storage, history,
+> your-site, analytics, newsletter, welcome, settings, footer, microcopy,
+> appearance, seo, pages, writing, homepage, media, projects, case-studies,
+> brands, experience, education, process, capabilities, recommendations,
+> artifacts, navigation), and the signed-out half (login, reset) now serves
+> from its own public shell. The rest serve from the legacy mount until their
+> slice lands.
 
 ## Why
 
@@ -455,6 +456,47 @@ three blocks and the palette, and a local move without Save left the draft
 untouched. The seed never had a `writing` key, so the draft ends with an
 empty list; `published.json` byte-identical throughout and the media library
 untouched.
+
+### Slice 10 — landed 2026-10-18
+
+The header menu, at its unchanged address:
+
+- `/admin/navigation` — a trunk reading the draft and a slice-8
+  `CollectionEditor` island carrying the legacy screen's one list: label,
+  path, visible, move, remove. It saves through the same `saveCollection` the
+  collections use, so the whole menu is one revision-checked write and the
+  list as displayed is the list as stored.
+- The "no such page" warning stops being a frozen list. The legacy screen
+  warned for anything outside five hardcoded routes, so a link to a built
+  page, a project, or a case study — addresses the site really serves — read
+  as a mistake. The port derives the known addresses from the draft: the
+  fixed routes, built pages, work, case studies, and the writing section
+  while it is on. Query strings and fragments are set aside before the
+  check, so `/about#team` is not a typo, and an empty address gets its own
+  notice instead of passing for the homepage.
+- The slice-9 controls finish moving in. `Field`, `SelectField` and
+  `CheckField` now live only in `_components/form-fields.tsx`, and the nine
+  collection builders import them from there the way the pages and writing
+  editors already did; the collection editor keeps the shell.
+
+Still legacy (next slices): integrations, help.
+
+Verified live (browser tools and the authenticated backup endpoint):
+anonymous 307 on `/admin/navigation` with `?next=`, and authed HTML with the
+four seeded links server-rendered in order and warning-free; the eleven
+screens whose imports moved to `form-fields` all still render. Then the round
+trip: a link added at the top, label and address typed, moved below Work with
+the order showing on screen. The address warning was checked all three ways —
+`/nope` listed the addresses derived from this draft (the five fixed routes,
+the built page, the four projects, the three case studies, and no `/writing`
+while the section is off), an empty address said so instead of passing for
+the homepage, and a real one went quiet. The save stored the five in the
+displayed order with `sortOrder` renumbered 1–5; Work was hidden (badge on
+the card, `visible: false` on disk), then the added link was deleted with the
+armed confirmation and Work restored, and the seed is back as it was — same
+four links, same ids, same order, all visible. `published.json`
+byte-identical throughout, and the public home page still serves the seed
+header links.
 
 ## Explicitly not in the rewrite
 

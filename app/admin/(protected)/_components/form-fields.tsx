@@ -1,14 +1,14 @@
 'use client';
 
 /**
- * The two controls every builder screen uses.
+ * The controls every builder screen uses.
  *
  * Field is a labelled input or textarea with a hint under it, and a problem
  * message that replaces the hint when there is one. CheckField is the
- * checkbox with its description. Small on purpose: they exist so the pages
- * and writing editors do not grow a third and fourth copy of "label, input,
- * hint", which is how two screens end up with two different ideas of what a
- * form looks like.
+ * checkbox with its description, and SelectField the dropdown for values
+ * that come from a fixed set. Small on purpose: they exist so the builder
+ * screens do not each grow a copy of "label, input, hint", which is how two
+ * screens end up with two different ideas of what a form looks like.
  */
 
 const field = 'w-full rounded-xl border border-border bg-surface-primary px-3 text-text-primary';
@@ -82,6 +82,39 @@ export function CheckField({
           <span className="block font-normal text-text-secondary">{description}</span>
         ) : null}
       </span>
+    </label>
+  );
+}
+
+export function SelectField({
+  label,
+  value,
+  onChange,
+  options,
+  hint,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string }[];
+  hint?: string;
+}) {
+  return (
+    <label className="grid gap-1 text-sm">
+      <span className="font-semibold">{label}</span>
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className={field}
+        style={{ minHeight: 44 }}
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      {hint ? <span className="text-text-secondary">{hint}</span> : null}
     </label>
   );
 }

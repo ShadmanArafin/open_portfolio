@@ -2,7 +2,8 @@
 
 import type { ProcessStepItem } from '@/cms/types/cms';
 import { updateProcessAction } from '../_actions/collections';
-import { CheckField, CollectionEditor, Field } from '../_components/collection-editor';
+import { CollectionEditor } from '../_components/collection-editor';
+import { CheckField, Field } from '../_components/form-fields';
 import { newId } from '../_components/ids';
 
 const pad2 = (value: number) => String(value).padStart(2, '0');

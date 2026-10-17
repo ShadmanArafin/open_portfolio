@@ -2,7 +2,8 @@
 
 import type { RecommendationItem } from '@/cms/types/cms';
 import { updateRecommendationsAction } from '../_actions/collections';
-import { CheckField, CollectionEditor, Field } from '../_components/collection-editor';
+import { CollectionEditor } from '../_components/collection-editor';
+import { CheckField, Field } from '../_components/form-fields';
 import { newId } from '../_components/ids';
 import { ImageField } from '../_components/image-field';
 
