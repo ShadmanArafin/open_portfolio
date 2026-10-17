@@ -43,6 +43,23 @@ await check('admin storage without a session is 401', async () => {
   assert(r.status === 401, `status ${r.status}`);
 });
 
+await check('a dead address is a real 404, not a 200 wearing a 404', async () => {
+  const r = await fetch(`${base}/definitely-not-a-page`, { redirect: 'manual' });
+  if (r.status >= 300 && r.status < 400) {
+    // A fresh, unclaimed instance sends everything to /setup first.
+    assert(
+      (r.headers.get('location') || '').includes('/setup'),
+      `redirect to ${r.headers.get('location')}`
+    );
+    return;
+  }
+  assert(r.status === 404, `status ${r.status} — a soft 404 defeats crawlers and analytics`);
+  const html = await r.text();
+  // Next marks streamed/rendered 404s noindex; if the status is ever wrong
+  // again, at least this must hold.
+  assert(html.includes('noindex'), 'the 404 body carries no noindex');
+});
+
 await check('security headers present on /', async () => {
   const r = await fetch(`${base}/`, { redirect: 'manual' });
   // / may redirect to /setup on a fresh instance — headers ride either way.

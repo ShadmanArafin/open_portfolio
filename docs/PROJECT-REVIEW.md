@@ -162,9 +162,11 @@ stated.
 
 ## 3. Product Design / IA lens
 
-Admin mount: `app/admin/[[...slug]]/admin-mount.tsx` (`ssr:false`) →
+Admin mount: `app/admin/[...slug]/admin-mount.tsx` (`ssr:false`) →
 `admin-app.tsx` (`BrowserRouter basename="/admin"`, all `React.lazy`) →
 `src/admin/layouts/AdminLayout.tsx` (AppShell + TopNav + SideNav + Banner).
+(Migrated screens under `app/admin/(protected)/` win over the catch-all; the
+group was optional `[[...slug]]` until admin slice 1.)
 
 | Area                    | Route(s)                                                                                                                                        | Component                                                                                                       |
 | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
@@ -728,7 +730,9 @@ computed contrast, zero console errors throughout).
       RSS autodiscovery link; per-post + JSON-LD SEO. _Skeleton mirrors page
       rhythm (aria-hidden); 404 keeps site chrome (screenshotted);
       `alternates.types` RSS on the index; `Article` JSON-LD on entries.
-      `Person` schema deferred to the OG-image phase._
+      `Person` schema deferred to the OG-image phase._ **The group-level
+      skeleton was later moved below the existence gates — it was the cause
+      of the 404-status P0 below.**
 - [x] Fonts fully self-hosted (`next/font`, 35-family static map, zero Google
       requests verified in the document head, GDPR liability closed, admin
       injector removed, CSP carve-out deleted); `CMSImage` lazy+async-decode
@@ -774,14 +778,24 @@ computed contrast, zero console errors throughout).
       (25 visitors / 40 views / /work 12 / /about 4), then disconnected.
 - [ ] Case-study `story` blocks + `work` merge + 301s.
 - [ ] Writing SEO parity + auto OG fallback.
-- [ ] **P0 discovered 2026-10-17: not-found renders with HTTP 200.** Every
-      dead address (`/no-such-route`, `/share/<bad-token>`, `/work/<missing>`)
-      renders the branded 404 body with status 200, in dev and in production
-      (`next start`), including a minimal route whose only statement is
-      `notFound()` — so it is not the share code, the catch-all, or the proxy
-      (all read correct). Crawlers will treat dead pages as live until the
-      status is fixed. Repro: `curl -o /dev/null -w '%{http_code}'` any dead
-      path.
+- [x] **P0 discovered 2026-10-17, FIXED 2026-10-18: not-found rendered with
+      HTTP 200.** Every dead address (`/no-such-route`, `/share/<bad-token>`,
+      `/work/<missing>`) rendered the branded 404 body with status 200, in dev
+      and in production, including a minimal route whose only statement was
+      `notFound()`. **Cause:** `app/(site)/loading.tsx` — a `loading.tsx`
+      boundary streams a 200 shell the moment its segment is entered, so the
+      status was already spent before any page ran; `notFound()` (or a throw
+      from `generateMetadata` — also tested) could only change the body. Not
+      the share code, the catch-all, or the proxy, all of which were correct.
+      **Fix:** the skeleton moved below each segment's existence gate —
+      `[...slug]/layout.tsx` (new), and the same for `work/[slug]`,
+      `case-studies/[slug]`, `writing/[slug]`, each with the skeleton beside
+      it; `share/[token]` keeps its page-level check with no skeleton above.
+      **Verified:** dev matrix — 5 dead paths all 404 with branded body +
+      noindex, `notFound()` still guarding the same addresses; live pages and
+      home 200; production re-verified after rebuild. Regression guards:
+      `core/pages/__tests__/not-found-boundaries.test.ts` (structural) +
+      a dead-address check in `scripts/smoke.mjs` (HTTP).
 - [x] Generic embed block + booking guide. **DONE 2026-10-18:** `embed`
       block (#26) with `toSchedulingUrl` host-allowlist validation (Cal.com,
       Calendly — rebuilt URLs, evil-host tests) + click-to-load `EmbedFacade`

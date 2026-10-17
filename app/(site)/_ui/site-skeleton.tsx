@@ -1,13 +1,24 @@
 /**
- * Route-level loading state for the public site.
+ * The site's route-level skeleton, shared by the segments that may load
+ * slowly.
  *
- * Without this, a slow content read leaves a blank `<main>` — the Doherty
- * complaint made concrete. The skeleton mirrors the page rhythm (label,
- * headline, bands) in token greys so the swap-in does not reflow the eye,
- * and it is hidden from assistive tech because "loading" is announced by
- * the route change itself, not by placeholder shapes.
+ * This used to be `app/(site)/loading.tsx` — one skeleton for every route.
+ * That placement was a real bug: a `loading.tsx` boundary streams a `200`
+ * shell the moment its segment is entered, before the page below it has run,
+ * so every `notFound()` in the group rendered the branded 404 with an HTTP
+ * `200`. Crawlers and analytics treated dead addresses as live pages.
+ *
+ * So the skeleton now sits *below* each segment's existence gate (the
+ * `layout.tsx` beside it), which resolves and throws before any fallback can
+ * flush. See `core/pages/__tests__/not-found-boundaries.test.ts`, which fails
+ * if it is ever hoisted back up.
+ *
+ * It mirrors the page rhythm (label, headline, bands) in token greys so the
+ * swap-in does not reflow the eye, and it is hidden from assistive tech
+ * because "loading" is announced by the route change itself, not by
+ * placeholder shapes.
  */
-export default function Loading() {
+export default function SiteSkeleton() {
   return (
     <div
       aria-hidden="true"
