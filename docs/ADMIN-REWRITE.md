@@ -5,11 +5,11 @@
 > prerequisites. The twenty-screen migration itself is post-1.0 work and is
 > tracked here, not hidden.
 
-> Update 2026-10-18 — slices 1–3 landed: the `(protected)` shell exists with
-> eight screens migrated (dashboard, messages, storage, history, your-site,
-> analytics, newsletter, welcome), and the signed-out half (login, reset) now
-> serves from its own public shell.
-> The rest serve from the legacy mount until their slice lands.
+> Update 2026-10-18 — slices 1–4 landed: the `(protected)` shell exists with
+> thirteen screens migrated (dashboard, messages, storage, history, your-site,
+> analytics, newsletter, welcome, settings, footer, microcopy, appearance,
+> seo), and the signed-out half (login, reset) now serves from its own public
+> shell. The rest serve from the legacy mount until their slice lands.
 
 ## Why
 
@@ -87,9 +87,8 @@ media usage) with tests — the legacy `CMSService` copies stay until the old
 shell dies; the route-guard AST test now walks `_actions` too, so unguarded
 server actions fail the build.
 
-Still legacy (next slices): settings, pages builder, media library,
-collections, writing, navigation/footer/microcopy/appearance/seo,
-integrations, help.
+Still legacy (next slices): pages builder, media library, collections,
+writing, navigation, integrations, help.
 
 ### Slice 3 — landed 2026-10-18
 
@@ -129,6 +128,55 @@ Notes for the next slice: the legacy `admin-app.tsx` still routes
 `/login`, `/reset` and `/welcome` for the old shell's internal navigation
 (its `AdminLayout` guard navigates to `/welcome` client-side, which renders
 the legacy wizard until a reload). They die with the shell.
+
+### Slice 4 — landed 2026-10-18
+
+The settings family, five URLs at unchanged addresses — the last read-write
+screens before the builders:
+
+- `/admin/settings` — identity and the About story through
+  `updateSiteSettingsAction`; backup on the _server_ bundle rather than the
+  legacy browser draft store (export is a plain session-authenticated link to
+  `/api/admin/backup`, restore arms on the file's own name, reset types
+  `RESET`); `resetContentAction` writes the seed to both snapshots —
+  unconditionally, like a restore, because resetting a site that has moved on
+  should not lose to a revision check. Passkeys list is server-rendered;
+  enroll/remove use the existing endpoints.
+- `/admin/footer` — `updateFooterAction` (copyright + oversized word) and
+  `updateSocialLinksAction` (the whole card list, platform still a picker,
+  handle still accepts a pasted profile URL). Two sequential writes on save:
+  both are revision-checked, and a concurrent pair would race itself.
+- `/admin/microcopy` — the closed set, searchable client-side, one draft
+  write per save instead of one per keystroke. The action only writes keys
+  the content already has, so a stale tab cannot add fields.
+- `/admin/appearance` — theme choice, six colour tokens, three fonts.
+  Choosing a theme clears the overrides, and the confirm appears only when
+  something would actually be lost; that rule is now pure
+  (`core/theme/overrides.ts`, unit tested) rather than inline. Colour text
+  inputs keep "empty means no override" honest: the fallback colour is a
+  placeholder, never a value the save would invent.
+- `/admin/seo` — `updateSeoAction`, plain draft fields.
+
+Every action calls `requireOwner()` first, validates the patch against a
+written-down field set, and writes the draft revision-checked, so the
+conflict message matches the newsletter form's. Nothing here can touch the
+published snapshot except Publish.
+
+Parked, deliberately: the legacy panel's "editor typeface" preference styles
+the old Astryx kit through `AdminFontContext`, which the migrated shell does
+not use. Half-porting it would be a dead setting; it moves when the legacy
+shell's type system does — or dies with it.
+
+Verified live: curl matrix (anonymous 307s to login, authenticated renders,
+server-rendered props), then real-browser round trips for every action —
+each edit saved, checked in `draft.json`, reverted through the same form and
+checked again — plus the appearance switch both ways (gate when overrides
+existed, direct when not), a backup export→restore round trip against the
+live endpoint, and the reset typed gate exercised against a fresh export
+(seed written to both snapshots, then the export restored back). The
+settings-family writes stayed draft-only throughout — `published.json`
+unchanged until the reset test wrote it deliberately — and the route-guard
+AST test covers all seven new actions.
 
 ## Explicitly not in the rewrite
 
