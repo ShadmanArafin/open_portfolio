@@ -129,7 +129,7 @@ export function AppearanceForm({ initial }: { initial: AppearanceSettings }) {
                       key={i}
                       aria-hidden
                       className="h-6 w-6 rounded"
-                      style={{ background: colour, border: '1px solid var(--color-border)' }}
+                      style={{ background: colour, border: '1px solid var(--border-color)' }}
                     />
                   ))}
                 </span>

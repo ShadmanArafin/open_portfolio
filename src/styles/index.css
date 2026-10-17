@@ -1,10 +1,68 @@
-/* Preflight is layered so Astryx component styles can outrank it; see layers.css. */
-@layer tw-preflight {
-  @tailwind base;
-}
+/*
+ * Tailwind 4 (issue #9, evaluated 2026-10-18). The three imports replace the
+ * old `@tailwind` directives; preflight keeps its low layer under Astryx (see
+ * layers.css), and `source(none)` turns off auto-detection so the scan is
+ * exactly the three trees below — v4 would otherwise also scan `site/`, the
+ * separate marketing app.
+ */
+@layer theme, base, components, utilities;
 
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/preflight.css' layer(tw-preflight);
+@import 'tailwindcss/utilities.css' layer(utilities) source(none);
+
+@source '../../app/**/*.{ts,tsx}';
+@source '../../core/**/*.{ts,tsx}';
+@source '../**/*.{ts,tsx}';
+
+/* v3's `darkMode: 'class'`, in v4 syntax. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * `theme.extend` from the deleted `tailwind.config.js`, ported verbatim
+ * (issue #9). `inline` keeps every utility referencing the runtime variables
+ * (`var(--bg-primary)`, …) the way v3 emitted them, instead of an extra hop
+ * through Tailwind-owned variables.
+ */
+@theme inline {
+  --breakpoint-xs: 480px;
+
+  --color-bg: var(--bg-primary);
+  --color-surface-primary: var(--surface-primary);
+  --color-surface-secondary: var(--surface-secondary);
+  --color-accent: var(--accent-color);
+  --color-danger: var(--danger);
+  --color-danger-subtle: var(--danger-subtle);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-border: var(--border-color);
+  --color-border-hover: var(--border-color-hover);
+
+  /*
+   * `--font-sans` and friends are also the runtime variables the font picker
+   * writes on :root (app/layout.tsx). The theme entry reads them back, and
+   * `inline` emits `var(--font-sans)` rather than a self-referential
+   * declaration. Defaults live in the base layer below.
+   */
+  --font-sans: var(--font-sans), sans-serif;
+  --font-display: var(--font-display), sans-serif;
+  --font-body: var(--font-body), sans-serif;
+  --font-mono: var(--font-mono), monospace;
+
+  --radius-pill: 9999px;
+  --radius-2xl: 24px;
+  --radius-3xl: 28px;
+
+  --tracking-tight-hero: -0.035em;
+  --tracking-tight-head: -0.025em;
+
+  --ease-editorial: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-hero-clip: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --container-1440: 1440px;
+  --container-1280: 1280px;
+}
 
 @layer base {
   html {

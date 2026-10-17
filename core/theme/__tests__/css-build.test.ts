@@ -1,49 +1,49 @@
 import { describe, expect, it } from 'vitest';
 import postcss from 'postcss';
-import tailwindcss from 'tailwindcss';
-import config from '../../../tailwind.config.js';
+import tailwindcss from '@tailwindcss/postcss';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
-const themeColors = (config as { theme?: { extend?: { colors?: Record<string, unknown> } } }).theme
-  ?.extend?.colors as Record<string, unknown> | undefined;
+const stylesheetPath = fileURLToPath(new URL('../../../src/styles/index.css', import.meta.url));
 
 /**
- * The CSS-build assertion test (issue #9): the gate before Tailwind 4.
+ * The CSS-build assertion test (issue #9): the gate for Tailwind 4.
  *
- * Tailwind 4 stops reading `tailwind.config.js` — silently. Every token-backed
- * utility this site is built on (`bg-bg`, `text-text-primary`, …) would
- * compile to nothing, with no build error anywhere. So this test compiles the
- * real config and asserts the utilities exist in the output. It fails the day
- * the config stops being read, which is exactly the day the bump becomes
- * unsafe to attempt, not the day after it ships.
+ * Missing Tailwind utilities do not fail a build — they emit nothing, and a
+ * page with half its classes missing looks exactly like a page with no CSS.
+ * So this test compiles the real stylesheet through the real pipeline and
+ * asserts the token-backed utilities the site is built on come out the other
+ * side, still referencing the runtime variables the appearance editor
+ * rewrites. It fails the moment that pipeline stops reading its theme — which
+ * is the day a Tailwind change becomes unsafe to attempt, not the day after
+ * it ships.
  */
 describe('css build', () => {
   it('emits the token-backed utilities the site is built on', async () => {
-    const fixture =
-      '<div class="bg-bg text-text-primary bg-surface-primary text-accent border-border"></div>';
-    const result = await postcss([tailwindcss({ ...config, content: [{ raw: fixture }] })]).process(
-      '@tailwind utilities;',
-      { from: undefined }
-    );
+    const result = await postcss([tailwindcss()]).process(readFileSync(stylesheetPath, 'utf8'), {
+      from: stylesheetPath,
+    });
+
     for (const utility of [
       '.bg-bg',
       '.text-text-primary',
       '.bg-surface-primary',
       '.border-border',
+      '.rounded-pill',
+      '.font-display',
     ]) {
       expect(
         result.css,
         `${utility} must survive the build — the theme tokens depend on it`
       ).toContain(utility);
     }
-  });
 
-  it('keeps the config this test compiles', async () => {
-    // If this import ever resolves to nothing (config moved, renamed, or
-    // converted to CSS-first), the suite must say so here — not ship pages
-    // with half their classes missing.
-    expect((themeColors?.bg as string) ?? '').toBe('var(--bg-primary)');
-    expect(
-      ((themeColors?.text as Record<string, string> | undefined)?.primary as string) ?? ''
-    ).toBe('var(--text-primary)');
-  });
+    // The palette and the font stacks are runtime data, so the utilities
+    // must stay indirections through the variables in the page — never
+    // baked values. `--font-display` is the important one: the theme entry
+    // reads back the same variable the font picker writes on :root.
+    expect(result.css).toContain('var(--bg-primary)');
+    expect(result.css).toContain('var(--text-primary)');
+    expect(result.css).toContain('var(--font-display)');
+  }, 120_000);
 });
