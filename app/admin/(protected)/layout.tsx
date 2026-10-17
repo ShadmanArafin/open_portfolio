@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { requireOwner, UnauthorizedError } from '@/core/auth/guard';
 import { getContentForChannel } from '@/core/content/read';
 import { isWelcomePlaceholder } from '@/core/content/welcome';
+import { ErrorCollector } from './error-collector';
 import { WelcomeGate } from './welcome-gate';
 
 export const dynamic = 'force-dynamic';
@@ -74,6 +75,7 @@ export default async function ProtectedAdminLayout({ children }: { children: Rea
   return (
     <div className="min-h-screen bg-bg font-body text-text-primary">
       <WelcomeGate looksUnconfigured={isWelcomePlaceholder(draft.settings?.fullName)} />
+      <ErrorCollector />
       <a
         href="#admin-main"
         className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:left-4 focus:top-4 focus:rounded-full focus:bg-text-primary focus:px-4 focus:py-2 focus:text-sm focus:text-bg"

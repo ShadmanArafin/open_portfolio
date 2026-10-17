@@ -5,14 +5,15 @@
 > prerequisites. The twenty-screen migration itself is post-1.0 work and is
 > tracked here, not hidden.
 
-> Update 2026-10-18 — slices 1–11 landed: the `(protected)` shell exists with
-> twenty-eight screens migrated (dashboard, messages, storage, history,
+> Update 2026-10-18 — slices 1–12 landed: the `(protected)` shell exists with
+> twenty-nine screens migrated (dashboard, messages, storage, history,
 > your-site, analytics, newsletter, welcome, settings, footer, microcopy,
 > appearance, seo, pages, writing, homepage, media, projects, case-studies,
 > brands, experience, education, process, capabilities, recommendations,
-> artifacts, navigation, services), and the signed-out half (login, reset) now
-> serves from its own public shell. The rest serve from the legacy mount until
-> their slice lands.
+> artifacts, navigation, services, help), and the signed-out half (login,
+> reset) now serves from its own public shell. Every screen the legacy mount
+> served now has an App Router home; what remains is the kill criteria —
+> deleting the catch-all mount and the old screens.
 
 ## Why
 
@@ -558,6 +559,69 @@ was removed, the dev server restarted without it, and `kv-config.json` is
 typecheck; lint 0 errors, 121 warnings (119 pre-slice-9 baseline plus one per
 new page); format:check; 992 tests passed, 11 skipped over 69 files (the
 three view tests are new); build with `/admin/services` in the route table.
+
+### Slice 12 — landed 2026-10-18
+
+The help screen, at its unchanged address — the last legacy screen:
+
+- `/admin/help` — a server-rendered trunk plus one island, carrying the same
+  three answers the legacy screen had: report something broken, ask for
+  something new, see what changed. Everything that does not need the network
+  is server-rendered by calling the same core helpers the support endpoint
+  calls — version, storage backend, host, content counts — so the page and the
+  endpoint cannot describe the site differently, and the forms are in the
+  first byte rather than after a client fetch.
+- The update check stays in the browser, deliberately, exactly as the legacy
+  screen had it: it is an unauthenticated call to GitHub that can take its
+  full eight-second timeout on a server with no route out, and the one page
+  somebody opens to report a problem should not hang on a request it does not
+  need.
+- The interactions stay on the existing endpoints —
+  `/api/admin/support/search`, `/connect`, `/submit` — where the rate limits,
+  the device flow and the server-side body composition already live. The port
+  adds no second path to GitHub.
+- The "recent errors" switch is no longer guaranteed empty. The legacy module
+  exported `startCollectingErrors` and nothing in the codebase ever called it,
+  so its ring buffer could only ever hold nothing. `error-log.ts` is ported,
+  and `error-collector.tsx` mounts it once in the protected layout, so the
+  buffer sees errors from every screen walked through in the session — which
+  is the list the switch describes. `CheckField` grew an optional `disabled`
+  for the switch that has nothing to offer yet.
+
+Still legacy (next slices): none — every screen now has an App Router home.
+What remains is the kill criteria from the sequencing section: delete the
+catch-all mount and `src/admin/**`, then re-evaluate Tailwind 4 with the
+CSS-build test as the acceptance gate.
+
+Verified live (browser tools, the endpoints and the state files): 76 HTTP
+checks — anonymous 307 with `?next=%2Fadmin%2Fhelp`, all five support
+endpoints 401 anonymous, the authed page server-rendering its sections,
+records, fields, toggles and the diagnostics preview with the same facts the
+endpoint reported, the update line left as "Checking for the latest version…",
+the no-GitHub-application fallback, search answering 200 with a matches array,
+submit refusing 502 with "No GitHub account is connected.", all 29 admin
+screens 200, the public home 200, and `published.json` `07f0f97f67ba7d83`
+with `kv-config.json` `{}` untouched throughout. Then the browser round trip:
+the island fetched updates and the screen said "You are on the newest version
+(0.5.0)"; the diagnostics preview gained its Browser/Screen/Language rows
+after mount; filling the bug record enabled the send button and fired the
+debounced search POST (no matches shown when GitHub finds none); a trusted
+Enter on the focused button opened the real pre-filled issue tab, whose
+`return_to` carried the title, the body, the diagnostics `<details>` block
+and `labels=bug,from-admin`; Clear emptied the record and disabled the button
+again; the toggles hid and restored the preview; and the collector check —
+soft-navigating to the dashboard, dispatching one error, soft-navigating back
+— had the switch reading "1 error recorded in this session." and the preview
+carrying that error, which is the thing the legacy collector never did. Zero
+console errors. Gates: typecheck; lint 0 errors, 123 warnings (121 before
+this slice plus the one each new page and island carry); format:check; 992
+tests passed, 11 skipped over 69 files; build with `/admin/help` in the route
+table — reached on the second attempt, for a reason worth knowing: Google
+Fonts answers a family's stylesheet with extensionless `/l/font?kit=…` URLs
+every so often (roughly 1–2% of responses; upstream `vercel/next.js#99114`),
+Turbopack 16.3 cannot parse those, and once one lands in `.next` every later
+build replays it. Thirty-four catalogue families means each fresh build is a
+dice roll; when it loses, delete `.next` and build again.
 
 ## Explicitly not in the rewrite
 

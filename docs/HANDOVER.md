@@ -371,6 +371,16 @@ adapter serialises writes per path because of this, and the same fix caused
 `ENOENT` on Linux before it was made per-path. A test passing on one platform is
 not evidence about the other — Docker is right there.
 
+**A build that fails on somebody else's dice.** Google Fonts occasionally
+answers a `next/font/google` stylesheet request with extensionless
+`/l/font?kit=…` URLs instead of `/s/…/*.woff2` — roughly 1–2% of responses per
+family (`vercel/next.js#99114`, open at the time of writing). Turbopack 16.3
+cannot parse those, and `core/theme/fonts.ts` loads thirty-four families, so
+every fresh `npm run build` rolls thirty-four dice; worse, a bad response is
+cached, so every retry replays it and six builds in a row can all name the same
+family. **Delete `.next` and build again until it passes — the failure is the
+dice, not your change.**
+
 **Prettier does not read `.gitignore`.** Generated and scratch directories have
 to be listed in `.prettierignore` separately, or `format:check` fails on files
 that are not part of the project. `.opb` and `.superpowers` are already there.

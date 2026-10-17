@@ -68,17 +68,25 @@ export function CheckField({
   description,
   checked,
   onChange,
+  disabled,
 }: {
   label: string;
   description?: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
+  /** The help screen disables the errors toggle when there is nothing to attach. */
+  disabled?: boolean;
 }) {
   return (
-    <label className="flex min-h-[44px] cursor-pointer items-center gap-3 text-sm">
+    <label
+      className={`flex min-h-[44px] items-center gap-3 text-sm ${
+        disabled ? 'opacity-60' : 'cursor-pointer'
+      }`}
+    >
       <input
         type="checkbox"
         checked={checked}
+        disabled={disabled}
         onChange={(event) => onChange(event.target.checked)}
         className="h-5 w-5"
       />
