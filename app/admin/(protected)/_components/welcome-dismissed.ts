@@ -11,6 +11,10 @@
  * A dismissal is a UI preference belonging to this browser, not site content —
  * it must not travel in an export or reach a visitor — so localStorage is the
  * right home for it, alongside the theme.
+ *
+ * Moved here from the legacy admin's `src/admin/welcomeDismissed.ts` when the
+ * old shell was deleted; `welcome-gate.tsx` and the wizard leaf are the only
+ * callers.
  */
 const KEY = 'opb.welcome.dismissed';
 

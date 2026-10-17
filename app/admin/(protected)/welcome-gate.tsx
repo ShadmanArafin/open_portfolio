@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { isWelcomeDismissed } from '@/admin/welcomeDismissed';
+import { isWelcomeDismissed } from './_components/welcome-dismissed';
 
 /**
  * The first-run funnel, moved from the legacy shell's layout guard.

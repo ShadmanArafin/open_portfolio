@@ -17,7 +17,8 @@ import type { CMSState } from '@/cms/types/cms';
  *
  * "Never set up" is inferred from the content rather than stored as a flag: a
  * fresh install has this name and nothing else does. The dismissal preference
- * lives in the browser (see `src/admin/welcomeDismissed.ts`), because somebody
+ * lives in the browser
+ * (`app/admin/(protected)/_components/welcome-dismissed.ts`), because somebody
  * who skipped the wizard has, by definition, not changed their name yet.
  */
 export const WELCOME_NAME_PLACEHOLDER = 'Your Name';

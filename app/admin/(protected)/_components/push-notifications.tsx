@@ -22,6 +22,14 @@ function urlBase64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
  * Home-Screen-installed site (16.4+); Chrome exempts installed sites from its
  * low-engagement revocation. So the copy names the install step instead of
  * pretending the button alone is enough.
+ *
+ * Moved here from the legacy admin's `src/admin/components/PushNotifications.tsx`
+ * when the old shell was deleted. It is the last component still on the
+ * Astryx kit, which is why `app/layout.tsx` still loads that CSS; porting it
+ * to this directory's plain-Tailwind kit retires the dependency. It has
+ * rendered unthemed since it first appeared in the App Router shell — the
+ * legacy `AdminSurface` set the `data-astryx-theme` scope, and nothing here
+ * does — so the move changes nothing about how it looks.
  */
 export const PushNotifications: React.FC = () => {
   const [state, setState] = useState<

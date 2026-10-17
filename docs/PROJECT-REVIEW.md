@@ -162,6 +162,10 @@ stated.
 
 ## 3. Product Design / IA lens
 
+_(Updated 2026-10-18: the App Router rewrite landed end to end and these files
+are deleted — `docs/ADMIN-REWRITE.md`. The mapping is kept as the audit that
+motivated the rework.)_
+
 Admin mount: `app/admin/[...slug]/admin-mount.tsx` (`ssr:false`) →
 `admin-app.tsx` (`BrowserRouter basename="/admin"`, all `React.lazy`) →
 `src/admin/layouts/AdminLayout.tsx` (AppShell + TopNav + SideNav + Banner).
@@ -533,13 +537,15 @@ width=720` needs `maxWidth=100vw`. Tablet 768px preview frame forces
 
 ### 6.3 Tech debt (scheduled, not urgent)
 
-- **Dual router / legacy `src/` tree:** entire admin is `BrowserRouter` +
-  `ssr:false` + 25× `lazy()` (`admin-app.tsx`); public themed sections are
-  all `'use client'` + `useCMS()` (`src/views/*.tsx`) with only the
-  `core/blocks` path as true RSC. Exit is the App Router admin rewrite
-  (which also delivers the missing 5th auth mechanism:
-  `app/admin/(protected)/layout.tsx` guard-by-existence, `PLAN.md` line 250).
-  `react-router-dom@7.18.2` dies with that rewrite — no new imports.
+- **Dual router / legacy `src/` tree:** the admin half is **resolved**
+  (2026-10-18): the App Router rewrite migrated all twenty-nine screens by
+  twelve slices, and the kill criteria deleted the `BrowserRouter` mount and
+  `src/admin/**`; `react-router-dom` left the manifest. The rewrite also
+  delivered the missing 5th auth mechanism —
+  `app/admin/(protected)/layout.tsx` guard-by-existence (`PLAN.md` line 250).
+  The public half still stands: themed sections are all `'use client'` +
+  `useCMS()` (`src/views/*.tsx`) with only the `core/blocks` path as true RSC.
+  See `docs/ADMIN-REWRITE.md`.
 - **Styling triple-source:** Tailwind 3 + CSS-var tokens + Astryx/StyleX (no
   direct `stylex.*()` in app code — inside Astryx packages only). The
   Tailwind 4 pin (`.github/dependabot.yml`) is correct; v4 drops
@@ -560,15 +566,15 @@ width=720` needs `maxWidth=100vw`. Tablet 768px preview frame forces
 
 ## 7. Tech stack — keep, change, evaluate
 
-| Current                                                           | Verdict                                                                                                                                                                                      |
-| ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Next.js 16 App Router + React 19 + TS strict                      | **Keep.** Idiomatic (`params:Promise`, `cache()`, `revalidate:60`, `force-dynamic` mutations).                                                                                               |
-| Tailwind 3 pinned                                                 | **Keep until admin rewrite.** v4 needs a CSS-build assertion test first (missing utilities fail silently).                                                                                   |
-| 8 storage adapters + env inference                                | **Keep.** Zero-config deploy works because of it. Add Convex only with a real account; do not fake it.                                                                                       |
-| scrypt + opaque cookies + `@simplewebauthn/*` present             | **Keep.** Passkey ceremonies + OTP recovery are built per `PLAN.md`; `README.md` "no passkeys/OTP" is stale — update it.                                                                     |
-| Nodemailer SMTP only                                              | **Keep core, extend via registry.** Vault + registry exist; only `smtp` registered (`core/integrations/definitions/smtp.ts`). Add Resend/Brevo + Turnstile + Plausible/Umami as definitions. |
-| Vitest + Playwright + axe + conformance                           | **Keep.** Raise coverage to `src/cms` once `themes/` lands.                                                                                                                                  |
-| `react-router-dom`, `framer-motion@13`, `react-icons` server drag | **Remove in admin rewrite.** No new imports.                                                                                                                                                 |
+| Current                                                           | Verdict                                                                                                                                                                                                              |
+| ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Next.js 16 App Router + React 19 + TS strict                      | **Keep.** Idiomatic (`params:Promise`, `cache()`, `revalidate:60`, `force-dynamic` mutations).                                                                                                                       |
+| Tailwind 3 pinned                                                 | **Keep until admin rewrite.** v4 needs a CSS-build assertion test first (missing utilities fail silently).                                                                                                           |
+| 8 storage adapters + env inference                                | **Keep.** Zero-config deploy works because of it. Add Convex only with a real account; do not fake it.                                                                                                               |
+| scrypt + opaque cookies + `@simplewebauthn/*` present             | **Keep.** Passkey ceremonies + OTP recovery are built per `PLAN.md`; `README.md` "no passkeys/OTP" is stale — update it.                                                                                             |
+| Nodemailer SMTP only                                              | **Keep core, extend via registry.** Vault + registry exist; only `smtp` registered (`core/integrations/definitions/smtp.ts`). Add Resend/Brevo + Turnstile + Plausible/Umami as definitions.                         |
+| Vitest + Playwright + axe + conformance                           | **Keep.** Raise coverage to `src/cms` once `themes/` lands.                                                                                                                                                          |
+| `react-router-dom`, `framer-motion@13`, `react-icons` server drag | **First two done 2026-10-18:** `react-router-dom` left with the legacy admin (kill criteria); `framer-motion` became `motion` earlier. `react-icons` stays — and stays client-side (`core/blocks/standard.tsx:856`). |
 
 **Evaluate next (verify before adopting):** self-hosted `next/image` + `sharp`;
 `next/font` self-host + `display=swap`; Turnstile (proves the integrations
@@ -845,15 +851,16 @@ computed contrast, zero console errors throughout).
       links as the now-path; three reopen criteria.
 - [x] App Router admin rewrite (SSR, `(protected)` guard-by-existence,
       kill `react-router-dom`, `motion/react` migration, Tailwind 4
-      re-evaluation with CSS-build assertion test). **Prerequisites DONE
-      2026-10-17, migration tracked; slices 1–2 landed 2026-10-18:**
-      `(protected)` shell + guard-by-existence (307 to login, verified live),
-      7 screens migrated at unchanged URLs (dashboard with publish action,
-      messages, storage, history with restore action, your-site, analytics,
-      newsletter with settings + subscriber actions),
-      `core/content/changes.ts` pure helpers with tests, route-guard AST test
-      extended to `_actions`. Full 20-screen migration continues per
-      `docs/ADMIN-REWRITE.md`.
+      re-evaluation with CSS-build assertion test). **DONE 2026-10-18:** all
+      twenty-nine screens migrated at unchanged URLs across twelve slices,
+      then the kill criteria landed — the catch-all mount and `src/admin/**`
+      deleted, `react-router-dom` removed from the manifest, the ESLint
+      tripwire retired, and the two still-used modules relocated into
+      `app/admin/(protected)/_components/`. Verified: 29 screens 200, unknown
+      `/admin/*` answers 404 authenticated and 307 to login signed out, 984
+      tests / lint / build green, state files byte-identical. Full record with
+      per-slice evidence: `docs/ADMIN-REWRITE.md`. Tailwind 4 stays pinned
+      pending the re-evaluation (issue #9, §7).
 
 ---
 
@@ -1565,14 +1572,14 @@ Turnstile free 2026` (splitforms 2026-07-12: "Turnstile free with
 
 Verified from `package-lock.json` (evidence, not memory), Oct 2026:
 
-| What                                                                                                                                                                                                                                        | License (lockfile)           | Verdict                                                                                  |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | ---------------------------------------------------------------------------------------- |
-| Project itself                                                                                                                                                                                                                              | MIT (`packages[""].license`) | Free + OSI-approved                                                                      |
-| `@astryxdesign/core`, `/theme-neutral`, `/cli`                                                                                                                                                                                              | MIT                          | Free + OSI-approved                                                                      |
-| `next@16.3.0`, `react`, `react-dom`, `zod`, `clsx`, `tailwind-merge`, `motion`, `react-icons`, `react-router-dom`, `server-only`, `nodemailer`, `postgres`, `tailwindcss`, `typescript`, `eslint`, `prettier`, `vitest`, `postcss`, `jsdom` | MIT / ISC                    | Free + OSI-approved (`framer-motion@13` removed 2026-10-17, replaced by `motion@14` MIT) |
-| `@vercel/blob@2.7.0`, `firebase-admin@14.5.0`, `@cloudflare/workerd-*`, `firebase-tools`, `@electric-sql/pglite`                                                                                                                            | Apache-2.0                   | Free + OSI-approved **SDKs** — but the _services_ behind two of them are commercial      |
-| `@axe-core/playwright`, `axe-core`                                                                                                                                                                                                          | MPL-2.0                      | Free + OSI-approved (copyleft, file-level — fine for testing dep)                        |
-| `lru-cache` (transitive)                                                                                                                                                                                                                    | BlueOak-1.0.0                | Free + OSI-approved                                                                      |
+| What                                                                                                                                                                                                                    | License (lockfile)           | Verdict                                                                                            |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------- |
+| Project itself                                                                                                                                                                                                          | MIT (`packages[""].license`) | Free + OSI-approved                                                                                |
+| `@astryxdesign/core`, `/theme-neutral`, `/cli`                                                                                                                                                                          | MIT                          | Free + OSI-approved                                                                                |
+| `next@16.3.0`, `react`, `react-dom`, `zod`, `clsx`, `tailwind-merge`, `motion`, `react-icons`, `server-only`, `nodemailer`, `postgres`, `tailwindcss`, `typescript`, `eslint`, `prettier`, `vitest`, `postcss`, `jsdom` | MIT / ISC                    | Free + OSI-approved (`framer-motion@13` removed 2026-10-17; `react-router-dom` removed 2026-10-18) |
+| `@vercel/blob@2.7.0`, `firebase-admin@14.5.0`, `@cloudflare/workerd-*`, `firebase-tools`, `@electric-sql/pglite`                                                                                                        | Apache-2.0                   | Free + OSI-approved **SDKs** — but the _services_ behind two of them are commercial                |
+| `@axe-core/playwright`, `axe-core`                                                                                                                                                                                      | MPL-2.0                      | Free + OSI-approved (copyleft, file-level — fine for testing dep)                                  |
+| `lru-cache` (transitive)                                                                                                                                                                                                | BlueOak-1.0.0                | Free + OSI-approved                                                                                |
 
 **Services (not code — policy applies):** `@vercel/blob` and `firebase-admin`
 are optional storage adapters only; Supabase/Neon/hosted-DB free tiers are
@@ -1653,6 +1660,9 @@ icon library 2026 Lucide Heroicons Phosphor` (Hugeicons 2026-02-05,
   on shadcn + **Base UI** default; the current Astryx kit stays until then
   (no mid-flight primitive swap). Either way the admin keeps the repo's
   token layer — headless primitives own behavior, tokens own looks.
+  _(2026-10-18: the rewrite landed without shadcn — plain Tailwind plus the
+  local `_components` kit. Re-evaluate Base UI when the next primitive is
+  needed; the last Astryx island is scheduled to leave.)_
 - **Animation licensing — Motion, not GSAP, under free-only.** SERP `GSAP
 free MIT Webflow 2026` (gsap.com/pricing + webflow.com 2026-06-16 +
   2025-04-30: "100% free … including former Club GreenSock plugins" after

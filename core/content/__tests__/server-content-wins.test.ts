@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync, readdirSync } from 'node:fs';
+import { join, relative, sep } from 'node:path';
 
 /**
  * The public site must render the server's content and keep it.
@@ -25,6 +25,12 @@ import { join } from 'node:path';
 
 const ROOT = join(import.meta.dirname, '..', '..', '..');
 const read = (...parts: string[]) => readFileSync(join(ROOT, ...parts), 'utf8');
+
+const walk = (dir: string): string[] =>
+  readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const full = join(dir, entry.name);
+    return entry.isDirectory() ? walk(full) : [full];
+  });
 
 describe('the public site keeps what the server sent', () => {
   it('passes the server content into the provider', () => {
@@ -54,11 +60,25 @@ describe('the public site keeps what the server sent', () => {
     ).toBe(2);
   });
 
-  it('leaves the admin alone', () => {
-    // The admin passes no initialData on purpose: its local draft is the thing
-    // being edited, and it must keep loading it.
-    const adminApp = read('app', 'admin', '[...slug]', 'admin-app.tsx');
-    expect(adminApp).toContain('<CMSProvider>');
-    expect(adminApp).not.toContain('CMSProvider initialData');
+  it('mounts the CMS provider in exactly one place, the public site', () => {
+    // The legacy admin used to mount CMSProvider without initialData, on
+    // purpose: its local draft was the thing being edited. That admin is gone
+    // (docs/ADMIN-REWRITE.md) — every admin screen now reads and writes
+    // through server actions, and nothing under app/admin touches the CMS
+    // context. The provider has exactly one caller, the public site, and it
+    // is always given server content. If a second mount appears, it owes this
+    // test a reason.
+    const hits: string[] = [];
+    for (const top of ['app', 'src']) {
+      for (const file of walk(join(ROOT, top))) {
+        if (!/\.(ts|tsx)$/.test(file)) continue;
+        // `<CMSProvider[\s>]` — not every mention: the type
+        // `React.FC<CMSProviderProps>` contains the substring too.
+        if (/<CMSProvider[\s>]/.test(readFileSync(file, 'utf8'))) {
+          hits.push(relative(ROOT, file).split(sep).join('/'));
+        }
+      }
+    }
+    expect(hits).toEqual(['app/(site)/providers.tsx']);
   });
 });

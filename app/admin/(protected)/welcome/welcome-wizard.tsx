@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { PROFESSIONS, type ProfessionId } from '@/cms/data/professions';
 import { WELCOME_ACCENTS, type WelcomeAccent } from '@/core/content/welcome';
-import { dismissWelcome } from '@/admin/welcomeDismissed';
+import { dismissWelcome } from '../_components/welcome-dismissed';
 import { applyWelcomeAction } from '../_actions/welcome';
 
 /**

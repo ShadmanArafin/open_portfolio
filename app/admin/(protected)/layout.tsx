@@ -19,11 +19,10 @@ export const dynamic = 'force-dynamic';
  * matter what rendered the button, so each one still calls `requireOwner()`
  * itself (see `core/auth/guard.ts`).
  *
- * Migration is incremental: specific routes win over the legacy
- * `[[...slug]]` catch-all (now required `[...slug]` so the `/admin` root
- * belongs to the migrated dashboard), so migrated screens live here at their unchanged
- * URLs while the rest keep serving from the old client-side mount. The nav
- * below links every section either way, so the split is invisible in use.
+ * This layout used to be the migrated half of a split admin, with unmigrated
+ * screens still serving from the legacy `[...slug]` mount; that mount is
+ * deleted, so every admin URL in the nav below is a real route in this group.
+ * See `docs/ADMIN-REWRITE.md` for the slices and the kill criteria.
  */
 
 export const metadata: Metadata = {

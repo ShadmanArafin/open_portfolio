@@ -66,7 +66,7 @@ no alternate providers, no integrations registry or secrets vault, no OTP.
 **Fixed:** `/admin/welcome`'s Skip link used to be inert — it navigated without
 setting `fullName`, so `AdminLayout`'s guard bounced straight back to it, on the
 first screen every new deployer meets. Skipping and finishing now both record
-the choice in `localStorage` (`src/admin/welcomeDismissed.ts`), and the guard
+the choice in `localStorage` (`app/admin/(protected)/_components/welcome-dismissed.ts`), and the guard
 honours it. Inferring "never set up" from the content is right for deciding
 whether to _offer_ the wizard and wrong for deciding whether to _force_ it.
 Verified in a browser against a clean instance.

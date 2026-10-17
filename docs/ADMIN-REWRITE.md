@@ -5,15 +5,15 @@
 > prerequisites. The twenty-screen migration itself is post-1.0 work and is
 > tracked here, not hidden.
 
-> Update 2026-10-18 — slices 1–12 landed: the `(protected)` shell exists with
-> twenty-nine screens migrated (dashboard, messages, storage, history,
+> Update 2026-10-18 — the rewrite is complete, kill criteria included: slices
+> 1–12 migrated all twenty-nine screens (dashboard, messages, storage, history,
 > your-site, analytics, newsletter, welcome, settings, footer, microcopy,
 > appearance, seo, pages, writing, homepage, media, projects, case-studies,
 > brands, experience, education, process, capabilities, recommendations,
-> artifacts, navigation, services, help), and the signed-out half (login,
-> reset) now serves from its own public shell. Every screen the legacy mount
-> served now has an App Router home; what remains is the kill criteria —
-> deleting the catch-all mount and the old screens.
+> artifacts, navigation, services, help) and the signed-out half (login, reset)
+> onto its own public shell; then the catch-all mount and `src/admin/**` were
+> deleted and `react-router-dom` left the manifest. The Tailwind 4
+> re-evaluation is the one sequencing item still open — issue #9.
 
 ## Why
 
@@ -588,10 +588,9 @@ The help screen, at its unchanged address — the last legacy screen:
   is the list the switch describes. `CheckField` grew an optional `disabled`
   for the switch that has nothing to offer yet.
 
-Still legacy (next slices): none — every screen now has an App Router home.
-What remains is the kill criteria from the sequencing section: delete the
-catch-all mount and `src/admin/**`, then re-evaluate Tailwind 4 with the
-CSS-build test as the acceptance gate.
+Still legacy (next slices): none — every screen now has an App Router home,
+and the mount and `src/admin/**` were deleted the same day; see the
+kill-criteria section below.
 
 Verified live (browser tools, the endpoints and the state files): 76 HTTP
 checks — anonymous 307 with `?next=%2Fadmin%2Fhelp`, all five support
@@ -622,6 +621,57 @@ every so often (roughly 1–2% of responses; upstream `vercel/next.js#99114`),
 Turbopack 16.3 cannot parse those, and once one lands in `.next` every later
 build replays it. Thirty-four catalogue families means each fresh build is a
 dice roll; when it loses, delete `.next` and build again.
+
+### Kill criteria — landed 2026-10-18
+
+The old shell is gone: `app/admin/[...slug]/` (the route, the `ssr:false`
+wrapper and the React Router app) and all of `src/admin/**`. Three of the four
+sequencing items closed with it:
+
+- **Last `react-router-dom` import deleted** — and the dependency with it
+  (`npm uninstall`, lockfile included). The ESLint block that restricted new
+  imports of it had nothing left to guard, so it is retired.
+- **`ssr: false` mount deleted** — with the mount went the last client-only
+  admin route; every admin URL is server-rendered inside `(protected)` now.
+- **`motion` stays** — it was never the legacy shell's; the public site uses
+  `motion/react` throughout.
+
+The fourth item, the Tailwind 4 re-evaluation, is tracked in issue #9.
+
+Two modules were still in use by the new tree and moved verbatim instead of
+dying with it:
+
+- `welcomeDismissed.ts` → `app/admin/(protected)/_components/welcome-dismissed.ts`
+  — the skip preference, read by the welcome gate and written by the wizard.
+- `PushNotifications.tsx` → `app/admin/(protected)/_components/push-notifications.tsx`
+  — the inbox buzz button. It is the last Astryx component in the product and
+  renders with the kit's built-in defaults (the `data-astryx-theme` scope
+  lived on the deleted `AdminSurface`), which is exactly how it already
+  rendered inside the new shell. Porting it to plain Tailwind retires
+  `@astryxdesign/*` and the global CSS imports in `app/layout.tsx` with it.
+
+`src/styles/admin-theme.css` went too — its `.admin-ui` rules only ever
+matched the deleted surface. `src/context` and `src/views` stay: the public
+site still imports them.
+
+Three checks moved with the deletion. `server-content-wins.test.ts`'s "leaves
+the admin alone" assertion became a scan asserting the CMS provider is mounted
+in exactly one place (`app/(site)/providers.tsx`), because no admin code
+touches the CMS context any more. `admin-links.test.ts` — the guard against
+React Router basename-relative hrefs — died with its subject. The route-guard
+AST test needed no change: it already walked `app/admin/**/_actions`.
+Housekeeping found on the way: `-X`, a header-only curl cookie jar accidentally
+committed during the Phase A–D work, is deleted from the repo root.
+
+Verified after the kill: gates green — typecheck; lint 0 errors with 81
+warnings (the deleted screens carried 42); format:check; 984 tests passed, 11
+skipped over 66 files; build green. The 76-check HTTP script re-ran green (all
+29 admin screens 200, API guards 401 anonymous, `published.json` and
+`kv-config.json` byte-identical throughout). Live routing: an authenticated
+unknown `/admin/*` path now answers 404 where the catch-all used to render, and
+a signed-out one still bounces to `/admin/login?next=…`; `/admin/login` and
+`/admin/reset` serve 200 anonymously from the public shell; and in the browser
+the messages screen still mounted the push island, zero console errors.
 
 ## Explicitly not in the rewrite
 

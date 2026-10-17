@@ -89,12 +89,15 @@ container and recreating it against the same volume.
 
 ### Architecture in three sentences
 
-`app/` holds routes only. `core/` holds server-only domain logic — storage
-adapters behind one contract, auth, email, content reads — and files there start
-with `import 'server-only'` so a leaked credential is a build failure, except
-`core/theme/*`, which deliberately runs in the browser too. `src/` still holds
-the public site components (`src/views`, `src/components`) and the admin
-(`src/admin`).
+`app/` holds routes only — the whole admin included now (`(public)` for
+login/reset, `(protected)` for everything else). `core/` holds server-only
+domain logic — storage adapters behind one contract, auth, email, content
+reads — and files there start with `import 'server-only'` so a leaked
+credential is a build failure, except `core/theme/*`, which deliberately runs
+in the browser too. `src/` holds the public site's components and views
+(`src/components`, `src/views`) and its browser-side CMS; the legacy admin
+that used to live in `src/admin` was deleted 2026-10-18
+(`docs/ADMIN-REWRITE.md`).
 
 `site/` is a **separate application** — the marketing site, the help centre and
 the developer docs. Its own `package.json`, its own toolchain, deliberately not
@@ -356,10 +359,12 @@ addresses — for 24 hours in an origin-scoped cache that logging out does not
 clear. It is also `NetworkOnly` in dev, so this cannot be reproduced with
 `next dev`. See [MOBILE-AND-PWA.md](research/MOBILE-AND-PWA.md).
 
-**React Router paths are relative to the basename.** The admin mounts at
-`basename="/admin"`, so an absolute `/admin/projects` resolves to
-`/admin/admin/projects`. Every sidebar link was broken this way and nothing
-errored. A test now reads the hrefs.
+**React Router paths were relative to the basename — trap retired.** The
+legacy admin mounted at `basename="/admin"`, so an absolute `/admin/projects`
+resolved to `/admin/admin/projects`; every sidebar link was broken this way
+and nothing errored. The App Router rewrite deleted the admin, the links and
+the test that read them (2026-10-18, `docs/ADMIN-REWRITE.md`). Admin links are
+ordinary Next `<Link href="/admin/…">` paths now.
 
 **Reading the outside world during render.** `recentErrors()`, `navigator`,
 `window.screen` — the React Compiler rejects the component and it is genuinely

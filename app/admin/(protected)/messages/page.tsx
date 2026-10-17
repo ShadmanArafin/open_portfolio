@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getStorageAdapter } from '@/core/storage/registry';
-import { PushNotifications } from '@/admin/components/PushNotifications';
+import { PushNotifications } from '../_components/push-notifications';
 import { DeleteMessage, ReadToggle } from './message-actions';
 
 export const dynamic = 'force-dynamic';

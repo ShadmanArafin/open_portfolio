@@ -9,10 +9,15 @@ import { resolveAnalytics } from '@/core/integrations/analytics';
 import { THEME_STORAGE_KEY } from '@/context/themeConstants';
 
 /*
- * Astryx, used by the admin. Loaded globally because the layer order below
- * keeps it from touching the public site: the reset uses :where() for zero
- * specificity inside @layer reset, and the theme is scoped to
- * [data-astryx-theme], which only the admin surface sets.
+ * Astryx, still loaded for one thing: the push-notifications island on
+ * /admin/messages, the last component the old admin kit ever rendered
+ * (see `app/admin/(protected)/_components/push-notifications.tsx`). Loaded
+ * globally because the layer order below keeps it from touching the public
+ * site — the reset uses :where() for zero specificity inside @layer reset,
+ * and its theme styles are scoped to [data-astryx-theme], which nothing sets
+ * since the legacy admin surface was deleted, so the island renders with the
+ * components' built-in defaults. Porting that island to plain Tailwind
+ * retires this whole block and the @astryxdesign dependencies with it.
  *
  * Layer order: tw-preflight -> reset -> astryx-base -> astryx-theme -> ours.
  */
@@ -22,7 +27,6 @@ import '@astryxdesign/core/astryx.css';
 import '@astryxdesign/theme-neutral/theme.css';
 
 import '@/styles/index.css';
-import '@/styles/admin-theme.css';
 
 export async function generateMetadata(): Promise<Metadata> {
   const content = await getPublishedContent();

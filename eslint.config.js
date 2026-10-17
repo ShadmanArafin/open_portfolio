@@ -109,47 +109,5 @@ export default tseslint.config(
     files: ['*.config.{js,ts}', 'scripts/**/*.{js,mjs,ts}'],
     languageOptions: { globals: globals.node },
     rules: { 'no-console': 'off' },
-  },
-
-  /*
-   * react-router-dom dies with the App Router admin rewrite — no new imports.
-   *
-   * The eight files below are the entire existing surface (the catch-all
-   * mount plus the screens/layouts that render inside it). Anything else
-   * importing the client-side router is a step in the wrong direction, so it
-   * fails the build here rather than being caught in review.
-   */
-  {
-    files: ['src/**/*.{ts,tsx}', 'app/**/*.{ts,tsx}'],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          paths: [
-            {
-              name: 'react-router-dom',
-              message:
-                'The admin is leaving react-router-dom for the App Router (Phase D). Add screens to the App Router instead.',
-            },
-          ],
-        },
-      ],
-    },
-  },
-  {
-    // Brackets never match literally in minimatch, so the catch-all mount is
-    // named by directory, not by path.
-    files: [
-      'app/admin/**/admin-app.tsx',
-      'src/admin/layouts/AdminLayout.tsx',
-      'src/admin/components/AdminSidebar.tsx',
-      'src/admin/components/astryx/AstryxCommandPalette.tsx',
-      'src/admin/pages/AdminDashboard.tsx',
-      'src/admin/pages/AdminLogin.tsx',
-      'src/admin/pages/AdminResetPassphrase.tsx',
-      'src/admin/pages/AdminSettings.tsx',
-      'src/admin/pages/AdminWelcome.tsx',
-    ],
-    rules: { 'no-restricted-imports': 'off' },
   }
 );

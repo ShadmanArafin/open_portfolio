@@ -13,8 +13,11 @@ The five that bite hardest:
   variables and cookies only.
 - **ESLint 9, TypeScript 5 and Tailwind 3 are pinned on purpose.** Dependabot
   will keep proposing bumps; see the handoff notes before taking one.
-- **Admin paths are router-relative.** The old admin runs under
-  `basename="/admin"`, so `to="/admin/login"` resolves to `/admin/admin/login`.
+- **Admin links are plain paths now.** The router-relative
+  `basename="/admin"` trap died with the legacy admin (deleted 2026-10-18,
+  `docs/ADMIN-REWRITE.md`); its successor rule is that route handlers and
+  server actions never inherit the layout guard — each one calls
+  `requireOwner()` itself.
 - **No personal or client content, ever.** `npm run check:personal-data` runs in
   CI. Demo content must be fictional, yours, or CC0.
 
