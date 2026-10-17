@@ -10,14 +10,9 @@ import {
   normaliseSlug,
   type PageRecord,
 } from '@/core/pages/schema';
-import {
-  getBlockDefinition,
-  listBlockDefinitions,
-  parsePage,
-  runBlockChecks,
-} from '@/core/blocks/registry';
-import type { Block } from '@/core/blocks/schema';
-import { BlockFields } from './block-fields';
+import { BlocksEditor } from '../_components/blocks-editor';
+import { CheckField, Field } from '../_components/form-fields';
+import { newId } from '../_components/ids';
 import { SharePanel } from './share-panel';
 import { updatePagesAction } from '../_actions/pages';
 
@@ -46,102 +41,9 @@ const secondary =
   'rounded-full border border-border px-3 text-sm text-text-secondary hover:text-text-primary disabled:opacity-50';
 const danger = 'rounded-full bg-danger px-3 text-sm font-semibold text-bg disabled:opacity-50';
 
-const PALETTE_GROUPS: { id: string; label: string }[] = [
-  { id: 'identity', label: 'Say who you are' },
-  { id: 'work', label: 'Show your work' },
-  { id: 'credentials', label: 'Back it up' },
-  { id: 'conversion', label: 'Ask for something' },
-  { id: 'utility', label: 'Everything else' },
-];
-
-const DEFINITIONS = listBlockDefinitions();
-
-function blockSummary(block: Block): string {
-  const props = block.props as Record<string, unknown>;
-  for (const key of ['headline', 'heading', 'title', 'caption']) {
-    const value = props?.[key];
-    if (typeof value === 'string' && value.trim()) return value;
-  }
-  const paragraphs = props?.paragraphs;
-  if (Array.isArray(paragraphs) && typeof paragraphs[0] === 'string') return paragraphs[0];
-  return '';
-}
-
-let idCounter = 0;
-const newId = (prefix: string) => `${prefix}_${Date.now().toString(36)}_${++idCounter}`;
-
 /** Home first, always. It is the page every visitor sees. */
 function sortHomeFirst(pages: PageRecord[]): PageRecord[] {
   return [...pages].sort((a, b) => Number(isHomePage(b)) - Number(isHomePage(a)));
-}
-
-function Field({
-  label,
-  value,
-  onChange,
-  hint,
-  problem,
-  rows,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  hint?: string;
-  problem?: string | null;
-  rows?: number;
-}) {
-  return (
-    <label className="grid gap-1 text-sm">
-      <span className="font-semibold">{label}</span>
-      {rows ? (
-        <textarea
-          rows={rows}
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          className={`${field} py-2`}
-        />
-      ) : (
-        <input
-          type="text"
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          className={field}
-          style={{ minHeight: 44 }}
-        />
-      )}
-      {problem ? <span className="text-danger">{problem}</span> : null}
-      {hint && !problem ? <span className="text-text-secondary">{hint}</span> : null}
-    </label>
-  );
-}
-
-function CheckField({
-  label,
-  description,
-  checked,
-  onChange,
-}: {
-  label: string;
-  description?: string;
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-}) {
-  return (
-    <label className="flex min-h-[44px] cursor-pointer items-center gap-3 text-sm">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(event) => onChange(event.target.checked)}
-        className="h-5 w-5"
-      />
-      <span className="font-semibold">
-        {label}
-        {description ? (
-          <span className="block font-normal text-text-secondary">{description}</span>
-        ) : null}
-      </span>
-    </label>
-  );
 }
 
 function PageEditor({
@@ -157,42 +59,8 @@ function PageEditor({
   saved: boolean;
   onMutate: (mutate: (page: PageRecord) => PageRecord) => void;
 }) {
-  const [removeBlockArmed, setRemoveBlockArmed] = useState<string | null>(null);
   const home = isHomePage(page);
-  const parsed = parsePage(page.blocks);
   const slugProblem = checkSlug(page.slug, { existingSlugs: otherSlugs, isHome: home });
-
-  const setBlocks = (mutate: (blocks: unknown[]) => unknown[]) =>
-    onMutate((current) => ({ ...current, blocks: mutate([...current.blocks]) }));
-
-  const addBlock = (type: string) => {
-    const definition = getBlockDefinition(type);
-    if (!definition) return;
-    setBlocks((blocks) => [
-      ...blocks,
-      {
-        id: newId('block'),
-        type: definition.type,
-        v: definition.version,
-        props: definition.defaults(),
-      },
-    ]);
-  };
-
-  const moveBlock = (index: number, by: number) =>
-    setBlocks((blocks) => {
-      const target = index + by;
-      if (target < 0 || target >= blocks.length) return blocks;
-      [blocks[index], blocks[target]] = [blocks[target], blocks[index]];
-      return blocks;
-    });
-
-  const toggleBlockHidden = (index: number) =>
-    setBlocks((blocks) => {
-      const block = blocks[index] as { hidden?: boolean };
-      blocks[index] = { ...block, hidden: !block.hidden };
-      return blocks;
-    });
 
   return (
     <div className="grid gap-6 border-t border-border pt-4">
@@ -285,166 +153,11 @@ function PageEditor({
           </p>
         </div>
 
-        {parsed.length === 0 ? (
-          <p className="m-0 text-sm text-text-secondary">
-            Nothing on this page yet. Add a block below.
-          </p>
-        ) : (
-          parsed.map((entry, index) => {
-            const id = entry.kind === 'block' ? entry.block.id : entry.id;
-            const definition =
-              entry.kind === 'block' ? getBlockDefinition(entry.block.type) : undefined;
-            const warnings = runBlockChecks(entry);
-
-            return (
-              <div key={id} className="grid gap-3 rounded-xl border border-border p-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="flex flex-wrap items-center gap-2">
-                    <span className="text-sm font-semibold">
-                      {definition?.label ?? 'Not readable'}
-                    </span>
-                    {definition && entry.kind === 'block' ? (
-                      <span className="max-w-[24ch] truncate text-xs text-text-muted">
-                        {blockSummary(entry.block)}
-                      </span>
-                    ) : null}
-                    {warnings.length > 0 ? (
-                      <span className="rounded-full border border-border px-2 text-xs text-text-muted">
-                        {warnings.length} to look at
-                      </span>
-                    ) : null}
-                  </span>
-                  <span className="flex flex-wrap items-center gap-2">
-                    {entry.kind === 'block' ? (
-                      <label className="flex min-h-[44px] cursor-pointer items-center gap-2 text-sm">
-                        <input
-                          type="checkbox"
-                          checked={!entry.block.hidden}
-                          onChange={() => toggleBlockHidden(index)}
-                          className="h-5 w-5"
-                        />
-                        <span className="text-text-secondary">
-                          {entry.block.hidden ? 'Hidden' : 'Visible'}
-                        </span>
-                      </label>
-                    ) : null}
-                    <button
-                      type="button"
-                      onClick={() => moveBlock(index, -1)}
-                      disabled={index === 0}
-                      className={secondary}
-                      style={{ minHeight: 44 }}
-                    >
-                      Move up
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => moveBlock(index, 1)}
-                      disabled={index === parsed.length - 1}
-                      className={secondary}
-                      style={{ minHeight: 44 }}
-                    >
-                      Move down
-                    </button>
-                    {removeBlockArmed === id ? (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setBlocks((blocks) => blocks.filter((_, i) => i !== index));
-                            setRemoveBlockArmed(null);
-                          }}
-                          className={danger}
-                          style={{ minHeight: 44 }}
-                        >
-                          Remove it
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setRemoveBlockArmed(null)}
-                          className={secondary}
-                          style={{ minHeight: 44 }}
-                        >
-                          Cancel
-                        </button>
-                      </>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => setRemoveBlockArmed(id)}
-                        className={secondary}
-                        style={{ minHeight: 44 }}
-                      >
-                        Remove block
-                      </button>
-                    )}
-                  </span>
-                </div>
-
-                {entry.kind === 'unknown' ? (
-                  <p className="m-0 rounded-xl border border-danger bg-danger-subtle p-3 text-sm">
-                    This block cannot be shown here. {entry.reason} It is kept exactly as it is, and
-                    will work again on a version that understands it.
-                  </p>
-                ) : (
-                  <div className="grid gap-3">
-                    {warnings.map((warning) => (
-                      <p
-                        key={warning}
-                        className="m-0 rounded-xl border border-border bg-surface-secondary p-3 text-sm text-text-secondary"
-                      >
-                        {warning}
-                      </p>
-                    ))}
-                    {definition ? (
-                      <BlockFields
-                        fields={definition.fields}
-                        props={entry.block.props}
-                        onChange={(next) =>
-                          setBlocks((blocks) => {
-                            blocks[index] = {
-                              ...(blocks[index] as Record<string, unknown>),
-                              props: next,
-                            };
-                            return blocks;
-                          })
-                        }
-                        media={media}
-                      />
-                    ) : null}
-                  </div>
-                )}
-              </div>
-            );
-          })
-        )}
-
-        <div className="grid gap-3 rounded-xl border border-border p-3">
-          <span className="text-sm font-semibold">Add a block</span>
-          {PALETTE_GROUPS.map((group) => {
-            const inGroup = DEFINITIONS.filter((definition) => definition.group === group.id);
-            if (inGroup.length === 0) return null;
-            return (
-              <div key={group.id} className="grid gap-2">
-                <span className="text-sm text-text-secondary">{group.label}</span>
-                <span className="flex flex-wrap gap-2">
-                  {inGroup.map((definition) => (
-                    <button
-                      key={definition.type}
-                      type="button"
-                      title={definition.description}
-                      onClick={() => addBlock(definition.type)}
-                      className={secondary}
-                      style={{ minHeight: 44 }}
-                    >
-                      {definition.label}
-                    </button>
-                  ))}
-                </span>
-              </div>
-            );
-          })}
-        </div>
+        <BlocksEditor
+          blocks={page.blocks}
+          onChange={(blocks) => onMutate((current) => ({ ...current, blocks }))}
+          media={media}
+        />
       </section>
 
       <section aria-label="Share preview" className="grid gap-3">

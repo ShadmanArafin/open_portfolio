@@ -4,7 +4,7 @@ import { useState } from 'react';
 import type { MediaItem } from '@/cms/types/cms';
 import { getPath, setPath, type BlockField } from '@/core/blocks/fields';
 import { uploadMediaAction } from '../_actions/media';
-import { probeDimensions } from '../_components/probe-dimensions';
+import { probeDimensions } from './probe-dimensions';
 
 /**
  * One form for every block type.

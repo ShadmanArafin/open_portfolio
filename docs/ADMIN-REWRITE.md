@@ -5,13 +5,13 @@
 > prerequisites. The twenty-screen migration itself is post-1.0 work and is
 > tracked here, not hidden.
 
-> Update 2026-10-18 — slices 1–8 landed: the `(protected)` shell exists with
-> twenty-five screens migrated (dashboard, messages, storage, history, your-site,
+> Update 2026-10-18 — slices 1–9 landed: the `(protected)` shell exists with
+> twenty-six screens migrated (dashboard, messages, storage, history, your-site,
 > analytics, newsletter, welcome, settings, footer, microcopy, appearance,
-> seo, pages, homepage, media, projects, case-studies, brands, experience,
-> education, process, capabilities, recommendations, artifacts), and the
-> signed-out half (login, reset) now serves from its own public shell. The rest
-> serve from the legacy mount until their slice lands.
+> seo, pages, writing, homepage, media, projects, case-studies, brands,
+> experience, education, process, capabilities, recommendations, artifacts),
+> and the signed-out half (login, reset) now serves from its own public shell.
+> The rest serve from the legacy mount until their slice lands.
 
 ## Why
 
@@ -397,6 +397,64 @@ key. Two artifact files uploaded in one batch stored in file order with the
 `ui` category and the library captions as alt text. The library ends where
 it started - three items, the résumé PDF the only byte in `.opb/media` - and
 `published.json` byte-identical throughout.
+
+### Slice 9 — landed 2026-10-18
+
+Writing, at its unchanged address:
+
+- `/admin/writing` — a trunk reading the draft and an island carrying the
+  legacy screen's two halves: the settings that make this not a blog (name,
+  order, dates, on/off) and the pieces themselves, each built from the same
+  blocks as pages. One Save writes the settings _and_ the list in a single
+  revision-checked draft write, so a save that half-landed does not exist.
+- The block editor is now shared, not copied. The per-block UI — warnings,
+  visible/hidden, move, armed remove, the grouped Add-a-block palette — moved
+  out of `pages-builder` into `_components/blocks-editor.tsx`, the block field
+  renderer moved from `pages/` to `_components/block-fields.tsx`, and the
+  shared `Field`/`CheckField` controls into `_components/form-fields.tsx`.
+  Pages renders through the same components, so a block type added to the
+  registry still appears on both screens the day it renders, and a piece that
+  wants a gallery no longer needs a parallel editor.
+- `core/blocks/clean.ts` holds the block cleaner both actions use. Anything
+  exported from a `'use server'` module becomes a callable endpoint, so the
+  shared cleaner lives in core rather than being re-exported from pages.
+- `sortOrder` is trusted rather than reassigned from the array order (pages
+  reassigns, because a page list _is_ its order): the reading order is what
+  `arrange()` computes from position and pin, so the stored array stays in
+  creation order and the numbers are the curated positions. Moving renumbers
+  the whole visible list — the legacy dance — so no ties are left for the
+  date fallback to break in ways nobody chose, and the move buttons exist
+  only in curated mode, where a position means something.
+- New pieces derive their address from the title like the legacy screen did
+  (`untitled`, `untitled-2` when taken), the settings' `slug` is preserved
+  rather than accepted — the public route is fixed at /writing — and
+  scheduled pieces keep the legacy predicate: `isLive()` at read time, no
+  cron to promise and none needed.
+- Additions the legacy screen could not make, in the established spirit: the
+  web address is editable at all (it was title-derived and frozen, so two
+  "Untitled" pieces could share one and the second was unreachable), duplicate
+  addresses are refused at save, and a piece's blocks get the same
+  visible/hidden and move controls pages have. Dates stay exactly as
+  unfrozen as before — `publishedAt` and per-piece SEO are fields the legacy
+  editor never wrote, and this slice still does not invent them; the
+  writing-SEO backlog item owns that.
+
+Still legacy (next slices): navigation, integrations, help.
+
+Verified live (browser tools and the authenticated backup endpoint):
+anonymous 307 on `/admin/writing` with `?next=`, and authed HTML with the
+seeded settings (label "Blog", section off) and an empty list. Then the
+round trips: settings switched on, renamed, reordered and date-showing
+stored as typed; two pieces created, one moved above the other in curated
+mode with both `sortOrder`s renumbered; a scheduled piece kept its date; the
+address field refused a duplicate with the writing-voice message while the
+action refused it too; a pin flipped the reading order; both pieces deleted
+with the armed confirmation and the settings restored to the seed. Pages was
+re-checked through the shared editor — the seeded page still renders its
+three blocks and the palette, and a local move without Save left the draft
+untouched. The seed never had a `writing` key, so the draft ends with an
+empty list; `published.json` byte-identical throughout and the media library
+untouched.
 
 ## Explicitly not in the rewrite
 
