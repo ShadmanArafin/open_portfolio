@@ -147,6 +147,8 @@ export function CollectionEditor<T extends { id: string }>({
   save,
   note = 'Nothing on this screen is live until you publish.',
   headerExtra,
+  customAdd,
+  leading,
   renderFields,
 }: {
   initialItems: T[];
@@ -163,6 +165,10 @@ export function CollectionEditor<T extends { id: string }>({
   save: (items: T[]) => Promise<SaveOutcome<T>>;
   note?: string;
   headerExtra?: ReactNode;
+  /** Replaces the Add button — the artifact screen uploads before it has a record. */
+  customAdd?: (add: (items: T[]) => void) => ReactNode;
+  /** A preview before the title, for screens whose records are pictures. */
+  leading?: (item: T) => ReactNode;
   renderFields: (item: T, mutate: (mutate: (item: T) => T) => void, items: T[]) => ReactNode;
 }) {
   const [items, setItems] = useState<T[]>(initialItems);
@@ -175,10 +181,14 @@ export function CollectionEditor<T extends { id: string }>({
   const mutateItem = (id: string, mutate: (item: T) => T) =>
     setItems((list) => list.map((item) => (item.id === id ? mutate(item) : item)));
 
-  const add = () => {
-    const item = create(items);
-    setItems((list) => [item, ...list]);
-    setOpenId(item.id);
+  /**
+   * New records go to the top and open themselves, so what was just added is
+   * what is in front of you. Only the artifact uploader adds a batch.
+   */
+  const addItems = (added: T[]) => {
+    if (added.length === 0) return;
+    setItems((list) => [...added, ...list]);
+    setOpenId(added[0].id);
   };
 
   const makeCopy = (item: T) => {
@@ -224,14 +234,18 @@ export function CollectionEditor<T extends { id: string }>({
   return (
     <div className="grid gap-6">
       <div className="flex flex-wrap gap-3">
-        <button
-          type="button"
-          onClick={add}
-          className="rounded-full bg-text-primary px-4 text-sm font-semibold text-bg"
-          style={{ minHeight: 44 }}
-        >
-          {addLabel}
-        </button>
+        {customAdd ? (
+          customAdd(addItems)
+        ) : (
+          <button
+            type="button"
+            onClick={() => addItems([create(items)])}
+            className="rounded-full bg-text-primary px-4 text-sm font-semibold text-bg"
+            style={{ minHeight: 44 }}
+          >
+            {addLabel}
+          </button>
+        )}
         {headerExtra}
       </div>
 
@@ -248,31 +262,34 @@ export function CollectionEditor<T extends { id: string }>({
             return (
               <li key={item.id} className="grid gap-3 rounded-2xl border border-border p-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setOpenId(open ? null : item.id)}
-                    aria-expanded={open}
-                    className="grid gap-1 text-left"
-                    style={{ minHeight: 44 }}
-                  >
-                    <span className="flex flex-wrap items-center gap-2">
-                      <span className="font-semibold">{title(item) || 'Untitled'}</span>
-                      {itemBadge ? (
-                        <span
-                          className={`rounded-full border px-2 py-0.5 text-xs ${
-                            itemBadge.live
-                              ? 'border-accent text-accent'
-                              : 'border-border text-text-muted'
-                          }`}
-                        >
-                          {itemBadge.label}
-                        </span>
+                  <span className="flex flex-wrap items-center gap-3">
+                    {leading ? leading(item) : null}
+                    <button
+                      type="button"
+                      onClick={() => setOpenId(open ? null : item.id)}
+                      aria-expanded={open}
+                      className="grid gap-1 text-left"
+                      style={{ minHeight: 44 }}
+                    >
+                      <span className="flex flex-wrap items-center gap-2">
+                        <span className="font-semibold">{title(item) || 'Untitled'}</span>
+                        {itemBadge ? (
+                          <span
+                            className={`rounded-full border px-2 py-0.5 text-xs ${
+                              itemBadge.live
+                                ? 'border-accent text-accent'
+                                : 'border-border text-text-muted'
+                            }`}
+                          >
+                            {itemBadge.label}
+                          </span>
+                        ) : null}
+                      </span>
+                      {summary ? (
+                        <span className="text-sm text-text-secondary">{summary(item)}</span>
                       ) : null}
-                    </span>
-                    {summary ? (
-                      <span className="text-sm text-text-secondary">{summary(item)}</span>
-                    ) : null}
-                  </button>
+                    </button>
+                  </span>
 
                   <span className="flex flex-wrap items-center gap-2">
                     <button

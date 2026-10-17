@@ -5,12 +5,13 @@
 > prerequisites. The twenty-screen migration itself is post-1.0 work and is
 > tracked here, not hidden.
 
-> Update 2026-10-18 — slices 1–7 landed: the `(protected)` shell exists with
-> eighteen screens migrated (dashboard, messages, storage, history, your-site,
+> Update 2026-10-18 — slices 1–8 landed: the `(protected)` shell exists with
+> twenty-five screens migrated (dashboard, messages, storage, history, your-site,
 > analytics, newsletter, welcome, settings, footer, microcopy, appearance,
-> seo, pages, homepage, media, projects, case-studies), and the signed-out
-> half (login, reset) now serves from its own public shell. The rest serve
-> from the legacy mount until their slice lands.
+> seo, pages, homepage, media, projects, case-studies, brands, experience,
+> education, process, capabilities, recommendations, artifacts), and the
+> signed-out half (login, reset) now serves from its own public shell. The rest
+> serve from the legacy mount until their slice lands.
 
 ## Why
 
@@ -334,6 +335,68 @@ was refused with the exact message before any write; an anonymous fetch of
 the added project's `/work/…` returned the draft's not-found state while
 the seeded published pages still render. `published.json` byte-identical
 throughout.
+
+### Slice 8 — landed 2026-10-18
+
+The seven small collections, at their unchanged addresses:
+
+- `/admin/brands`, `/admin/experience`, `/admin/education`, `/admin/process`,
+  `/admin/capabilities`, `/admin/recommendations`, `/admin/artifacts` — each a
+  trunk that reads the draft and a slice-7 `CollectionEditor` island carrying
+  only its own fields. The legacy screens had four different shapes for the
+  same job (a card grid, cards with a footer Save, lists with no Save at all);
+  one shell absorbs all seven, and every list now saves the whole array in one
+  revision-checked write.
+- One saver (`saveCollection`) enforces what the seven share — a bounded
+  list, unique ids, `sortOrder` reassigned from the array order — and each
+  collection keeps its cleaner next to the interface it mirrors. Missing text
+  reads as empty so old snapshots keep saving; the closed sets (`size`,
+  education `status`, artifact `category`) are validated; all seven actions
+  call `requireOwner()` like every other write.
+- Three frozen fields start moving. The timeline block reads
+  `experience.period` verbatim and the legacy admin never wrote it, so editing
+  dates changed nothing the site showed — the action now writes that label
+  from the structured dates on every save (entries without dates keep their
+  authored text). Education `number` is derived from the list position — the
+  legacy screen's `"0" + length` collided after a removal — and `isCurrent`
+  from the status. New process and capability numbers come from the highest
+  number in the list, not the list length.
+- Line-list fields — highlights, detail chips, capabilities — split on save
+  rather than per keystroke, so blank lines drop out of the stored data while
+  typing stays natural.
+- Two shell extensions, both driven by artifacts: `leading` puts a preview
+  before the record title, and `customAdd` replaces the Add button so the
+  upload control is how records are made — the legacy behavior, where you
+  picked one or more files, each became a record with `alt` from the library
+  caption, in the chosen order.
+- Additions the legacy screens could not make, in slice 7's spirit: Experience
+  and Education can be hidden (`visible` exists in the type and the public
+  filter, and no legacy toggle could reach it), Recommendations can be
+  featured — the testimonials block's "featured only" rule was unreachable —
+  its avatar can be cleared rather than only replaced, and a brand logo can
+  carry its own description for screen readers instead of only a caption in
+  the library. The seven screens also join the admin nav after Case studies.
+
+Still legacy (next slices): writing, navigation, integrations, help.
+
+Verified live (browser tools and the authenticated backup endpoint):
+anonymous 307s on all seven addresses with `?next=`, server-rendered HTML in
+storage order with the seed records visible. Then the round trips: a brand
+added with a logo upload - bytes on disk, a library record with the upload's
+caption, the stored brand carrying its own description and the default size -
+and removed with the armed confirmation, the draft back to its five. A role
+saved with both dates and Current off stored the label the structured dates
+imply (`Jan 2020 — Jun 2021` was never typed), and a blank line in the
+highlights left no empty string in the stored list. An education entry added
+at the top stored `01` with `isCurrent` derived from its In Progress status,
+read `02` after one Move down, and left the seeds back at `01`/`02` when it
+was deleted. A step stored `04`, a group `05`, and their line lists one
+string per non-blank line. A recommendation saved featured by default, kept
+the toggle off when it was switched, and cleared its avatar to a missing
+key. Two artifact files uploaded in one batch stored in file order with the
+`ui` category and the library captions as alt text. The library ends where
+it started - three items, the résumé PDF the only byte in `.opb/media` - and
+`published.json` byte-identical throughout.
 
 ## Explicitly not in the rewrite
 

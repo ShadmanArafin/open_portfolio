@@ -6,14 +6,22 @@ import { normaliseSlug } from '@/core/pages/schema';
 import { RevisionConflictError } from '@/core/storage/contract';
 import { getStorageAdapter } from '@/core/storage/registry';
 import type {
+  BrandItem,
+  CapabilityGroupItem,
   CaseStudyBlock,
   CaseStudyItem,
   CMSState,
+  EducationItem,
+  ExperienceItem,
+  ProcessStepItem,
   ProjectApproachStep,
   ProjectImageItem,
   ProjectItem,
   PublishStatus,
+  RecommendationItem,
+  VisualArtifactItem,
 } from '@/cms/types/cms';
+import { formatPeriod } from '@/cms/utils/dates';
 
 export interface ProjectsResult {
   ok: boolean;
@@ -28,6 +36,55 @@ export interface CaseStudiesResult {
   error?: string;
   conflict?: boolean;
   caseStudies?: CaseStudyItem[];
+}
+
+export interface BrandsResult {
+  ok: boolean;
+  error?: string;
+  conflict?: boolean;
+  brands?: BrandItem[];
+}
+
+export interface ExperienceResult {
+  ok: boolean;
+  error?: string;
+  conflict?: boolean;
+  experience?: ExperienceItem[];
+}
+
+export interface EducationResult {
+  ok: boolean;
+  error?: string;
+  conflict?: boolean;
+  education?: EducationItem[];
+}
+
+export interface ProcessResult {
+  ok: boolean;
+  error?: string;
+  conflict?: boolean;
+  processSteps?: ProcessStepItem[];
+}
+
+export interface CapabilitiesResult {
+  ok: boolean;
+  error?: string;
+  conflict?: boolean;
+  capabilityGroups?: CapabilityGroupItem[];
+}
+
+export interface RecommendationsResult {
+  ok: boolean;
+  error?: string;
+  conflict?: boolean;
+  recommendations?: RecommendationItem[];
+}
+
+export interface ArtifactsResult {
+  ok: boolean;
+  error?: string;
+  conflict?: boolean;
+  artifacts?: VisualArtifactItem[];
 }
 
 /**
@@ -88,6 +145,34 @@ function flag(value: unknown, fallback: boolean): boolean | null {
   if (value === undefined || value === null) return fallback;
   return typeof value === 'boolean' ? value : null;
 }
+
+/** An `id`: present, plain, and safe to keep in the content tree. */
+function idField(value: unknown): string | null {
+  return isText(value, 100) && ID_PATTERN.test(value) ? value : null;
+}
+
+/** An ISO `YYYY-MM-DD`. Empty and absent both mean "no date". */
+function isoDate(value: unknown): string | undefined | null {
+  if (value === undefined || value === null || value === '') return undefined;
+  return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null;
+}
+
+/** A value from a fixed set. Absent reads as the fallback; anything else is rejected. */
+function union<T extends string>(value: unknown, allowed: readonly T[], fallback: T): T | null {
+  if (value === undefined || value === null || value === '') return fallback;
+  return typeof value === 'string' && (allowed as readonly string[]).includes(value)
+    ? (value as T)
+    : null;
+}
+
+/** A list of lines — highlights, chips, capabilities. Typing keeps blanks, saving drops them. */
+function lineList(value: unknown, maxItems: number, maxLength: number): string[] | null {
+  const list = textList(value, maxItems, maxLength);
+  if (list === null) return null;
+  return list.map((line) => line.trim()).filter((line) => line.length > 0);
+}
+
+const pad2 = (value: number) => String(value).padStart(2, '0');
 
 function count(value: unknown, fallback: number): number | null {
   if (value === undefined || value === null) return fallback;
@@ -606,4 +691,416 @@ export async function updateCaseStudiesAction(caseStudies: unknown): Promise<Cas
 
   revalidatePath('/admin/case-studies');
   return { ok: true, caseStudies: stamped };
+}
+
+/* ---------------------------------------------------- the small collections */
+
+/**
+ * Seven shorter lists share one shape: an `id`, a `sortOrder`, a `visible`
+ * flag, and nothing else structural. They get one saver that enforces what
+ * they have in common — a bounded list, unique ids, the same position rule
+ * as the work collections — and each keeps its own cleaner next to the
+ * interface it mirrors. The public site reads these lists positioned by
+ * `sortOrder` and filtered by `visible !== false`.
+ */
+
+const BRAND_SIZES = ['small', 'default', 'wide'] as const;
+const EDUCATION_STATUSES = ['In Progress', 'Graduated', 'Completed', 'Paused'] as const;
+const ARTIFACT_CATEGORIES = ['ui', 'systems', 'mobile'] as const;
+
+async function saveCollection<T extends { id: string; sortOrder: number }>(
+  payload: unknown,
+  notUsable: string,
+  clean: (raw: unknown) => T | null,
+  stamp: (items: T[]) => T[],
+  apply: (draft: CMSState, items: T[]) => void,
+  path: string
+): Promise<{ ok: boolean; error?: string; conflict?: boolean; items?: T[] }> {
+  if (!Array.isArray(payload) || payload.length > MAX_RECORDS) {
+    return { ok: false, error: notUsable };
+  }
+
+  const kept: T[] = [];
+  const seen = new Set<string>();
+  for (const raw of payload) {
+    const item = clean(raw);
+    if (!item || seen.has(item.id)) return { ok: false, error: notUsable };
+    seen.add(item.id);
+    kept.push(item);
+  }
+
+  const stamped = stamp(kept);
+  const outcome = await writeList((draft) => apply(draft, stamped));
+  if (outcome === 'missing') return { ok: false, error: NO_DRAFT_MESSAGE };
+  if (outcome === 'conflict') return { ok: false, conflict: true, error: CONFLICT_MESSAGE };
+
+  revalidatePath(path);
+  return { ok: true, items: stamped };
+}
+
+/** Position in the list is position in the order — the same rule as the work lists. */
+function stampOrder<T extends { sortOrder: number }>(items: T[]): T[] {
+  return items.map((item, index) => ({ ...item, sortOrder: index + 1 }));
+}
+
+function cleanBrand(raw: unknown): BrandItem | null {
+  const entry = object(raw);
+  if (!entry) return null;
+
+  const id = idField(entry.id);
+  const name = text(entry.name, 200);
+  const logo = text(entry.logo, 1000);
+  const alt = text(entry.alt, 500);
+  const url = optionalText(entry.url, 1000);
+  const size = union(entry.size, BRAND_SIZES, 'default');
+  const visible = flag(entry.visible, true);
+  if (
+    !id ||
+    name === null ||
+    logo === null ||
+    alt === null ||
+    url === null ||
+    size === null ||
+    visible === null
+  ) {
+    return null;
+  }
+
+  const brand: BrandItem = { id, name, logo, alt, size, sortOrder: 0, visible };
+  if (url !== undefined) brand.url = url;
+  return brand;
+}
+
+function cleanExperience(raw: unknown): ExperienceItem | null {
+  const entry = object(raw);
+  if (!entry) return null;
+
+  const id = idField(entry.id);
+  const period = text(entry.period, 200);
+  const startDate = isoDate(entry.startDate);
+  const endDate = isoDate(entry.endDate);
+  const type = text(entry.type, 100);
+  const role = text(entry.role, 200);
+  const company = text(entry.company, 200);
+  const companyUrl = optionalText(entry.companyUrl, 1000);
+  const current = flag(entry.current, false);
+  const summary = text(entry.summary, 2000);
+  const highlights = lineList(entry.highlights, 20, 300);
+  const visible = flag(entry.visible, true);
+  if (
+    !id ||
+    period === null ||
+    startDate === null ||
+    endDate === null ||
+    type === null ||
+    role === null ||
+    company === null ||
+    companyUrl === null ||
+    current === null ||
+    summary === null ||
+    highlights === null ||
+    visible === null
+  ) {
+    return null;
+  }
+
+  const item: ExperienceItem = {
+    id,
+    // The timeline block reads this label verbatim and never re-derives it,
+    // and the legacy admin never wrote it at all. Writing it from the
+    // structured dates is the port's fix; entries without dates keep the
+    // text they were authored with.
+    period: formatPeriod({ startDate, endDate, current, period }),
+    type,
+    role,
+    company,
+    current,
+    summary,
+    highlights,
+    sortOrder: 0,
+    visible,
+  };
+  if (startDate !== undefined) item.startDate = startDate;
+  if (endDate !== undefined && !current) item.endDate = endDate;
+  if (companyUrl !== undefined) item.companyUrl = companyUrl;
+  return item;
+}
+
+function cleanEducation(raw: unknown): EducationItem | null {
+  const entry = object(raw);
+  if (!entry) return null;
+
+  const id = idField(entry.id);
+  const number = text(entry.number, 20);
+  const yearLabel = text(entry.yearLabel, 50);
+  const degree = text(entry.degree, 300);
+  const institution = text(entry.institution, 300);
+  const institutionUrl = optionalText(entry.institutionUrl, 1000);
+  const status = union(entry.status, EDUCATION_STATUSES, 'Graduated');
+  const visible = flag(entry.visible, true);
+  if (
+    !id ||
+    number === null ||
+    yearLabel === null ||
+    degree === null ||
+    institution === null ||
+    institutionUrl === null ||
+    status === null ||
+    visible === null
+  ) {
+    return null;
+  }
+
+  const item: EducationItem = {
+    id,
+    number,
+    yearLabel,
+    degree,
+    institution,
+    status,
+    sortOrder: 0,
+    visible,
+  };
+  if (institutionUrl !== undefined) item.institutionUrl = institutionUrl;
+  return item;
+}
+
+function cleanProcessStep(raw: unknown): ProcessStepItem | null {
+  const entry = object(raw);
+  if (!entry) return null;
+
+  const id = idField(entry.id);
+  const number = text(entry.number, 20);
+  const title = text(entry.title, 300);
+  const duration = text(entry.duration, 100);
+  const deliverable = text(entry.deliverable, 200);
+  const description = text(entry.description, 2000);
+  const details = lineList(entry.details, 20, 200);
+  const visible = flag(entry.visible, true);
+  if (
+    !id ||
+    number === null ||
+    title === null ||
+    duration === null ||
+    deliverable === null ||
+    description === null ||
+    details === null ||
+    visible === null
+  ) {
+    return null;
+  }
+
+  return {
+    id,
+    number,
+    title,
+    duration,
+    deliverable,
+    description,
+    details,
+    sortOrder: 0,
+    visible,
+  };
+}
+
+function cleanCapabilityGroup(raw: unknown): CapabilityGroupItem | null {
+  const entry = object(raw);
+  if (!entry) return null;
+
+  const id = idField(entry.id);
+  const number = text(entry.number, 20);
+  const title = text(entry.title, 300);
+  const description = text(entry.description, 2000);
+  const capabilities = lineList(entry.capabilities, 40, 200);
+  const visible = flag(entry.visible, true);
+  if (
+    !id ||
+    number === null ||
+    title === null ||
+    description === null ||
+    capabilities === null ||
+    visible === null
+  ) {
+    return null;
+  }
+
+  return { id, number, title, description, capabilities, sortOrder: 0, visible };
+}
+
+function cleanRecommendation(raw: unknown): RecommendationItem | null {
+  const entry = object(raw);
+  if (!entry) return null;
+
+  const id = idField(entry.id);
+  const name = text(entry.name, 200);
+  const role = text(entry.role, 200);
+  const company = text(entry.company, 200);
+  const companyUrl = optionalText(entry.companyUrl, 1000);
+  const quote = text(entry.quote, 2000);
+  const avatar = optionalText(entry.avatar, 1000);
+  const featured = flag(entry.featured, false);
+  const visible = flag(entry.visible, true);
+  if (
+    !id ||
+    name === null ||
+    role === null ||
+    company === null ||
+    companyUrl === null ||
+    quote === null ||
+    avatar === null ||
+    featured === null ||
+    visible === null
+  ) {
+    return null;
+  }
+
+  const item: RecommendationItem = {
+    id,
+    name,
+    role,
+    company,
+    quote,
+    featured,
+    sortOrder: 0,
+    visible,
+  };
+  if (companyUrl !== undefined) item.companyUrl = companyUrl;
+  if (avatar !== undefined) item.avatar = avatar;
+  return item;
+}
+
+function cleanArtifact(raw: unknown): VisualArtifactItem | null {
+  const entry = object(raw);
+  if (!entry) return null;
+
+  const id = idField(entry.id);
+  const category = union(entry.category, ARTIFACT_CATEGORIES, 'ui');
+  const src = text(entry.src, 1000);
+  const alt = text(entry.alt, 500);
+  const visible = flag(entry.visible, true);
+  if (!id || category === null || src === null || alt === null || visible === null) return null;
+
+  return { id, category, src, alt, sortOrder: 0, visible };
+}
+
+/**
+ * Education entries number themselves from their position, the way
+ * `sortOrder` does. The legacy screen wrote "0" + list length at creation,
+ * which collided after a removal ("05" twice); the number is display-only,
+ * so deriving it from the order is safe.
+ */
+function stampEducation(items: EducationItem[]): EducationItem[] {
+  return items.map((item, index) => ({
+    ...item,
+    number: pad2(index + 1),
+    isCurrent: item.status === 'In Progress',
+    sortOrder: index + 1,
+  }));
+}
+
+export async function updateBrandsAction(brands: unknown): Promise<BrandsResult> {
+  await requireOwner();
+  const { ok, error, conflict, items } = await saveCollection(
+    brands,
+    'Those brands are not usable.',
+    cleanBrand,
+    stampOrder,
+    (draft, list) => {
+      draft.brands = list;
+    },
+    '/admin/brands'
+  );
+  return { ok, error, conflict, brands: items };
+}
+
+export async function updateExperienceAction(experience: unknown): Promise<ExperienceResult> {
+  await requireOwner();
+  const { ok, error, conflict, items } = await saveCollection(
+    experience,
+    'That experience list is not usable.',
+    cleanExperience,
+    stampOrder,
+    (draft, list) => {
+      draft.experience = list;
+    },
+    '/admin/experience'
+  );
+  return { ok, error, conflict, experience: items };
+}
+
+export async function updateEducationAction(education: unknown): Promise<EducationResult> {
+  await requireOwner();
+  const { ok, error, conflict, items } = await saveCollection(
+    education,
+    'That education list is not usable.',
+    cleanEducation,
+    stampEducation,
+    (draft, list) => {
+      draft.education = list;
+    },
+    '/admin/education'
+  );
+  return { ok, error, conflict, education: items };
+}
+
+export async function updateProcessAction(processSteps: unknown): Promise<ProcessResult> {
+  await requireOwner();
+  const { ok, error, conflict, items } = await saveCollection(
+    processSteps,
+    'Those process steps are not usable.',
+    cleanProcessStep,
+    stampOrder,
+    (draft, list) => {
+      draft.processSteps = list;
+    },
+    '/admin/process'
+  );
+  return { ok, error, conflict, processSteps: items };
+}
+
+export async function updateCapabilitiesAction(groups: unknown): Promise<CapabilitiesResult> {
+  await requireOwner();
+  const { ok, error, conflict, items } = await saveCollection(
+    groups,
+    'Those capability groups are not usable.',
+    cleanCapabilityGroup,
+    stampOrder,
+    (draft, list) => {
+      draft.capabilityGroups = list;
+    },
+    '/admin/capabilities'
+  );
+  return { ok, error, conflict, capabilityGroups: items };
+}
+
+export async function updateRecommendationsAction(
+  recommendations: unknown
+): Promise<RecommendationsResult> {
+  await requireOwner();
+  const { ok, error, conflict, items } = await saveCollection(
+    recommendations,
+    'Those recommendations are not usable.',
+    cleanRecommendation,
+    stampOrder,
+    (draft, list) => {
+      draft.recommendations = list;
+    },
+    '/admin/recommendations'
+  );
+  return { ok, error, conflict, recommendations: items };
+}
+
+export async function updateArtifactsAction(artifacts: unknown): Promise<ArtifactsResult> {
+  await requireOwner();
+  const { ok, error, conflict, items } = await saveCollection(
+    artifacts,
+    'Those artifacts are not usable.',
+    cleanArtifact,
+    stampOrder,
+    (draft, list) => {
+      draft.artifacts = list;
+    },
+    '/admin/artifacts'
+  );
+  return { ok, error, conflict, artifacts: items };
 }
