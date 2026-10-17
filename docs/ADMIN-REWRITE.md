@@ -5,9 +5,10 @@
 > prerequisites. The twenty-screen migration itself is post-1.0 work and is
 > tracked here, not hidden.
 
-> Update 2026-10-18 — slices 1–2 landed: the `(protected)` shell exists and
-> seven screens are migrated (dashboard, messages, storage, history,
-> your-site, analytics, newsletter).
+> Update 2026-10-18 — slices 1–3 landed: the `(protected)` shell exists with
+> eight screens migrated (dashboard, messages, storage, history, your-site,
+> analytics, newsletter, welcome), and the signed-out half (login, reset) now
+> serves from its own public shell.
 > The rest serve from the legacy mount until their slice lands.
 
 ## Why
@@ -86,9 +87,48 @@ media usage) with tests — the legacy `CMSService` copies stay until the old
 shell dies; the route-guard AST test now walks `_actions` too, so unguarded
 server actions fail the build.
 
-Still legacy (next slices): login/reset/welcome (public shell first),
-settings, pages builder, media library, collections, writing,
-navigation/footer/microcopy/appearance/seo, integrations, help.
+Still legacy (next slices): settings, pages builder, media library,
+collections, writing, navigation/footer/microcopy/appearance/seo,
+integrations, help.
+
+### Slice 3 — landed 2026-10-18
+
+- **Public shell** (`app/admin/(public)/layout.tsx`) — centered card on the
+  admin tokens, `noindex`, no section navigation. The first admin routes a
+  signed-out visitor may see, so they cannot live in the guarded group.
+- `/admin/login` — server-rendered page, client leaf with all four ways in
+  (passphrase, passkey, emailed OTP, reset link), unchanged endpoints. The
+  proxy's `?next=` is now honoured after sign-in, validated to `/admin`
+  paths only. The leaf navigates with a full `window.location.assign`: the
+  session cookie was just set by the response and a soft transition can be
+  served from the router's signed-out cache.
+- `/admin/reset` — the two states switched by `?token`, same endpoints.
+  Confirm leaves with a full navigation for the same cookie reason.
+- `/admin/welcome` — RSC trunk plus the wizard as a client leaf. The answers
+  go through `applyWelcomeAction`: the draft is read from storage, the
+  transformation is applied by the pure `core/content/welcome.ts` (unit
+  tested), written back revision-checked, then published through the same
+  `publishDraftAction` the Publish button uses — contrast gate included. A
+  failed publish reports "answers saved, publish failed" and does not roll
+  back, exactly as the old client-side wizard behaved.
+- **First-run gate restored** — the legacy `AdminLayout` used to bounce an
+  unconfigured install to `/admin/welcome`; the migrated shell now does the
+  same: the server decides "still the placeholder name" from the draft, the
+  `WelcomeGate` leaf adds the localStorage dismissal (a browser preference,
+  not content), and it stands down on the wizard's own path.
+
+Verified live against the dev server in a real browser (browser tools):
+wrong-passphrase error, OTP request state, reset request round-trip, the
+gate redirecting an unconfigured install to the wizard, a full wizard run
+publishing (published.json: Jane Doe / terminal theme / Blue accent / Blog
+label, writing left off), the home page showing the new name, and the gate
+staying quiet afterwards. `applyWelcomeAction` is covered by the AST guard
+test like every other `_actions` export.
+
+Notes for the next slice: the legacy `admin-app.tsx` still routes
+`/login`, `/reset` and `/welcome` for the old shell's internal navigation
+(its `AdminLayout` guard navigates to `/welcome` client-side, which renders
+the legacy wizard until a reload). They die with the shell.
 
 ## Explicitly not in the rewrite
 
