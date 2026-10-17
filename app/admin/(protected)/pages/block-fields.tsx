@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { MediaItem } from '@/cms/types/cms';
 import { getPath, setPath, type BlockField } from '@/core/blocks/fields';
+import { uploadMediaAction } from '../_actions/media';
 
 /**
  * One form for every block type.
@@ -14,9 +15,9 @@ import { getPath, setPath, type BlockField } from '@/core/blocks/fields';
  *
  * Everything writes through `setPath` onto a copy, so a block's props are
  * replaced rather than mutated. The media field lists the draft's media —
- * passed down from the page rather than fetched — and uploads go straight to
- * `/api/admin/media`; an upload joins the picker's local list immediately and
- * enters the library proper with the media slice.
+ * passed down from the page rather than fetched — and uploads go through the
+ * media library's own action, so a file added here enters the library as well
+ * as the picker.
  */
 
 const field = 'w-full rounded-xl border border-border bg-surface-primary px-3 text-text-primary';
@@ -275,6 +276,29 @@ function OneField({
 }
 
 /**
+ * The image's own proportions, read in the browser so the library entry can
+ * show them. The twin of this lives in the media library's uploader; the
+ * server never decodes pixels for either.
+ */
+function probeDimensions(file: File): Promise<string | null> {
+  if (!file.type.startsWith('image/')) return Promise.resolve(null);
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    const finish = (value: string | null) => {
+      URL.revokeObjectURL(url);
+      resolve(value);
+    };
+    img.onload = () =>
+      finish(
+        img.naturalWidth && img.naturalHeight ? `${img.naturalWidth}x${img.naturalHeight}` : null
+      );
+    img.onerror = () => finish(null);
+    img.src = url;
+  });
+}
+
+/**
  * An image slot: what is there now, and a way to change it.
  *
  * Opening a picker rather than a file dialog is the whole point. A file dialog
@@ -309,37 +333,19 @@ function MediaField({
     try {
       const body = new FormData();
       body.append('file', file);
-      const res = await fetch('/api/admin/media', { method: 'POST', body });
-      const data = (await res.json().catch(() => null)) as {
-        ok?: boolean;
-        media?: {
-          key: string;
-          url: string;
-          mimeType: string;
-          sizeBytes: number;
-          uploadedAt: string;
-        };
-        error?: string;
-      } | null;
-      if (data?.ok && data.media) {
-        const item: MediaItem = {
-          id: data.media.key,
-          name: file.name,
-          url: data.media.url,
-          type: file.type === 'image/svg+xml' ? 'svg' : 'image',
-          sizeBytes: data.media.sizeBytes,
-          uploadedAt: data.media.uploadedAt,
-          altText: '',
-          usageCount: 0,
-        };
+      const dimensions = await probeDimensions(file);
+      if (dimensions) body.append('dimensions', dimensions);
+      // The description typed above travels with the file, so the library
+      // entry is described from its first moment too.
+      if (altDraft) body.append('altText', altDraft);
+      const result = await uploadMediaAction(body);
+      if (result.ok && result.item) {
+        const item = result.item;
         setUploaded((list) => [item, ...list]);
-        onPick({
-          url: item.url,
-          altText: altDraft || file.name.replace(/\.[a-z0-9]+$/i, ''),
-        });
+        onPick({ url: item.url, altText: altDraft || item.altText || item.name });
         setStatus('Uploaded and chosen.');
       } else {
-        setStatus(data?.error ?? 'The upload did not go through.');
+        setStatus(result.error ?? 'The upload did not go through.');
       }
     } catch {
       setStatus('The upload did not go through.');

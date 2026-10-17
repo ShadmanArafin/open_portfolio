@@ -5,11 +5,11 @@
 > prerequisites. The twenty-screen migration itself is post-1.0 work and is
 > tracked here, not hidden.
 
-> Update 2026-10-18 — slices 1–5 landed: the `(protected)` shell exists with
-> fifteen screens migrated (dashboard, messages, storage, history, your-site,
+> Update 2026-10-18 — slices 1–6 landed: the `(protected)` shell exists with
+> sixteen screens migrated (dashboard, messages, storage, history, your-site,
 > analytics, newsletter, welcome, settings, footer, microcopy, appearance,
-> seo, pages, homepage), and the signed-out half (login, reset) now serves
-> from its own public shell. The rest serve from the legacy mount until
+> seo, pages, homepage, media), and the signed-out half (login, reset) now
+> serves from its own public shell. The rest serve from the legacy mount until
 > their slice lands.
 
 ## Why
@@ -223,6 +223,61 @@ revoked; a page added (revision 1) and deleted; slug normalisation seen live
 ("Spaced Value" → "spaced-value"); "Build my home page" as a local-only step
 a reload discarded; the Preview button following its 303 to a
 draft-rendered `/example`. `published.json` byte-identical throughout.
+
+### Slice 6 — landed 2026-10-18
+
+The media library, and the second address that pointed at it:
+
+- `/admin/media` — the draft's media list _is_ the library, and "used N×" is
+  counted from the draft by `countMediaUsage`, the helper the publish summary
+  already trusts, rather than read from the item's stored `usageCount`.
+  Uploads go through `uploadMediaAction`: the same byte-sniffing
+  `validateUpload` the HTTP endpoint uses, bytes written to the configured
+  backend, and the record appended to the draft in the same call. The legacy
+  screen was the only place its uploads could be seen; the block editor's
+  media field now uploads through this same action, so a file added from a
+  page's image field is in the library before the page is even saved — and a
+  file in the library is pickable from every image field.
+- Upload and delete are idempotent (append-if-absent, remove-if-present) and
+  retried once against the freshly-read draft when the revision has moved:
+  refusing instead would let one save in another tab lose an upload the
+  backend already accepted, or swallow a delete. Delete removes the record
+  first and the bytes second, so a conflict cannot leave referenced content
+  pointing at a file that is already gone; only `/api/media/…` files are
+  removed from storage — the seeded demo artwork lives in `public/demo/`, and
+  legacy `data:`/`idb:` references have nothing on the server to delete. The
+  armed delete now names the asset and its usage before anything happens.
+- The résumé hand-off stays, and grows: a PDF upload asks the same "use as
+  résumé?" question, and any PDF already in the library can be set as the
+  résumé later, which the legacy screen could not do without a re-upload.
+  `updateResumeAction` accepts only `/api/media/…` URLs, so no other string
+  can become a link on the public site. `dimensions` is read in the browser
+  and carried with the upload — the one thing a server would need an image
+  library for — and a malformed value is dropped rather than stored.
+- `/admin/resume` — the legacy deep link redirects to `/admin/media` instead
+  of re-serving the old screen through the legacy mount.
+
+Still legacy (next slices): collections, writing, navigation, integrations,
+help.
+
+Verified live (browser tools, the authenticated backup endpoint, and the data
+directory): anonymous 307s on both addresses with `?next=%2Fadmin%2Fmedia`,
+server-rendered library HTML carrying the seed items and computed usage, and
+the authed alias following its 307 to `/admin/media`. Then the round trips: a
+PNG uploaded through the real file input (bytes in the data directory, record
+prepended to the draft with the browser-probed `200x120` dimensions, `unused`
+badge, `used 0×`); a PDF upload raising the résumé prompt, answered with "use
+as résumé", the toolbar line and card marker updating, and `/api/media/<key>`
+serving `application/pdf`; an armed delete removing record and bytes (the
+deleted URL 404s, the file is gone from the data directory); an upload from
+the pages builder's image picker landing in the library with the typed alt
+text while `page_example`'s revision and blocks stayed untouched; and — after
+the picker gained the same dimension probe — a second picker upload carrying
+`200x120` too. The copy button's clipboard write is refused by the automation
+profile itself (`NotAllowedError: Write permission denied`); the fallback
+named the reference URL, which is the branch that matters when a browser
+denies the clipboard. `published.json` byte-identical throughout
+(`07f0f97f67ba7d83`).
 
 ## Explicitly not in the rewrite
 
