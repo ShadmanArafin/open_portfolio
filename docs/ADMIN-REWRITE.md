@@ -5,14 +5,14 @@
 > prerequisites. The twenty-screen migration itself is post-1.0 work and is
 > tracked here, not hidden.
 
-> Update 2026-10-18 — slices 1–10 landed: the `(protected)` shell exists with
-> twenty-seven screens migrated (dashboard, messages, storage, history,
+> Update 2026-10-18 — slices 1–11 landed: the `(protected)` shell exists with
+> twenty-eight screens migrated (dashboard, messages, storage, history,
 > your-site, analytics, newsletter, welcome, settings, footer, microcopy,
 > appearance, seo, pages, writing, homepage, media, projects, case-studies,
 > brands, experience, education, process, capabilities, recommendations,
-> artifacts, navigation), and the signed-out half (login, reset) now serves
-> from its own public shell. The rest serve from the legacy mount until their
-> slice lands.
+> artifacts, navigation, services), and the signed-out half (login, reset) now
+> serves from its own public shell. The rest serve from the legacy mount until
+> their slice lands.
 
 ## Why
 
@@ -497,6 +497,67 @@ armed confirmation and Work restored, and the seed is back as it was — same
 four links, same ids, same order, all visible. `published.json`
 byte-identical throughout, and the public home page still serves the seed
 header links.
+
+### Slice 11 — landed 2026-10-18
+
+The services screen, at its unchanged address:
+
+- `/admin/services` — a server-rendered trunk plus one island, carrying the
+  legacy screen's interaction exactly: a card per service, all of them
+  described by the definition registry, expanded to show the free-tier note,
+  what breaks without it, the numbered setup, and the fields — then Save,
+  Test, Disconnect. The legacy screen's twenty-fifth-service promise holds:
+  nothing here knows a service's name.
+- The writes stay on `/api/admin/integrations`. That endpoint is where a
+  secret is handled (encrypted at rest, returned as a hint and never as a
+  value), where tests are rate-limited because they reach a host the caller
+  chose, and where the demo refusal lives. Moving those judgments into server
+  actions would have duplicated the one path that must not drift while the
+  legacy mount still calls it. What the port shared instead is the read:
+  `core/integrations/views.ts` is now the single projection both the endpoint
+  and the trunk speak, so the two cannot describe a service differently.
+- Services are sorted by id in that projection. The registry remembers
+  registration order, and a definition registers the first time its module is
+  evaluated — `analytics.ts` imports the umami and plausible definitions for
+  their script helpers, so which file wins depends on the bundle that happens
+  to load first. The screen and the endpoint had already begun to disagree,
+  in the same dev server, about the order of the same five services.
+- Disconnect asks once before clearing stored settings, the same shape as
+  every other destructive button in this admin. A save without a vault shows
+  the refusal inside the card instead of in a toast nobody reads, and the
+  password fields carry `autoComplete` themselves — `new-password` on the
+  password, `off` on the rest — replacing the legacy MutationObserver that
+  patched the same attributes in after React rendered. That needed `Field` to
+  accept optional `type` and `autoComplete`; the services screen is the only
+  caller that wants anything but text.
+- A new `core/integrations/__tests__/views.test.ts` pins the projection:
+  every service described, a stored secret present only as its hint and
+  absent from `JSON.stringify`, and env-configured services marked as such.
+
+Still legacy (next slices): help.
+
+Verified live (browser tools, the endpoint and the raw config file):
+55 HTTP checks — anonymous 307 with `?next=%2Fadmin%2Fservices`, anonymous
+API 401, authed 200 with the heading, five collapsed cards all reading "Not
+set", the vault warning and the form's `autoComplete` server-rendered; the
+endpoint answering the legacy shape with the five services in the stable
+order and no secret hints; all 28 admin screens 200; the public home page 200. Then the browser round trip on the clean seed: three Test paths on the
+Giscus card — an unusable value named the field, a nonexistent repository
+came back with GitHub's 404 branch, the real repository with the success
+branch; Save stored it (badge "On", Disconnect appearing, plaintext on disk
+where no secret is involved); Disconnect armed with its warning and Cancel
+restored it, then the confirm cleared the namespace back to `{}`. On the SMTP
+card, a vault-less Save showed the OPB_SECRET_KEY refusal in the card and
+wrote nothing. Dev has no vault, so a temporary `OPB_SECRET_KEY` was set to
+exercise the secret path: Save stored the password as `v1.*` ciphertext on
+disk, the reloaded screen showed the field empty with `••••ter2 — leave blank
+to keep` in its placeholder, and saving a port change with the field
+untouched updated the port and left the ciphertext byte-identical. The key
+was removed, the dev server restarted without it, and `kv-config.json` is
+`{}` again with `published.json` at `07f0f97f67ba7d83` throughout. Gates:
+typecheck; lint 0 errors, 121 warnings (119 pre-slice-9 baseline plus one per
+new page); format:check; 992 tests passed, 11 skipped over 69 files (the
+three view tests are new); build with `/admin/services` in the route table.
 
 ## Explicitly not in the rewrite
 

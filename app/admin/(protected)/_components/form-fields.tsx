@@ -21,6 +21,8 @@ export function Field({
   problem,
   rows,
   placeholder,
+  type = 'text',
+  autoComplete,
 }: {
   label: string;
   value: string;
@@ -29,6 +31,9 @@ export function Field({
   problem?: string | null;
   rows?: number;
   placeholder?: string;
+  /** The services screen is the caller that needs more than plain text. */
+  type?: 'text' | 'password' | 'number';
+  autoComplete?: string;
 }) {
   return (
     <label className="grid gap-1 text-sm">
@@ -43,7 +48,8 @@ export function Field({
         />
       ) : (
         <input
-          type="text"
+          type={type}
+          autoComplete={autoComplete}
           value={value}
           placeholder={placeholder}
           onChange={(event) => onChange(event.target.value)}

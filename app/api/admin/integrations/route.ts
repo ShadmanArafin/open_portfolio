@@ -4,8 +4,7 @@ import { requireOwner, UnauthorizedError } from '@/core/auth/guard';
 import { clientKey, rateLimit } from '@/core/auth/ratelimit';
 import {
   getIntegration,
-  hintFor,
-  listIntegrations,
+  listIntegrationViews,
   readConfig,
   vaultAvailable,
   writeConfig,
@@ -43,48 +42,12 @@ export async function GET() {
   const rejected = await guard();
   if (rejected) return rejected;
 
-  const integrations = await Promise.all(
-    listIntegrations().map(async (definition) => {
-      const stored = await readConfig(definition.id, definition.secretFields);
-      const byEnv = definition.configuredByEnv?.(process.env) ?? false;
-
-      const values: Record<string, unknown> = {};
-      const secrets: Record<string, unknown> = {};
-      for (const [name, value] of Object.entries(stored ?? {})) {
-        if (definition.secretFields.includes(name)) {
-          secrets[name] = hintFor(typeof value === 'string' ? value : '');
-        } else {
-          values[name] = value;
-        }
-      }
-
-      return {
-        id: definition.id,
-        name: definition.name,
-        category: definition.category,
-        summary: definition.summary,
-        freeTier: definition.freeTier,
-        docsUrl: definition.docsUrl,
-        setup: definition.setup,
-        fields: definition.fields,
-        secretFields: definition.secretFields,
-        degradation: definition.degradation,
-        // Env wins, and the screen says so rather than offering fields that
-        // would be silently ignored.
-        configuredByEnv: byEnv,
-        isConfigured: byEnv || stored !== null,
-        values,
-        secrets,
-      };
-    })
-  );
-
   return NextResponse.json({
     ok: true,
     // Without a server secret nothing can be stored safely, and the screen has
     // to say that up front rather than accepting a password and losing it.
     vaultAvailable: vaultAvailable(),
-    integrations,
+    integrations: await listIntegrationViews(),
   });
 }
 

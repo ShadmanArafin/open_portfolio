@@ -24,3 +24,4 @@ export {
   VaultUnavailableError,
   type SecretHint,
 } from './vault';
+export { listIntegrationViews, type IntegrationView } from './views';
