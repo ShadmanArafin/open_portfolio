@@ -13,7 +13,8 @@
 > artifacts, navigation, services, help) and the signed-out half (login, reset)
 > onto its own public shell; then the catch-all mount and `src/admin/**` were
 > deleted and `react-router-dom` left the manifest. The Tailwind 4
-> re-evaluation is the one sequencing item still open — issue #9.
+> re-evaluation landed 2026-10-18 — port verified on the `tailwind4-attempt`
+> branch, Safari 16.4+ call pending (issue #9).
 
 ## Why
 
@@ -29,7 +30,8 @@ screens. Consequences, all known:
   while there is one catch-all route — the login page lives under the same
   path and must stay public.
 - `react-router-dom`, `framer-motion@13` and the Astryx kit travel with the
-  old shell. Tailwind 4 cannot be evaluated until the CSS-build guard exists.
+  old shell. Tailwind 4 could not be evaluated until the CSS-build guard
+  existed — it now does, and the re-evaluation has landed (issue #9).
 
 ## Landed prerequisites (this phase)
 
@@ -39,10 +41,12 @@ screens. Consequences, all known:
    Material 3 Expressive read; `MotionConfig reducedMotion="user"` remains
    the reduced-motion path.
 2. **CSS-build assertion test** (`core/theme/__tests__/css-build.test.ts`) —
-   compiles the real `tailwind.config.js` and asserts the token utilities
-   (`bg-bg`, `text-text-primary`, …) survive. Tailwind 4 stops reading the
-   JS config silently; this test fails first, before any bump. The pin on
-   Tailwind 3 stands until then.
+   compiles the real stylesheet through the real pipeline and asserts the
+   token utilities (`bg-bg`, `text-text-primary`, …) survive. Tailwind 4
+   stops reading the JS config silently; this test fails first, before any
+   bump. The pin on Tailwind 3 stood until the re-evaluation landed
+   2026-10-18: port verified on the `tailwind4-attempt` branch, Safari 16.4+
+   call pending (issue #9).
 3. **No new router imports** — ESLint `no-restricted-imports` fails any
    `react-router-dom` import outside the nine existing files. The rewrite
    cannot be outgrown while it is being built.
@@ -636,7 +640,9 @@ sequencing items closed with it:
 - **`motion` stays** — it was never the legacy shell's; the public site uses
   `motion/react` throughout.
 
-The fourth item, the Tailwind 4 re-evaluation, is tracked in issue #9.
+The fourth item, the Tailwind 4 re-evaluation, landed 2026-10-18 — the port
+is verified on the `tailwind4-attempt` branch; only the Safari 16.4+ product
+call remains (issue #9).
 
 Two modules were still in use by the new tree and moved verbatim instead of
 dying with it:

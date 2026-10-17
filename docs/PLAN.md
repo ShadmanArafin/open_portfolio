@@ -16,21 +16,21 @@
 
 ## Status at a glance
 
-| Phase                       | State                | What it means                                                              |
-| --------------------------- | -------------------- | -------------------------------------------------------------------------- |
-| 0 — Repo publishable        | **Done, verified**   | MIT, no personal data, CI, guards                                          |
-| 1 — Next.js + SEO           | **Done, verified**   | Server-rendered, real metadata, sitemap, 404                               |
-| 2 — Tokens + primitives     | **Partially done**   | Tokens, gate, primitives done. Tailwind 4 remains                          |
-| 3 — Storage contract        | **Done, verified**   | Contract, local adapter, registry, server read                             |
-| 4 — Auth                    | **Done, verified**   | Passphrase + sessions. **Passkeys/OTP not built**                          |
-| 5 — Write path              | **Done**             | Publish, contact, blocks, pages, preview, revisions                        |
-| 6 — Hosted adapters         | **Done, verified**   | Supabase, Neon, Postgres. **Uploads verified on both hosted stores**       |
-| 7 — Admin (Astryx)          | **In progress**      | Page builder and media picker work. **Settings merge, block home remain**  |
-| 8 — Adapters + integrations | **Done**             | Vault, SMTP, OTP, 8 backends. **Convex blocked on signup, not code**       |
-| 9 — Blog, themes, presets   | **Mostly done**      | 6 themes, 7 presets, writing+RSS, newsletter, site, demo                   |
-| Community + updates         | **Done**             | Reports, dedupe, update workflow, `UPDATING.md`. **Blocked: repo private** |
-| Self-hosting (Docker)       | **Done, verified**   | `docker compose up`, volume survives container replacement                 |
-| 10 — Launch                 | **Site + demo live** | Marketing site deployed, demo + PWA shipped; checklist remains             |
+| Phase                       | State                | What it means                                                                                |
+| --------------------------- | -------------------- | -------------------------------------------------------------------------------------------- |
+| 0 — Repo publishable        | **Done, verified**   | MIT, no personal data, CI, guards                                                            |
+| 1 — Next.js + SEO           | **Done, verified**   | Server-rendered, real metadata, sitemap, 404                                                 |
+| 2 — Tokens + primitives     | **Partially done**   | Tokens, gate, primitives done. Tailwind 4 ported + verified on a branch; Safari call pending |
+| 3 — Storage contract        | **Done, verified**   | Contract, local adapter, registry, server read                                               |
+| 4 — Auth                    | **Done, verified**   | Passphrase + sessions. **Passkeys/OTP not built**                                            |
+| 5 — Write path              | **Done**             | Publish, contact, blocks, pages, preview, revisions                                          |
+| 6 — Hosted adapters         | **Done, verified**   | Supabase, Neon, Postgres. **Uploads verified on both hosted stores**                         |
+| 7 — Admin (Astryx)          | **In progress**      | Page builder and media picker work. **Settings merge, block home remain**                    |
+| 8 — Adapters + integrations | **Done**             | Vault, SMTP, OTP, 8 backends. **Convex blocked on signup, not code**                         |
+| 9 — Blog, themes, presets   | **Mostly done**      | 6 themes, 7 presets, writing+RSS, newsletter, site, demo                                     |
+| Community + updates         | **Done**             | Reports, dedupe, update workflow, `UPDATING.md`. **Blocked: repo private**                   |
+| Self-hosting (Docker)       | **Done, verified**   | `docker compose up`, volume survives container replacement                                   |
+| 10 — Launch                 | **Site + demo live** | Marketing site deployed, demo + PWA shipped; checklist remains                               |
 
 **Where to start:** make the repository public and tag `v0.5.0`. It takes
 minutes, has no dependencies, and is the only thing in this document on a clock
@@ -121,13 +121,11 @@ Four things, and only four:
 ### Suggested order
 
 1. ~~**Phase 2 remainder**~~ — the publish-time contrast gate shipped, and so
-   did the primitives. **Tailwind 4 is now argued against rather than merely
-   deferred**, and PR #7 is closed in favour of issue #9: it was a version bump
-   carrying none of the migration — the
-   PostCSS plugin moved, the `@tailwind` directives are gone and
-   `tailwind.config.js` is no longer read, so every `bg-bg` and
-   `text-text-primary` would compile to nothing — and v4 requires Safari 16.4+,
-   which decides who can see a site built with this. See the locked decisions.
+   did the primitives. **Tailwind 4 was re-evaluated 2026-10-18** (issue #9,
+   PR #7 stays closed): the CSS-build guard landed and the full port is
+   verified on the `tailwind4-attempt` branch. What is left is the product
+   call — v4 requires Safari 16.4+, which decides who can see a site built
+   with this. See the locked decisions.
 2. ~~**Phase 5 blocks and pages**~~ — done. Blocks, pages, routing, preview and
    revisions all shipped; the record-per-row storage split moved to Phase 9.
 3. ~~**Phase 7 `MediaPicker`**~~ — done. The shadcn rebuild is cancelled; see
@@ -441,11 +439,13 @@ _Risk: theme hydration mismatch → keep the blocking script verbatim, `suppress
 > - Fonts are still applied client-side by `loadGoogleFonts`, so the family name
 >   is right only after hydration. Server-rendering them means getting the font
 >   catalogue onto the server without dragging `react-icons` with it.
-> - **Tailwind 4 — PR #7 is closed; tracked in issue #9.** It replaces the JS
->   config with CSS-first `@theme`, and `tailwind.config.js` stops being read,
->   so every token-backed utility would compile to nothing. Nothing here would
->   catch that: no test asserts the built CSS, and missing utilities emit
->   nothing rather than failing a build. The test comes first.
+> - **Tailwind 4 — re-evaluated 2026-10-18; PR #7 stays closed (issue #9).**
+>   It replaces the JS config with CSS-first `@theme`, and
+>   `tailwind.config.js` stops being read, so a naive bump voids every
+>   token-backed utility without failing a build. The guard now exists —
+>   `css-build.test.ts` compiles the real stylesheet — and the full port is
+>   verified on the `tailwind4-attempt` branch. The only question left is the
+>   product call: v4 requires Safari 16.4+.
 >
 > The content core (schema, dates, health, listOps) was **not** moved into
 > `core/` — it still lives under `src/cms/`. It works; tidy it when convenient.
@@ -1216,7 +1216,9 @@ These are decisions, not oversights, and the reasoning is in each phase block:
   the framework migration could land without also rewriting twenty screens.
 - **`work`/`timeline` collection merges not done.** Still four collections.
 - **Content core still lives in `src/cms/`,** not `core/content/`.
-- **Tailwind 4 deferred** — no longer blocked, just not done.
+- **Tailwind 4 re-evaluated 2026-10-18** — ported and verified on the
+  `tailwind4-attempt` branch; the pin waits only on the Safari 16.4+ product
+  call (issue #9).
 - **Folder layout differs from the plan above.** There is no top-level
   `/adapters`, `/themes`, `/integrations` or `/presets`. Storage lives in
   `core/storage/adapters/`, and the theme and integration directories do not

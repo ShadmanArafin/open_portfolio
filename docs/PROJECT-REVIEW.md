@@ -548,8 +548,9 @@ width=720` needs `maxWidth=100vw`. Tablet 768px preview frame forces
   See `docs/ADMIN-REWRITE.md`.
 - **Styling triple-source:** Tailwind 3 + CSS-var tokens + Astryx/StyleX (no
   direct `stylex.*()` in app code — inside Astryx packages only). The
-  Tailwind 4 pin (`.github/dependabot.yml`) is correct; v4 drops
-  `tailwind.config.js` and silently voids every `bg-bg`/`text-text-primary`.
+  Tailwind 4 re-evaluation landed 2026-10-18: the port is complete and
+  verified on the `tailwind4-attempt` branch; the pin now waits only on the
+  Safari 16.4+ product call (issue #9, §7, §11.5).
 - **Perf:** zero `next/image`, zero `next/font`; Google Fonts `<link>` is
   render-blocking; images are raw `<img>` with no sizing/lazy/`remotePatterns`.
 - **Deps:** `framer-motion@13` (17 files) → `motion/react` during admin
@@ -569,7 +570,7 @@ width=720` needs `maxWidth=100vw`. Tablet 768px preview frame forces
 | Current                                                           | Verdict                                                                                                                                                                                                              |
 | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Next.js 16 App Router + React 19 + TS strict                      | **Keep.** Idiomatic (`params:Promise`, `cache()`, `revalidate:60`, `force-dynamic` mutations).                                                                                                                       |
-| Tailwind 3 pinned                                                 | **Keep until admin rewrite.** v4 needs a CSS-build assertion test first (missing utilities fail silently).                                                                                                           |
+| Tailwind 3 pinned                                                 | **Keep, one call pending.** Re-evaluated 2026-10-18 (issue #9): the CSS-build guard and a verified port live on the `tailwind4-attempt` branch; what remains is the Safari 16.4+ baseline decision, not code.        |
 | 8 storage adapters + env inference                                | **Keep.** Zero-config deploy works because of it. Add Convex only with a real account; do not fake it.                                                                                                               |
 | scrypt + opaque cookies + `@simplewebauthn/*` present             | **Keep.** Passkey ceremonies + OTP recovery are built per `PLAN.md`; `README.md` "no passkeys/OTP" is stale — update it.                                                                                             |
 | Nodemailer SMTP only                                              | **Keep core, extend via registry.** Vault + registry exist; only `smtp` registered (`core/integrations/definitions/smtp.ts`). Add Resend/Brevo + Turnstile + Plausible/Umami as definitions.                         |
@@ -859,8 +860,11 @@ computed contrast, zero console errors throughout).
       `app/admin/(protected)/_components/`. Verified: 29 screens 200, unknown
       `/admin/*` answers 404 authenticated and 307 to login signed out, 984
       tests / lint / build green, state files byte-identical. Full record with
-      per-slice evidence: `docs/ADMIN-REWRITE.md`. Tailwind 4 stays pinned
-      pending the re-evaluation (issue #9, §7).
+      per-slice evidence: `docs/ADMIN-REWRITE.md`. The last sequencing item —
+      the Tailwind 4 re-evaluation — landed the same day: the CSS-build guard
+      now compiles the real stylesheet, the port is verified on the
+      `tailwind4-attempt` branch, and the pin waits only on the Safari 16.4+
+      product call (§7, §11.5).
 
 ---
 
@@ -987,12 +991,16 @@ var(--font-inter) }`; v3 config shown too). One call = one hosted instance:
   `outline-none`→`outline-hidden`); default border/divide color becomes
   `currentColor`; `hover` only fires on hover-capable devices; variable
   shorthand becomes `bg-(--brand)`; upgrade tool `npx @tailwindcss/upgrade`.
-- Implication: the `tailwindcss@3.4.10` pin + Dependabot hold (§6.3/§7) is
-  the right call for a portfolio product (viewers on older Safari). If v4 is
-  ever taken, budget the silent-failure risk already flagged: `tailwind.config.js`
-  stops being read, so every `bg-bg`/`text-text-primary` compiles to nothing
-  with no build error — the CSS-build assertion test (issue #9) must land
-  **before** the bump, not after.
+- Implication, re-checked against a live port (2026-10-18, issue #9): the
+  silent-failure risk is now guarded — `css-build.test.ts` compiles the real
+  stylesheet through the real pipeline, and the port is verified end to end on
+  the `tailwind4-attempt` branch (full gate green, computed styles identical to
+  the v3 baseline). Two deltas the port surfaced: one source file read
+  `var(--color-border)`, an Astryx-owned name v4 would have started emitting
+  with our value (fixed — it now reads `var(--border-color)`), and 18
+  custom-token alpha utilities (`bg-bg/90`, `selection:bg-accent/20`, …) that
+  v3 emitted as nothing now render. The pin waits only on the §7 product call:
+  v4's Safari 16.4+ floor decides who can see a site built on this.
 
 ### 11.6 Cloudflare Turnstile — integration shape confirmed
 
