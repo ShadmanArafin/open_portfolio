@@ -5,11 +5,12 @@
 > prerequisites. The twenty-screen migration itself is post-1.0 work and is
 > tracked here, not hidden.
 
-> Update 2026-10-18 — slices 1–4 landed: the `(protected)` shell exists with
-> thirteen screens migrated (dashboard, messages, storage, history, your-site,
+> Update 2026-10-18 — slices 1–5 landed: the `(protected)` shell exists with
+> fifteen screens migrated (dashboard, messages, storage, history, your-site,
 > analytics, newsletter, welcome, settings, footer, microcopy, appearance,
-> seo), and the signed-out half (login, reset) now serves from its own public
-> shell. The rest serve from the legacy mount until their slice lands.
+> seo, pages, homepage), and the signed-out half (login, reset) now serves
+> from its own public shell. The rest serve from the legacy mount until
+> their slice lands.
 
 ## Why
 
@@ -177,6 +178,51 @@ live endpoint, and the reset typed gate exercised against a fresh export
 settings-family writes stayed draft-only throughout — `published.json`
 unchanged until the reset test wrote it deliberately — and the route-guard
 AST test covers all seven new actions.
+
+### Slice 5 — landed 2026-10-18
+
+The builders, two URLs at unchanged addresses:
+
+- `/admin/homepage` — one island for the whole band list. Reordering,
+  visibility and the text fields are local edits until Save, and the save is
+  one revision-checked write of the entire list, merged by id on the server:
+  a section the payload omits is kept and one it invents is ignored, so a
+  stale screen can only ever change the fields it is looking at. The legacy
+  editor wrote the draft on every keystroke; a single Save means one revision
+  instead of hundreds, and a mis-tap of "move down" is no longer instantly
+  live. The floor separating reorderable homepage bands from the standalone
+  page headers (Work, Case studies, Contact) is now a shared constant rather
+  than a comment (`core/content/sections.ts`, unit tested), and the about
+  band mirrors into `settings` only for the fields that changed in that save
+  — mirroring unconditionally would let the section's copy silently overwrite
+  a heading just edited on the Settings screen.
+- `/admin/pages` — the block builder over the same registry the public site
+  renders from: labels, fields, defaults and check messages are read from the
+  block definitions, so a new block type appears in both places the day it
+  lands. The payload is the whole page list — add, remove and reorder are all
+  "the list came back different" — validated field by field with slug
+  normalisation re-run server-side; revisions and `updatedAt` are stamped by
+  the server (stored revision + 1, one for a page that did not exist) and
+  returned, so version badges move without a reload. Every block shares one
+  generic form (`pages/block-fields.tsx`); the media field lists the draft's
+  library and uploads straight to `/api/admin/media`. Share preview reuses
+  the existing one-link-per-page tokens and stays disabled until the page
+  exists server-side. Preview is not re-implemented: the button opens the
+  existing owner-gated `/api/preview?path=…`.
+
+Still legacy (next slices): media library, collections, writing, navigation,
+integrations, help.
+
+Verified live (browser tools plus the authenticated backup endpoint): anon
+307s for both routes; the about heading edited, mirrored into
+`settings.aboutHeading`, and reverted; a band moved down and back (orders
+renumbered 1..n, page headers untouched); a page title edited and reverted; a
+block field edited and reverted; a palette block added and removed through
+the armed control; a share link created, fetched by an anonymous visitor and
+revoked; a page added (revision 1) and deleted; slug normalisation seen live
+("Spaced Value" → "spaced-value"); "Build my home page" as a local-only step
+a reload discarded; the Preview button following its 303 to a
+draft-rendered `/example`. `published.json` byte-identical throughout.
 
 ## Explicitly not in the rewrite
 
