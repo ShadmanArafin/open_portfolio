@@ -5,8 +5,9 @@
 > prerequisites. The twenty-screen migration itself is post-1.0 work and is
 > tracked here, not hidden.
 
-> Update 2026-10-17 — slice 1 landed: the `(protected)` shell exists and five
-> screens are migrated (dashboard, messages, storage, history, your-site).
+> Update 2026-10-18 — slices 1–2 landed: the `(protected)` shell exists and
+> seven screens are migrated (dashboard, messages, storage, history,
+> your-site, analytics, newsletter).
 > The rest serve from the legacy mount until their slice lands.
 
 ## Why
@@ -59,7 +60,7 @@ screens. Consequences, all known:
 ### Slice 1 — landed 2026-10-17
 
 Shell + guard (`(protected)/layout.tsx`, 307 to `/admin/login?next=` when
-signed out, verified live), five migrated screens at unchanged URLs
+signed out, verified live), migrated screens at unchanged URLs
 (specific routes win over the legacy catch-all):
 
 - `/admin` dashboard — readiness/issues/activity/views server-rendered,
@@ -70,14 +71,24 @@ signed out, verified live), five migrated screens at unchanged URLs
 - `/admin/history` — version list + `restoreVersionAction` (conflict-safe)
 - `/admin/your-site` — URL/platform/published state + copy island
 
+### Slice 2 — landed 2026-10-18
+
+- `/admin/analytics` — enquiry stats from the real inbox, provider state
+  resolved server-side, audience cards/top-pages only when there is data,
+  share-URL iframe as a plain embed
+- `/admin/newsletter` — form settings through
+  `updateNewsletterSettingsAction` (draft snapshot, conflict-safe), list read
+  from `adapter.subscribers` with `removeSubscriberAction`, CSV export as a
+  session-authenticated link
+
 Supporting work: pure `core/content/changes.ts` (fingerprint, diff summary,
 media usage) with tests — the legacy `CMSService` copies stay until the old
 shell dies; the route-guard AST test now walks `_actions` too, so unguarded
 server actions fail the build.
 
 Still legacy (next slices): login/reset/welcome (public shell first),
-settings, pages builder, media library, collections, newsletter, analytics,
-writing, navigation/footer/microcopy/appearance/seo, integrations, help.
+settings, pages builder, media library, collections, writing,
+navigation/footer/microcopy/appearance/seo, integrations, help.
 
 ## Explicitly not in the rewrite
 

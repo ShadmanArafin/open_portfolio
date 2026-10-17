@@ -832,10 +832,11 @@ computed contrast, zero console errors throughout).
 - [x] App Router admin rewrite (SSR, `(protected)` guard-by-existence,
       kill `react-router-dom`, `motion/react` migration, Tailwind 4
       re-evaluation with CSS-build assertion test). **Prerequisites DONE
-      2026-10-17, migration tracked; slice 1 landed 2026-10-18:**
+      2026-10-17, migration tracked; slices 1–2 landed 2026-10-18:**
       `(protected)` shell + guard-by-existence (307 to login, verified live),
-      5 screens migrated at unchanged URLs (dashboard with publish action,
-      messages, storage, history with restore action, your-site),
+      7 screens migrated at unchanged URLs (dashboard with publish action,
+      messages, storage, history with restore action, your-site, analytics,
+      newsletter with settings + subscriber actions),
       `core/content/changes.ts` pure helpers with tests, route-guard AST test
       extended to `_actions`. Full 20-screen migration continues per
       `docs/ADMIN-REWRITE.md`.
