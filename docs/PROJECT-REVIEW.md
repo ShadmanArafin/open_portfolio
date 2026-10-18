@@ -794,9 +794,61 @@ computed contrast, zero console errors throughout).
       `/case-studies/:slug` -> `/work/:slug`; `core/content/read.ts` provides
       lossless backward compatibility via `caseStudyToProject` mapping;
       seeded demo case studies mapped into `initialProjects` with rich story blocks.
-      Verified: unit tests for `caseStudyToProject` and 301 redirects, typecheck
-      green, format check green, lint green (0 errors / 81 warnings).
-- [ ] Writing SEO parity + auto OG fallback.
+      **Same day, the second half — the merge was server-only at first.**
+      `/work` and the `collection` block read `data.projects` /
+      `content.projects` directly, so a legacy case study answered at
+      `/work/<slug>` and sat in the sitemap while being absent from the list
+      and from every block meant to show it. `ProjectItem.origin: 'case-study'`
+      now marks an adapted record (a pre-merge snapshot carries no `story`
+      blocks to recognise it by), the pure helpers moved to
+      `core/content/work.ts`, and `publicView` + `blockContentFrom` fold the
+      legacy list in at the two points where a client or a block sees content.
+      `BlockContent.caseStudies` is gone; `collection` links `/work/<slug>` and
+      offers only the two meanings that remain (`both` stays in the schema so
+      stored props still parse); the homepage band reads the merged list;
+      `updateCaseStudiesAction` refuses a case study whose slug a project
+      already uses instead of letting `mergeWork` drop it silently. Copy that
+      still pointed at the deleted routes — the navigation route picker, the
+      case-studies editor hints, the content-health cover check, the seeded
+      band CTA — was corrected.
+      Verified (with item 5, same tree): live `/case-studies` → 308 `/work` and
+      `/case-studies/rethinking-onboarding` → 308 `/work/rethinking-onboarding`;
+      `/work` server-renders all seven records including the three legacy case
+      studies; the sitemap carries seven `/work` URLs and no `/case-studies`;
+      1002 passed | 11 skipped (1013) over 69 files; lint 0 errors / 76
+      warnings; typecheck, format check and build green.
+- [x] Writing SEO parity + auto OG fallback. **DONE 2026-10-18:** a writing
+      entry unfurls with a card of its own now — a per-piece card at
+      `app/writing/[slug]/opengraph-image.tsx` (title, summary, date, author and
+      role, site) beside
+      `app/opengraph-image.tsx` for everything else (name, role, availability,
+      location, tagline), both 1200×630. `buildMetadata` falls back
+      path-aware (`/writing/…` → its own card, otherwise the site-wide one), a
+      per-piece image beats the SEO screen's `ogImage` beats the card, and
+      `metadataBase` is always set so a relative path still resolves on an
+      install with no domain. The Article JSON-LD was missing everything that
+      attaches a headline to anything — `mainEntityOfPage`, `image`,
+      `author.url`, `publisher`, `dateModified` — all of which need an absolute
+      address and so are emitted only once a domain is set.
+      **A real bug, found by measuring:** a metadata route inside a route group
+      is served at a hashed path. `getMetadataRouteSuffix` in
+      `next/dist/lib/metadata/get-metadata-route.js` hashes the parent path of
+      any metadata route under a `(group)`/`@parallel` segment, so the file at
+      `app/(site)/writing/[slug]/opengraph-image.tsx` really answered
+      `/writing/<slug>/opengraph-image-cvh5yn` while every page, the sitemap and
+      the JSON-LD advertised the clean path — which 404'd. Measured side by side
+      on a live build: 200 on the suffixed path, 404 on the clean one, page
+      itself perfect either way. The file now lives at
+      `app/writing/[slug]/opengraph-image.tsx`, outside the group, and
+      `core/pages/__tests__/metadata-route-placement.test.ts` fails if anyone
+      moves it back. An unknown slug answers 404 rather than a generic card.
+      Verified live against a temporarily seeded published piece (the store was
+      backed up first and restored byte-identical, SHA-256 compared): `og:image`
+      absolute and pointing at the per-piece route, `og:type=article`,
+      `twitter:card=summary_large_image`, Article JSON-LD carrying
+      `mainEntityOfPage` / `image` / `datePublished` / `dateModified` /
+      `publisher` once a domain is set, both cards 200 `image/png`, unknown slug 404. Regression tests: `core/content/__tests__/og-fallback.test.ts` (five)
+      plus the placement guard.
 - [x] **P0 discovered 2026-10-17, FIXED 2026-10-18: not-found rendered with
       HTTP 200.** Every dead address (`/no-such-route`, `/share/<bad-token>`,
       `/work/<missing>`) rendered the branded 404 body with status 200, in dev
@@ -837,6 +889,11 @@ computed contrast, zero console errors throughout).
       skeletons + `aria-live`, offline badge, conflict diff UI, version
       diff preview.
 - [ ] Import v1: Markdown/CSV + image bulk upload.
+- [ ] Phase C entries in `CHANGELOG.md`. Turnstile, the analytics view counts,
+      the `work` merge, the not-found 200 status fix, the embed block, Giscus
+      and the writing cards are all user-visible changes and none of them are
+      written up yet; the section is the release's own record of what a
+      self-hoster gets, so it should not be left to release day guesswork.
 
 ### Phase D — Strategic (post-1.0)
 

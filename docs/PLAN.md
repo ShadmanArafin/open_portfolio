@@ -659,6 +659,20 @@ Passkey + OTP + sessions + claim + CSRF + rate limiting + CSP/headers. `requireO
 > are seeded in `next.config.ts` for `/case-studies` and `/case-studies/:slug`.
 > The `timeline` merge (`experience` + `education`) remains.
 >
+> **The merge has to be visible to the client too, and the first pass was not.**
+> Folding the two lists only in the server read layer left a legacy case study
+> answering at `/work/<slug>` and listed in the sitemap while the `/work` page
+> and every `collection` block left it out — the page worked and the list that
+> was supposed to show it did not. The pure helpers
+> (`hasStory`, `isCaseStudy`, `caseStudyToProject`, `mergeWork`) live in
+> `core/content/work.ts`, free of `server-only`, and fold at the two choke
+> points where a client or a block ever sees content: `publicView` and
+> `blockContentFrom`. `ProjectItem.origin: 'case-study'` marks an adapted
+> record, because a snapshot written before the merge carries no `story` blocks
+> to recognise it by. `BlockContent.caseStudies` is gone; the `collection`
+> block's `source` keeps `both` in its schema so stored props still parse, but
+> the picker offers only the two meanings that remain.
+>
 > **The contact inbox left the content snapshot.** Enquiries were appended by
 > reading the published document, unshifting and writing it back, so two
 > arriving together lost one — and the conformance suite pinned that as correct,

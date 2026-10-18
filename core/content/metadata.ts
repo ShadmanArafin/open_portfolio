@@ -70,7 +70,10 @@ export async function buildMetadata(input: PageMetaInput = {}): Promise<Metadata
   const siteUrl = resolveSiteUrl(content);
   const title = applyTitleTemplate(seo, input.title);
   const description = input.description || seo.metaDescription || '';
-  const image = input.image || seo.ogImage;
+  const fallbackImage = input.path?.startsWith('/writing/')
+    ? `${input.path}/opengraph-image`
+    : '/opengraph-image';
+  const image = input.image || seo.ogImage || fallbackImage;
   const url = siteUrl && input.path ? `${siteUrl}${input.path}` : siteUrl;
 
   // An OG image only works as an absolute URL.
@@ -78,6 +81,7 @@ export async function buildMetadata(input: PageMetaInput = {}): Promise<Metadata
     image && siteUrl && image.startsWith('/') ? `${siteUrl}${image}` : image || undefined;
 
   const meta: Metadata = {
+    metadataBase: new URL(siteUrl || 'http://localhost:3000'),
     title,
     description,
     applicationName: seo.siteTitle || undefined,
@@ -102,7 +106,6 @@ export async function buildMetadata(input: PageMetaInput = {}): Promise<Metadata
   };
 
   if (siteUrl) {
-    meta.metadataBase = new URL(siteUrl);
     meta.alternates = {
       canonical: url || siteUrl,
       ...(input.rss ? { types: { 'application/rss+xml': input.rss } } : {}),

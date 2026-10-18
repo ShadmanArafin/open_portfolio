@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { buildMetadata } from '@/core/content/metadata';
+import { buildMetadata, resolveSiteUrl } from '@/core/content/metadata';
 import { BlockList } from '@/core/blocks/registry';
 import { blockContentFrom } from '@/core/blocks/content';
 import { getContentForChannel } from '@/core/content/read';
@@ -34,7 +34,7 @@ export async function generateMetadata({
       title: entry.seo.title || entry.title,
       description: entry.seo.description || entry.summary,
       path: `/writing/${entry.slug}`,
-      image: entry.seo.image,
+      image: entry.seo.image || `/writing/${entry.slug}/opengraph-image`,
       type: 'article',
     })),
     robots: entry.seo.noindex || entry.status !== 'published' ? 'noindex, nofollow' : undefined,
@@ -55,15 +55,38 @@ export default async function WritingEntryPage({ params }: { params: Promise<{ s
   // Entity clarity, not decoration: JSON-LD tells search engines and AI
   // citations what the page is (an Article, by whom, when) in a form that
   // survives any theme. Google documents it as the recommended format.
+  const siteUrl = resolveSiteUrl(content);
+  const articleUrl = siteUrl ? `${siteUrl}/writing/${resolved.entry.slug}` : undefined;
+  const imageUrl = resolved.entry.seo.image
+    ? resolved.entry.seo.image.startsWith('/') && siteUrl
+      ? `${siteUrl}${resolved.entry.seo.image}`
+      : resolved.entry.seo.image
+    : siteUrl
+      ? `${siteUrl}/writing/${resolved.entry.slug}/opengraph-image`
+      : undefined;
+
   const article = {
     '@context': 'https://schema.org',
     '@type': 'Article',
     headline: resolved.entry.title,
     ...(resolved.entry.summary ? { description: resolved.entry.summary } : {}),
+    ...(articleUrl ? { mainEntityOfPage: { '@type': 'WebPage', '@id': articleUrl } } : {}),
+    ...(imageUrl ? { image: [imageUrl] } : {}),
     author: content.settings.fullName
-      ? { '@type': 'Person', name: content.settings.fullName }
+      ? {
+          '@type': 'Person',
+          name: content.settings.fullName,
+          ...(siteUrl ? { url: siteUrl } : {}),
+        }
+      : undefined,
+    publisher: content.settings.fullName
+      ? {
+          '@type': 'Person',
+          name: content.settings.fullName,
+        }
       : undefined,
     ...(resolved.entry.publishedAt ? { datePublished: resolved.entry.publishedAt } : {}),
+    ...(resolved.entry.updatedAt ? { dateModified: resolved.entry.updatedAt } : {}),
   };
 
   return (

@@ -390,6 +390,20 @@ dice, not your change.**
 to be listed in `.prettierignore` separately, or `format:check` fails on files
 that are not part of the project. `.opb` and `.superpowers` are already there.
 
+**A metadata route inside a route group is served at a hashed address.**
+`getMetadataRouteSuffix` in `next/dist/lib/metadata/get-metadata-route.js`
+hashes the parent path of any `opengraph-image` / `twitter-image` / `icon` file
+whose directory contains a `(group)` or `@parallel` segment. So
+`app/(site)/writing/[slug]/opengraph-image.tsx` really answered
+`/writing/<slug>/opengraph-image-cvh5yn`, while `buildMetadata`, the sitemap and
+every page advertised the clean `/writing/<slug>/opengraph-image` — which
+returned 404. Measured before the fix: 200 on the suffixed path, 404 on the
+clean one, and the page itself perfect in both cases. The file lives outside
+the group now (`app/writing/[slug]/opengraph-image.tsx`) and
+`core/pages/__tests__/metadata-route-placement.test.ts` fails if one moves back
+in. Next's own injected tags know about the suffix, so this only bites routes
+whose URL we write by hand — which is every `opengraph-image` here.
+
 ---
 
 ## Decisions already made — do not silently reverse these
