@@ -60,6 +60,22 @@ through a letterbox. It now takes the window.
   booking widget therefore ships no third-party URL until somebody asks for
   one.
 
+- **Put an Instagram post, a Behance project or a Substack subscribe box on a
+  page.** A new `Social post` block takes a link and rebuilds the embed address
+  from the code it read rather than trusting whatever was pasted - the same
+  rule the video and booking blocks follow - and loads nothing from any of them
+  until a visitor presses show. Behance's address is the iframe Behance's own
+  oEmbed endpoint hands out, and Substack's is the subscribe box its
+  publications serve; both were fetched while this was written rather than
+  remembered. GitHub is deliberately absent: there is no embeddable page for a
+  repository, and the editor says so instead of leaving a gap.
+
+- **Start a link-in-bio page in one press.** Pages has "Add a links page"
+  beside "Add page": it makes a draft page at `/links` holding a
+  picture-and-text introduction, cards pointing at your work, writing and
+  contact, and your social row. All three are ordinary blocks, so everything in
+  it can be edited, reordered or deleted straight away.
+
 - **Let readers comment, if you want them to.** A `comments` block wires up
   Giscus: the thread lives in a GitHub Discussions category of a public repo
   you own, nothing is tracked and nothing is advertised, and it stays off until

@@ -21,6 +21,8 @@ A few addresses are already used by the site itself and will be refused with an 
 
 The page stays a draft until you publish. Drafts are invisible to visitors, and you can look at one at its real address with a banner across the top so you never mistake it for the live site.
 
+If what you want is the one-page kind of site — a photograph, a line about you, a few links and your social row — **Add a links page** makes that page at `/links`, already built from ordinary blocks. Everything in it is yours to edit, reorder or delete straight away.
+
 ## The blocks
 
 **Add block** opens a palette grouped by what each one is for.
@@ -35,6 +37,7 @@ The page stays a draft until you publish. Drafts are invisible to visitors, and 
 **To show work**
 
 - **Image**, **Gallery**, **Video** — a picture, a set of pictures, or a YouTube or Vimeo link.
+- **Social post** — an Instagram post or reel, a Behance project, or a Substack subscribe box. Nothing loads from any of them until a visitor asks to see it.
 - **Your work** — the one that pays off. It shows projects or case studies you have already entered. Choose "featured only" and "first four" and the page follows your records: update a project and every page showing it updates too.
 - **Your writing** — the essays or notes you have published, in the order you chose.
 - **Clients** — the logos you have added.

@@ -1,6 +1,6 @@
 ---
 title: Blocks
-summary: The envelope, the twenty-six definitions, and how to add one.
+summary: The envelope, the twenty-seven definitions, and how to add one.
 group: Extending it
 order: 60
 ---
@@ -65,7 +65,7 @@ Two of those carry the design.
 
 ## Two kinds of block
 
-**Literal** blocks hold what somebody typed: `hero`, `richText`, `image`, `gallery`, `stats`, `cards`, `ctaBanner`, plus `contactForm`, `faq`, `video`, `split`, `quote`, `newsletter`, `socialRow`, `services`, `download`, `separator`.
+**Literal** blocks hold what somebody typed: `hero`, `richText`, `image`, `gallery`, `stats`, `cards`, `ctaBanner`, plus `contactForm`, `faq`, `video`, `socialPost`, `split`, `quote`, `newsletter`, `socialRow`, `services`, `download`, `separator`.
 
 **Record-placing** blocks hold a _rule_ rather than content: `collection`, `writingList`, `timeline`, `logoWall`, `testimonials`, `skills`, `steps`. Their props say which records to show and never what the records say, so updating a project updates every page showing it.
 

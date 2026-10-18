@@ -483,6 +483,193 @@ const embed: BlockDefinition<EmbedProps> = {
             title={props.title}
             provider={scheduling.provider}
             ratio={props.ratio ?? '3 / 4'}
+            blurb={`Booking runs on ${scheduling.provider}, and nothing loads from there until you ask.`}
+            action="Book a time"
+          />
+        </Stack>
+      </Band>
+    );
+  },
+};
+
+/* -------------------------------------------------------------- socialPost */
+
+/**
+ * A post, a project or a subscribe box, from the hosts that publish one.
+ *
+ * Three hosts, and the addresses are the ones their own documentation or
+ * endpoints produce rather than the ones a memory produces:
+ *
+ *   - Instagram: `/p|reel|tv/<code>/embed`, the documented embed path.
+ *   - Behance: `/embed/project/<id>?ilo0=1`, the exact iframe their oEmbed
+ *     endpoint returns for a gallery link. It was fetched while writing this,
+ *     not guessed at.
+ *   - Substack: `https://<publication>.substack.com/embed`, the subscribe box
+ *     their publications serve.
+ *
+ * The same rule as the video and booking facades holds: the address is
+ * **rebuilt** from the id read out of the link, never passed through. The link
+ * can arrive in an import, a restored backup or a typo, and "it is the owner's
+ * own link" is not a property a string has.
+ *
+ * GitHub is absent on purpose and says so in the editor. It publishes no
+ * embeddable page for a repository; the alternatives are framing something
+ * that refuses to be framed, or shipping a script this site promised not to
+ * ship, and an honest gap beats both.
+ */
+const INSTAGRAM_HOSTS = ['instagram.com', 'www.instagram.com'];
+const BEHANCE_HOSTS = ['behance.net', 'www.behance.net'];
+const GITHUB_HOSTS = ['github.com', 'www.github.com'];
+const SUBSTACK_SUFFIX = '.substack.com';
+
+export interface SocialEmbed {
+  url: string;
+  provider: string;
+  /** What pressing the button does, in the provider's own terms. */
+  action: string;
+  /** The sentence beside it, naming the provider and the promise. */
+  blurb: string;
+  /** The shape the provider's own embed is built for. */
+  ratio: string;
+}
+
+export function toSocialEmbed(raw: string): SocialEmbed | null {
+  const value = raw.trim();
+  if (!value) return null;
+
+  let parsed: URL;
+  try {
+    parsed = new URL(value);
+  } catch {
+    return null;
+  }
+  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return null;
+
+  const host = parsed.hostname.toLowerCase();
+
+  if (INSTAGRAM_HOSTS.includes(host)) {
+    const match = parsed.pathname.match(/^\/(p|reel|tv)\/([A-Za-z0-9_-]{5,})/);
+    if (!match) return null;
+    return {
+      url: `https://www.instagram.com/${match[1]}/${match[2]}/embed`,
+      provider: 'Instagram',
+      action: 'Show the post',
+      blurb: 'This is an Instagram post. Nothing loads from Instagram until you show it.',
+      ratio: '4 / 5',
+    };
+  }
+
+  if (BEHANCE_HOSTS.includes(host)) {
+    const match = parsed.pathname.match(/^\/gallery\/([0-9]{4,})(?:\/|$)/);
+    if (!match) return null;
+    return {
+      url: `https://www.behance.net/embed/project/${match[1]}?ilo0=1`,
+      provider: 'Behance',
+      action: 'Show the project',
+      blurb: 'This is a Behance project. Nothing loads from Behance until you show it.',
+      ratio: '4 / 3',
+    };
+  }
+
+  const bare = host.startsWith('www.') ? host.slice(4) : host;
+  if (bare.endsWith(SUBSTACK_SUFFIX)) {
+    const publication = bare.slice(0, -SUBSTACK_SUFFIX.length);
+    if (!/^[a-z0-9-]+$/.test(publication)) return null;
+    return {
+      url: `https://${publication}${SUBSTACK_SUFFIX}/embed`,
+      provider: 'Substack',
+      action: 'Show the subscribe box',
+      blurb: 'Subscribing runs on Substack, and nothing loads from there until you ask.',
+      ratio: '4 / 3',
+    };
+  }
+
+  return null;
+}
+
+const socialPostProps = z.object({
+  heading: z.string().optional(),
+  url: z.string(),
+  title: z.string().min(1),
+  ratio: z.enum(['1 / 1', '4 / 5', '4 / 3', '3 / 4']).optional(),
+});
+type SocialPostProps = z.infer<typeof socialPostProps>;
+
+const socialPost: BlockDefinition<SocialPostProps> = {
+  type: 'socialPost',
+  version: 1,
+  label: 'Social post',
+  description:
+    'An Instagram post, a Behance project or a Substack subscribe box. Nothing loads until a visitor asks for it.',
+  group: 'work',
+  schema: socialPostProps,
+  defaults: () => ({ url: '', title: 'A post' }),
+  fields: [
+    headingField,
+    {
+      kind: 'text',
+      path: 'url',
+      label: 'Link to the post or project',
+      placeholder: 'https://www.instagram.com/p/...',
+      help: 'Instagram posts and reels, Behance projects, and <name>.substack.com for the subscribe box. A publication on its own domain has to be pasted as its .substack.com address.',
+    },
+    {
+      kind: 'text',
+      path: 'title',
+      label: 'What it is',
+      help: 'Announced to anyone using a screen reader.',
+    },
+    {
+      kind: 'choice',
+      path: 'ratio',
+      label: 'Shape',
+      options: [
+        { value: '4 / 5', label: 'Portrait' },
+        { value: '1 / 1', label: 'Square' },
+        { value: '4 / 3', label: 'Classic' },
+        { value: '3 / 4', label: 'Tall' },
+      ],
+    },
+  ],
+  checks: [
+    {
+      id: 'recognised',
+      run: (props) => {
+        const link = props.url.trim();
+        if (!link || toSocialEmbed(link)) return null;
+
+        let host = '';
+        try {
+          host = new URL(link).hostname.toLowerCase();
+        } catch {
+          host = '';
+        }
+
+        if (GITHUB_HOSTS.includes(host)) {
+          return 'GitHub publishes no embeddable page for a repository, so nothing can appear here. Link to it from a card or from your work instead.';
+        }
+        if (BEHANCE_HOSTS.includes(host)) {
+          return 'That is not a project page. A Behance project address looks like behance.net/gallery/<number>/<name>.';
+        }
+        return 'That link is not an Instagram post, a Behance project or a Substack publication, so nothing will appear here.';
+      },
+    },
+  ],
+  Render: ({ props, frame, headingLevel }) => {
+    const social = toSocialEmbed(props.url);
+    if (!social) return null;
+
+    return (
+      <Band frame={frame}>
+        <Stack gap={5}>
+          {props.heading && <Heading level={headingLevel}>{props.heading}</Heading>}
+          <EmbedFacade
+            embedUrl={social.url}
+            title={props.title}
+            provider={social.provider}
+            ratio={props.ratio ?? social.ratio}
+            blurb={social.blurb}
+            action={social.action}
           />
         </Stack>
       </Band>
@@ -1212,6 +1399,7 @@ export const STANDARD_DEFINITIONS = [
   faq,
   video,
   embed,
+  socialPost,
   split,
   quote,
   newsletter,

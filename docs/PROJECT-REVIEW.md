@@ -876,7 +876,9 @@ computed contrast, zero console errors throughout).
       choice, editor check. Verified: URL unit tests, render/check tests, axe
       matrix entry, suite green, build green; live CSP headers carry both
       hosts and the homepage ships zero third-party URLs (facade contract
-      holds). Social facade set + link-in-bio preset stay next.
+      holds). The social facade set and link-in-bio preset this item left open
+      were done in their own row below: `socialPost` reuses this block's
+      `EmbedFacade`, which now takes its copy from the caller.
 - [x] Expiring share links (M). **DONE 2026-10-18:** one private URL per page.
       `core/sharing/tokens.ts` mints a 192-bit token, stores only its SHA-256
       under the `share` kv namespace with a TTL, and resolves it by
@@ -1066,6 +1068,56 @@ computed contrast, zero console errors throughout).
       list, Save stored it, reload showed `/writing/on-slow-mornings` again,
       zero console errors, and the store was restored byte-identical
       afterwards.
+- [x] Social embed facade set + a link-in-bio page preset. **DONE 2026-10-18:**
+      A `socialPost` block for the three hosts whose embed address can be
+      _rebuilt_ from the link rather than passed through, following the video
+      and booking facades: Instagram posts, reels and TV
+      (`/p|reel|tv/<code>` -> `/<kind>/<code>/embed`), Behance projects
+      (`/gallery/<id>/...` -> `/embed/project/<id>?ilo0=1`) and Substack
+      publications (`<pub>.substack.com` -> `/embed`, the subscribe box). The
+      Behance and Substack addresses were **fetched while writing this**, not
+      remembered: Behance's own oEmbed endpoint returned that exact iframe for
+      a gallery link, and a live publication answered at `/embed` with its
+      subscribe form. `EmbedFacade` now takes its blurb and button text from
+      the caller, so the booking block reads exactly as it did and each
+      provider gets its own promise ("Show the post", "Show the subscribe
+      box").
+      **GitHub is not in the set, and the block says why in the editor rather
+      than leaving a blank space:** it publishes no embeddable page for a
+      repository, so the other two options were framing something that refuses
+      to be framed or shipping a script this site has promised not to ship. The
+      check message points at linking from a card or from the work collection
+      instead.
+      The link-in-bio half is a _page preset_, not a new block type:
+      `createLinkInBioPage` returns a draft `links` page built from three
+      blocks that already exist (picture-and-text, cards, social row), and
+      Pages gains "Add a links page" beside "Add page". A dedicated
+      stack-of-links block stays on the P2 list.
+      Verified: `toSocialEmbed` cases for the three hosts, for the lookalikes
+      (`instagram.com.evil.example`, `behance.net.evil.example`, …), for
+      profiles and galleries that are not posts or projects, and for
+      non-http schemes; a jsdom test that mounts the block, asserts no
+      Instagram address is in the DOM at all, presses the real button, and
+      then reads the iframe's rebuilt `src` and its `title`; a registry test
+      that parses the preset's blocks, so a starting point cannot arrive
+      pre-quarantined; 427 block and page tests green, full suite green
+      (1075 passed | 11 skipped), typecheck, lint (0 errors, the 76-warning
+      baseline) and format:check green, production build green.
+      A live pass against the built server, because a facade is a promise about
+      what a browser does: Pages → "Add a links page" made a page carrying its
+      three blocks, Save stored it, the Social post block took the link, and
+      Publish now made `/links` public. The **server-rendered** HTML carries
+      the facade's blurb and its `aria-label`ed button, and an `<iframe>` is
+      absent from it. A browser on `/links` made **no request to Instagram**
+      before the press; after it, the frame was the rebuilt address, titled
+      from the field, with **zero CSP refusals** in the console and 43 requests
+      to Instagram — all of them the frame's own making. The store was restored
+      byte-identical afterwards.
+      _Nuance for whoever checks this next: the rebuilt address does appear in
+      the page's hydration payload as a string, and the site's own social row
+      links to instagram.com as ordinary links. Neither is a request, and the
+      request is the thing the facade promises to withhold — so that is what
+      was measured, rather than a grep for the hostname._
 - [ ] Import v1, the CSV half. **Open, and it needs a decision before code:**
       what a spreadsheet is imported _into_. Markdown had one obvious target;
       a CSV has ten — every collection with a repeating shape (work, brands,

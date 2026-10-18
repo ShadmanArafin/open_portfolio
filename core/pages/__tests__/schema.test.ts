@@ -3,11 +3,13 @@ import { readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   HOME_SLUG,
+  LINK_IN_BIO_SLUG,
   MAX_SLUG_SEGMENTS,
   RESERVED_LOCALE_PREFIXES,
   RESERVED_TOP_LEVEL,
   checkSlug,
   createHomePage,
+  createLinkInBioPage,
   createPage,
   isHomePage,
   isLocalePrefix,
@@ -16,6 +18,7 @@ import {
   segmentsToSlug,
   slugToSegments,
 } from '../schema';
+import { parsePage } from '../../blocks/registry';
 
 const APP_ROOT = join(import.meta.dirname, '..', '..', '..', 'app');
 
@@ -206,5 +209,32 @@ describe('the home page record', () => {
 
   it('validates as a page like any other', () => {
     expect(pageSchema.safeParse({ ...createHomePage(), slug: 'x' }).success).toBe(true);
+  });
+});
+
+describe('createLinkInBioPage', () => {
+  it('builds a stack of doors out of blocks that already exist', () => {
+    const page = createLinkInBioPage('page_links');
+    expect(page.slug).toBe(LINK_IN_BIO_SLUG);
+    expect(page.title).toBe('Links');
+    expect(page.status).toBe('draft');
+
+    // A preset is only a preset if it survives the same validation every
+    // stored page does: these three blocks are rendered by the registry, so
+    // they are parsed by it here. A quarantined block in a starting point
+    // would be a first impression nobody recovers from.
+    const parsed = parsePage(page.blocks);
+    for (const [index, entry] of parsed.entries()) {
+      if (entry.kind !== 'block') throw new Error(`block ${index} quarantined: ${entry.reason}`);
+    }
+    expect(parsed.map((entry) => (entry.kind === 'block' ? entry.block.type : ''))).toEqual([
+      'split',
+      'cards',
+      'socialRow',
+    ]);
+  });
+
+  it('validates as a page like any other', () => {
+    expect(pageSchema.safeParse(createLinkInBioPage('page_links')).success).toBe(true);
   });
 });

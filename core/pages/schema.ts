@@ -305,6 +305,68 @@ export function isHomePage(page: { slug: string }): boolean {
   return page.slug === HOME_SLUG;
 }
 
+/** The address a link-in-bio page is made at. Short, because it goes in a bio. */
+export const LINK_IN_BIO_SLUG = 'links';
+
+/**
+ * "Link in bio" - one page, built from blocks, that is a stack of doors.
+ *
+ * The shape people mean by that phrase: who you are at the top, the handful of
+ * places worth going next, and the social row underneath. A *preset* rather
+ * than a new block type, deliberately - every part of it is a block the owner
+ * already understands, and every part can be edited, reordered or deleted
+ * afterwards with nothing new to learn first. (A dedicated stack-of-links
+ * block is still an open idea; this is what today's blocks can honestly
+ * build.)
+ *
+ * Nothing here is published: it arrives as a draft like any other new page, so
+ * the cost of trying it is looking at it.
+ */
+export function createLinkInBioPage(id: string): PageRecord {
+  return {
+    id,
+    slug: LINK_IN_BIO_SLUG,
+    title: 'Links',
+    blocks: [
+      {
+        id: `block_${++counter}`,
+        type: 'split',
+        v: 1,
+        props: {
+          heading: 'Hello',
+          paragraphs: ['Say who you are in a sentence, and what somebody can find here.'],
+          media: { src: '', alt: '' },
+          ratio: '1 / 1',
+        },
+      },
+      {
+        id: `block_${++counter}`,
+        type: 'cards',
+        v: 1,
+        props: {
+          columns: 2,
+          items: [
+            { title: 'My work', href: '/work' },
+            { title: 'Writing', href: '/writing' },
+            { title: 'Get in touch', href: '/contact' },
+          ],
+        },
+      },
+      {
+        id: `block_${++counter}`,
+        type: 'socialRow',
+        v: 1,
+        props: { showHandles: true },
+      },
+    ],
+    status: 'draft',
+    seo: {},
+    nav: { show: false, order: 0 },
+    updatedAt: new Date().toISOString(),
+    revision: 1,
+  };
+}
+
 /** `about/team` -> `['about', 'team']`. The shape a catch-all route returns. */
 export function slugToSegments(slug: string): string[] {
   return slug.split('/').filter(Boolean);

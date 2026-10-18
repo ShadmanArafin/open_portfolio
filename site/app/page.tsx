@@ -195,7 +195,7 @@ export default function Home() {
               </p>
             </div>
             <div className="card">
-              <h3 className="head">Pages built from twenty-six blocks</h3>
+              <h3 className="head">Pages built from twenty-seven blocks</h3>
               <p>
                 A hero, text, images, a gallery, figures, cards, a call to action, a contact form,
                 questions and answers, a video, a picture beside text, a quote, a newsletter box,

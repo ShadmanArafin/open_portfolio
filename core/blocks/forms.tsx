@@ -559,17 +559,26 @@ export interface EmbedFacadeProps {
   title: string;
   provider: string;
   ratio: string;
+  /**
+   * The sentence beside the button: what the provider is, and the promise the
+   * facade makes. Written by the caller, because the promises differ - a
+   * booking calendar and a subscribe box are not the same offer.
+   */
+  blurb: string;
+  /** What pressing does, in the provider's own terms. */
+  action: string;
 }
 
 /**
- * A booking calendar that loads nothing until pressed.
+ * A third-party box that loads nothing until pressed.
  *
- * Same contract as the video facade: the iframe — and with it Cal.com or
- * Calendly tracking state — appears only after an explicit press, announced
- * by a real button with the provider named. A scheduling widget that loaded
- * on page view would tax every visitor for the few who book.
+ * Same contract as the video facade: the iframe - and with it Cal.com's,
+ * Calendly's, Instagram's, Behance's or Substack's tracking state - appears
+ * only after an explicit press, announced by a real button that names the
+ * provider. A widget that loaded on page view would tax every visitor for the
+ * few who came for it.
  */
-export function EmbedFacade({ embedUrl, title, provider, ratio }: EmbedFacadeProps) {
+export function EmbedFacade({ embedUrl, title, provider, ratio, blurb, action }: EmbedFacadeProps) {
   const [open, setOpen] = useState(false);
 
   if (!open) {
@@ -593,12 +602,12 @@ export function EmbedFacade({ embedUrl, title, provider, ratio }: EmbedFacadePro
             color: 'var(--text-secondary)',
           }}
         >
-          Booking runs on {provider}, and nothing loads from there until you ask.
+          {blurb}
         </p>
         <button
           type="button"
           onClick={() => setOpen(true)}
-          aria-label={`Book a time, loading ${provider}`}
+          aria-label={`${action}, loading ${provider}`}
           style={{
             minHeight: 'var(--control-height)',
             paddingInline: 'var(--space-6)',
@@ -612,7 +621,7 @@ export function EmbedFacade({ embedUrl, title, provider, ratio }: EmbedFacadePro
             cursor: 'pointer',
           }}
         >
-          Book a time
+          {action}
         </button>
       </div>
     );

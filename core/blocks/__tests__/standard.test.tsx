@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import React from 'react';
 import { getBlockDefinition, parsePage } from '../registry';
 import { EMPTY_BLOCK_CONTENT, type BlockContent } from '../content';
-import { toEmbedUrl, toSchedulingUrl } from '../standard';
+import { toEmbedUrl, toSchedulingUrl, toSocialEmbed } from '../standard';
 import type { BlockDefinition } from '../schema';
 
 /**
@@ -160,6 +160,102 @@ describe('the booking block', () => {
       )
       .filter(Boolean);
     expect(warnings.length).toBe(1);
+  });
+});
+
+describe('turning a social link into an embed', () => {
+  it('rebuilds an Instagram post, reel or TV address from the code', () => {
+    // Rebuilt, not passed through: the pasted link can carry a query string,
+    // and nothing of it survives into the iframe address.
+    expect(toSocialEmbed('https://www.instagram.com/p/CxYz12abcDe/')?.url).toBe(
+      'https://www.instagram.com/p/CxYz12abcDe/embed'
+    );
+    expect(toSocialEmbed('https://instagram.com/reel/CxYz12abcDe/?utm_source=ig_web')?.url).toBe(
+      'https://www.instagram.com/reel/CxYz12abcDe/embed'
+    );
+    expect(toSocialEmbed('https://www.instagram.com/tv/CxYz12abcDe/')?.url).toBe(
+      'https://www.instagram.com/tv/CxYz12abcDe/embed'
+    );
+    expect(toSocialEmbed('https://www.instagram.com/p/CxYz12abcDe/')?.provider).toBe('Instagram');
+  });
+
+  it('refuses an Instagram profile, because a profile is not a post', () => {
+    expect(toSocialEmbed('https://www.instagram.com/yourname/')).toBeNull();
+    expect(toSocialEmbed('https://www.instagram.com/')).toBeNull();
+  });
+
+  it('rebuilds a Behance gallery as the iframe Behance itself hands out', () => {
+    // The address and its ?ilo0=1 are what Behance's own oEmbed endpoint
+    // answered for a gallery link while this was written - fetched, not
+    // remembered. If they change it, this test is where that shows up.
+    expect(toSocialEmbed('https://www.behance.net/gallery/123456789/Logo-Design')?.url).toBe(
+      'https://www.behance.net/embed/project/123456789?ilo0=1'
+    );
+    expect(toSocialEmbed('https://www.behance.net/gallery/123456789')?.url).toBe(
+      'https://www.behance.net/embed/project/123456789?ilo0=1'
+    );
+  });
+
+  it('rebuilds a Substack publication as its subscribe box', () => {
+    expect(toSocialEmbed('https://astralcodexten.substack.com/')?.url).toBe(
+      'https://astralcodexten.substack.com/embed'
+    );
+    // A post link is read as its publication: the subscribe box is what
+    // Substack publishes for embedding, so that is what the block offers.
+    expect(toSocialEmbed('https://astralcodexten.substack.com/p/some-post')?.url).toBe(
+      'https://astralcodexten.substack.com/embed'
+    );
+    // The platform itself is not a publication.
+    expect(toSocialEmbed('https://substack.com/@someone')).toBeNull();
+  });
+
+  it('refuses everything else, including the lookalikes', () => {
+    for (const link of [
+      '',
+      'not a link',
+      'https://evil.example/instagram.com/p/CxYz12abcDe/',
+      'https://instagram.com.evil.example/p/CxYz12abcDe/',
+      'https://instagrarn.com/p/CxYz12abcDe/',
+      'https://www.behance.net/yourname',
+      'https://behance.net.evil.example/gallery/123456789/x',
+      'https://substack.com.evil.example/embed',
+      'javascript:alert(1)',
+      'ftp://instagram.com/p/CxYz12abcDe/',
+    ]) {
+      expect(toSocialEmbed(link), link).toBeNull();
+    }
+  });
+});
+
+describe('the social post block', () => {
+  it('renders nothing at all rather than an empty frame', () => {
+    expect(renderBlock('socialPost', { url: '', title: 'A post' })).toBe('');
+  });
+
+  it('invites without contacting the provider until asked', () => {
+    // The press itself, and the address it hands the frame, are measured in
+    // `social-post-facade.test.tsx`, in a real DOM. What can be said from
+    // static markup is that the invitation names the provider and carries no
+    // address of theirs at all.
+    const html = renderBlock('socialPost', {
+      url: 'https://www.instagram.com/p/CxYz12abcDe/',
+      title: 'A post from my studio',
+    });
+    expect(html).toContain('Instagram');
+    expect(html).toContain('Show the post');
+    expect(html).not.toContain('<iframe');
+    expect(html).not.toContain('instagram.com');
+  });
+
+  it('says why a GitHub link will not appear, rather than leaving a blank space', () => {
+    const definition = definitionFor('socialPost');
+    const warnings = (definition.checks ?? [])
+      .map((check) =>
+        check.run({ url: 'https://github.com/owner/name', title: 'A post' }, EMPTY_BLOCK_CONTENT)
+      )
+      .filter(Boolean);
+    expect(warnings.length).toBe(1);
+    expect(String(warnings[0])).toContain('GitHub');
   });
 });
 

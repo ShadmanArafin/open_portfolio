@@ -5,6 +5,7 @@ import type { MediaItem } from '@/cms/types/cms';
 import {
   checkSlug,
   createHomePage,
+  createLinkInBioPage,
   createPage,
   isHomePage,
   normaliseSlug,
@@ -221,16 +222,21 @@ export function PagesBuilder({
   const mutatePage = (id: string, mutate: (page: PageRecord) => PageRecord) =>
     setPages((list) => list.map((page) => (page.id === id ? mutate(page) : page)));
 
-  const addPage = () => {
-    const page = createPage({ title: 'Untitled page', id: newId('page') });
-    // Every new page needs a slug nobody is using; "untitled-page" twice is a
-    // page that saves and never opens.
-    let slug = page.slug;
+  /**
+   * A new page, and the slug nobody is using.
+   *
+   * "untitled-page" twice is a page that saves and never opens, so the second
+   * one takes -2. The starting point is a parameter because a page can also
+   * start from a preset: a link-in-bio page is this same act, from a different
+   * first draft.
+   */
+  const addPage = (fresh = createPage({ title: 'Untitled page', id: newId('page') })) => {
+    let slug = fresh.slug;
     for (let n = 2; pages.some((existing) => existing.slug === slug); n++) {
-      slug = `${page.slug}-${n}`;
+      slug = `${fresh.slug}-${n}`;
     }
-    setPages((list) => [...list, { ...page, slug }]);
-    setOpenId(page.id);
+    setPages((list) => [...list, { ...fresh, slug }]);
+    setOpenId(fresh.id);
   };
 
   const buildHome = () => {
@@ -284,11 +290,19 @@ export function PagesBuilder({
         ) : null}
         <button
           type="button"
-          onClick={addPage}
+          onClick={() => addPage()}
           className="rounded-full bg-text-primary px-4 text-sm font-semibold text-bg"
           style={{ minHeight: 44 }}
         >
           Add page
+        </button>
+        <button
+          type="button"
+          onClick={() => addPage(createLinkInBioPage(newId('page')))}
+          className={secondary}
+          style={{ minHeight: 44 }}
+        >
+          Add a links page
         </button>
       </div>
 

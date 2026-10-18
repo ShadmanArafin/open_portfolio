@@ -93,6 +93,13 @@ describe('blocks are accessible from defaults', () => {
       ['ctaBanner', { heading: 'Hire me', cta: [{ label: 'Contact', href: '/contact' }] }],
       ['embed', { url: 'https://cal.com/you/intro', title: 'Book a time' }],
       [
+        'socialPost',
+        {
+          url: 'https://www.instagram.com/p/CxYz12abcDe/',
+          title: 'A post from my studio',
+        },
+      ],
+      [
         'comments',
         {
           heading: 'Discussion',

@@ -524,7 +524,7 @@ export function Studio() {
                   <h3>Nothing selected</h3>
                   <p className="studio__hint">
                     Choose a block on the left. Every block describes its own form, which is why
-                    there are twenty-six blocks and one editor.
+                    there are twenty-seven blocks and one editor.
                   </p>
                 </>
               )}

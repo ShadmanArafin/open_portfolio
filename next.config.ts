@@ -12,19 +12,22 @@ import type { NextConfig } from 'next';
  * would break both. What this policy still buys: no plugins/objects, no
  * framing except same-origin (admin device preview needs it), restricted
  * frame targets for the video facade, the Turnstile challenge widget and the
- * scheduling embeds (Cal.com, Calendly — both host-allowlisted by the embed
- * block, so the CSP names the same two),
- * and `base-uri`/`form-action` locked to self. A per-request nonce policy is
- * the follow-up, not today's change.
+ * embeds the blocks build — Cal.com and Calendly, and the social set
+ * (Instagram, Behance, Substack). Every one of those hosts is allowlisted by
+ * the block that frames it, and `core/blocks/__tests__/frame-src.test.ts`
+ * keeps this list and those allowlists in step: the Turnstile widget once
+ * shipped with a policy that refused its own iframe, and that is the shape of
+ * bug a second list invites. Also `base-uri`/`form-action` locked to self. A
+ * per-request nonce policy is the follow-up, not today's change.
  */
-const contentSecurityPolicy = [
+export const contentSecurityPolicy = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
   "connect-src 'self' https:",
-  "frame-src 'self' https://www.youtube-nocookie.com https://player.vimeo.com https://challenges.cloudflare.com https://cal.com https://calendly.com",
+  "frame-src 'self' https://www.youtube-nocookie.com https://player.vimeo.com https://challenges.cloudflare.com https://cal.com https://calendly.com https://instagram.com https://www.instagram.com https://behance.net https://www.behance.net https://*.substack.com",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
