@@ -38,6 +38,7 @@ describe('listIntegrationViews', () => {
     // depends on which definition file the running bundle imported first.
     expect(views.map((view) => view.id)).toEqual([
       'giscus',
+      'listmonk',
       'plausible',
       'smtp',
       'turnstile',

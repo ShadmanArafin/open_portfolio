@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
+import { listIntegrationViews } from '@/core/integrations';
 import { getStorageAdapter } from '@/core/storage/registry';
 import { resolveTransportWithStored } from '@/core/email/transport';
 import { NEWSLETTER_DEFAULTS, type Subscriber } from '@/core/newsletter/schema';
@@ -23,7 +25,9 @@ export const metadata: Metadata = {
  * deliverability, bounces, list hygiene — and half of that leaves somebody
  * holding a list they cannot practically mail. The CSV export takes the list
  * somewhere built for it; it is a plain link, authenticated by the session
- * cookie, which is what makes it work on a phone.
+ * cookie, which is what makes it work on a phone. The "Sending it out" section
+ * at the bottom says where that somewhere is, and reads its state from the
+ * same registry the Services screen renders.
  */
 
 function describe(sub: Subscriber): string {
@@ -38,11 +42,13 @@ function describe(sub: Subscriber): string {
 
 export default async function NewsletterPage() {
   const adapter = await getStorageAdapter();
-  const [draftMeta, subscribers, transport] = await Promise.all([
+  const [draftMeta, subscribers, transport, integrations] = await Promise.all([
     adapter.readSnapshotMeta('draft'),
     adapter.subscribers.list().catch(() => [] as Subscriber[]),
     resolveTransportWithStored().catch(() => ({ kind: 'none' as const })),
+    listIntegrationViews().catch(() => []),
   ]);
+  const listmonk = integrations.find((view) => view.id === 'listmonk');
 
   const settings = {
     ...NEWSLETTER_DEFAULTS,
@@ -116,10 +122,6 @@ export default async function NewsletterPage() {
             </a>
           ) : null}
         </p>
-        <p className="m-0 text-sm text-text-secondary">
-          The columns match what Buttondown, Mailchimp and the rest expect on import, so moving to a
-          sending tool is a file upload rather than a project.
-        </p>
 
         {subscribers.length === 0 ? (
           <p
@@ -147,6 +149,47 @@ export default async function NewsletterPage() {
             ))}
           </ul>
         )}
+      </section>
+
+      <section
+        aria-label="Sending it out"
+        className="grid gap-3 rounded-2xl border border-border p-4"
+      >
+        <div>
+          <h2 className="m-0 text-xl">Sending it out</h2>
+          <p className="m-0 text-sm text-text-secondary">
+            This screen collects; it never sends. To write to everyone at once, the addresses above
+            go to something built for it.
+          </p>
+        </div>
+
+        <ul className="m-0 grid list-none gap-3 p-0 text-sm text-text-secondary">
+          <li>
+            <strong className="block text-text-primary">Listmonk</strong>
+            Free, open source and self-hosted, so your subscribers stay on your own server, and it
+            runs beside the database this site already uses.{' '}
+            {listmonk?.isConfigured ? (
+              <>
+                Its address is connected —{' '}
+                <Link href="/admin/services">check it under Services</Link>.
+              </>
+            ) : (
+              <>
+                <Link href="/admin/services">Set it up under Services</Link>.
+              </>
+            )}
+          </li>
+          <li>
+            <strong className="block text-text-primary">A sending tool you already use</strong>
+            The columns match what Buttondown, Mailchimp and the rest expect on import, so moving
+            the list is a file upload rather than a project.
+          </li>
+        </ul>
+
+        <p className="m-0 text-sm text-text-secondary">
+          Whichever sends it: mail only the confirmed addresses above, keep the unsubscribe link
+          every tool adds, and send the first one to yourself before it goes to anyone else.
+        </p>
       </section>
     </div>
   );

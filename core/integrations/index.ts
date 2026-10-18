@@ -9,6 +9,7 @@ import 'server-only';
  */
 
 import './definitions/smtp';
+import './definitions/listmonk';
 import './definitions/turnstile';
 import './definitions/umami';
 import './definitions/plausible';

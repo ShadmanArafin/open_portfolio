@@ -1144,6 +1144,16 @@ _Honest scoping:_ Vercel Marketplace can only auto-provision Marketplace-native 
 >   already subscribed" is a way to test, one query at a time, whether a given
 >   person is on somebody's list.
 >
+> - **Where the list goes is a definition, not a sender.** Capture ships;
+>   sending does not, because a mis-sent campaign to a stale list is not
+>   something a self-hosting owner can undo. The recommendation sits on the
+>   Services screen with every other service — self-hosted Listmonk (AGPL, one
+>   binary, happy beside the Postgres this site already runs) — and the
+>   Newsletter screen says so beside the download instead of leaving the exit
+>   as a footnote. Nothing in the product calls Listmonk, so there is no key to
+>   store: the definition exists to hold the address and to answer whether the
+>   instance is actually up.
+>
 > **Also done, and not as specified.** The marketing site, a nine-page help
 > centre and eight pages of developer docs, in `site/` — a separate application
 > that builds to a static export. Fumadocs was installed and removed: the

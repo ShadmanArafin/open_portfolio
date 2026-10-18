@@ -875,7 +875,42 @@ computed contrast, zero console errors throughout).
       matrix entry, suite green, build green; live CSP headers carry both
       hosts and the homepage ships zero third-party URLs (facade contract
       holds). Social facade set + link-in-bio preset stay next.
-- [ ] Expiring share links (M); newsletter handoff via Listmonk (S).
+- [x] Expiring share links (M). **DONE 2026-10-18:** one private URL per page.
+      `core/sharing/tokens.ts` mints a 192-bit token, stores only its SHA-256
+      under the `share` kv namespace with a TTL, and resolves it by
+      constant-time compare; `/api/admin/share` is owner-only in all three
+      directions; `/share/[token]` renders the page's **draft** with `noindex`
+      and a banner that says what it is; the Pages screen carries the panel
+      that mints, lists and revokes. It had been written but only ever checked
+      by unit test, so it was verified live this round — **both expiry layers
+      separately**, because an expiry that is written and never enforced is the
+      classic silent bug here. Measured: mint → `/share/<token>` 200, noindex,
+      92 KB of draft; a wrong token 404; revoke → the same link 404 and the kv
+      row gone; backdating the record's own `expiresAt` → 404 **and** the row
+      swept; backdating the kv envelope instead → the row reads as absent and
+      the admin answers `active: false` rather than a stale date. The nine unit
+      tests in `core/sharing/__tests__/tokens.test.ts` already covered
+      mint/resolve/revoke.
+- [x] Newsletter broadcast handoff via Listmonk (S). **DONE 2026-10-18:**
+      `definitions/listmonk.ts` puts the recommendation on the Services screen
+      where the other services live — AGPLv3, single binary, `verifiedOn`
+      2026-10-18 (licence, install path and v6.2.0 of 26 Jun 2026 read off
+      listmonk.app that day). **No API key field on purpose:** nothing in the
+      product calls Listmonk, and a credential stored for a caller that does
+      not exist is a liability with no payoff. The Test button therefore checks
+      the one thing worth checking while self-hosting — is it answering, is
+      that the right port, is its database up. Statuses are the ones a real
+      instance returned (measured against a public demo, not assumed):
+      `{ data: … }` on success, `{ message: … }` on refusal, refusal as **403,
+      not 401**. The CSV exit is now a handoff rather than a footnote: a
+      "Sending it out" section on the Newsletter screen says the screen never
+      sends, names Listmonk first with its connected/not state read through the
+      same projection the Services screen uses, keeps Buttondown/Mailchimp as
+      the "already paying for one" case, and states the obligations — confirmed
+      addresses only, keep the unsubscribe link, send the first one to
+      yourself. Resend/Brevo stay documented as bring-your-own-key fallbacks;
+      no paid tier is promoted anywhere. Nine new tests cover the definition
+      and every answer the Test button can give.
 - [x] Comments via Giscus, off by default. **DONE 2026-10-18:**
       `definitions/giscus.ts` (setup, public-repo Test, honest degradation),
       `comments` block with its own props + click-to-load facade (no GitHub
