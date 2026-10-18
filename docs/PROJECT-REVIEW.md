@@ -970,7 +970,18 @@ computed contrast, zero console errors throughout).
       overridden, `offline` event dispatched): the chip appears with
       `role="status"` and leaves again on `online`. Unit test covers both
       transitions.
-      Still open on this item: the conflict / version diff UIs.
+      **The version diff preview is in** (History). Each row now says what
+      pressing Restore would do, in the words the publish button already uses
+      — `changedParts` was split out of `describeChanges` so the two cannot
+      drift — and a snapshot that matches the draft says so instead of
+      inviting a restore that changes nothing. Verified live against the
+      production build by editing the store under the running server (backed
+      up first, restored after, hashes compared): as-is the row reads
+      "Restoring would change: site settings, pages, … media (-1)"; with the
+      snapshot cloned over the draft it reads "Matches your draft — restoring
+      would change nothing". Unit test proves the sentence `describeChanges`
+      builds is exactly these parts, in both directions.
+      Still open on this item: the conflict diff UI.
 - [ ] Import v1: Markdown/CSV + image bulk upload.
 - [ ] Phase C entries in `CHANGELOG.md`. Turnstile, the analytics view counts,
       the `work` merge, the not-found 200 status fix, the embed block, Giscus

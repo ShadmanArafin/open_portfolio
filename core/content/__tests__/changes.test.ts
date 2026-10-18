@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { INITIAL_CMS_STATE } from '@/cms/data/initialData';
 import {
+  changedParts,
   contentFingerprint,
   countMediaUsage,
   describeChanges,
@@ -47,6 +48,29 @@ describe('content comparisons', () => {
     const a = state();
     const b = state();
     expect(describeChanges(a, b)).toBe('No content changes.');
+  });
+
+  it('names the collections that moved, on their own, for the History preview', () => {
+    const base = state();
+    const later = state();
+    expect(changedParts(base, later)).toEqual([]);
+
+    later.settings = { ...later.settings, fullName: 'Someone Else' };
+    expect(changedParts(base, later)).toEqual(['site settings']);
+
+    const firstPage = (later.pages ?? [])[0];
+    if (firstPage) {
+      later.pages = [...(later.pages ?? []), { ...firstPage, id: 'page_new', slug: 'new' }];
+      expect(changedParts(base, later)).toEqual(['site settings', 'pages (+1)']);
+      // The sentence the publish button shows is exactly these parts, so the
+      // History preview and the publish summary cannot drift apart.
+      expect(describeChanges(base, later)).toBe(
+        `Changed: ${changedParts(base, later).join(', ')}.`
+      );
+      // History asks the other way round: draft → snapshot, so a restore that
+      // would drop the page reads as `pages (-1)`.
+      expect(changedParts(later, base)).toEqual(['site settings', 'pages (-1)']);
+    }
   });
 
   it('counts media references by the URL written into content', () => {

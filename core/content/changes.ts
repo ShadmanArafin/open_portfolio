@@ -29,8 +29,14 @@ export function hasUnpublishedChanges(draft: CMSState, published: CMSState | nul
   return contentFingerprint(draft) !== contentFingerprint(published);
 }
 
-/** Plain-language summary of what changed, shown before publishing. */
-export function describeChanges(from: CMSState, to: CMSState): string {
+/**
+ * The collections that differ between two states, in the admin's own words.
+ *
+ * `describeChanges` wraps this in a sentence for the publish button; the
+ * History screen wants the parts on their own ("Restoring would change: pages
+ * (+2), writing"), and the two should read the same way.
+ */
+export function changedParts(from: CMSState, to: CMSState): string[] {
   const parts: string[] = [];
 
   const countDiff = (key: keyof CMSState, label: string) => {
@@ -74,6 +80,12 @@ export function describeChanges(from: CMSState, to: CMSState): string {
   countDiff('navLinks', 'navigation');
   countDiff('media', 'media');
 
+  return parts;
+}
+
+/** Plain-language summary of what changed, shown before publishing. */
+export function describeChanges(from: CMSState, to: CMSState): string {
+  const parts = changedParts(from, to);
   if (parts.length === 0) return 'No content changes.';
   return `Changed: ${parts.join(', ')}.`;
 }
