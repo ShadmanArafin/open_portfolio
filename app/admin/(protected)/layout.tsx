@@ -5,6 +5,7 @@ import { requireOwner, UnauthorizedError } from '@/core/auth/guard';
 import { getContentForChannel } from '@/core/content/read';
 import { isWelcomePlaceholder } from '@/core/content/welcome';
 import { AdminNav } from './_components/admin-nav';
+import { OfflineNotice } from './_components/offline-notice';
 import { ADMIN_SECTIONS } from './_components/sections';
 import { ErrorCollector } from './error-collector';
 import { WelcomeGate } from './welcome-gate';
@@ -61,6 +62,7 @@ export default async function ProtectedAdminLayout({ children }: { children: Rea
             Admin
           </Link>
           <AdminNav sections={ADMIN_SECTIONS} />
+          <OfflineNotice />
         </div>
       </header>
       <main id="admin-main" className="mx-auto max-w-[1280px] px-6 py-8">

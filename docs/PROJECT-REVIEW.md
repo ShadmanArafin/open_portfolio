@@ -959,8 +959,18 @@ computed contrast, zero console errors throughout).
       `min-h-[44px]` labels, and `sr-only` file inputs behind 44px buttons.
       There is no picker overlay to width-cap: the admin has no `<dialog>`,
       `role="dialog"` or fixed overlay anywhere.
-      Still open on this item: the offline badge, and the conflict / version
-      diff UIs.
+      **The offline badge is in** (`_components/offline-notice.tsx`): a
+      `useSyncExternalStore` chip in the header reading `navigator.onLine` and
+      the browser's `online`/`offline` events. External state, so the first
+      paint has an answer rather than an effect catching up; the server
+      snapshot is "online" so it cannot flash for everyone on load. Every write
+      on these screens is a server action, which makes this the one failure the
+      server cannot report — nothing reached it. Verified in a real browser by
+      driving the disconnect the way a browser drives it (`navigator.onLine`
+      overridden, `offline` event dispatched): the chip appears with
+      `role="status"` and leaves again on `online`. Unit test covers both
+      transitions.
+      Still open on this item: the conflict / version diff UIs.
 - [ ] Import v1: Markdown/CSV + image bulk upload.
 - [ ] Phase C entries in `CHANGELOG.md`. Turnstile, the analytics view counts,
       the `work` merge, the not-found 200 status fix, the embed block, Giscus
