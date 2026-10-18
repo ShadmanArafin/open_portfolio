@@ -3,6 +3,7 @@
 import { getStorageAdapter } from '@/core/storage/registry';
 import { requireOwner } from '@/core/auth/guard';
 import { RevisionConflictError } from '@/core/storage/contract';
+import { conflictMessage } from '@/core/content/changes';
 import { PROFESSIONS } from '@/cms/data/professions';
 import type { CMSState } from '@/cms/types/cms';
 import { applyWelcomeAnswers, WELCOME_ACCENTS, type WelcomeAnswers } from '@/core/content/welcome';
@@ -77,10 +78,13 @@ export async function applyWelcomeAction(input: {
     await adapter.writeSnapshot('draft', next, meta.revision);
   } catch (err) {
     if (err instanceof RevisionConflictError) {
+      // Raced with another save. Re-read for the diff: what matters is what is
+      // stored now, not the read this write was built on.
+      const fresh = await adapter.readSnapshotMeta('draft');
       return {
         ok: false,
         conflict: true,
-        error: 'This changed somewhere else. Reload and try again.',
+        error: conflictMessage(err, fresh?.state ?? null, next, 'Saving'),
       };
     }
     throw err;

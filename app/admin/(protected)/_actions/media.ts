@@ -7,6 +7,7 @@ import { clientKey, rateLimit } from '@/core/auth/ratelimit';
 import { makeMediaKey, UploadRejected, validateUpload } from '@/core/media/validate';
 import { getStorageAdapter } from '@/core/storage/registry';
 import { RevisionConflictError } from '@/core/storage/contract';
+import { conflictMessage } from '@/core/content/changes';
 import type { CMSState, MediaItem } from '@/cms/types/cms';
 
 export interface MediaResult {
@@ -35,7 +36,7 @@ const HARD_MAX_BYTES = 25 * 1024 * 1024;
 async function writeDraft(
   mutate: (draft: CMSState) => void,
   mayRetry = true
-): Promise<'ok' | 'conflict' | 'missing'> {
+): Promise<'ok' | 'missing' | { conflict: string }> {
   const adapter = await getStorageAdapter();
   const meta = await adapter.readSnapshotMeta('draft');
   if (!meta) return 'missing';
@@ -48,13 +49,15 @@ async function writeDraft(
     return 'ok';
   } catch (err) {
     if (err instanceof RevisionConflictError) {
-      return mayRetry ? writeDraft(mutate, false) : 'conflict';
+      // Once, quietly: a race is safe to replay — `mutate` is a small edit
+      // applied to the fresh draft, not a whole document from a form.
+      if (mayRetry) return writeDraft(mutate, false);
+      const fresh = await adapter.readSnapshotMeta('draft');
+      return { conflict: conflictMessage(err, fresh?.state ?? null, next, 'Saving') };
     }
     throw err;
   }
 }
-
-const CONFLICT_MESSAGE = 'This changed somewhere else. Reload and try again.';
 
 export async function uploadMediaAction(form: FormData): Promise<MediaResult> {
   await requireOwner();
@@ -129,7 +132,7 @@ export async function uploadMediaAction(form: FormData): Promise<MediaResult> {
   if (outcome !== 'ok') {
     return {
       ok: false,
-      conflict: outcome === 'conflict',
+      conflict: outcome !== 'missing',
       error:
         'The file was stored, but the library list could not be updated. Reload the page — ' +
         'if the file is missing from the library, upload it again.',
@@ -157,7 +160,11 @@ export async function deleteMediaAction(id: unknown): Promise<MediaResult> {
     draft.media = (draft.media ?? []).filter((m) => m.id !== id);
   });
   if (outcome !== 'ok') {
-    return { ok: false, conflict: outcome === 'conflict', error: CONFLICT_MESSAGE };
+    return {
+      ok: false,
+      conflict: outcome !== 'missing',
+      error: outcome === 'missing' ? 'There is no draft to change yet.' : outcome.conflict,
+    };
   }
 
   // Then the bytes. Only files this app stored are removed — the seeded demo
@@ -200,7 +207,11 @@ export async function updateResumeAction(url: unknown, name: unknown): Promise<M
     draft.settings.resumeFilename = name;
   });
   if (outcome !== 'ok') {
-    return { ok: false, conflict: outcome === 'conflict', error: CONFLICT_MESSAGE };
+    return {
+      ok: false,
+      conflict: outcome !== 'missing',
+      error: outcome === 'missing' ? 'There is no draft to change yet.' : outcome.conflict,
+    };
   }
 
   revalidatePath('/admin/media');

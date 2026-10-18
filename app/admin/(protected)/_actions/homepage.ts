@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { getStorageAdapter } from '@/core/storage/registry';
 import { requireOwner } from '@/core/auth/guard';
 import { RevisionConflictError } from '@/core/storage/contract';
+import { conflictMessage } from '@/core/content/changes';
 import { aboutChanges } from '@/core/content/sections';
 import type { CMSState, SectionConfig } from '@/cms/types/cms';
 
@@ -138,10 +139,13 @@ export async function updateHomepageAction(sections: unknown): Promise<HomepageR
     await adapter.writeSnapshot('draft', next, meta.revision);
   } catch (err) {
     if (err instanceof RevisionConflictError) {
+      // Raced with another save. Re-read for the diff: what matters is what is
+      // stored now, not the read this write was built on.
+      const fresh = await adapter.readSnapshotMeta('draft');
       return {
         ok: false,
         conflict: true,
-        error: 'This changed somewhere else. Reload and try again.',
+        error: conflictMessage(err, fresh?.state ?? null, next, 'Saving'),
       };
     }
     throw err;

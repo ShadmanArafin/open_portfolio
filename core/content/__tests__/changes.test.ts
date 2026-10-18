@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { INITIAL_CMS_STATE } from '@/cms/data/initialData';
 import {
   changedParts,
+  conflictMessage,
   contentFingerprint,
   countMediaUsage,
   describeChanges,
@@ -71,6 +72,30 @@ describe('content comparisons', () => {
       // would drop the page reads as `pages (-1)`.
       expect(changedParts(later, base)).toEqual(['site settings', 'pages (-1)']);
     }
+  });
+
+  it('explains a refused write, with the diff there is to show', () => {
+    const fresh = state();
+    const attempted = state();
+    attempted.settings = { ...attempted.settings, fullName: 'Someone Else' };
+
+    const message = conflictMessage({ expected: 97, current: 98 }, fresh, attempted, 'Saving');
+
+    // The first question is whether anything was lost; the answer leads.
+    expect(message).toContain('nothing was written');
+    expect(message).toContain('You had version 97; the site is on 98.');
+    expect(message).toContain('Saving would change: site settings.');
+    expect(message).toContain('Reload');
+  });
+
+  it('does not invent a diff when the states match, or when there is no fresh state', () => {
+    const a = state();
+    expect(conflictMessage({ expected: 1, current: 2 }, a, state(), 'Restoring')).toContain(
+      'matches the site anyway'
+    );
+    expect(conflictMessage({ expected: 1, current: 2 }, null, a, 'Restoring')).toContain(
+      'Reload to see the current version first.'
+    );
   });
 
   it('counts media references by the URL written into content', () => {

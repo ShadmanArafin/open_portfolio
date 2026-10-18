@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, type ReactNode } from 'react';
+import { ConflictNotice } from './conflict-notice';
 
 const secondary =
   'rounded-full border border-border px-3 text-sm text-text-secondary hover:text-text-primary disabled:opacity-50';
@@ -70,6 +71,7 @@ export function CollectionEditor<T extends { id: string }>({
   const [busy, setBusy] = useState(false);
   const [noteText, setNoteText] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [conflict, setConflict] = useState(false);
 
   const mutateItem = (id: string, mutate: (item: T) => T) =>
     setItems((list) => list.map((item) => (item.id === id ? mutate(item) : item)));
@@ -109,12 +111,14 @@ export function CollectionEditor<T extends { id: string }>({
     setBusy(true);
     setNoteText(null);
     setSaveError(null);
+    setConflict(false);
     try {
       const result = await save(items);
       if (result.ok) {
         if (result.items) setItems(result.items);
         setNoteText('Saved to your draft.');
       } else {
+        setConflict(Boolean(result.conflict));
         setSaveError(result.error ?? 'The save did not go through.');
       }
     } catch {
@@ -275,9 +279,13 @@ export function CollectionEditor<T extends { id: string }>({
           </p>
         ) : null}
         {saveError ? (
-          <p role="alert" className="m-0 text-sm text-danger">
-            {saveError}
-          </p>
+          conflict ? (
+            <ConflictNotice message={saveError} />
+          ) : (
+            <p role="alert" className="m-0 text-sm text-danger">
+              {saveError}
+            </p>
+          )
         ) : null}
       </div>
     </div>

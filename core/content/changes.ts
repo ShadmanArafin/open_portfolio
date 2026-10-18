@@ -90,6 +90,38 @@ export function describeChanges(from: CMSState, to: CMSState): string {
   return `Changed: ${parts.join(', ')}.`;
 }
 
+/**
+ * What a refused conditional write says, including the diff there is to show.
+ *
+ * A conflict means the stored revision moved between the read that built a
+ * write and the write itself, so nothing was written — say that first, because
+ * it is the answer to the only urgent question ("did I lose my change?").
+ * Then the revisions, then the one comparison actually available: what was
+ * about to be written against what is stored now. The state *between* the two
+ * revisions is not kept anywhere, so this is as precise as the answer gets —
+ * and it is the same sentence `describeChanges` gives publishing.
+ *
+ * `fresh` may be null (the snapshot vanished under a conflict); the message
+ * still explains itself without a diff.
+ */
+export function conflictMessage(
+  err: { expected: number; current: number },
+  fresh: CMSState | null,
+  attempted: CMSState,
+  verb: string
+): string {
+  const head =
+    `Someone else saved first, so nothing was written. ` +
+    `You had version ${err.expected}; the site is on ${err.current}.`;
+  if (!fresh) return `${head} Reload to see the current version first.`;
+
+  const parts = changedParts(fresh, attempted);
+  if (parts.length === 0) {
+    return `${head} What you were saving matches the site anyway, so reloading is enough.`;
+  }
+  return `${head} ${verb} would change: ${parts.join(', ')}. Reload to see the current version first.`;
+}
+
 function makeIdbUrl(mediaId: string): string {
   return `idb:${mediaId}`;
 }

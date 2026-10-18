@@ -3,6 +3,7 @@
 import { getStorageAdapter } from '@/core/storage/registry';
 import { requireOwner } from '@/core/auth/guard';
 import { RevisionConflictError } from '@/core/storage/contract';
+import { conflictMessage } from '@/core/content/changes';
 import type { CMSState } from '@/cms/types/cms';
 
 /**
@@ -62,10 +63,14 @@ export async function restoreVersionAction(
     return { ok: true };
   } catch (err) {
     if (err instanceof RevisionConflictError) {
+      // The draft moved between this screen's load and this click. Re-read for
+      // the diff: what matters is what is stored *now*, not the read the
+      // restore was built on.
+      const fresh = await adapter.readSnapshotMeta('draft');
       return {
         ok: false,
         conflict: true,
-        error: 'This changed somewhere else while you were looking. Reload and try again.',
+        error: conflictMessage(err, fresh?.state ?? null, restored, 'Restoring'),
       };
     }
     throw err;

@@ -5,6 +5,7 @@ import { getStorageAdapter } from '@/core/storage/registry';
 import { requireOwner } from '@/core/auth/guard';
 import { NEWSLETTER_DEFAULTS } from '@/core/newsletter/schema';
 import { RevisionConflictError } from '@/core/storage/contract';
+import { conflictMessage } from '@/core/content/changes';
 
 export interface NewsletterActionResult {
   ok: boolean;
@@ -51,10 +52,13 @@ export async function updateNewsletterSettingsAction(settings: {
     await adapter.writeSnapshot('draft', next, meta.revision);
   } catch (err) {
     if (err instanceof RevisionConflictError) {
+      // Raced with another save. Re-read for the diff: what matters is what is
+      // stored now, not the read this write was built on.
+      const fresh = await adapter.readSnapshotMeta('draft');
       return {
         ok: false,
         conflict: true,
-        error: 'This changed somewhere else. Reload and try again.',
+        error: conflictMessage(err, fresh?.state ?? null, next, 'Saving'),
       };
     }
     throw err;

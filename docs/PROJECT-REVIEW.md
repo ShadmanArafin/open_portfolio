@@ -981,7 +981,36 @@ computed contrast, zero console errors throughout).
       snapshot cloned over the draft it reads "Matches your draft — restoring
       would change nothing". Unit test proves the sentence `describeChanges`
       builds is exactly these parts, in both directions.
-      Still open on this item: the conflict diff UI.
+      **The conflict diff is in.** Every refusal now answers the three questions
+      in one sentence - whether anything was written ("nothing was written"),
+      the two revision numbers, and the diff there actually is to show.
+      `conflictMessage` builds it on the same `changedParts` as the publish
+      summary and the History preview, and the form islands render it with a
+      44px **"Reload this screen"** control (`_components/conflict-notice.tsx`),
+      because reloading is the only honest next step - there is no merge here
+      and no dialog. Both user-reachable conflicts were verified live against
+      the production build by moving the store's revision behind the loaded
+      page's back (both files backed up first, both restored after, hashes
+      compared, nothing else written): History's Restore answered "**You had
+      version 97; the site is on 98.** … Restoring would change: site settings,
+      pages, … media (-1)"; the dashboard's Publish answered "**You had version
+      5; the site is on 6.** … Publishing would change: … media (+1)" - each
+      with the Reload control at 44px. Unit tests cover the sentence's three
+      shapes (parts, no parts, no fresh state).
+      **What this still does not cover, and the tracker should keep saying so:**
+      the collection/settings editors write the revision they _just read_
+      (`writeList`, `writeDraft`), not the revision the screen loaded, so a
+      stale save is not refused - the edited list is replaced wholesale under a
+      fresh revision, and a change another tab made to that same list is lost
+      silently (a conflict there needs a true millisecond race to reach, which
+      is why it is not user-reachable; the message path is shared with the two
+      verified above). Closing it means sending the screen's loaded revision -
+      or a fingerprint of the list it loaded - with the save and refusing a
+      stale write, which is what `core/storage/contract.ts` already promises
+      ("a number that has to match… turns a lost update into a question the
+      user can answer"). Deliberately not started here: it touches every
+      builder and action, and a half-threaded revision is worse than an honest
+      note.
 - [ ] Import v1: Markdown/CSV + image bulk upload.
 - [ ] Phase C entries in `CHANGELOG.md`. Turnstile, the analytics view counts,
       the `work` merge, the not-found 200 status fix, the embed block, Giscus

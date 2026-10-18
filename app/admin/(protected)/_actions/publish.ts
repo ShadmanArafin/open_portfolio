@@ -8,7 +8,7 @@ import { auditContrast, describeFailure } from '@/core/theme/audit';
 import { flattenAppearance } from '@/core/theme/resolve';
 import { looksLikeContent } from '@/core/content/validate';
 import { RevisionConflictError } from '@/core/storage/contract';
-import { describeChanges } from '@/core/content/changes';
+import { conflictMessage, describeChanges } from '@/core/content/changes';
 import type { CMSState, ContentVersion } from '@/cms/types/cms';
 
 export interface PublishResult {
@@ -94,7 +94,15 @@ export async function publishDraftAction(expectedRevision?: number): Promise<Pub
     await adapter.writeSnapshot('published', merged, expectedRevision);
   } catch (err) {
     if (err instanceof RevisionConflictError) {
-      return { ok: false, conflict: true, error: err.message };
+      // Another publish landed between this dashboard's load and this click.
+      // Re-read the live snapshot for the diff: what is about to go out,
+      // against what is out now.
+      const fresh = await adapter.readSnapshotMeta('published');
+      return {
+        ok: false,
+        conflict: true,
+        error: conflictMessage(err, fresh?.state ?? null, merged, 'Publishing'),
+      };
     }
     throw err;
   }

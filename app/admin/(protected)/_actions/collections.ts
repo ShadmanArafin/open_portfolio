@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { requireOwner } from '@/core/auth/guard';
 import { normaliseSlug } from '@/core/pages/schema';
 import { RevisionConflictError } from '@/core/storage/contract';
+import { conflictMessage } from '@/core/content/changes';
 import { getStorageAdapter } from '@/core/storage/registry';
 import type {
   BrandItem,
@@ -620,7 +621,7 @@ function cleanCaseStudy(raw: unknown): CaseStudyItem | null {
 
 async function writeList(
   mutate: (draft: CMSState) => void
-): Promise<'ok' | 'conflict' | 'missing'> {
+): Promise<'ok' | 'missing' | { conflict: string }> {
   const adapter = await getStorageAdapter();
   const meta = await adapter.readSnapshotMeta('draft');
   if (!meta) return 'missing';
@@ -632,12 +633,19 @@ async function writeList(
     await adapter.writeSnapshot('draft', next, meta.revision);
     return 'ok';
   } catch (err) {
-    if (err instanceof RevisionConflictError) return 'conflict';
+    if (err instanceof RevisionConflictError) {
+      // A race, not an editing session: these screens write the revision they
+      // just read, so this fires only when another save landed in between.
+      // Re-read for the diff rather than compare against our own read.
+      const fresh = await adapter.readSnapshotMeta('draft');
+      return {
+        conflict: conflictMessage(err, fresh?.state ?? null, next, 'Saving'),
+      };
+    }
     throw err;
   }
 }
 
-const CONFLICT_MESSAGE = 'This changed somewhere else. Reload and try again.';
 const NO_DRAFT_MESSAGE = 'There is no draft to change yet.';
 
 function sharedAddressError(kind: string): string {
@@ -674,7 +682,7 @@ export async function updateProjectsAction(projects: unknown): Promise<ProjectsR
     draft.projects = stamped;
   });
   if (outcome === 'missing') return { ok: false, error: NO_DRAFT_MESSAGE };
-  if (outcome === 'conflict') return { ok: false, conflict: true, error: CONFLICT_MESSAGE };
+  if (outcome !== 'ok') return { ok: false, conflict: true, error: outcome.conflict };
 
   revalidatePath('/admin/projects');
   return { ok: true, projects: stamped };
@@ -719,7 +727,7 @@ export async function updateCaseStudiesAction(caseStudies: unknown): Promise<Cas
     draft.caseStudies = stamped;
   });
   if (outcome === 'missing') return { ok: false, error: NO_DRAFT_MESSAGE };
-  if (outcome === 'conflict') return { ok: false, conflict: true, error: CONFLICT_MESSAGE };
+  if (outcome !== 'ok') return { ok: false, conflict: true, error: outcome.conflict };
   if (clash.slug) {
     return {
       ok: false,
@@ -774,7 +782,7 @@ async function saveCollection<T extends { id: string; sortOrder: number }>(
   const stamped = stamp(kept);
   const outcome = await writeList((draft) => apply(draft, stamped));
   if (outcome === 'missing') return { ok: false, error: NO_DRAFT_MESSAGE };
-  if (outcome === 'conflict') return { ok: false, conflict: true, error: CONFLICT_MESSAGE };
+  if (outcome !== 'ok') return { ok: false, conflict: true, error: outcome.conflict };
 
   revalidatePath(path);
   return { ok: true, items: stamped };

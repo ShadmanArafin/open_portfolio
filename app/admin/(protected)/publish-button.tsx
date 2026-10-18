@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { publishDraftAction } from './_actions/publish';
+import { ConflictNotice } from './_components/conflict-notice';
 
 /**
  * Publish now, as a button. The readiness math stays on the server; this only
@@ -11,18 +12,21 @@ import { publishDraftAction } from './_actions/publish';
 export function PublishButton({ expectedRevision }: { expectedRevision: number }) {
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
+  const [conflict, setConflict] = useState(false);
 
   const publish = async () => {
     if (busy) return;
     setBusy(true);
     setNote(null);
+    setConflict(false);
     try {
       const result = await publishDraftAction(expectedRevision);
-      setNote(
-        result.ok
-          ? 'Live. The cached pages were cleared with it.'
-          : (result.error ?? 'The publish did not go through.')
-      );
+      if (result.ok) {
+        setNote('Live. The cached pages were cleared with it.');
+      } else {
+        setConflict(Boolean(result.conflict));
+        setNote(result.error ?? 'The publish did not go through.');
+      }
     } catch {
       setNote('The publish did not go through. Reload and try again.');
     } finally {
@@ -42,9 +46,13 @@ export function PublishButton({ expectedRevision }: { expectedRevision: number }
         {busy ? 'Publishing…' : 'Publish now'}
       </button>
       {note ? (
-        <span role="status" className="text-sm text-text-secondary">
-          {note}
-        </span>
+        conflict ? (
+          <ConflictNotice message={note} />
+        ) : (
+          <span role="status" className="text-sm text-text-secondary">
+            {note}
+          </span>
+        )
       ) : null}
     </span>
   );

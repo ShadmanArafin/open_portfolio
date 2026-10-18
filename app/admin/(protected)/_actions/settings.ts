@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { getStorageAdapter } from '@/core/storage/registry';
 import { requireOwner } from '@/core/auth/guard';
 import { RevisionConflictError } from '@/core/storage/contract';
+import { conflictMessage } from '@/core/content/changes';
 import { THEME_PRESETS, DEFAULT_THEME_ID } from '@/core/theme/presets';
 import { INITIAL_CMS_STATE } from '@/cms/data/initialData';
 import { SOCIAL_PLATFORM_BY_ID } from '@/cms/data/socialPlatforms';
@@ -50,10 +51,13 @@ async function writeDraft(
     await adapter.writeSnapshot('draft', next, meta.revision);
   } catch (err) {
     if (err instanceof RevisionConflictError) {
+      // Raced with another save. Re-read for the diff: what matters is what is
+      // stored now, not the read this write was built on.
+      const fresh = await adapter.readSnapshotMeta('draft');
       return {
         ok: false,
         conflict: true,
-        error: 'This changed somewhere else. Reload and try again.',
+        error: conflictMessage(err, fresh?.state ?? null, next, 'Saving'),
       };
     }
     throw err;

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { restoreVersionAction } from '../_actions/versions';
+import { ConflictNotice } from '../_components/conflict-notice';
 
 /**
  * Restore with the confirmation inline, not in a modal.
@@ -22,11 +23,13 @@ export function RestoreButton({
   const [armed, setArmed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
+  const [conflict, setConflict] = useState(false);
   const [done, setDone] = useState(false);
 
   const confirm = async () => {
     setBusy(true);
     setNote(null);
+    setConflict(false);
     try {
       const result = await restoreVersionAction(versionId, expectedRevision);
       if (result.ok) {
@@ -34,6 +37,7 @@ export function RestoreButton({
         setArmed(false);
         setNote('Restored into your draft — publish to make it live.');
       } else {
+        setConflict(Boolean(result.conflict));
         setNote(result.error ?? 'The restore did not go through.');
       }
     } catch {
@@ -91,9 +95,13 @@ export function RestoreButton({
         Keep current
       </button>
       {note ? (
-        <span role="status" className="w-full text-sm text-text-secondary">
-          {note}
-        </span>
+        conflict ? (
+          <ConflictNotice message={note} />
+        ) : (
+          <span role="status" className="w-full text-sm text-text-secondary">
+            {note}
+          </span>
+        )
       ) : null}
     </span>
   );
