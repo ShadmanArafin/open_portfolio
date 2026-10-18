@@ -653,10 +653,11 @@ Passkey + OTP + sessions + claim + CSRF + rate limiting + CSP/headers. `requireO
 >   example page is the only one — shipped as a draft, so nothing appears on a
 >   stranger's live site that they did not publish.
 >
-> **Also not done:** the `work` merge (`projects` + `caseStudies`) and the
-> `timeline` merge (`experience` + `education`) that the locked decisions chose.
-> All four collections still exist separately, so the 301 redirects the plan
-> mentions are not needed yet.
+> **The `work` merge (`projects` + `caseStudies`) landed 2026-10-18.**
+> `projects` is the unified `work` collection; optional `story: { blocks }`
+> decides depth (standard card vs rich multi-section case study). 301 redirects
+> are seeded in `next.config.ts` for `/case-studies` and `/case-studies/:slug`.
+> The `timeline` merge (`experience` + `education`) remains.
 >
 > **The contact inbox left the content snapshot.** Enquiries were appended by
 > reading the published document, unshifting and writing it back, so two

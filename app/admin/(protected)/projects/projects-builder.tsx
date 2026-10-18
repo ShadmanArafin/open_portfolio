@@ -8,6 +8,7 @@ import { CollectionEditor } from '../_components/collection-editor';
 import { CheckField, Field, SelectField } from '../_components/form-fields';
 import { newId } from '../_components/ids';
 import { ImageField } from '../_components/image-field';
+import { BlocksEditor } from '../_components/blocks-editor';
 
 /**
  * Selected work.
@@ -113,7 +114,13 @@ function withImage(
   return { ...project, images };
 }
 
-export function ProjectsBuilder({ initialProjects }: { initialProjects: ProjectItem[] }) {
+export function ProjectsBuilder({
+  initialProjects,
+  media = [],
+}: {
+  initialProjects: ProjectItem[];
+  media?: MediaItem[];
+}) {
   return (
     <CollectionEditor<ProjectItem>
       initialItems={initialProjects}
@@ -291,6 +298,24 @@ export function ProjectsBuilder({ initialProjects }: { initialProjects: ProjectI
                   );
                 })}
               </div>
+            </section>
+
+            <section
+              aria-label="Case-study story blocks"
+              className="grid gap-3 pt-4 border-t border-border"
+            >
+              <div>
+                <h3 className="m-0 text-base font-medium">Case-study story</h3>
+                <p className="m-0 text-xs text-text-secondary">
+                  Add rich blocks to turn this project into a deep case study. When empty, standard
+                  project details are shown.
+                </p>
+              </div>
+              <BlocksEditor
+                blocks={project.story?.blocks ?? []}
+                onChange={(blocks) => mutate((current) => ({ ...current, story: { blocks } }))}
+                media={media}
+              />
             </section>
           </>
         );

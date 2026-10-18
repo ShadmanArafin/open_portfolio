@@ -12,6 +12,8 @@ import { cn } from '../utils/cn';
 import { useCMS } from '../cms/context/CMSContext';
 import { formatYearRange } from '../cms/utils/dates';
 import { CMSImage } from '../components/common/CMSImage';
+import { BlockList, parsePage } from '@/core/blocks/registry';
+import { blockContentFrom } from '@/core/blocks/content';
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -41,6 +43,10 @@ export const ProjectDetailPage: React.FC = () => {
       trackEvent('Project viewed', { slug: project.slug, title: project.title });
     }
   }, [project?.slug]);
+
+  const rawBlocks = project?.story?.blocks;
+  const storyBlocks =
+    rawBlocks && Array.isArray(rawBlocks) && rawBlocks.length > 0 ? parsePage(rawBlocks) : [];
 
   // Deleting a project in the admin must not white-screen the site.
   if (!project) {
@@ -184,136 +190,151 @@ export const ProjectDetailPage: React.FC = () => {
         </Container>
       </section>
 
-      {/* 02 OVERVIEW */}
-      <Section className="border-b border-border bg-surface-primary">
-        <Container>
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
-            <div className="lg:col-span-4">
-              <SectionLabel text="OVERVIEW" />
-              <h2 className="font-display text-3xl font-medium text-text-primary">
-                Product Context
+      {/* 02 STORY BLOCKS OR STANDARD DETAIL SECTIONS */}
+      {storyBlocks.length > 0 ? (
+        <section className="py-12 border-b border-border bg-surface-primary">
+          <Container>
+            <BlockList blocks={storyBlocks} content={blockContentFrom(data)} />
+          </Container>
+        </section>
+      ) : (
+        <>
+          {/* 02 OVERVIEW */}
+          <Section className="border-b border-border bg-surface-primary">
+            <Container>
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
+                <div className="lg:col-span-4">
+                  <SectionLabel text="OVERVIEW" />
+                  <h2 className="font-display text-3xl font-medium text-text-primary">
+                    Product Context
+                  </h2>
+                </div>
+                <div className="lg:col-span-8 space-y-6 text-base sm:text-lg text-text-secondary leading-relaxed font-body font-normal">
+                  {project.overview.map((para, i) => (
+                    <p key={i}>{para}</p>
+                  ))}
+                </div>
+              </div>
+            </Container>
+          </Section>
+
+          {/* 03 CHALLENGE */}
+          <Section className="border-b border-border bg-surface-secondary/40">
+            <Container>
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
+                <div className="lg:col-span-4">
+                  <SectionLabel text="THE CHALLENGE" />
+                  <h2 className="font-display text-3xl font-medium text-text-primary">
+                    Problem Space
+                  </h2>
+                </div>
+                <div className="lg:col-span-8">
+                  <p className="text-lg sm:text-xl text-text-primary leading-relaxed p-8 rounded-2xl border border-border bg-surface-primary font-body font-normal">
+                    "{project.challenge}"
+                  </p>
+                </div>
+              </div>
+            </Container>
+          </Section>
+
+          {/* 04 DESIGN APPROACH */}
+          <Section className="border-b border-border bg-surface-primary">
+            <Container>
+              <SectionLabel text="DESIGN APPROACH" />
+              <h2 className="font-display text-3xl sm:text-4xl font-medium text-text-primary mb-12">
+                Structured Execution
               </h2>
-            </div>
-            <div className="lg:col-span-8 space-y-6 text-base sm:text-lg text-text-secondary leading-relaxed font-body font-normal">
-              {project.overview.map((para, i) => (
-                <p key={i}>{para}</p>
-              ))}
-            </div>
-          </div>
-        </Container>
-      </Section>
 
-      {/* 03 CHALLENGE */}
-      <Section className="border-b border-border bg-surface-secondary/40">
-        <Container>
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
-            <div className="lg:col-span-4">
-              <SectionLabel text="THE CHALLENGE" />
-              <h2 className="font-display text-3xl font-medium text-text-primary">Problem Space</h2>
-            </div>
-            <div className="lg:col-span-8">
-              <p className="text-lg sm:text-xl text-text-primary leading-relaxed p-8 rounded-2xl border border-border bg-surface-primary font-body font-normal">
-                "{project.challenge}"
-              </p>
-            </div>
-          </div>
-        </Container>
-      </Section>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {project.approachSteps.map((step, idx) => (
+                  <Reveal key={step.title} type="fade-up" delay={idx * 0.08}>
+                    <div className="p-8 rounded-2xl border border-border bg-surface-secondary/40 h-full flex flex-col justify-between space-y-4">
+                      <div>
+                        <span className="font-mono text-xs font-medium text-accent block mb-2">
+                          STEP 0{idx + 1}
+                        </span>
+                        <h3 className="font-display text-lg font-medium text-text-primary mb-2">
+                          {step.title}
+                        </h3>
+                        <p className="font-body text-xs sm:text-sm text-text-secondary leading-relaxed font-normal">
+                          {step.description}
+                        </p>
+                      </div>
+                    </div>
+                  </Reveal>
+                ))}
+              </div>
+            </Container>
+          </Section>
 
-      {/* 04 DESIGN APPROACH */}
-      <Section className="border-b border-border bg-surface-primary">
-        <Container>
-          <SectionLabel text="DESIGN APPROACH" />
-          <h2 className="font-display text-3xl sm:text-4xl font-medium text-text-primary mb-12">
-            Structured Execution
-          </h2>
+          {/* 05 SELECTED SCREENS & HIGHLIGHTS */}
+          {project.images && project.images.length > 1 && (
+            <Section className="border-b border-border bg-surface-secondary/30">
+              <Container>
+                <SectionLabel text="INTERFACE VISUALS" />
+                <h2 className="font-display text-3xl sm:text-4xl font-medium text-text-primary mb-12">
+                  Selected Screens & Components
+                </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {project.approachSteps.map((step, idx) => (
-              <Reveal key={step.title} type="fade-up" delay={idx * 0.08}>
-                <div className="p-8 rounded-2xl border border-border bg-surface-secondary/40 h-full flex flex-col justify-between space-y-4">
-                  <div>
-                    <span className="font-mono text-xs font-medium text-accent block mb-2">
-                      STEP 0{idx + 1}
-                    </span>
-                    <h3 className="font-display text-lg font-medium text-text-primary mb-2">
-                      {step.title}
-                    </h3>
-                    <p className="font-body text-xs sm:text-sm text-text-secondary leading-relaxed font-normal">
-                      {step.description}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {project.images.slice(1).map((img) => (
+                    <div
+                      key={img.id}
+                      className="p-6 rounded-2xl border border-border bg-surface-primary space-y-4"
+                    >
+                      <span className="text-xs font-mono font-medium uppercase tracking-wider text-text-muted block font-body">
+                        {img.label}
+                      </span>
+                      <div className="w-full aspect-[4/3] rounded-xl overflow-hidden border border-border bg-surface-secondary">
+                        {img.url ? (
+                          <CMSImage
+                            src={img.url}
+                            alt={img.alt}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div
+                            className={`w-full h-full bg-gradient-to-br ${img.placeholderGradient} flex items-center justify-center text-xs font-mono text-text-muted`}
+                          >
+                            {img.alt}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Container>
+            </Section>
+          )}
+
+          {/* 06 OUTCOME */}
+          <Section className="border-b border-border bg-surface-primary">
+            <Container>
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
+                <div className="lg:col-span-4">
+                  <SectionLabel text="OUTCOME & IMPACT" />
+                  <h2 className="font-display text-3xl font-medium text-text-primary">
+                    Key Takeaways
+                  </h2>
+                </div>
+                <div className="lg:col-span-8">
+                  <div className="p-8 rounded-2xl border border-border bg-surface-secondary/40">
+                    <div className="flex items-center gap-3 mb-4 text-accent">
+                      <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+                      <span className="font-display font-medium text-lg text-text-primary">
+                        Project Note
+                      </span>
+                    </div>
+                    <p className="text-base sm:text-lg text-text-secondary leading-relaxed font-body font-normal">
+                      {project.outcomeNote}
                     </p>
                   </div>
                 </div>
-              </Reveal>
-            ))}
-          </div>
-        </Container>
-      </Section>
-
-      {/* 05 SELECTED SCREENS & HIGHLIGHTS */}
-      {project.images && project.images.length > 1 && (
-        <Section className="border-b border-border bg-surface-secondary/30">
-          <Container>
-            <SectionLabel text="INTERFACE VISUALS" />
-            <h2 className="font-display text-3xl sm:text-4xl font-medium text-text-primary mb-12">
-              Selected Screens & Components
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {project.images.slice(1).map((img) => (
-                <div
-                  key={img.id}
-                  className="p-6 rounded-2xl border border-border bg-surface-primary space-y-4"
-                >
-                  <span className="text-xs font-mono font-medium uppercase tracking-wider text-text-muted block font-body">
-                    {img.label}
-                  </span>
-                  <div className="w-full aspect-[4/3] rounded-xl overflow-hidden border border-border bg-surface-secondary">
-                    {img.url ? (
-                      <CMSImage
-                        src={img.url}
-                        alt={img.alt}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div
-                        className={`w-full h-full bg-gradient-to-br ${img.placeholderGradient} flex items-center justify-center text-xs font-mono text-text-muted`}
-                      >
-                        {img.alt}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Container>
-        </Section>
-      )}
-
-      {/* 06 OUTCOME */}
-      <Section className="border-b border-border bg-surface-primary">
-        <Container>
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
-            <div className="lg:col-span-4">
-              <SectionLabel text="OUTCOME & IMPACT" />
-              <h2 className="font-display text-3xl font-medium text-text-primary">Key Takeaways</h2>
-            </div>
-            <div className="lg:col-span-8">
-              <div className="p-8 rounded-2xl border border-border bg-surface-secondary/40">
-                <div className="flex items-center gap-3 mb-4 text-accent">
-                  <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
-                  <span className="font-display font-medium text-lg text-text-primary">
-                    Project Note
-                  </span>
-                </div>
-                <p className="text-base sm:text-lg text-text-secondary leading-relaxed font-body font-normal">
-                  {project.outcomeNote}
-                </p>
               </div>
-            </div>
-          </div>
-        </Container>
-      </Section>
+            </Container>
+          </Section>
+        </>
+      )}
 
       {/* 07 NEXT PROJECT — hidden when this is the only project */}
       {nextProject && nextProject.id !== project.id && (

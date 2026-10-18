@@ -110,14 +110,6 @@ const initialBrands: BrandItem[] = BRANDS.map((brand, idx) => ({
   visible: true,
 }));
 
-const initialProjects: ProjectItem[] = PROJECTS.map((proj, idx) => ({
-  ...proj,
-  industry: proj.industry || proj.category,
-  ...parseYearRange(proj.year),
-  sortOrder: idx + 1,
-  status: 'published',
-}));
-
 /**
  * The outcome metrics are authored as sentences ("58% reduction in average
  * transaction processing time"). The detail page renders a large figure above
@@ -128,6 +120,114 @@ function splitMetric(text: string): { metric: string; label: string } {
   if (match) return { metric: match[1].trim(), label: match[2].trim() };
   return { metric: '', label: text };
 }
+
+function caseStudyToInitialProject(
+  cs: (typeof CASE_STUDIES)[number],
+  idx: number,
+  baseOrder: number
+): ProjectItem {
+  const splitMetrics = (cs.outcome?.metrics ?? []).map(splitMetric);
+  const blocks = [
+    {
+      id: `block_${cs.id}_overview`,
+      type: 'richText',
+      v: 1,
+      props: {
+        heading: 'Understanding the Problem & Scope',
+        paragraphs: cs.overview ?? [],
+      },
+    },
+    {
+      id: `block_${cs.id}_research`,
+      type: 'cards',
+      v: 1,
+      props: {
+        heading: cs.userResearch?.title || 'Research & Insights',
+        columns: 3,
+        items: (cs.userResearch?.keyInsights ?? []).map((insight, i) => ({
+          title: `Insight 0${i + 1}`,
+          body: insight,
+        })),
+      },
+    },
+    {
+      id: `block_${cs.id}_decisions`,
+      type: 'cards',
+      v: 1,
+      props: {
+        heading: 'Key Decisions & Impact',
+        columns: 2,
+        items: (cs.keyDecisions ?? []).map((d) => ({
+          title: `${d.number}. ${d.title}`,
+          body: `${d.rationale}${d.impact ? ` (Impact: ${d.impact})` : ''}`,
+        })),
+      },
+    },
+    {
+      id: `block_${cs.id}_outcomes`,
+      type: 'stats',
+      v: 1,
+      props: {
+        heading: 'Impact & Measurable Outcomes',
+        items: splitMetrics
+          .filter((m) => m.metric)
+          .map((m) => ({
+            value: m.metric,
+            label: m.label,
+          })),
+      },
+    },
+  ];
+
+  return {
+    id: cs.id,
+    slug: cs.slug,
+    number: String(baseOrder + idx + 1).padStart(2, '0'),
+    title: cs.title,
+    name: cs.title,
+    company: cs.industry || '',
+    category: cs.category,
+    year: cs.year,
+    ...parseYearRange(cs.year),
+    shortDescription: cs.shortChallenge,
+    description: cs.overview ?? [],
+    heroHeadline: cs.title,
+    role: cs.role,
+    deliverables: cs.disciplines ?? [],
+    industry: cs.industry,
+    timeline: cs.timeline,
+    platform: cs.platform,
+    featured: cs.featured,
+    sortOrder: baseOrder + idx + 1,
+    status: 'published',
+    visualPlaceholder: cs.coverGradient || 'from-emerald-950 via-zinc-900 to-black',
+    images: cs.coverImage
+      ? [{ id: `${cs.id}-cover`, label: '01 / COVER', alt: cs.title, url: cs.coverImage }]
+      : [],
+    overview: cs.overview ?? [],
+    challenge: cs.challenge || cs.shortChallenge,
+    approachSteps: (cs.keyDecisions ?? []).map((d) => ({
+      title: d.title,
+      description: `${d.rationale}${d.impact ? ` (${d.impact})` : ''}`,
+    })),
+    keyScreensCount: cs.wireframes?.length ?? 0,
+    outcomeNote: cs.outcome?.summary || '',
+    story: {
+      blocks,
+    },
+  };
+}
+
+const initialProjects: ProjectItem[] = [
+  ...PROJECTS.map((proj, idx) => ({
+    ...proj,
+    industry: proj.industry || proj.category,
+    ...parseYearRange(proj.year),
+    sortOrder: idx + 1,
+    status: 'published' as const,
+  })),
+  ...CASE_STUDIES.map((cs, idx) => caseStudyToInitialProject(cs, idx, PROJECTS.length)),
+];
 
 const initialCaseStudies: CaseStudyItem[] = CASE_STUDIES.map((cs, idx) => ({
   ...cs,

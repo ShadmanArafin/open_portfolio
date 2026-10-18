@@ -133,7 +133,20 @@ export interface ProjectItem {
   outcomeNote: string;
   seoTitle?: string;
   seoDescription?: string;
+  /**
+   * Optional case-study story blocks.
+   *
+   * When present and non-empty, the work entry renders as a rich case study
+   * using the universal block system (`core/blocks`). When absent, it renders
+   * the standard project detail view.
+   */
+  story?: {
+    blocks: unknown[];
+  };
 }
+
+/** The unified work collection type. */
+export type WorkItem = ProjectItem;
 
 export interface CaseStudyBlock {
   id: string;

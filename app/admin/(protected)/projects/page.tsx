@@ -27,7 +27,7 @@ export default async function ProjectsPage() {
         </p>
       </div>
 
-      <ProjectsBuilder initialProjects={projects} />
+      <ProjectsBuilder initialProjects={projects} media={draft.media ?? []} />
     </div>
   );
 }

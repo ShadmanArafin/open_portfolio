@@ -70,6 +70,21 @@ const nextConfig: NextConfig = {
    */
   serverExternalPackages: ['miniflare', '@cloudflare/workerd-*'],
 
+  async redirects() {
+    return [
+      {
+        source: '/case-studies',
+        destination: '/work',
+        permanent: true,
+      },
+      {
+        source: '/case-studies/:slug',
+        destination: '/work/:slug',
+        permanent: true,
+      },
+    ];
+  },
+
   async headers() {
     return [
       { source: '/:path*', headers: securityHeaders },

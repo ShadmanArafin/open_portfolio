@@ -783,7 +783,19 @@ computed contrast, zero console errors throughout).
       Umami Test fails friendly on a dead host, save flows vault→layout JSON
       (proven in the RSC payload), view cards render against a stub Umami
       (25 visitors / 40 views / /work 12 / /about 4), then disconnected.
-- [ ] Case-study `story` blocks + `work` merge + 301s.
+- [x] Case-study `story` blocks + `work` merge + 301s. **DONE 2026-10-18:**
+      `ProjectItem` extended with optional `story: { blocks: unknown[] }`;
+      `cleanProject` cleans story blocks using `cleanBlock` from `@/core/blocks/clean`
+      with `MAX_BLOCKS` guard; `ProjectsBuilder` integrates `BlocksEditor`
+      under 'Case-study story' with media support; `ProjectDetailPage` renders the universal
+      `BlockList` when story blocks are present and falls back to standard
+      overview/challenge/approach/screens/outcome when empty; `next.config.ts`
+      seeds permanent 301 redirects from `/case-studies` -> `/work` and
+      `/case-studies/:slug` -> `/work/:slug`; `core/content/read.ts` provides
+      lossless backward compatibility via `caseStudyToProject` mapping;
+      seeded demo case studies mapped into `initialProjects` with rich story blocks.
+      Verified: unit tests for `caseStudyToProject` and 301 redirects, typecheck
+      green, format check green, lint green (0 errors / 81 warnings).
 - [ ] Writing SEO parity + auto OG fallback.
 - [x] **P0 discovered 2026-10-17, FIXED 2026-10-18: not-found rendered with
       HTTP 200.** Every dead address (`/no-such-route`, `/share/<bad-token>`,

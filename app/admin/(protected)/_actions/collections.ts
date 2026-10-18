@@ -23,6 +23,7 @@ import type {
   VisualArtifactItem,
 } from '@/cms/types/cms';
 import { formatPeriod } from '@/cms/utils/dates';
+import { cleanBlock } from '@/core/blocks/clean';
 
 export interface ProjectsResult {
   ok: boolean;
@@ -350,6 +351,20 @@ function cleanProject(raw: unknown): ProjectItem | null {
   const seoDescription = optionalText(entry.seoDescription, 2000);
   if (seoDescription === null) return null;
   if (seoDescription !== undefined) project.seoDescription = seoDescription;
+
+  if (entry.story && typeof entry.story === 'object' && !Array.isArray(entry.story)) {
+    const rawBlocks = (entry.story as { blocks?: unknown }).blocks;
+    if (Array.isArray(rawBlocks)) {
+      if (rawBlocks.length > MAX_BLOCKS) return null;
+      const blocks: Record<string, unknown>[] = [];
+      for (const raw of rawBlocks) {
+        const block = cleanBlock(raw);
+        if (!block) return null;
+        blocks.push(block);
+      }
+      project.story = { blocks };
+    }
+  }
 
   return project;
 }
