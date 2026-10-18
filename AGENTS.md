@@ -31,8 +31,8 @@ Claims in this repository are expected to be backed by something you ran. If it
 is only in the DOM after hydration, it is not server-rendered — `curl` the route
 and grep the HTML.
 
-The admin's component kit has its own rules in
-[.claude/CLAUDE.md](.claude/CLAUDE.md).
+The admin's UI rules — plain Tailwind over the site's tokens, no component
+library — are in [.claude/CLAUDE.md](.claude/CLAUDE.md).
 
 <!-- BEGIN:nextjs-agent-rules -->
 

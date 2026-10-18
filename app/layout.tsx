@@ -9,22 +9,19 @@ import { resolveAnalytics } from '@/core/integrations/analytics';
 import { THEME_STORAGE_KEY } from '@/context/themeConstants';
 
 /*
- * Astryx, still loaded for one thing: the push-notifications island on
- * /admin/messages, the last component the old admin kit ever rendered
- * (see `app/admin/(protected)/_components/push-notifications.tsx`). Loaded
- * globally because the layer order below keeps it from touching the public
- * site — the reset uses :where() for zero specificity inside @layer reset,
- * and its theme styles are scoped to [data-astryx-theme], which nothing sets
- * since the legacy admin surface was deleted, so the island renders with the
- * components' built-in defaults. Porting that island to plain Tailwind
- * retires this whole block and the @astryxdesign dependencies with it.
+ * Stylesheets, in this order.
  *
- * Layer order: tw-preflight -> reset -> astryx-base -> astryx-theme -> ours.
+ * `layers.css` declares the cascade layer order and must come first, so that
+ * Tailwind's Preflight registers inside `tw-preflight` rather than winning
+ * against everything that follows. `index.css` then emits Preflight into that
+ * layer and carries the rest of the site's CSS.
+ *
+ * Three Astryx stylesheets used to sit between them, for the last component on
+ * that kit — the push-notifications island on /admin/messages. Ported to plain
+ * Tailwind on 2026-10-18, so both they and the `@astryxdesign` packages are
+ * gone. See `docs/ADMIN-REWRITE.md`.
  */
 import '@/styles/layers.css';
-import '@astryxdesign/core/reset.css';
-import '@astryxdesign/core/astryx.css';
-import '@astryxdesign/theme-neutral/theme.css';
 
 import '@/styles/index.css';
 

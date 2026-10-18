@@ -1,9 +1,6 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Button } from '@astryxdesign/core/Button';
-import { HStack, VStack } from '@astryxdesign/core/Layout';
-import { Text } from '@astryxdesign/core/Text';
 
 function urlBase64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
   const padding = '='.repeat((4 - (base64.length % 4)) % 4);
@@ -12,6 +9,10 @@ function urlBase64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
   for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
   return out;
 }
+
+/** The buttons here and in `messages/message-actions.tsx` are the same button. */
+const buttonClass =
+  'rounded-full border border-border px-4 text-sm text-text-secondary hover:text-text-primary disabled:opacity-50';
 
 /**
  * The owner's buzz, as a button.
@@ -24,12 +25,16 @@ function urlBase64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
  * pretending the button alone is enough.
  *
  * Moved here from the legacy admin's `src/admin/components/PushNotifications.tsx`
- * when the old shell was deleted. It is the last component still on the
- * Astryx kit, which is why `app/layout.tsx` still loads that CSS; porting it
- * to this directory's plain-Tailwind kit retires the dependency. It has
- * rendered unthemed since it first appeared in the App Router shell — the
- * legacy `AdminSurface` set the `data-astryx-theme` scope, and nothing here
- * does — so the move changes nothing about how it looks.
+ * when the old shell was deleted, and the last file in the product to still be
+ * on the Astryx kit. Ported to this directory's plain Tailwind on 2026-10-18,
+ * which is what let `app/layout.tsx` drop the kit's three stylesheets and
+ * `package.json` drop the three `@astryxdesign` packages.
+ *
+ * The look is unchanged on purpose: it had rendered with the kit's built-in
+ * defaults since the old shell went, because nothing sets `data-astryx-theme`
+ * any more, and these are the same `rounded-full border border-border…`
+ * buttons the neighbouring islands use. The one visible difference is the
+ * Enable button saying "Enabling…" while it works, instead of a spinner.
  */
 export const PushNotifications: React.FC = () => {
   const [state, setState] = useState<
@@ -157,62 +162,64 @@ export const PushNotifications: React.FC = () => {
 
   if (state === 'denied') {
     return (
-      <Text type="supporting" display="block">
+      <p className="m-0 text-sm text-text-secondary">
         Notifications are blocked for this site in the browser settings — unblock them there if you
         want a buzz for new enquiries.
-      </Text>
+      </p>
     );
   }
 
   if (state === 'unconfigured') {
     return (
-      <Text type="supporting" display="block">
+      <p className="m-0 text-sm text-text-secondary">
         Push is not set up on this server yet (OPB_VAPID_*). Email notifications still apply where
         mail is configured.
-      </Text>
+      </p>
     );
   }
 
   return (
-    <VStack gap={2}>
-      <HStack gap={2}>
+    <div className="grid gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         {state === 'on' ? (
           <>
-            <Button
-              variant="secondary"
-              size="sm"
-              label="Disable notifications"
+            <button
+              type="button"
+              disabled={busy}
               onClick={() => void disable()}
-              isDisabled={busy}
-            />
-            <Button
-              variant="ghost"
-              size="sm"
-              label="Send test"
+              className={buttonClass}
+              style={{ minHeight: 44 }}
+            >
+              Disable notifications
+            </button>
+            <button
+              type="button"
+              disabled={busy}
               onClick={() => void test()}
-              isDisabled={busy}
-            />
+              className={buttonClass}
+              style={{ minHeight: 44 }}
+            >
+              Send test
+            </button>
           </>
         ) : (
-          <Button
-            variant="secondary"
-            size="sm"
-            label="Enable notifications"
+          <button
+            type="button"
+            disabled={busy}
             onClick={() => void enable()}
-            isLoading={busy}
-          />
+            className={buttonClass}
+            style={{ minHeight: 44 }}
+          >
+            {busy ? 'Enabling…' : 'Enable notifications'}
+          </button>
         )}
-      </HStack>
-      <Text type="supporting" display="block">
+      </div>
+      <p className="m-0 text-sm text-text-secondary">
         {state === 'on'
           ? 'This device buzzes for new enquiries — bursts arrive as one. For the full effect, install the admin to your home screen first.'
           : 'One buzz per burst of enquiries. On iPhone, install the admin to the Home Screen first (iOS 16.4+ only delivers there).'}
-      </Text>
-      {note ? (
-        <Text type="supporting" display="block">
-          {note}
-        </Text>
-      ) : null}
-    </VStack>
+      </p>
+      {note ? <p className="m-0 text-sm text-text-secondary">{note}</p> : null}
+    </div>
   );
 };

@@ -1,4 +1,4 @@
-/* Preflight is layered so Astryx component styles can outrank it; see layers.css. */
+/* Preflight is layered so the app's own rules can outrank it; see layers.css. */
 @layer tw-preflight {
   @tailwind base;
 }

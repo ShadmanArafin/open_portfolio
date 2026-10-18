@@ -741,6 +741,12 @@ Supabase (built-in auth, presigned storage) and Neon+Vercel Blob (SQL, **no** bu
 > nothing a user can see. Phase 7 is therefore "build the missing screens in
 > Astryx", not "rebuild the existing ones in shadcn".
 >
+> _(2026-10-18 — the kit is gone. The last Astryx component, the
+> push-notifications island on /admin/messages, was ported to the same plain
+> Tailwind every other admin screen uses; `@astryxdesign/*` and the orphaned
+> `@stylexjs/stylex` left `package.json`, and `app/layout.tsx` stopped loading
+> the kit's stylesheets. Nothing a visitor or an owner sees changed.)_
+>
 > **Built:** `/admin/pages` — create a page, set its address with live checking,
 > choose draft or published, add blocks from a grouped palette, reorder, hide and
 > remove them, edit every field, set per-page SEO, and preview. Verified in a

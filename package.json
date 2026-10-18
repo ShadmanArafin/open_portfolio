@@ -20,11 +20,8 @@
     "e2e": "playwright test"
   },
   "dependencies": {
-    "@astryxdesign/core": "^0.3.0",
-    "@astryxdesign/theme-neutral": "^0.3.0",
     "@simplewebauthn/browser": "^14.0.0",
     "@simplewebauthn/server": "^14.0.3",
-    "@stylexjs/stylex": "^0.19.0",
     "@vercel/blob": "^2.7.0",
     "clsx": "^2.1.1",
     "firebase-admin": "^14.5.0",
@@ -42,7 +39,6 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@astryxdesign/cli": "^0.3.0",
     "@axe-core/playwright": "^4.14.0",
     "@cloudflare/workers-types": "^5.20261016.1",
     "@eslint/js": "^9.39.0",

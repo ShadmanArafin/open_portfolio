@@ -2,36 +2,37 @@
 
 Project-specific guidance for AI coding agents.
 
-<!-- ASTRYX:START -->
+## The admin's UI kit
 
-Astryx v0.3.0 · 155 components
-CLI: run every command as `npx astryx <cmd>` (shown below as `astryx ...`).
+The admin is **plain Tailwind 3 utilities over the site's CSS variables**. There
+is no component library: the last Astryx component was ported on 2026-10-18
+(`docs/ADMIN-REWRITE.md`) and `@astryxdesign/*` left `package.json` with it. Do
+not add one back.
 
-SETUP (once, in your app entry e.g. main.tsx) — without these, components render unstyled:
-import "@astryxdesign/core/reset.css";
-import "@astryxdesign/core/astryx.css";
+Read `app/admin/(protected)/services/page.tsx` and `.../newsletter/page.tsx`
+before writing a screen. `app/admin/(protected)/_components/` holds the shared
+pieces, and `messages/message-actions.tsx` is the shape of a client island.
 
-WORKFLOW — discover, don't guess. Before writing UI:
+- **Tokens, never literals.** `text-text-primary`, `text-text-secondary`,
+  `text-text-muted`, `border-border`, `bg-surface-secondary`, `bg-bg-secondary`.
+  No hex, no `text-gray-500`, no `p-[13px]`.
+- **The page frame** is
+  `<div className="grid gap-6" style={{ maxWidth: 'var(--measure)' }}>`. Its
+  heading is the eyebrow line
+  `<p className="m-0 font-mono text-xs uppercase tracking-widest text-text-muted">`
+  then `<h1 className="font-display m-0 mt-1 text-3xl">`.
+- **Every `<p>` in this directory carries `m-0`**; supporting copy under a
+  heading is `<p className="m-0 text-sm text-text-secondary">`.
+- **A card** is `grid gap-3 rounded-2xl border border-border p-4` with one
+  `<h2 className="m-0 text-xl">`.
+- **Touch targets are ≥44px**: buttons and links in client islands get
+  `style={{ minHeight: 44 }}`. Inline text links are exempt.
+- **Server first.** A server component renders the screen; `'use client'` is
+  one interaction, talking to a server action or an endpoint rather than to the
+  database.
+- **Route handlers and server actions call `requireOwner()` themselves** — the
+  layout guard does not reach them, and no authorization decision may come from
+  a request header.
 
-1. `astryx build "<idea>"` — START HERE: returns a kit (closest [page] + [block]s + [component]s). No args = full playbook.
-2. `astryx template <name> [--skeleton]` — scaffold the [page]/[block]s it named, or study their layout. Templates are reference code.
-3. `astryx component <Name>` — props + examples for every component you use.
-
-RULES:
-
-- No <div> — components do all layout/spacing. Full page → AppShell; sidebar nav → SideNav.
-- Frame first: pick the shell (AppShell / Layout+LayoutPanel) and budget regions in px BEFORE writing content (`astryx docs layout`).
-- Dense data = rows (Table, List/Item) edge-to-edge — never Card-wrapped list items. Card = dashboard widgets, galleries, settings groups only.
-- Status → StatusDot/Token; Badge only for counts and enumerated states, never decoration.
-- Custom styling: component props first; else Tailwind utilities backed by tokens (bg-surface, text-primary, rounded-lg) via tailwind-theme.css. No raw hex/px.
-- Tokens for every value (`astryx docs tokens`). Brand/accent via `astryx theme` — never override --color-* in :root.
-- SELF-CHECK before you finish: re-read the file and replace any style={{…}}, raw <div>/<span> layout, imported .css/@apply, or hardcoded/arbitrary value (e.g. bg-[#fff], p-[13px]) with the component or a token-backed utility. If unsure a component/prop exists, run `astryx component <Name>` / `astryx search "<thing>"`; don't hand-roll CSS.
-
-MORE CLI:
-search "<query>" find any component / hook / doc / template / block
-component --list 155 components by category
-template --list page + block recipes
-docs <topic> color, elevation, icons, illustrations, internationalization, layout, migration, motion, principles, shape, spacing, styling, theme, tokens, typography
-swizzle <Name> eject component source for deep customization
-upgrade --apply run after any @astryxdesign/core bump
-<!-- ASTRYX:END -->
+If a file, screen or doc you meet still talks about Astryx, `AppShell`, `VStack`
+or an `astryx` CLI, it is stale — fix it rather than following it.

@@ -546,11 +546,13 @@ width=720` needs `maxWidth=100vw`. Tablet 768px preview frame forces
   The public half still stands: themed sections are all `'use client'` +
   `useCMS()` (`src/views/*.tsx`) with only the `core/blocks` path as true RSC.
   See `docs/ADMIN-REWRITE.md`.
-- **Styling triple-source:** Tailwind 3 + CSS-var tokens + Astryx/StyleX (no
-  direct `stylex.*()` in app code — inside Astryx packages only). The
-  Tailwind 4 re-evaluation landed 2026-10-18: the port is complete and
-  verified on the `tailwind4-attempt` branch; the pin now waits only on the
-  Safari 16.4+ product call (issue #9, §7, §11.5).
+- **Styling, two sources:** Tailwind 3 + CSS-var tokens. It was three —
+  Astryx/StyleX sat under the legacy admin — until 2026-10-18, when the last
+  component on that kit was ported to plain Tailwind and `@astryxdesign/*`
+  plus the orphaned `@stylexjs/stylex` left `package.json`. The Tailwind 4
+  re-evaluation landed the same day: the port is complete and verified on the
+  `tailwind4-attempt` branch; the pin now waits only on the Safari 16.4+
+  product call (issue #9, §7, §11.5).
 - **Perf:** zero `next/image`, zero `next/font`; Google Fonts `<link>` is
   render-blocking; images are raw `<img>` with no sizing/lazy/`remotePatterns`.
 - **Deps:** `framer-motion@13` (17 files) → `motion/react` during admin
@@ -1684,14 +1686,13 @@ Turnstile free 2026` (splitforms 2026-07-12: "Turnstile free with
 
 Verified from `package-lock.json` (evidence, not memory), Oct 2026:
 
-| What                                                                                                                                                                                                                    | License (lockfile)           | Verdict                                                                                            |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------- |
-| Project itself                                                                                                                                                                                                          | MIT (`packages[""].license`) | Free + OSI-approved                                                                                |
-| `@astryxdesign/core`, `/theme-neutral`, `/cli`                                                                                                                                                                          | MIT                          | Free + OSI-approved                                                                                |
-| `next@16.3.0`, `react`, `react-dom`, `zod`, `clsx`, `tailwind-merge`, `motion`, `react-icons`, `server-only`, `nodemailer`, `postgres`, `tailwindcss`, `typescript`, `eslint`, `prettier`, `vitest`, `postcss`, `jsdom` | MIT / ISC                    | Free + OSI-approved (`framer-motion@13` removed 2026-10-17; `react-router-dom` removed 2026-10-18) |
-| `@vercel/blob@2.7.0`, `firebase-admin@14.5.0`, `@cloudflare/workerd-*`, `firebase-tools`, `@electric-sql/pglite`                                                                                                        | Apache-2.0                   | Free + OSI-approved **SDKs** — but the _services_ behind two of them are commercial                |
-| `@axe-core/playwright`, `axe-core`                                                                                                                                                                                      | MPL-2.0                      | Free + OSI-approved (copyleft, file-level — fine for testing dep)                                  |
-| `lru-cache` (transitive)                                                                                                                                                                                                | BlueOak-1.0.0                | Free + OSI-approved                                                                                |
+| What                                                                                                                                                                                                                    | License (lockfile)           | Verdict                                                                                                                                                                      |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Project itself                                                                                                                                                                                                          | MIT (`packages[""].license`) | Free + OSI-approved                                                                                                                                                          |
+| `next@16.3.0`, `react`, `react-dom`, `zod`, `clsx`, `tailwind-merge`, `motion`, `react-icons`, `server-only`, `nodemailer`, `postgres`, `tailwindcss`, `typescript`, `eslint`, `prettier`, `vitest`, `postcss`, `jsdom` | MIT / ISC                    | Free + OSI-approved (`framer-motion@13` removed 2026-10-17; `react-router-dom` removed 2026-10-18; `@astryxdesign/*` and its orphaned `@stylexjs/stylex` removed 2026-10-18) |
+| `@vercel/blob@2.7.0`, `firebase-admin@14.5.0`, `@cloudflare/workerd-*`, `firebase-tools`, `@electric-sql/pglite`                                                                                                        | Apache-2.0                   | Free + OSI-approved **SDKs** — but the _services_ behind two of them are commercial                                                                                          |
+| `@axe-core/playwright`, `axe-core`                                                                                                                                                                                      | MPL-2.0                      | Free + OSI-approved (copyleft, file-level — fine for testing dep)                                                                                                            |
+| `lru-cache` (transitive)                                                                                                                                                                                                | BlueOak-1.0.0                | Free + OSI-approved                                                                                                                                                          |
 
 **Services (not code — policy applies):** `@vercel/blob` and `firebase-admin`
 are optional storage adapters only; Supabase/Neon/hosted-DB free tiers are
@@ -1773,8 +1774,8 @@ icon library 2026 Lucide Heroicons Phosphor` (Hugeicons 2026-02-05,
   (no mid-flight primitive swap). Either way the admin keeps the repo's
   token layer — headless primitives own behavior, tokens own looks.
   _(2026-10-18: the rewrite landed without shadcn — plain Tailwind plus the
-  local `_components` kit. Re-evaluate Base UI when the next primitive is
-  needed; the last Astryx island is scheduled to leave.)_
+  local `_components` kit, and the last Astryx island has now left with the kit
+  itself. Re-evaluate Base UI when the next primitive is needed.)_
 - **Animation licensing — Motion, not GSAP, under free-only.** SERP `GSAP
 free MIT Webflow 2026` (gsap.com/pricing + webflow.com 2026-06-16 +
   2025-04-30: "100% free … including former Club GreenSock plugins" after

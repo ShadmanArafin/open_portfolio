@@ -653,8 +653,9 @@ dying with it:
   — the inbox buzz button. It is the last Astryx component in the product and
   renders with the kit's built-in defaults (the `data-astryx-theme` scope
   lived on the deleted `AdminSurface`), which is exactly how it already
-  rendered inside the new shell. Porting it to plain Tailwind retires
-  `@astryxdesign/*` and the global CSS imports in `app/layout.tsx` with it.
+  rendered inside the new shell. **Ported to plain Tailwind on 2026-10-18**,
+  which retired `@astryxdesign/*`, the orphaned `@stylexjs/stylex` and the
+  global CSS imports in `app/layout.tsx` with it.
 
 `src/styles/admin-theme.css` went too — its `.admin-ui` rules only ever
 matched the deleted surface. `src/context` and `src/views` stay: the public
