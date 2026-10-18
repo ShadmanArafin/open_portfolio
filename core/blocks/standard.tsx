@@ -494,7 +494,9 @@ const embed: BlockDefinition<EmbedProps> = {
   z.object({
     eyebrow: z.string().optional(),
     heading: z.string().optional(),
-    paragraphs: z.array(z.string()).min(1),
+    // Empty while editing is a state the editor writes (see `richText` for the
+    // whole reason), so nothing here refuses it.
+    paragraphs: z.array(z.string()),
     media: mediaSchema,
     cta: z
       .array(z.object({ label: z.string(), href: z.string() }))
@@ -543,6 +545,18 @@ const split: BlockDefinition<SplitProps> = {
         { kind: 'text', path: 'href', label: 'Where it goes' },
       ],
       newItem: () => ({ label: 'Read more', href: '/about' }),
+    },
+  ],
+  checks: [
+    {
+      id: 'empty',
+      run: (props) =>
+        props.heading ||
+        props.eyebrow ||
+        props.paragraphs.some((paragraph) => paragraph.trim()) ||
+        props.media.src
+          ? null
+          : 'This block is empty. Write something, or delete it.',
     },
   ],
   // `flip` finally has a consumer. It has been in the frame vocabulary since

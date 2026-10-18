@@ -64,6 +64,28 @@ describe('a page of real blocks', () => {
   });
 });
 
+describe('a block emptied in the editor', () => {
+  it('parses, warns, and keeps its fields instead of quarantining', () => {
+    // The text field writes `[]` when the textarea is cleared — the editor
+    // writes what is in the box. A schema of `.min(1)` used to refuse that at
+    // parse time, so the block came back quarantined and its fields vanished
+    // with it: the one state a person reaches by deleting text was the one
+    // state the editor could not show, and the way out was to delete the block.
+    // Empty is a pause. It parses, and a check says so.
+    const cases: { type: string; props: Record<string, unknown> }[] = [
+      { type: 'richText', props: { paragraphs: [] } },
+      { type: 'split', props: { paragraphs: [], media: { src: '', alt: '' } } },
+    ];
+
+    for (const { type, props } of cases) {
+      const definition = getBlockDefinition(type)!;
+      const parsed = parsePage([{ id: 'a', type, v: definition.version, props }])[0];
+      if (parsed.kind !== 'block') throw new Error(`${type}: ${parsed.reason}`);
+      expect(runBlockChecks(parsed).join(' '), type).toContain('empty');
+    }
+  });
+});
+
 describe('content checks', () => {
   it('warns about a headline too long to read on a phone', () => {
     const hero = getBlockDefinition('hero')!;

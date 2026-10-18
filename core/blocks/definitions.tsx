@@ -166,7 +166,17 @@ const hero: BlockDefinition<HeroProps> = {
 
 const richTextProps = z.object({
   heading: z.string().optional(),
-  paragraphs: z.array(z.string()).min(1),
+  /**
+   * Empty is a state a person reaches on purpose: the field writes what is in
+   * the textarea, and clearing the textarea is clearing the block.
+   *
+   * `.min(1)` used to refuse that state at *parse* time, which is the worst
+   * place to refuse it — the block came back quarantined, its fields vanished
+   * with it, and the only way out of an emptied Text block was to delete the
+   * block and start again. Nothing is lost by accepting it: the renderer draws
+   * nothing, and the check below is what keeps the block findable.
+   */
+  paragraphs: z.array(z.string()),
 });
 type RichTextProps = z.infer<typeof richTextProps>;
 
@@ -187,20 +197,36 @@ const richText: BlockDefinition<RichTextProps> = {
       help: 'Leave a blank line between paragraphs.',
     },
   ],
-  Render: ({ props, frame, headingLevel }) => (
-    <Band frame={frame}>
-      <Stack gap={5}>
-        {props.heading && <Heading level={headingLevel}>{props.heading}</Heading>}
-        <Prose>
-          {props.paragraphs.map((paragraph, i) => (
-            <p key={i} style={{ margin: 0 }}>
-              {paragraph}
-            </p>
-          ))}
-        </Prose>
-      </Stack>
-    </Band>
-  ),
+  checks: [
+    {
+      id: 'empty',
+      run: (props) =>
+        props.heading || props.paragraphs.some((paragraph) => paragraph.trim())
+          ? null
+          : 'This block is empty. Write something, or delete it.',
+    },
+  ],
+  Render: ({ props, frame, headingLevel }) => {
+    // No text to draw: render nothing rather than an empty band with its
+    // spacing. The block is still in the editor's outline, with the warning
+    // above next to it, so this reads as a pause and not a disappearance.
+    if (props.paragraphs.length === 0) return null;
+
+    return (
+      <Band frame={frame}>
+        <Stack gap={5}>
+          {props.heading && <Heading level={headingLevel}>{props.heading}</Heading>}
+          <Prose>
+            {props.paragraphs.map((paragraph, i) => (
+              <p key={i} style={{ margin: 0 }}>
+                {paragraph}
+              </p>
+            ))}
+          </Prose>
+        </Stack>
+      </Band>
+    );
+  },
 };
 
 /* -------------------------------------------------------------------- image */

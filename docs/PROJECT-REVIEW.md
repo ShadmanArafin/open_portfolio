@@ -1013,6 +1013,29 @@ computed contrast, zero console errors throughout).
       promises ("a number that has to match… turns a lost update into a
       question the user can answer"). It touches every builder and action, and
       a half-threaded revision is worse than an honest note.
+- [x] An emptied Text block keeps its fields. **FOUND AND FIXED 2026-10-18.**
+      Clearing the Text field writes `[]` — the editor writes what is in the
+      box — and `richText`'s props said
+      `paragraphs: z.array(z.string()).min(1)`, so the block came back from
+      `parsePage` **quarantined**: the editor showed "This block cannot be
+      shown here" instead of the fields, and the only way out of an emptied
+      block was to delete the block and start again. The one state a person
+      reaches by deleting text was the one state the editor could not show.
+      Both blocks carrying a `paragraphs` field had it (`richText` and
+      `split`). Fixed by making empty a state rather than a refusal: the
+      schemas accept an empty list, an `empty` check says "This block is
+      empty. Write something, or delete it." beside the block in the outline,
+      and `richText` renders _nothing_ for an empty block instead of an empty
+      band, so a half-written page carries no gap where the text will go. It
+      also rescues documents already stored in the invalid state: a page saved
+      with an emptied Text block opens again, with its fields.
+      Verified: `definitions.test.ts` parses both emptied blocks through the
+      real registry and asserts the warning fires; `render.test.tsx` asserts an
+      emptied Text block renders the empty string; 344 block tests green. Live
+      in the editor against the production build — a new piece, a Text block,
+      typed and cleared: the text field stayed, the heading field stayed, zero
+      "cannot be shown here" notices, the warning shown, no console errors, and
+      the store byte-identical because nothing was saved.
 - [x] Import v1, the Markdown half. **DONE 2026-10-18:** `core/writing/markdown.ts`
       reads the subset an exported post actually contains — front matter
       (title, date, summary, tags, and the `slug`/`permalink` aliases), a

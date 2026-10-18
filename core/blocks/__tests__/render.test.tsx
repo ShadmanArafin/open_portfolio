@@ -44,6 +44,14 @@ describe('every block renders', () => {
   it('covers all of them', () => {
     expect(listBlockDefinitions().length).toBeGreaterThanOrEqual(7);
   });
+
+  it('draws nothing for a Text block that was emptied in the editor', () => {
+    // Emptying the textarea is how somebody clears a block while rewriting it.
+    // The block stays in the document, and in the editor's outline with a
+    // warning next to it; on the page it draws no markup at all, so a
+    // half-written page does not carry a gap where the text will go.
+    expect(render([block('richText', { paragraphs: [] })])).toBe('');
+  });
 });
 
 describe('document outline', () => {

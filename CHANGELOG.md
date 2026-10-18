@@ -140,6 +140,17 @@ through a letterbox. It now takes the window.
 
 ### Fixed
 
+- **Emptying a Text block used to make it unopenable.** Clearing the text field
+  writes an empty list - the editor writes what is in the box - and the block's
+  schema demanded at least one paragraph, so the block came back unreadable:
+  "This block cannot be shown here", no fields, and the only way out was to
+  delete the block and start again. The one state a person reaches by deleting
+  text was the one state the editor could not show. Empty is now a state rather
+  than a refusal: the block keeps its fields, carries "This block is empty.
+  Write something, or delete it." beside it in the outline, and draws nothing on
+  the page, so a half-written page has no gap where the text will go. Pages
+  saved in the old, invalid state open again too.
+
 - **Dead addresses answered `200 OK`.** Every dead URL - `/no-such-route`,
   `/work/<missing>`, a bad share token - served the branded not-found page with
   a success status, in development and in production. The cause was not the
