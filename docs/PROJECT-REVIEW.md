@@ -921,9 +921,11 @@ computed contrast, zero console errors throughout).
       matrix, suite green, build green. Browser unavailable this round (tool
       catalog changed mid-session); same render path as the verified
       Turnstile widget.
-- [ ] Mobile admin pass. **Part done 2026-10-18 — the section nav (what the
-      item called the "44px TopNav strategy").** The header used to be a
-      wrapped list of 25 links: at 375px it measured **288px tall** — the
+- [x] Mobile admin pass. **DONE 2026-10-18 - all four parts: the section nav
+      (what the item called the "44px TopNav strategy"), the 375px target
+      sweep, the offline badge, and the conflict/version diff preview.** The
+      header used to be a wrapped list of 25 links: at 375px it measured
+      **288px tall** - the
       first screen — and every link was a 20px line of text. It is now a 44px
       Menu button that names the section you are in and opens the same 25
       links as **44px pills**; from `sm` up it stays the wrapped list, with
@@ -997,26 +999,38 @@ computed contrast, zero console errors throughout).
       5; the site is on 6.** … Publishing would change: … media (+1)" - each
       with the Reload control at 44px. Unit tests cover the sentence's three
       shapes (parts, no parts, no fresh state).
-      **What this still does not cover, and the tracker should keep saying so:**
-      the collection/settings editors write the revision they _just read_
-      (`writeList`, `writeDraft`), not the revision the screen loaded, so a
-      stale save is not refused - the edited list is replaced wholesale under a
-      fresh revision, and a change another tab made to that same list is lost
-      silently (a conflict there needs a true millisecond race to reach, which
-      is why it is not user-reachable; the message path is shared with the two
-      verified above). Closing it means sending the screen's loaded revision -
-      or a fingerprint of the list it loaded - with the save and refusing a
-      stale write, which is what `core/storage/contract.ts` already promises
-      ("a number that has to match… turns a lost update into a question the
-      user can answer"). Deliberately not started here: it touches every
-      builder and action, and a half-threaded revision is worse than an honest
-      note.
-- [ ] Import v1: Markdown/CSV + image bulk upload.
-- [ ] Phase C entries in `CHANGELOG.md`. Turnstile, the analytics view counts,
-      the `work` merge, the not-found 200 status fix, the embed block, Giscus
-      and the writing cards are all user-visible changes and none of them are
-      written up yet; the section is the release's own record of what a
-      self-hoster gets, so it should not be left to release day guesswork.
+- [ ] Collection writes refuse a stale save. **Found 2026-10-18 finishing the
+      mobile pass, deliberately not started there.** The collection/settings
+      editors write the revision they _just read_ (`writeList`, `writeDraft`),
+      not the revision the screen loaded, so a stale save is not refused - the
+      edited list is replaced wholesale under a fresh revision, and a change
+      another tab made to that same list is lost silently. A conflict there
+      needs a true millisecond race to reach, which is why no user has met one
+      yet; the refusal message path is shared with restore and publish, both of
+      which were verified live. Closing it means sending the screen's loaded
+      revision - or a fingerprint of the list it loaded - with the save and
+      refusing a stale write, which is what `core/storage/contract.ts` already
+      promises ("a number that has to match… turns a lost update into a
+      question the user can answer"). It touches every builder and action, and
+      a half-threaded revision is worse than an honest note.
+- [ ] Import v1: Markdown/CSV + image bulk upload. **Image bulk upload already
+      exists** (both Media and Artifacts take multiple files), so this is the
+      Markdown/CSV half; see also the switching-friction note in section 2.3.
+- [x] Phase C entries in `CHANGELOG.md`. **DONE 2026-10-18:** the named changes
+      are written up in the Unreleased section under **You can now** -
+      Turnstile, the analytics view counts, the `embed` block, Giscus, the
+      per-piece preview cards, expiring share links, the mobile admin pass, the
+      offline/conflict/restore-preview trio and the Listmonk handoff - with
+      **Changed** rows for the `work` merge and the design-system removal, and
+      **Fixed** rows for the 200-OK dead addresses and the hashed
+      `opengraph-image` path. Each row carries the _cause_, because that is the
+      part a reader cannot reconstruct from the diff. The sweep also caught the
+      release notes' own stale claim: every block count in the README, these
+      notes, the handover ledger and the marketing site said twenty-four, and
+      the registry has had two more since (`embed`, `comments`). It is
+      twenty-six everywhere now - and the handover rows for mobile, sign-in and
+      the test count had gone stale the same way, so those were corrected on
+      the same measurement rule.
 
 ### Phase D — Strategic (post-1.0)
 

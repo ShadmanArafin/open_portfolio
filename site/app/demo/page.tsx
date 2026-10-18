@@ -101,7 +101,7 @@ export default function DemoPage() {
             <div className="card">
               <h3 className="head">Add a block, and delete one</h3>
               <p>
-                All twenty-four, grouped as your own install groups them. Each arrives empty, which
+                All twenty-six, grouped as your own install groups them. Each arrives empty, which
                 is what adding a block actually looks like — including the warning telling you it
                 will render nothing until you fill it in.
               </p>

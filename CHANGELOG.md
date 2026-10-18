@@ -36,7 +36,82 @@ through a letterbox. It now takes the window.
   arrive empty, with the warnings that come with being empty. And you can delete
   one again.
 
+### You can now
+
+- **Keep automated submissions off the contact form.** Cloudflare Turnstile is
+  the second integration, switched on from Services the way the mail server is:
+  add the keys and the widget appears on every form that posts - the contact
+  blocks, the contact page and the newsletter box - and a submission that
+  arrives without a token is refused. Leave it unconfigured and nothing
+  changes, because nothing loads. The widget is fetched only on a page that has
+  a form on it, and the page's frame policy had to be widened to let it paint -
+  the kind of detail a later debugger would otherwise have to rediscover.
+
+- **See how many people read your site.** Umami and Plausible both take an
+  optional read key now; with one, the dashboard shows visitors, page views and
+  your busiest pages, cached for five minutes and going quietly absent when the
+  API is away. With none, the cards simply do not appear and nothing breaks.
+  Both are self-hosting first, and neither asks you to make an account
+  anywhere.
+
+- **Put a booking link on a page.** A new `embed` block takes a Cal.com or
+  Calendly link, rebuilds it against a host allowlist rather than trusting
+  whatever was pasted, and loads the frame only after a press. A page with a
+  booking widget therefore ships no third-party URL until somebody asks for
+  one.
+
+- **Let readers comment, if you want them to.** A `comments` block wires up
+  Giscus: the thread lives in a GitHub Discussions category of a public repo
+  you own, nothing is tracked and nothing is advertised, and it stays off until
+  you connect it. The frame waits for a click, like the video and booking ones.
+
+- **Give every piece of writing its own preview card.** An essay now unfurls
+  with a card of its own - title, summary, date, your name and role - and its
+  structured data carries the things that attach a headline to a page: the
+  canonical address, the image, the author, the publisher, the modified date.
+  The structured data appears once you have set a domain, because it wants
+  absolute addresses and a site without one has none to give.
+
+- **Share a draft page with one person, and take the link back.** The Pages
+  screen mints a private link per page: 192 bits of randomness, stored only as
+  a hash, with an expiry enforced in two places rather than one. The link shows
+  the draft - never the live page - carries `noindex`, and says on the page
+  itself that it is a draft. Revoke it and the same link is dead immediately.
+
+- **Run the editor from a phone.** The admin's header was a wrapped list of 25
+  links: 288px tall on a 375px screen, the whole first screen, every link a
+  20px line of text. It is now a 44px Menu button that names the section you
+  are in and opens the same 25 links as 44px pills - and the rest of the admin
+  was measured at 375px the same way, with every real target miss fixed.
+
+- **Know what a save did, or why it did not.** The admin tells you when you are
+  offline, before a save fails with nothing to explain. A refused save now says
+  which revisions disagreed and what the difference was - in the same words the
+  publish summary uses - with a reload control beside it. Version history says
+  what pressing Restore would actually change before you press it.
+
+- **Send your list out, with the screen saying how.** The Newsletter screen
+  never sends - that is deliberate - and it now says so out loud, in a "Sending
+  it out" section: Listmonk first (AGPLv3, a single binary, with its connected
+  state read from Services), Buttondown and Mailchimp for people already paying
+  for one, and the obligations in plain words - confirmed addresses only, keep
+  the unsubscribe link, send the first one to yourself.
+
 ### Changed
+
+- **Case studies and projects are one collection.** `/work` lists both now, a
+  case-study write-up is a `story` on the project - the same block editor as a
+  page, in the same Projects screen - and `/case-studies` and
+  `/case-studies/<slug>` redirect permanently to their `/work` equivalents. A
+  backup taken before the merge still reads: the old records are mapped onto
+  projects when the content is loaded, so nothing has to be migrated by hand. A
+  case study whose address a project already uses is refused now, rather than
+  dropped quietly by the merge.
+
+- **The admin no longer carries the design system it was built from.** Its CSS
+  went from 394 KB across four files to 240 KB across three, with no visual
+  change: the same tokens and the same screens, less to download on the phone
+  the rest of this section is about.
 
 - **The product is now called Open Portfolio**, not Open Portfolio Builder. The
   name matches the repository and the address; the sentence under it still says
@@ -54,6 +129,24 @@ through a letterbox. It now takes the window.
 
 ### Fixed
 
+- **Dead addresses answered `200 OK`.** Every dead URL - `/no-such-route`,
+  `/work/<missing>`, a bad share token - served the branded not-found page with
+  a success status, in development and in production. The cause was not the
+  routing: a `loading.tsx` boundary streamed a `200` shell the moment its
+  segment was entered, so the status had been spent before any page ran and
+  `notFound()` could only change the body. The skeletons now sit below each
+  segment's existence check, and dead addresses answer `404` with the same page
+  they always showed. Two guards keep it that way: a structural test over the
+  boundaries, and a dead-address check in the smoke script.
+
+- **The per-piece preview card was advertised at an address it did not
+  answer.** A metadata route placed inside a route group is served at a hashed
+  path, so `/writing/<slug>/opengraph-image` - what the page, the sitemap and
+  the structured data all pointed at - answered 404, while a suffixed path
+  nothing referred to answered 200. The route now lives outside the group, an
+  unknown slug gets a 404 rather than the site-wide card, and a test fails if
+  the file moves back in.
+
 - The social preview card served as `application/octet-stream` while declaring
   itself a PNG, and had kept the old product name because it spelled it in
   capitals — which a search for the name in its normal casing does not find. It
@@ -61,8 +154,8 @@ through a letterbox. It now takes the window.
 
 - Two test counts in these notes and in the developer docs were 10 short of what
   the suite actually runs. They were wrong when written rather than gone stale:
-  no tests have been added since. It is 686, or 782 with a database and a mail
-  server attached.
+  no tests had been added since. It was 686 at that point, or 782 with a
+  database and a mail server attached, and the suite has grown a lot since.
 
 ## 0.5.0 — 2026-08-13
 

@@ -52,7 +52,7 @@ export default function RightForYouPage() {
               },
               {
                 label: 'Your site is words, pictures and a contact form',
-                note: 'That is what this does well. Twenty-four blocks, six themes, real search metadata, an inbox that works.',
+                note: 'That is what this does well. Twenty-six blocks, six themes, real search metadata, an inbox that works.',
               },
               {
                 label: 'You have been burned by a subscription',
