@@ -947,9 +947,20 @@ computed contrast, zero console errors throughout).
       item also carried is **superseded**: the preview is a full tab now
       (`window.open('/api/preview?path=…')`, owner-gated draft mode), not an
       iframe beside the editor, so there is no stack to size or scroll to keep.
-      Still open on this item: the media library at 375px (what the item
-      called `MediaPicker maxWidth:100vw`), the offline badge, and the
-      conflict / version diff UIs.
+      **The media sub-item is resolved by measurement, not by porting a legacy
+      rule.** A Playwright sweep of all 25 admin screens at 375px found
+      **zero horizontal overflow on every one of them** — Media included —
+      zero console errors, and no real sub-24px target left. Two were real and
+      are fixed in the same pass: the Appearance colour presets were 20px
+      buttons (now a 20px swatch inside a 44px hit area) and Help's two
+      standalone links were 20px (now `py-1` → 28px). Every remaining flag is
+      an exception, checked one at a time: inline links inside a sentence
+      (dashboard health rows, "Set it up under Services"), checkboxes inside
+      `min-h-[44px]` labels, and `sr-only` file inputs behind 44px buttons.
+      There is no picker overlay to width-cap: the admin has no `<dialog>`,
+      `role="dialog"` or fixed overlay anywhere.
+      Still open on this item: the offline badge, and the conflict / version
+      diff UIs.
 - [ ] Import v1: Markdown/CSV + image bulk upload.
 - [ ] Phase C entries in `CHANGELOG.md`. Turnstile, the analytics view counts,
       the `work` merge, the not-found 200 status fix, the embed block, Giscus

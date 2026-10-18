@@ -178,7 +178,7 @@ export function AppearanceForm({ initial }: { initial: AppearanceSettings }) {
       >
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="m-0 text-xl">Colour tokens</h2>
-          <span className="flex items-center gap-2">
+          <span className="flex flex-wrap items-center gap-1">
             <span className="text-xs text-text-muted">Presets</span>
             {QUICK_PRESETS.map((preset) => (
               <button
@@ -189,11 +189,18 @@ export function AppearanceForm({ initial }: { initial: AppearanceSettings }) {
                   set('accentLight', preset.accentLight);
                   set('backgroundDark', preset.bgDark);
                 }}
-                className="h-5 w-5 rounded-full border border-border"
-                style={{ backgroundColor: preset.accentDark }}
+                // A 20px swatch with a 44px hit area: the colour stays the size
+                // a colour chip should be, the target is the size a thumb needs.
+                className="flex h-11 w-11 items-center justify-center rounded-full"
                 title={preset.name}
                 aria-label={`Apply ${preset.name} preset`}
-              />
+              >
+                <span
+                  aria-hidden
+                  className="h-5 w-5 rounded-full border border-border"
+                  style={{ backgroundColor: preset.accentDark }}
+                />
+              </button>
             ))}
           </span>
         </div>

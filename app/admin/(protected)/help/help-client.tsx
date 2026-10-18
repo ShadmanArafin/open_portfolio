@@ -810,14 +810,19 @@ export function HelpClient({
             {`Version ${server.version} · ${server.adapter} · ${server.host} · Node ${server.nodeVersion}`}
           </p>
           <span className="flex flex-wrap gap-3 text-sm">
-            <a href={UPSTREAM_URL} target="_blank" rel="noreferrer noopener" className="underline">
+            <a
+              href={UPSTREAM_URL}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="py-1 underline"
+            >
               The project on GitHub
             </a>
             <a
               href={`${UPSTREAM_URL}/issues`}
               target="_blank"
               rel="noreferrer noopener"
-              className="underline"
+              className="py-1 underline"
             >
               Everything already reported
             </a>
