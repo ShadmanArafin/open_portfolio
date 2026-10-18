@@ -921,10 +921,35 @@ computed contrast, zero console errors throughout).
       matrix, suite green, build green. Browser unavailable this round (tool
       catalog changed mid-session); same render path as the verified
       Turnstile widget.
-- [ ] Mobile admin pass: stacking preview (preserve scroll, per-page device
-      memory), 44px TopNav strategy, `MediaPicker maxWidth:100vw`,
-      skeletons + `aria-live`, offline badge, conflict diff UI, version
-      diff preview.
+- [ ] Mobile admin pass. **Part done 2026-10-18 — the section nav (what the
+      item called the "44px TopNav strategy").** The header used to be a
+      wrapped list of 25 links: at 375px it measured **288px tall** — the
+      first screen — and every link was a 20px line of text. It is now a 44px
+      Menu button that names the section you are in and opens the same 25
+      links as **44px pills**; from `sm` up it stays the wrapped list, with
+      28px rows (WCAG 2.2 asks 24px) and `aria-current="page"` on the current
+      section. Each link carries a pending dot (`useLinkStatus`) because the
+      admin is `force-dynamic` and a tap on a slow connection otherwise shows
+      nothing until the server answers — **no `loading.tsx` was added**, since
+      a loading boundary streams a 200 shell and that is exactly the
+      not-found-returns-200 bug fixed further up this list. `aria-live` was
+      not missing either: every async message in the admin is already a
+      `role="status"`/`role="alert"`.
+      **Measured** with Playwright at 375×812 against the production build:
+      header 288 → 113px, button and every one of the 25 links exactly 44px,
+      one `aria-current`, zero horizontal overflow, no console errors;
+      desktop two rows as before (129px vs 120px). Test:
+      `app/admin/(protected)/_components/__tests__/admin-nav.test.tsx` (six —
+      every href in order, collapsed by default with a live `aria-controls`,
+      `aria-current` only on the current section, the 44px class on every
+      link, every href resolving to a real `page.tsx`, axe clean).
+      The "stacking preview (preserve scroll, per-page device memory)" this
+      item also carried is **superseded**: the preview is a full tab now
+      (`window.open('/api/preview?path=…')`, owner-gated draft mode), not an
+      iframe beside the editor, so there is no stack to size or scroll to keep.
+      Still open on this item: the media library at 375px (what the item
+      called `MediaPicker maxWidth:100vw`), the offline badge, and the
+      conflict / version diff UIs.
 - [ ] Import v1: Markdown/CSV + image bulk upload.
 - [ ] Phase C entries in `CHANGELOG.md`. Turnstile, the analytics view counts,
       the `work` merge, the not-found 200 status fix, the embed block, Giscus

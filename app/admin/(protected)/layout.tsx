@@ -4,6 +4,8 @@ import { redirect } from 'next/navigation';
 import { requireOwner, UnauthorizedError } from '@/core/auth/guard';
 import { getContentForChannel } from '@/core/content/read';
 import { isWelcomePlaceholder } from '@/core/content/welcome';
+import { AdminNav } from './_components/admin-nav';
+import { ADMIN_SECTIONS } from './_components/sections';
 import { ErrorCollector } from './error-collector';
 import { WelcomeGate } from './welcome-gate';
 
@@ -29,34 +31,6 @@ export const metadata: Metadata = {
   title: { default: 'Admin', template: '%s — Admin' },
   robots: { index: false, follow: false },
 };
-
-const SECTIONS: { href: string; label: string }[] = [
-  { href: '/admin', label: 'Dashboard' },
-  { href: '/admin/pages', label: 'Pages' },
-  { href: '/admin/writing', label: 'Writing' },
-  { href: '/admin/projects', label: 'Projects' },
-  { href: '/admin/case-studies', label: 'Case studies' },
-  { href: '/admin/brands', label: 'Brands' },
-  { href: '/admin/experience', label: 'Experience' },
-  { href: '/admin/education', label: 'Education' },
-  { href: '/admin/process', label: 'Process' },
-  { href: '/admin/capabilities', label: 'Capabilities' },
-  { href: '/admin/recommendations', label: 'Recommendations' },
-  { href: '/admin/artifacts', label: 'Artifacts' },
-  { href: '/admin/media', label: 'Media' },
-  { href: '/admin/messages', label: 'Messages' },
-  { href: '/admin/newsletter', label: 'Newsletter' },
-  { href: '/admin/analytics', label: 'Analytics' },
-  { href: '/admin/navigation', label: 'Navigation' },
-  { href: '/admin/appearance', label: 'Appearance' },
-  { href: '/admin/seo', label: 'SEO' },
-  { href: '/admin/settings', label: 'Settings' },
-  { href: '/admin/services', label: 'Services' },
-  { href: '/admin/storage', label: 'Storage' },
-  { href: '/admin/your-site', label: 'Your site' },
-  { href: '/admin/history', label: 'History' },
-  { href: '/admin/help', label: 'Help' },
-];
 
 export default async function ProtectedAdminLayout({ children }: { children: React.ReactNode }) {
   try {
@@ -86,20 +60,7 @@ export default async function ProtectedAdminLayout({ children }: { children: Rea
           <Link href="/admin" className="font-display text-lg font-semibold no-underline">
             Admin
           </Link>
-          <nav aria-label="Admin sections">
-            <ul className="flex flex-wrap gap-x-4 gap-y-1">
-              {SECTIONS.map((section) => (
-                <li key={section.href}>
-                  <Link
-                    href={section.href}
-                    className="text-sm text-text-secondary no-underline hover:text-text-primary"
-                  >
-                    {section.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
+          <AdminNav sections={ADMIN_SECTIONS} />
         </div>
       </header>
       <main id="admin-main" className="mx-auto max-w-[1280px] px-6 py-8">
