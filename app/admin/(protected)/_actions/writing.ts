@@ -7,7 +7,7 @@ import { RevisionConflictError } from '@/core/storage/contract';
 import { conflictMessage } from '@/core/content/changes';
 import { normaliseSlug } from '@/core/pages/schema';
 import { cleanBlock, isText } from '@/core/blocks/clean';
-import { WRITING_DEFAULTS } from '@/core/writing/schema';
+import { MAX_WRITING_ENTRIES, WRITING_DEFAULTS } from '@/core/writing/schema';
 import type { WritingEntry, WritingSettings } from '@/core/writing/schema';
 import type { CMSState } from '@/cms/types/cms';
 
@@ -35,7 +35,6 @@ export interface WritingResult {
  * takes effect.
  */
 
-const MAX_ENTRIES = 200;
 const MAX_BLOCKS = 120;
 const MAX_TAGS = 20;
 const STATUSES = new Set(['draft', 'published', 'scheduled']);
@@ -87,7 +86,7 @@ export async function updateWritingAction(
   entries: unknown
 ): Promise<WritingResult> {
   await requireOwner();
-  if (!Array.isArray(entries) || entries.length > MAX_ENTRIES) {
+  if (!Array.isArray(entries) || entries.length > MAX_WRITING_ENTRIES) {
     return { ok: false, error: 'Those pieces are not usable.' };
   }
 

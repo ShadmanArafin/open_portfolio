@@ -1013,9 +1013,47 @@ computed contrast, zero console errors throughout).
       promises ("a number that has to match… turns a lost update into a
       question the user can answer"). It touches every builder and action, and
       a half-threaded revision is worse than an honest note.
-- [ ] Import v1: Markdown/CSV + image bulk upload. **Image bulk upload already
-      exists** (both Media and Artifacts take multiple files), so this is the
-      Markdown/CSV half; see also the switching-friction note in section 2.3.
+- [x] Import v1, the Markdown half. **DONE 2026-10-18:** `core/writing/markdown.ts`
+      reads the subset an exported post actually contains — front matter
+      (title, date, summary, tags, and the `slug`/`permalink` aliases), a
+      leading `#` as the title when there is none, headings into block
+      headings, paragraphs, lists into bullet paragraphs, quotes into the real
+      `quote` block with an em-dash attribution, links keeping their address
+      after the text — and reports what it could not carry (images, bold and
+      italics, code, tables, HTML) rather than dropping it silently. 20 tests,
+      one of which runs every block it builds through the renderer's own
+      validation, so an import cannot arrive pre-quarantined.
+      The screen is deliberately not a second screen:
+      `writing/markdown-import.tsx` reads the files in the browser with the
+      same module the tests run, previews each piece and its warnings, settles
+      slug clashes with the same `-2` rule the screen already uses, and
+      appends to the Writing screen's own list — which keeps the contract
+      under Save ("until Save, everything on this page is local") and means no
+      second write path to keep in step with `updateWritingAction`. Image
+      bulk upload already existed (Media and Artifacts both take multiple
+      files). `MAX_WRITING_ENTRIES` moved from the action into the schema,
+      because the save and the import now both have to agree about the
+      200-piece limit; the cap, and the room left under it, is shown in the
+      panel before anything is added.
+      Verified: 20 reader tests + 4 jsdom tests of the panel (preview, clash,
+      refusal on a full site); suite green (1046), typecheck, lint and
+      format:check green, production build green; live against the built
+      server with a real `.md` upload — the preview read "4 blocks · dated
+      2024-03-01" with the list and link warnings, "Add 1 piece" put it in the
+      list, Save stored it, reload showed `/writing/on-slow-mornings` again,
+      zero console errors, and the store was restored byte-identical
+      afterwards.
+- [ ] Import v1, the CSV half. **Open, and it needs a decision before code:**
+      what a spreadsheet is imported _into_. Markdown had one obvious target;
+      a CSV has ten — every collection with a repeating shape (work, brands,
+      experience, education, artifacts, recommendations, capabilities). A
+      per-screen import with a fixed, documented column template is the honest
+      v1 (it needs no mapping screen and can be described where it lives);
+      a target-and-column-mapping screen is the v2 if the fixed templates turn
+      out to be too rigid. Worth doing on whichever screen hurts first rather
+      than all ten at once.
+- [ ] Import v1: image bulk upload. **Already shipped** — Media and Artifacts
+      both take multiple files; kept here only so the item is not half-lost.
 - [x] Phase C entries in `CHANGELOG.md`. **DONE 2026-10-18:** the named changes
       are written up in the Unreleased section under **You can now** -
       Turnstile, the analytics view counts, the `embed` block, Giscus, the

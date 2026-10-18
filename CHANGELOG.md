@@ -72,6 +72,17 @@ through a letterbox. It now takes the window.
   The structured data appears once you have set a domain, because it wants
   absolute addresses and a site without one has none to give.
 
+- **Bring your old posts with you.** The Writing screen takes `.md` files now,
+  up to twenty at a time, read in your own browser. Front matter is read -
+  title, date, summary, tags and address; a leading `#` stands in for a title
+  when there is none; headings become block headings, lists become bullet
+  paragraphs, quotes become the quote block, and a link keeps its address
+  after its text. What it cannot carry is said out loud, per file, before
+  anything is added: images, bold and italics, code, tables. Every piece
+  arrives as a draft at the bottom of the list, and nothing is written until
+  you press Save - so the way out of an import you regret is the Delete piece
+  button you already know.
+
 - **Share a draft page with one person, and take the link back.** The Pages
   screen mints a private link per page: 192 bits of randomness, stored only as
   a hash, with an expiry enforced in two places rather than one. The link shows

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { MediaItem } from '@/cms/types/cms';
 import { MAX_SLUG_LENGTH, normaliseSlug } from '@/core/pages/schema';
 import {
+  MAX_WRITING_ENTRIES,
   WRITING_DEFAULTS,
   arrange,
   createWritingEntry,
@@ -14,6 +15,7 @@ import { BlocksEditor } from '../_components/blocks-editor';
 import { CheckField, Field } from '../_components/form-fields';
 import { newId } from '../_components/ids';
 import { updateWritingAction } from '../_actions/writing';
+import { MarkdownImport } from './markdown-import';
 
 /**
  * Writing — essays, notes, posts.
@@ -230,6 +232,17 @@ export function WritingBuilder({
           </p>
         ) : null}
       </div>
+
+      <MarkdownImport
+        existingSlugs={entries.map((entry) => entry.slug)}
+        startOrder={entries.length + 1}
+        room={MAX_WRITING_ENTRIES - entries.length}
+        onAdd={(added, note) => {
+          setEntries((list) => [...list, ...added]);
+          setNote(note);
+          setError(null);
+        }}
+      />
 
       {arranged.length === 0 ? (
         <p className="m-0 rounded-xl border border-border bg-surface-secondary p-3 text-sm text-text-secondary">

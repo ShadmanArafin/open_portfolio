@@ -18,6 +18,15 @@ import { z } from 'zod';
 
 export const writingStatus = z.enum(['draft', 'published', 'scheduled']);
 
+/**
+ * How many pieces one site holds.
+ *
+ * In the schema rather than in the action, because two places now need to
+ * agree about it: the save refuses past it, and the Markdown import has to
+ * know how much room is left before it offers to add anything.
+ */
+export const MAX_WRITING_ENTRIES = 200;
+
 export const writingSchema = z.object({
   id: z.string().min(1),
   slug: z.string().min(1),
