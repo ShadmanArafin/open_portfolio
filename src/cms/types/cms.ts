@@ -143,6 +143,16 @@ export interface ProjectItem {
   story?: {
     blocks: unknown[];
   };
+  /**
+   * Set when this record was adapted from a legacy `caseStudies` entry.
+   *
+   * The merge folded case studies into the work collection, but a legacy case
+   * study carries none of the `story` blocks a newer one does, so "is this a
+   * case study?" cannot be answered from `story` alone. The marker survives the
+   * adaptation and lets views pick case studies out of the unified list without
+   * guessing. It clears the moment the owner edits the record as ordinary work.
+   */
+  origin?: 'case-study';
 }
 
 /** The unified work collection type. */

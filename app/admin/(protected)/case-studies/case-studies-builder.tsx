@@ -139,7 +139,7 @@ export function CaseStudiesBuilder({
       initialItems={initialCaseStudies}
       addLabel="Add case study"
       emptyTitle="No case studies yet."
-      emptyHint="A story becomes a page at /case-studies/…, and blocks can list them automatically."
+      emptyHint="A story becomes a page at /work/…, and blocks can list them automatically."
       deleteLabel="Delete case study"
       deleteWarning="The story leaves your draft, wherever it was shown. This cannot be undone without restoring a version."
       title={(study) => study.title}
@@ -260,7 +260,7 @@ export function CaseStudiesBuilder({
               onChange={(value) =>
                 mutate((current) => ({ ...current, slug: normaliseSlug(value) }))
               }
-              hint={`This case study will be at /case-studies/${study.slug}`}
+              hint={`This case study will be at /work/${study.slug}`}
               problem={slugProblem}
             />
 

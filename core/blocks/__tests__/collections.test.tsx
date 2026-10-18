@@ -153,6 +153,43 @@ describe('an empty collection is silent on the page and loud in the editor', () 
   });
 });
 
+describe('a collection view reads one work list', () => {
+  it('shows only the case-study end when asked for case studies', () => {
+    const content = contentWith({
+      projects: [
+        project({ id: 'plain', title: 'Ordinary work' }) as never,
+        project({ id: 'deep', title: 'Deep work', origin: 'case-study' }) as never,
+      ],
+    });
+    const html = render([block('collection', { source: 'caseStudies' })], content);
+    expect(html).toContain('Deep work');
+    expect(html).not.toContain('Ordinary work');
+  });
+
+  it('counts work that carries a story, not only legacy case studies', () => {
+    const content = contentWith({
+      projects: [
+        project({ id: 'plain', title: 'Ordinary work' }) as never,
+        project({
+          id: 'deep',
+          title: 'Deep work',
+          story: { blocks: [{ id: 'b1', type: 'richText', v: 1, props: {} }] },
+        }) as never,
+      ],
+    });
+    const html = render([block('collection', { source: 'caseStudies' })], content);
+    expect(html).toContain('Deep work');
+    expect(html).not.toContain('Ordinary work');
+  });
+
+  it('warns when a case-studies-only view has no case studies to show', () => {
+    const content = contentWith({ projects: [project() as never] });
+    expect(checksFor('collection', { source: 'caseStudies' }, content)).toContain(
+      'will not appear'
+    );
+  });
+});
+
 describe('blockContentFrom decides what a block may see', () => {
   const state = {
     projects: [
@@ -173,6 +210,46 @@ describe('blockContentFrom decides what a block may see', () => {
   it('drops records the owner has not published', () => {
     const content = blockContentFrom(state);
     expect(content.projects.map((p) => p.id)).toEqual(['live']);
+  });
+
+  it('folds legacy case studies into the one work list', () => {
+    // Before the merge these lived in a second collection, and a block pointed
+    // at "projects" silently omitted them. Folding happens before the block
+    // sees anything, so there is no second list to forget.
+    const content = blockContentFrom({
+      ...state,
+      projects: [],
+      caseStudies: [
+        {
+          id: 'cs1',
+          slug: 'a-legacy-study',
+          number: '03',
+          title: 'A Legacy Study',
+          category: 'Research',
+          year: '2025',
+          shortChallenge: 'The hard part.',
+          disciplines: [],
+          featured: true,
+          role: '',
+          timeline: '',
+          platform: '',
+          industry: '',
+          overview: ['Overview.'],
+          challenge: '',
+          wireframes: [],
+          keyDecisions: [],
+          outcomes: [],
+          sortOrder: 1,
+          status: 'published',
+          coverImage: '',
+          coverGradient: '',
+        },
+      ],
+    } as unknown as CMSState);
+
+    expect(content.projects.map((p) => p.slug)).toEqual(['a-legacy-study']);
+    // The marker is what lets a "case studies only" view still find it.
+    expect(content.projects[0].origin).toBe('case-study');
   });
 
   it('drops records the owner has hidden', () => {

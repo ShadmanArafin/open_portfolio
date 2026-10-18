@@ -5,7 +5,7 @@ import { NavigationBuilder } from './navigation-builder';
 export const metadata: Metadata = { title: 'Navigation' };
 
 /** Routes every install serves, whatever the draft contains. */
-const FIXED_ROUTES = ['/', '/work', '/case-studies', '/about', '/contact'];
+const FIXED_ROUTES = ['/', '/work', '/about', '/contact'];
 
 /**
  * The header menu, at its own address instead of inside the legacy
@@ -29,6 +29,9 @@ export default async function NavigationPage() {
     if (page.slug.length > 0) known.add(`/${page.slug}`);
   }
   for (const project of draft.projects ?? []) known.add(`/work/${project.slug}`);
+  // The old case-study addresses still answer — `/case-studies/<slug>` is a
+  // permanent redirect to `/work/<slug>` — so a link written before the merge
+  // is not reported as broken.
   for (const study of draft.caseStudies ?? []) known.add(`/case-studies/${study.slug}`);
   if (writingOn) {
     for (const entry of draft.writing ?? []) known.add(`/writing/${entry.slug}`);

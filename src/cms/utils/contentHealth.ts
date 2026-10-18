@@ -131,8 +131,7 @@ export function analyseContent(
     id: 'case-study-covers',
     severity: 'warning',
     title: `${coverless.length} case stud${coverless.length === 1 ? 'y has' : 'ies have'} no cover image`,
-    detail:
-      'The cover is what the card on /case-studies shows. Without it the card reads as empty.',
+    detail: 'The cover is what the card on /work shows. Without it the card reads as empty.',
     to: '/admin/case-studies',
     action: 'Add covers',
   }));

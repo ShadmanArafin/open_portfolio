@@ -40,7 +40,6 @@ describe('not-found status on the public site', () => {
   it.each([
     ['a built page', ['app', '(site)', '[...slug]']],
     ['a project', ['app', '(site)', 'work', '[slug]']],
-    ['a case study', ['app', '(site)', 'case-studies', '[slug]']],
     ['a writing entry', ['app', '(site)', 'writing', '[slug]']],
   ])('keeps the skeleton below the gate for %s', (_label, parts) => {
     const gate = readFileSync(join(ROOT, ...parts, 'layout.tsx'), 'utf8');

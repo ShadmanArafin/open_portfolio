@@ -117,6 +117,45 @@ describe('publicView', () => {
     expect(view.writing?.map((w) => w.slug)).toEqual(['out']);
   });
 
+  it('folds legacy case studies into one work list for the client', () => {
+    // The list that renders `/work` reads `projects` only. Leaving case studies
+    // in a second array meant a case study whose own page still worked was
+    // missing from the list that was meant to show it.
+    const split = {
+      ...state,
+      projects: [],
+      caseStudies: [
+        {
+          id: 'cs1',
+          slug: 'a-study',
+          title: 'A Study',
+          category: 'Research',
+          year: '2025',
+          shortChallenge: '',
+          disciplines: [],
+          featured: false,
+          role: '',
+          timeline: '',
+          platform: '',
+          industry: '',
+          overview: [],
+          challenge: '',
+          wireframes: [],
+          keyDecisions: [],
+          outcomes: [],
+          sortOrder: 1,
+          status: 'published',
+          coverImage: '',
+          coverGradient: '',
+        } as never,
+      ],
+    };
+
+    const view = publicView(split);
+    expect(view.projects?.map((p) => p.slug)).toEqual(['a-study']);
+    expect(view.caseStudies).toEqual([]);
+  });
+
   it('drops the inbox, version history and activity log', () => {
     // Versions carry old copies of content that may since have been removed on
     // purpose — a quieter version of the same leak.

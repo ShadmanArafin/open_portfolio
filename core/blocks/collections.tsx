@@ -15,6 +15,7 @@ import {
   Text,
 } from '../primitives';
 import { deeper } from '../primitives/heading-level';
+import { isCaseStudy } from '../content/work';
 import type { BlockContent } from './content';
 import type { BlockDefinition } from './schema';
 
@@ -85,6 +86,14 @@ const headingField = {
 
 const collectionProps = z.object({
   heading: z.string().optional(),
+  /**
+   * How much of the work collection to show.
+   *
+   * Three values survive so content written before the merge still parses.
+   * `both` was meaningful when projects and case studies were separate lists;
+   * now it reads the same as `projects`, and the picker only offers the two
+   * meanings that remain.
+   */
   source: z.enum(['projects', 'caseStudies', 'both']).default('projects'),
   featuredOnly: z.boolean().optional(),
   limit: z.number().int().min(0).max(24).optional(),
@@ -94,29 +103,19 @@ const collectionProps = z.object({
 type CollectionProps = z.infer<typeof collectionProps>;
 
 function collectionItems(props: CollectionProps, content: BlockContent) {
-  const projects = props.source === 'caseStudies' ? [] : content.projects;
-  const studies = props.source === 'projects' ? [] : content.caseStudies;
-
-  const rows = [
-    ...projects.map((p) => ({
-      id: p.id,
-      title: p.title,
-      summary: p.shortDescription,
-      href: `/work/${p.slug}`,
-      meta: p.category,
-      featured: p.featured,
-    })),
-    ...studies.map((c) => ({
-      id: c.id,
-      title: c.title,
-      // Case studies lead with the problem rather than a description; it is the
-      // nearest thing they have to a one-line summary.
-      summary: c.shortChallenge,
-      href: `/case-studies/${c.slug}`,
-      meta: c.category,
-      featured: c.featured,
-    })),
-  ];
+  const rows = content.projects
+    // "Case studies" is the deep end of the work collection — records carrying
+    // a story, plus those adapted from a legacy case study. There is no second
+    // list to read from.
+    .filter((project) => (props.source === 'caseStudies' ? isCaseStudy(project) : true))
+    .map((project) => ({
+      id: project.id,
+      title: project.title,
+      summary: project.shortDescription,
+      href: `/work/${project.slug}`,
+      meta: project.category,
+      featured: project.featured,
+    }));
 
   return take(props.featuredOnly ? rows.filter((r) => r.featured) : rows, props.limit);
 }
@@ -125,7 +124,7 @@ const collection: BlockDefinition<CollectionProps> = {
   type: 'collection',
   version: 1,
   label: 'Your work',
-  description: 'Places your projects or case studies. They follow the records, not this block.',
+  description: 'Places work from your Work screen. It follows the records, not this block.',
   group: 'work',
   schema: collectionProps,
   defaults: () => ({ source: 'projects', limit: 6, heading: 'Selected work' }),
@@ -136,9 +135,8 @@ const collection: BlockDefinition<CollectionProps> = {
       path: 'source',
       label: 'Show',
       options: [
-        { value: 'projects', label: 'Projects' },
-        { value: 'caseStudies', label: 'Case studies' },
-        { value: 'both', label: 'Both' },
+        { value: 'projects', label: 'All work' },
+        { value: 'caseStudies', label: 'Case studies only' },
       ],
     },
     {
@@ -160,11 +158,17 @@ const collection: BlockDefinition<CollectionProps> = {
   ],
   frameDefaults: { spacing: 'loose' },
   checks: [
-    emptyCheck(
-      'collection-empty',
-      (c) => c.projects.length + c.caseStudies.length,
-      'published records'
-    ),
+    {
+      id: 'collection-empty',
+      // Asked through the same filter the renderer uses, so "case studies only"
+      // with no case studies warns instead of rendering a heading over nothing.
+      run: (props: CollectionProps, content: BlockContent) =>
+        collectionItems({ ...props, featuredOnly: false, limit: 0 }, content).length === 0
+          ? `There are no ${
+              props.source === 'caseStudies' ? 'case studies' : 'records'
+            } yet, so this block will not appear on the page.`
+          : null,
+    },
     {
       id: 'collection-featured-empty',
       run: (props: CollectionProps, content: BlockContent) =>

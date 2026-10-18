@@ -2,7 +2,6 @@ import type {
   BrandItem,
   CMSState,
   CapabilityGroupItem,
-  CaseStudyItem,
   EducationItem,
   ExperienceItem,
   ProcessStepItem,
@@ -15,6 +14,7 @@ import type {
 // the same way anywhere, which is what lets the marketing site's demo render
 // real blocks instead of a look-alike that drifts.
 import { WRITING_DEFAULTS, arrange, isLive, type WritingEntry } from '../writing/schema';
+import { mergeWork } from '../content/work';
 
 /**
  * The site's own records, as a block sees them.
@@ -38,8 +38,14 @@ import { WRITING_DEFAULTS, arrange, isLive, type WritingEntry } from '../writing
  * spread away from the public page.
  */
 export interface BlockContent {
+  /**
+   * Selected work — the one collection.
+   *
+   * Legacy case studies are folded in here (see `mergeWork`), so a block never
+   * has to decide between two lists for the same idea. Use `isCaseStudy` to
+   * pick out the deep ones.
+   */
   projects: ProjectItem[];
-  caseStudies: CaseStudyItem[];
   brands: BrandItem[];
   experience: ExperienceItem[];
   education: EducationItem[];
@@ -72,7 +78,6 @@ export interface BlockContent {
 /** What a block sees when nobody passed it anything. Never null — see below. */
 export const EMPTY_BLOCK_CONTENT: BlockContent = {
   projects: [],
-  caseStudies: [],
   brands: [],
   experience: [],
   education: [],
@@ -97,9 +102,10 @@ function byOrder<T extends { sortOrder: number }>(items: T[]): T[] {
  * the kind of mistake nobody reports because the person who notices is a
  * stranger.
  *
- * `projects` and `caseStudies` filter on `status` rather than `visible`,
- * matching `getPublishedProjects()`. That difference is the collections' and
- * not this function's to fix.
+ * `projects` filters on `status` rather than `visible`, matching
+ * `getPublishedProjects()`. That difference is the collections' and not this
+ * function's to fix. Legacy case studies are folded in so a block sees one work
+ * collection rather than two that can disagree.
  */
 export function blockContentFrom(state: CMSState | undefined): BlockContent {
   if (!state) return EMPTY_BLOCK_CONTENT;
@@ -110,8 +116,12 @@ export function blockContentFrom(state: CMSState | undefined): BlockContent {
   const settings = { ...WRITING_DEFAULTS, ...(state.writingSettings ?? {}) };
 
   return {
-    projects: byOrder((state.projects ?? []).filter((p) => p.status === 'published')),
-    caseStudies: byOrder((state.caseStudies ?? []).filter((c) => c.status === 'published')),
+    projects: byOrder(
+      mergeWork(
+        (state.projects ?? []).filter((p) => p.status === 'published'),
+        (state.caseStudies ?? []).filter((c) => c.status === 'published')
+      )
+    ),
     brands: visible(state.brands),
     experience: visible(state.experience),
     education: visible(state.education),

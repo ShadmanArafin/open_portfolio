@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { CaseStudyItem } from '@/cms/types/cms';
-import { caseStudyToProject } from '@/core/content/read';
+import { caseStudyToProject, mergeWork } from '@/core/content/read';
+import { hasStory, isCaseStudy } from '@/core/content/work';
 import nextConfig from '../../../next.config';
 
 describe('work merge and case-study adaptation', () => {
@@ -115,6 +116,43 @@ describe('work merge and case-study adaptation', () => {
       id: 'story-b1',
       type: 'text',
     });
+  });
+
+  it('marks an adapted case study so views can tell it from ordinary work', () => {
+    const adapted = caseStudyToProject(sampleCaseStudy);
+    expect(adapted.origin).toBe('case-study');
+    expect(isCaseStudy(adapted)).toBe(true);
+    expect(hasStory(adapted)).toBe(true);
+  });
+
+  it('still calls a legacy case study a case study when it carries no story', () => {
+    // A snapshot written before the merge has no story blocks, so `story` alone
+    // cannot answer the question the case-study views ask.
+    const adapted = caseStudyToProject({ ...sampleCaseStudy, blocks: [] });
+    expect(hasStory(adapted)).toBe(false);
+    expect(isCaseStudy(adapted)).toBe(true);
+  });
+
+  it('counts work that carries a story even without the legacy marker', () => {
+    const adapted = caseStudyToProject(sampleCaseStudy);
+    const { origin: _origin, ...withoutMarker } = adapted;
+    expect(isCaseStudy(withoutMarker)).toBe(true);
+  });
+
+  it('folds legacy case studies in without duplicating ones already migrated', () => {
+    const migrated = caseStudyToProject(sampleCaseStudy);
+    const other = { ...sampleCaseStudy, id: 'cs-other', slug: 'another-study' };
+
+    const merged = mergeWork([migrated], [sampleCaseStudy, other]);
+
+    // The migrated one is already in `projects`; only the new one is added.
+    expect(merged.map((p) => p.slug)).toEqual(['sample-case-study', 'another-study']);
+  });
+
+  it('is idempotent, so folding at several boundaries cannot duplicate work', () => {
+    const once = mergeWork([], [sampleCaseStudy]);
+    const twice = mergeWork(once, [sampleCaseStudy]);
+    expect(twice.map((p) => p.slug)).toEqual(['sample-case-study']);
   });
 
   it('configures 301 permanent redirects for /case-studies and /case-studies/:slug', async () => {

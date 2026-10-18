@@ -1,5 +1,6 @@
 import 'server-only';
 import type { CMSState } from '@/cms/types/cms';
+import { mergeWork } from './work';
 
 /**
  * Takes the contact inbox out of a content document before it is published.
@@ -42,6 +43,13 @@ export function withoutEnquiries(state: CMSState): CMSState {
  * So the public view is cut down to what is already visible. Version history
  * and activity logs go too — they carry old copies of content that may since
  * have been deliberately removed, which is a subtler version of the same leak.
+ *
+ * The work merge happens here too. `projects` and `caseStudies` were two
+ * collections for one idea, and the client that renders the work list read only
+ * the first — so a case study whose page still worked was missing from the list
+ * that was meant to show it. Folding them into one array here means every
+ * client consumer sees the same records, and `caseStudies` is emptied so
+ * nothing can read a stale second copy.
  */
 export function publicView(state: CMSState): CMSState {
   const isLiveWriting = (entry: { status?: string; scheduledFor?: string }): boolean => {
@@ -51,12 +59,17 @@ export function publicView(state: CMSState): CMSState {
     return Number.isFinite(due) && due <= Date.now();
   };
 
+  const projects = mergeWork(
+    (state.projects ?? []).filter((p) => p.status === 'published'),
+    (state.caseStudies ?? []).filter((c) => c.status === 'published')
+  ).sort((a, b) => a.sortOrder - b.sortOrder);
+
   return {
     ...state,
     pages: (state.pages ?? []).filter((page) => page.status === 'published'),
     writing: (state.writing ?? []).filter(isLiveWriting),
-    projects: (state.projects ?? []).filter((p) => p.status === 'published'),
-    caseStudies: (state.caseStudies ?? []).filter((c) => c.status === 'published'),
+    projects,
+    caseStudies: [],
     messages: [],
     versions: [],
     activityLogs: [],

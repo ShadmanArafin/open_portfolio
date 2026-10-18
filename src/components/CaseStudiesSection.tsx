@@ -9,15 +9,19 @@ import { SectionLabel } from './common/SectionLabel';
 import { Reveal } from './common/Reveal';
 import { useCMS } from '../cms/context/CMSContext';
 import { CMSImage } from './common/CMSImage';
+import { isCaseStudy } from '@/core/content/work';
 
 import Link from 'next/link';
 export const CaseStudiesSection: React.FC = () => {
   const { data } = useCMS();
   const section = data.sections.find((s) => s.id === 'case-studies');
 
-  // Homepage shows the first two featured case studies.
-  const featuredCaseStudies = [...data.caseStudies]
-    .filter((cs) => cs.featured && cs.status !== 'archived')
+  // Deep case studies are the case-study end of the work collection: records
+  // carrying a story, plus legacy ones adapted on read. Since the merge there
+  // is one collection, so this band reads a subset of it rather than a second
+  // list that could drift.
+  const featuredCaseStudies = [...data.projects]
+    .filter((project) => project.featured && project.status !== 'archived' && isCaseStudy(project))
     .sort((a, b) => a.sortOrder - b.sortOrder)
     .slice(0, 2);
 
@@ -55,16 +59,13 @@ export const CaseStudiesSection: React.FC = () => {
               viewport={{ once: true, margin: '-5% 0px' }}
               transition={{ duration: 0.6, delay: index * 0.12, ease: [0.16, 1, 0.3, 1] }}
             >
-              <Link
-                href={`/case-studies/${study.slug}`}
-                className="group flex flex-col block h-full"
-              >
+              <Link href={`/work/${study.slug}`} className="group flex flex-col block h-full">
                 {/* Image Container with Hover Scale */}
                 <div className="w-full aspect-[16/10] rounded-2xl overflow-hidden border border-border bg-surface-secondary mb-6 relative shadow-sm">
-                  {study.coverImage ? (
+                  {study.images?.[0]?.url ? (
                     <CMSImage
-                      src={study.coverImage}
-                      alt={study.title}
+                      src={study.images[0].url}
+                      alt={study.images[0].alt || study.title}
                       className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                     />
                   ) : (
@@ -109,7 +110,7 @@ export const CaseStudiesSection: React.FC = () => {
                   </h3>
 
                   <p className="text-sm text-text-secondary font-body font-normal leading-relaxed line-clamp-2 mb-4">
-                    {study.shortChallenge}
+                    {study.shortDescription}
                   </p>
 
                   <div className="mt-auto flex items-center gap-1.5 text-xs font-body font-medium uppercase tracking-wider text-text-primary group-hover:text-accent transition-colors pt-2">
@@ -126,7 +127,7 @@ export const CaseStudiesSection: React.FC = () => {
         <div className="mt-14 sm:mt-20 flex justify-end">
           <Reveal type="fade-up" delay={0.4}>
             <Link
-              href="/case-studies"
+              href="/work"
               aria-label="View All Case Studies"
               className="inline-flex items-center justify-center gap-2 h-[42px] px-6 rounded-full bg-transparent text-text-primary border border-border hover:border-text-primary/40 hover:bg-surface-secondary font-body text-xs sm:text-[13px] font-medium uppercase tracking-wider transition-all duration-250 hover:-translate-y-[1px] group cursor-pointer shadow-sm select-none"
             >

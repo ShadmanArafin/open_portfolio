@@ -706,11 +706,26 @@ export async function updateCaseStudiesAction(caseStudies: unknown): Promise<Cas
   }
 
   const stamped = clean.map((study, index) => ({ ...study, sortOrder: index + 1 }));
+
+  // A case study and a project share one address now (`/work/<slug>`), and
+  // `mergeWork` resolves a collision in the project's favour. Without this
+  // check the owner would save a case study, see it in this list, and never
+  // find it on the site.
+  const clash = { slug: '' };
   const outcome = await writeList((draft) => {
+    const projectSlugs = new Set((draft.projects ?? []).map((project) => project.slug));
+    clash.slug = stamped.find((study) => projectSlugs.has(study.slug))?.slug ?? '';
+    if (clash.slug) return;
     draft.caseStudies = stamped;
   });
   if (outcome === 'missing') return { ok: false, error: NO_DRAFT_MESSAGE };
   if (outcome === 'conflict') return { ok: false, conflict: true, error: CONFLICT_MESSAGE };
+  if (clash.slug) {
+    return {
+      ok: false,
+      error: `“${clash.slug}” is already the web address of a project. Case studies and projects live at the same address, so give this one its own.`,
+    };
+  }
 
   revalidatePath('/admin/case-studies');
   return { ok: true, caseStudies: stamped };

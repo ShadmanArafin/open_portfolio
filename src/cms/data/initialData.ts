@@ -7,7 +7,6 @@ import {
   CapabilityGroupItem,
   BrandItem,
   ProjectItem,
-  CaseStudyItem,
   RecommendationItem,
   NavLinkItem,
 } from '../types/cms';
@@ -215,6 +214,7 @@ function caseStudyToInitialProject(
     story: {
       blocks,
     },
+    origin: 'case-study',
   };
 }
 
@@ -228,26 +228,6 @@ const initialProjects: ProjectItem[] = [
   })),
   ...CASE_STUDIES.map((cs, idx) => caseStudyToInitialProject(cs, idx, PROJECTS.length)),
 ];
-
-const initialCaseStudies: CaseStudyItem[] = CASE_STUDIES.map((cs, idx) => ({
-  ...cs,
-  ...parseYearRange(cs.year),
-  sortOrder: idx + 1,
-  status: 'published',
-  keyDecisions: cs.keyDecisions ?? [],
-  finalSolution: {
-    title: 'Final Solution',
-    description: cs.finalSolution?.description ?? '',
-    highlights: cs.finalSolution?.highlights ?? [],
-  },
-  designSystemTokens: cs.designSystemTokens ?? {
-    colors: [],
-    typography: '',
-    spacingScale: '',
-  },
-  outcome: cs.outcome ?? { summary: '', metrics: [] },
-  outcomes: (cs.outcome?.metrics ?? []).map(splitMetric),
-}));
 
 const initialRecommendations: RecommendationItem[] = RECOMMENDATIONS.map((rec, idx) => ({
   id: rec.id,
@@ -264,15 +244,8 @@ const initialRecommendations: RecommendationItem[] = RECOMMENDATIONS.map((rec, i
 
 const initialNavLinks: NavLinkItem[] = [
   { id: 'nav-work', label: 'Work', path: '/work', visible: true, sortOrder: 1 },
-  {
-    id: 'nav-case-studies',
-    label: 'Case Studies',
-    path: '/case-studies',
-    visible: true,
-    sortOrder: 2,
-  },
-  { id: 'nav-about', label: 'About', path: '/about', visible: true, sortOrder: 3 },
-  { id: 'nav-contact', label: 'Contact', path: '/contact', visible: true, sortOrder: 4 },
+  { id: 'nav-about', label: 'About', path: '/about', visible: true, sortOrder: 2 },
+  { id: 'nav-contact', label: 'Contact', path: '/contact', visible: true, sortOrder: 3 },
 ];
 
 /** Seeded assets have no real upload date — use the install date. */
@@ -516,7 +489,10 @@ export const INITIAL_CMS_STATE: CMSState = {
       description:
         'Longer stories covering the thinking, the decisions and the dead ends behind the finished work.',
       primaryCtaLabel: 'VIEW ALL CASE STUDIES',
-      primaryCtaUrl: '/case-studies',
+      // The case-study pages became `/work/<slug>` in the merge; the band here
+      // still shows only the ones carrying a story, but it links at the one
+      // address that is not a redirect.
+      primaryCtaUrl: '/work',
     },
     {
       id: 'experience',
@@ -625,7 +601,10 @@ export const INITIAL_CMS_STATE: CMSState = {
 
   pages: initialPages,
   projects: initialProjects,
-  caseStudies: initialCaseStudies,
+  // The work merge folded the demo case studies into `projects`. `caseStudies`
+  // is kept on the state and on the read path only so a snapshot written before
+  // the merge still loads losslessly; a fresh install seeds nothing here.
+  caseStudies: [],
   brands: initialBrands,
   experience: initialExperience,
   education: initialEducation,
