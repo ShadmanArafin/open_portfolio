@@ -1,7 +1,11 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { buildMetadata } from '@/core/content/metadata';
-import { getProjectBySlug, getPublishedProjects } from '@/core/content/read';
+import { getContentForChannel, getProjectBySlug, getPublishedProjects } from '@/core/content/read';
+import { publicView } from '@/core/content/sanitise';
+import { currentChannel } from '@/core/pages/read';
+import { BlockList, parsePage } from '@/core/blocks/registry';
+import { blockContentFrom } from '@/core/blocks/content';
 import { ProjectDetailPage } from '@/views/ProjectDetailPage';
 
 /**
@@ -42,5 +46,16 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   // Resolved on the server so a bad slug returns a real 404 status, which
   // matters for crawlers as much as for people.
   if (!(await getProjectBySlug(slug))) notFound();
-  return <ProjectDetailPage />;
+
+  // The case-study story renders here, on the server, with the whole document
+  // to draw on — a story block can list writing or work, which the client copy
+  // of the content (`clientView`) no longer carries.
+  const content = publicView(await getContentForChannel(await currentChannel()));
+  const blocks = content.projects.find((project) => project.slug === slug)?.story?.blocks;
+  const story =
+    Array.isArray(blocks) && blocks.length > 0 ? (
+      <BlockList blocks={parsePage(blocks)} content={blockContentFrom(content)} />
+    ) : undefined;
+
+  return <ProjectDetailPage story={story} />;
 }

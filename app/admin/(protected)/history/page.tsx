@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { changedParts } from '@/core/content/changes';
 import { getStorageAdapter } from '@/core/storage/registry';
+import { listVersions } from '@/core/content/versions';
 import type { CMSState } from '@/cms/types/cms';
 import { RestoreButton } from './restore-button';
 
@@ -26,8 +27,12 @@ export const metadata: Metadata = {
  */
 
 export default async function HistoryPage() {
-  const meta = await (await getStorageAdapter()).readSnapshotMeta('draft');
-  const versions = meta?.state.versions ?? [];
+  const adapter = await getStorageAdapter();
+  const [meta, published] = await Promise.all([
+    adapter.readSnapshotMeta('draft'),
+    adapter.readSnapshotMeta('published'),
+  ]);
+  const versions = await listVersions(adapter, published?.state ?? meta?.state);
   const revision = meta?.revision ?? 0;
   const draft = meta?.state ?? null;
 

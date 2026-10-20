@@ -138,7 +138,9 @@ export const ProjectPreview: React.FC<ProjectPreviewProps> = ({ project }) => {
                       exception does not apply to them. */}
                   <Link
                     href={`/work/${project.slug}`}
-                    aria-label={`Read the ${project.title} case page`}
+                    // The name starts with the words on screen (WCAG 2.5.3), so saying
+                    // "Read the case" to voice control finds it.
+                    aria-label={`Read the case: ${project.title}`}
                     className="inline-flex min-h-[24px] items-center gap-1.5 py-1 font-medium text-text-primary hover:text-accent transition-colors group cursor-pointer"
                   >
                     <span>Read the case</span>
@@ -158,7 +160,7 @@ export const ProjectPreview: React.FC<ProjectPreviewProps> = ({ project }) => {
                       onClick={() => trackEvent('Live site clicked', { project: project.title })}
                       target="_blank"
                       rel="noopener noreferrer"
-                      aria-label={`Visit ${project.title} live website`}
+                      aria-label={`Visit Live Site: ${project.title}`}
                       className="inline-flex min-h-[24px] items-center gap-1.5 py-1 font-medium text-text-primary hover:text-accent transition-colors group cursor-pointer"
                     >
                       <span>Visit Live Site</span>

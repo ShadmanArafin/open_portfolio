@@ -6,14 +6,16 @@ import { turnstileSiteKey } from '@/core/integrations/turnstile';
  *
  * Public by design — a site key belongs in page HTML the way a lock belongs
  * on a door, visible and useless without the secret, which never leaves the
- * server. A 404 here means bot protection is simply off and the forms fall
- * back to the honeypot; the widget renders nothing in that case rather than
- * an error.
+ * server. `siteKey: null` means bot protection is simply off and the forms
+ * fall back to the honeypot; the widget renders nothing in that case.
+ *
+ * That answer used to be a 404, which every browser logs as a red console
+ * error — on every page with a form, on every site that had not set Turnstile
+ * up, which is most of them. "Off" is a normal answer, so it is a 200.
  */
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   const siteKey = await turnstileSiteKey();
-  if (!siteKey) return NextResponse.json({ ok: false }, { status: 404 });
-  return NextResponse.json({ ok: true, siteKey });
+  return NextResponse.json({ ok: true, siteKey: siteKey || null });
 }

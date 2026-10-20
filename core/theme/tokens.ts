@@ -95,6 +95,23 @@ function enforceContrast(colour: Rgb, background: Rgb, size: TextSize = 'body'):
   return target;
 }
 
+/**
+ * `enforceContrast` against every background a colour is used on.
+ *
+ * Text tokens are shared by the page and by the cards and section bands on
+ * it, which sit a few percent away from the page colour. Passing on the page
+ * alone shipped muted text at 4.39:1 on the experience band and 4.43:1 on the
+ * footer cards — measured by axe on the default theme. Each pass walks the
+ * same way (towards the readable extreme for these backgrounds, which share a
+ * side of mid-grey), so a later pass never undoes an earlier one.
+ */
+function enforceContrastOnAll(colour: Rgb, backgrounds: Rgb[], size: TextSize = 'body'): Rgb {
+  return backgrounds.reduce(
+    (current, background) => enforceContrast(current, background, size),
+    colour
+  );
+}
+
 /** `rgb(r g b / a)` — for the translucent fills badges and rings use. */
 function alpha({ r, g, b }: Rgb, opacity: number): string {
   const round = (n: number) => Math.max(0, Math.min(255, Math.round(n)));
@@ -142,18 +159,30 @@ export function generateTokens(mode: ThemeMode, inputs: Partial<ThemeInputs> = {
   const textPrimary = readableForeground(bg, INK);
   const away = textPrimary;
 
-  const textSecondary = enforceContrast(mix(textPrimary, bg, 0.38), bg);
+  const surface = mix(bg, away, 0.025);
+  const surfaceSecondary = mix(bg, away, 0.055);
+  const surfaceRaised = mix(bg, away, 0.08);
+  const surfaceSunken = shade(bg, 5);
+
+  // Everything text may sit on: the page, the cards and the section bands
+  // (see the `--section-*` tokens below, which use these same steps).
+  const textGrounds = [
+    bg,
+    surface,
+    surfaceSecondary,
+    surfaceRaised,
+    surfaceSunken,
+    mix(bg, away, 0.03),
+    shade(bg, 3),
+  ];
+
+  const textSecondary = enforceContrastOnAll(mix(textPrimary, bg, 0.38), textGrounds);
   // Body, not large. Muted text carries captions, dates and meta labels — all
   // of it small — so WCAG's 4.5:1 applies. Holding it to 3:1 shipped a default
   // palette whose muted text failed at 4.22:1 in dark and 3.24:1 in light.
   // Enforcing it costs some of the visual step down from secondary text, which
   // is the correct trade: a hierarchy nobody can read is not a hierarchy.
-  const textMuted = enforceContrast(mix(textPrimary, bg, 0.55), bg);
-
-  const surface = mix(bg, away, 0.025);
-  const surfaceSecondary = mix(bg, away, 0.055);
-  const surfaceRaised = mix(bg, away, 0.08);
-  const surfaceSunken = shade(bg, 5);
+  const textMuted = enforceContrastOnAll(mix(textPrimary, bg, 0.55), textGrounds);
 
   // 3:1 is right for the accent as a *surface* and as the focus ring — both are
   // interface components under WCAG 1.4.11, not text.
@@ -161,7 +190,7 @@ export function generateTokens(mode: ThemeMode, inputs: Partial<ThemeInputs> = {
   // Links are text, and small text at that, so they need their own 4.5:1
   // derivation. Sharing the accent's value shipped links at 3.02:1 in light
   // mode — readable to the person who chose the colour, not to everyone.
-  const linkOnBg = enforceContrast(accent, bg);
+  const linkOnBg = enforceContrastOnAll(accent, textGrounds);
   const accentHover = mix(accent, away, 0.15);
   const textOnAccent = readableForeground(accent, INK);
 

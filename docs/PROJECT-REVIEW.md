@@ -2442,11 +2442,74 @@ explicit Save.
 
 **E3 — Public performance (1–2 weeks)**
 
-- [ ] D2 delete the dead client data layer
-- [ ] D1 per-route data, then RSC themed views
-- [ ] D3 Cache Components + `updateTag`
-- [ ] Image dimensions + responsive variants
-- [ ] D10 versions out of the published document
+- [x] D2 delete the dead client data layer. `cmsService` (931 lines), the
+      IndexedDB `localStore` (337), its types and `loadGoogleFonts` are gone;
+      `CMSProvider` is a read-only context with `initialData` required, and the
+      structural test now asserts it has no effect and no browser storage.
+      **Found on the way:** a previewed theme change painted the published
+      colours — the root layout read published appearance, and the client fix
+      for previews keyed off a `?preview=true` nothing sets. The root layout is
+      channel-aware now; measured `--accent-color` in an owner preview: old
+      code `#35f2b3` (published), new `#c0ffee` (draft), public unchanged.
+- [x] D1 per-route data. `clientView` (`core/content/sanitise.ts`) ships no
+      writing, no page blocks, no project stories and only the media items with
+      smaller copies; its size no longer grows with the amount of writing
+      (unit-tested at 2 vs 200 posts). Project stories render on the server and
+      reach the client view as a slot, which also takes the block registry out
+      of the browser bundle. Measured on the seed (dev): `/contact`
+      99.4→95.8 KB, `/` 157.6→153.9 KB, `/work` 131.6→127.9 KB; a story page
+      grows a little because it now carries its own story as markup instead of
+      every page carrying every story. The full move of the themed views to
+      RSC stays open — the payload problem it was for is solved without it.
+- [ ] D3 Cache Components + `updateTag` — **deferred, with the premise
+      corrected.** Publishing was never waiting 60 s: it calls
+      `revalidatePath('/', 'layout')`, and the golden-path e2e proves a visitor
+      sees a publish at once. The 60 s only bounds scheduled writing. Adopting
+      Cache Components means removing 55 route-segment configs, moving the
+      `Date.now()` in the scheduling predicate behind a cache boundary, and
+      making every `generateStaticParams` return at least one param (they
+      deliberately return `[]` when storage is down) — a migration for its own
+      branch, now that the production build runs here.
+- [x] Image dimensions + responsive variants. Uploads of JPEG/PNG/WebP wider
+      than 640px get WebP copies at 640/1280/1920 beside the original
+      (`core/media/variants.ts`, `sharp`, fail-soft), recorded as
+      `MediaItem.variants`; the image, gallery and picture-beside-text blocks
+      and the theme's `CMSImage` emit `srcset`/`sizes` from them
+      (`core/media/srcset.ts`). Chosen over `next/image` because it needs no
+      per-backend `remotePatterns` and opens no resize endpoint
+      (CVE-2026-64644). Verified live: a 2400px upload stored three WebP
+      copies, each served `200 image/webp`. Layout shift was already handled:
+      block images reserve their box with `aspect-ratio`.
+- [x] D10 versions out of the published document. One record per publish in
+      the `versions` collection (`core/content/versions.ts`), newest twenty
+      kept, nested history moved across on the next publish and readable until
+      then. Verified live: two publishes → two record files, `published.json`
+      and `draft.json` with zero nested versions, History listing both with
+      their diffs, Restore loading the older one back.
+
+**Also fixed in E3, found by running the browser suite against a production
+build for the first time** (the production build turned out to work here once
+a half-written `.next` cache was cleared):
+
+- The axe matrix was flaky — it measured text mid-fade. It now reduces motion
+  and scrolls the page before measuring, and passes repeatably.
+- **Muted text failed contrast on cards and bands** (4.39–4.43:1): secondary,
+  muted and link colours were derived against the page background only. They
+  are now derived against every surface they sit on, and the publish audit
+  checks muted text and links on the raised surface.
+- **`text-accent` failed as small text in light mode (2.83:1):** it now maps to
+  the link colour (4.5:1 everywhere); fills and rings keep the accent.
+- **Label-in-name (WCAG 2.5.3):** four links whose `aria-label` hid their
+  visible words. The experience rows now link only the company name with a
+  stretched hit area.
+- `/api/spam/sitekey` answered 404 when Turnstile was off — a red console error
+  on every page with a form; it answers 200 with `siteKey: null` now, and a new
+  smoke test fails on console errors.
+- The WhatsApp icon was hard-coded white on a button that is white in dark mode.
+
+Verified: typecheck, lint (0 errors; warnings 79 → 76), format, 1120 unit
+tests, production build, and the full browser suite (18 tests) green twice in a
+row against `next start`.
 
 **E4 — Editor quality of life (1–2 weeks)**
 

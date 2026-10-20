@@ -15,6 +15,7 @@ import type {
 // real blocks instead of a look-alike that drifts.
 import { WRITING_DEFAULTS, arrange, isLive, type WritingEntry } from '../writing/schema';
 import { mergeWork } from '../content/work';
+import { buildImageIndex, type ImageIndex } from '@/core/media/srcset';
 
 /**
  * The site's own records, as a block sees them.
@@ -73,6 +74,11 @@ export interface BlockContent {
    * notice, because they know what they set.
    */
   writingSettings: { label: string; showDates: boolean };
+  /**
+   * Smaller copies of uploaded photos, by URL, so an image block can offer a
+   * phone the 640px copy instead of the original. See `core/media/srcset`.
+   */
+  images: ImageIndex;
 }
 
 /** What a block sees when nobody passed it anything. Never null — see below. */
@@ -87,6 +93,7 @@ export const EMPTY_BLOCK_CONTENT: BlockContent = {
   socialLinks: [],
   writing: [],
   writingSettings: { label: WRITING_DEFAULTS.label, showDates: WRITING_DEFAULTS.showDates },
+  images: {},
 };
 
 function byOrder<T extends { sortOrder: number }>(items: T[]): T[] {
@@ -137,5 +144,6 @@ export function blockContentFrom(state: CMSState | undefined): BlockContent {
       settings.order
     ),
     writingSettings: { label: settings.label, showDates: settings.showDates },
+    images: buildImageIndex(state.media),
   };
 }

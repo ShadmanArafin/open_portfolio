@@ -75,3 +75,31 @@ export function publicView(state: CMSState): CMSState {
     activityLogs: [],
   };
 }
+
+/**
+ * What the client-side theme components need, and nothing more.
+ *
+ * `publicView` decides what a visitor is *allowed* to see; this decides what
+ * is worth *sending*. The layout hands its result to a client provider, so it
+ * is serialised into every public page — and before this, that meant every
+ * published page's blocks, every piece of writing in full and every project's
+ * story went out with every request, `/contact` included. A writer with two
+ * hundred posts shipped all two hundred on each page view.
+ *
+ * Those three are rendered on the server (the block pages, the writing routes,
+ * and project stories via `app/(site)/work/[slug]/page.tsx`), so the client
+ * copy carries none of them. Pages keep their address, title and menu entry,
+ * which is what the navbar builds the menu from. The media library is cut to
+ * the photos that have smaller copies, which is all the client reads it for
+ * (`srcset` in `CMSImage`).
+ */
+export function clientView(state: CMSState): CMSState {
+  const visible = publicView(state);
+  return {
+    ...visible,
+    pages: (visible.pages ?? []).map((page) => ({ ...page, blocks: [] })),
+    writing: [],
+    projects: visible.projects.map(({ story: _story, ...project }) => project),
+    media: (visible.media ?? []).filter((item) => item.variants?.length),
+  };
+}

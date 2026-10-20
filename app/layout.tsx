@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { buildMetadata } from '@/core/content/metadata';
-import { getPublishedContent } from '@/core/content/read';
+import { getContentForChannel, getPublishedContent } from '@/core/content/read';
+import { currentChannel } from '@/core/pages/read';
 import { siteLanguage } from '@/core/content/language';
 import { profileLinks } from '@/core/content/profiles';
 import { buildThemeStylesheet } from '@/core/theme/tokens';
@@ -58,10 +59,16 @@ const themeScript = `
 `.trim();
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  // Both palettes, generated from the published appearance settings. Rendered
-  // here rather than written from an effect, so the first paint is already the
+  // Both palettes, generated from the appearance settings. Rendered here
+  // rather than written from an effect, so the first paint is already the
   // site's own colours instead of the built-in ones.
-  const content = await getPublishedContent();
+  //
+  // Channel-aware: a preview (draft mode, owner only) paints the draft's
+  // colours and typefaces. This read the published appearance unconditionally,
+  // and the client effect meant to cover previews keyed off a `?preview=true`
+  // flag nothing sets any more — so a previewed theme change showed the old
+  // palette until it was published.
+  const content = await getContentForChannel(await currentChannel());
   // Colour changes per mode; spacing, radius and type do not, so the layout
   // half is emitted once on :root rather than duplicated into both blocks.
   // The chosen theme supplies anything the owner has not overridden, and its

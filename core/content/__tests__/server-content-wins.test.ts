@@ -42,22 +42,20 @@ describe('the public site keeps what the server sent', () => {
   it('reads that content on the server, not in the browser', () => {
     const layout = read('app', '(site)', 'layout.tsx');
     expect(layout).toContain('getContentForChannel');
-    // Wrapped in `publicView`, not passed raw. The whole document used to be
-    // serialised into every public page, drafts included.
-    expect(layout).toContain('initialData={publicView(content)}');
+    // Wrapped in `clientView` (which applies `publicView`), not passed raw. The
+    // whole document used to be serialised into every public page, drafts
+    // included, and then every page's blocks and every post in full.
+    expect(layout).toContain('initialData={clientView(content)}');
   });
 
-  it('guards the local-store load on having been given server content', () => {
+  it('has no browser-side store that could replace it', () => {
+    // The bug was a local store loading after mount. That store is gone — the
+    // provider is a plain read-only context now — and this keeps it gone: no
+    // effect, no browser storage, and server content is a required prop.
     const context = read('src', 'cms', 'context', 'CMSContext.tsx');
-    expect(context).toContain('const serverProvided = initialData !== undefined');
-
-    // Both effects, not one. The subscription is the same hazard: a stale local
-    // write pushing itself into a page the server had already rendered.
-    const guards = context.match(/if \(serverProvided\) return;/g) ?? [];
-    expect(
-      guards.length,
-      'Both the init effect and the subscribe effect must bail out when the server supplied content'
-    ).toBe(2);
+    expect(context).not.toMatch(/useEffect|indexedDB|localStorage|sessionStorage/);
+    expect(context).toMatch(/initialData: CMSState\b/);
+    expect(context).not.toMatch(/initialData\?:/);
   });
 
   it('mounts the CMS provider in exactly one place, the public site', () => {

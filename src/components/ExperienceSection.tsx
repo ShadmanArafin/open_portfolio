@@ -40,21 +40,17 @@ export const ExperienceSection: React.FC = () => {
         <div className="space-y-0 divide-y divide-border border-t border-b border-border">
           {expList.map((exp, idx) => {
             const hasLink = exp.companyUrl && exp.companyUrl !== '#';
-            const Wrapper = hasLink ? 'a' : 'div';
-            const linkProps = hasLink
-              ? {
-                  href: exp.companyUrl,
-                  target: '_blank',
-                  rel: 'noopener noreferrer',
-                  'aria-label': `View ${exp.company}`,
-                }
-              : {};
 
             return (
               <Reveal key={exp.id} type="fade-up" delay={0.1 + idx * 0.08}>
-                <Wrapper
-                  {...linkProps}
-                  className="group py-8 sm:py-10 grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8 items-baseline transition-all duration-300 hover:bg-surface-primary/40 px-2 sm:px-4 rounded-xl cursor-pointer block text-left"
+                {/* The row is clickable, but only the company name is the link —
+                    its `::after` covers the row. Wrapping the whole row in an
+                    <a> and naming it "View <company>" hid everything the row
+                    says from its accessible name (WCAG 2.5.3, label in name),
+                    so a voice-control user saying what they could see got
+                    nothing. */}
+                <div
+                  className={`group relative py-8 sm:py-10 grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8 items-baseline transition-all duration-300 hover:bg-surface-primary/40 px-2 sm:px-4 rounded-xl text-left ${hasLink ? 'cursor-pointer' : ''}`}
                 >
                   {/* Left Column: Timeline & Employment Type (~3 Cols) */}
                   <div className="lg:col-span-3 flex flex-col gap-1">
@@ -71,9 +67,21 @@ export const ExperienceSection: React.FC = () => {
                     <h3 className="font-display text-xl sm:text-2xl font-medium text-text-primary group-hover:text-accent transition-colors flex items-center gap-1.5">
                       <span>{exp.role}</span>
                     </h3>
-                    <span className="text-sm font-body text-text-secondary font-medium block">
-                      {exp.company}
-                    </span>
+                    {hasLink ? (
+                      <a
+                        href={exp.companyUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm font-body text-text-secondary font-medium block after:absolute after:inset-0 after:rounded-xl focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-accent"
+                      >
+                        {exp.company}
+                        <span className="sr-only"> (opens in a new tab)</span>
+                      </a>
+                    ) : (
+                      <span className="text-sm font-body text-text-secondary font-medium block">
+                        {exp.company}
+                      </span>
+                    )}
                   </div>
 
                   {/* Right Column: Summary & Bullet Points (~5 Cols) */}
@@ -96,7 +104,7 @@ export const ExperienceSection: React.FC = () => {
                       </ul>
                     )}
                   </div>
-                </Wrapper>
+                </div>
               </Reveal>
             );
           })}

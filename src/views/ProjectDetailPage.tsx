@@ -12,12 +12,16 @@ import { cn } from '../utils/cn';
 import { useCMS } from '../cms/context/CMSContext';
 import { formatYearRange } from '../cms/utils/dates';
 import { CMSImage } from '../components/common/CMSImage';
-import { BlockList, parsePage } from '@/core/blocks/registry';
-import { blockContentFrom } from '@/core/blocks/content';
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-export const ProjectDetailPage: React.FC = () => {
+/**
+ * `story` is the project's case-study blocks, already rendered on the server
+ * (`app/(site)/work/[slug]/page.tsx`). The client copy of the content carries
+ * no story blocks — see `clientView` — so this view never parses or renders
+ * them itself, and the block registry stays out of the browser bundle.
+ */
+export const ProjectDetailPage: React.FC<{ story?: React.ReactNode }> = ({ story }) => {
   const { slug } = useParams<{ slug: string }>();
   const { data } = useCMS();
 
@@ -43,10 +47,6 @@ export const ProjectDetailPage: React.FC = () => {
       trackEvent('Project viewed', { slug: project.slug, title: project.title });
     }
   }, [project?.slug]);
-
-  const rawBlocks = project?.story?.blocks;
-  const storyBlocks =
-    rawBlocks && Array.isArray(rawBlocks) && rawBlocks.length > 0 ? parsePage(rawBlocks) : [];
 
   // Deleting a project in the admin must not white-screen the site.
   if (!project) {
@@ -191,11 +191,9 @@ export const ProjectDetailPage: React.FC = () => {
       </section>
 
       {/* 02 STORY BLOCKS OR STANDARD DETAIL SECTIONS */}
-      {storyBlocks.length > 0 ? (
+      {story ? (
         <section className="py-12 border-b border-border bg-surface-primary">
-          <Container>
-            <BlockList blocks={storyBlocks} content={blockContentFrom(data)} />
-          </Container>
+          <Container>{story}</Container>
         </section>
       ) : (
         <>

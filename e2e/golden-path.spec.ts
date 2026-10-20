@@ -76,6 +76,7 @@ test('claim → edit → publish → a visitor sees it', async ({ page, browser,
 for (const route of ['/admin', '/admin/settings', '/admin/brands', '/admin/pages']) {
   test(`${route} has no axe violations`, async ({ page, baseURL }) => {
     await signIn(page, baseURL!);
+    await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto(route);
     await expect(page.locator('h1').first()).toBeVisible();
     const results = await new AxeBuilder({ page }).analyze();

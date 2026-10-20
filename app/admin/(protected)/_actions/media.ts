@@ -5,6 +5,7 @@ import { demoRestrictionMessage, isDemoMode } from '@/core/demo/config';
 import { requireOwner } from '@/core/auth/guard';
 import { clientKey, rateLimit } from '@/core/auth/ratelimit';
 import { makeMediaKey, UploadRejected, validateUpload } from '@/core/media/validate';
+import { storeVariants, variantKey } from '@/core/media/variants';
 import { getStorageAdapter } from '@/core/storage/registry';
 import { RevisionConflictError } from '@/core/storage/contract';
 import { conflictMessage } from '@/core/content/changes';
@@ -101,6 +102,9 @@ export async function uploadMediaAction(form: FormData): Promise<MediaResult> {
     };
   }
 
+  // Smaller copies for phones, beside the original. Best-effort: none is fine.
+  const variants = await storeVariants(adapter.media, key, validated.bytes, validated.mimeType);
+
   const name = file.name.slice(0, 300);
   const typedAlt = form.get('altText');
   const dimensions = form.get('dimensions');
@@ -116,6 +120,7 @@ export async function uploadMediaAction(form: FormData): Promise<MediaResult> {
     ...(typeof dimensions === 'string' && /^[0-9]{2,5}x[0-9]{2,5}$/.test(dimensions)
       ? { dimensions }
       : {}),
+    ...(variants.length > 0 ? { variants } : {}),
     uploadedAt: (stored.uploadedAt || new Date().toISOString()).slice(0, 10),
     altText:
       typeof typedAlt === 'string' && typedAlt.length > 0
@@ -174,6 +179,9 @@ export async function deleteMediaAction(id: unknown): Promise<MediaResult> {
   if (item && item.url.startsWith('/api/media/')) {
     try {
       await adapter.media.remove(item.id);
+      for (const width of item.variants ?? []) {
+        await adapter.media.remove(variantKey(item.id, width)).catch(() => undefined);
+      }
     } catch (err) {
       console.error('[media] Delete failed.', err);
       warning = `"${item.name}" is out of the library, but the stored copy could not be deleted.`;

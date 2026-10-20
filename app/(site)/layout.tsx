@@ -1,5 +1,5 @@
 import { getContentForChannel } from '@/core/content/read';
-import { publicView } from '@/core/content/sanitise';
+import { clientView } from '@/core/content/sanitise';
 import { currentChannel } from '@/core/pages/read';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
@@ -9,9 +9,11 @@ import { DemoBanner } from './demo-banner';
 
 /**
  * Content lives in storage and can change without a rebuild, so pages cannot be
- * frozen at build time. Sixty seconds is a placeholder: once publishing runs
- * through the server it will call `revalidateTag`, updates will be immediate,
- * and this can go back up to an hour.
+ * frozen at build time. Publishing is already immediate — the publish action
+ * calls `revalidatePath('/', 'layout')`, and the e2e golden path checks a
+ * visitor sees the change at once. What the sixty seconds still bounds is a
+ * piece of writing scheduled for later, which appears on the first render after
+ * its time; raising this would make those up to that much late.
  */
 export const revalidate = 60;
 
@@ -22,9 +24,10 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
   const content = await getContentForChannel(await currentChannel());
 
   return (
-    // Cut down to what is already visible. The whole document used to be
-    // serialised into every public page, drafts included.
-    <SiteProviders initialData={publicView(content)}>
+    // Cut down to what is visible (no drafts) and then to what the client
+    // components render (no page blocks, writing or stories, which the
+    // server renders). See `clientView`.
+    <SiteProviders initialData={clientView(content)}>
       <div className="min-h-screen flex flex-col justify-between relative">
         {/* First focusable element on the page: keyboard users should not have
             to tab through the whole navigation to reach the content. */}
