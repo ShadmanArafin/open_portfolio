@@ -11,14 +11,13 @@ import { RevisionConflictError } from '@/core/storage/contract';
 import { conflictMessage, describeChanges } from '@/core/content/changes';
 import type { CMSState, ContentVersion } from '@/cms/types/cms';
 import { readDraftForWrite } from '@/core/content/draft';
+import { recordVersion } from '@/core/content/versions';
 
 export interface PublishResult {
   ok: boolean;
   error?: string;
   conflict?: boolean;
 }
-
-const MAX_VERSIONS = 20;
 
 /**
  * Publishing, as a server action.
@@ -74,10 +73,10 @@ export async function publishDraftAction(expectedRevision?: number): Promise<Pub
     snapshot,
   };
 
-  nextPublished.versions = [
-    version,
-    ...((publishedMeta?.state as CMSState | undefined)?.versions ?? []),
-  ].slice(0, MAX_VERSIONS);
+  // History is its own records now (`core/content/versions`), not nested in
+  // the document every page render reads. Recorded once the publish lands.
+  const legacyVersions = (publishedMeta?.state as CMSState | undefined)?.versions ?? [];
+  nextPublished.versions = [];
   nextPublished.activityLogs = [
     {
       id: `act-${Date.now()}`,
@@ -113,6 +112,12 @@ export async function publishDraftAction(expectedRevision?: number): Promise<Pub
     await adapter.writeSnapshot('draft', merged);
   } catch {
     /* The publish landed; a stale draft is a reload, not a failure. */
+  }
+
+  try {
+    await recordVersion(adapter, version, legacyVersions);
+  } catch (err) {
+    console.error('[publish] Published, but the snapshot for History was not stored.', err);
   }
 
   revalidatePath('/', 'layout');

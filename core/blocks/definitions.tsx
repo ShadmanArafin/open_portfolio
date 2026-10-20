@@ -17,6 +17,7 @@ import {
 } from '../primitives';
 import { deeper } from '../primitives/heading-level';
 import type { BlockField } from './fields';
+import { srcSetFor } from '@/core/media/srcset';
 import type { BlockDefinition } from './schema';
 import { COLLECTION_DEFINITIONS } from './collections';
 import { STANDARD_DEFINITIONS } from './standard';
@@ -274,10 +275,14 @@ const image: BlockDefinition<ImageProps> = {
           : null,
     },
   ],
-  Render: ({ props, frame }) => (
+  Render: ({ props, frame, content }) => (
     <Band frame={frame}>
       <Stack gap={3}>
-        <Media {...props.media} ratio={props.ratio ?? '16 / 9'} />
+        <Media
+          {...props.media}
+          ratio={props.ratio ?? '16 / 9'}
+          srcSet={srcSetFor(props.media.src, content.images)}
+        />
         {props.caption && (
           <Text size="sm" tone="muted">
             {props.caption}
@@ -355,14 +360,20 @@ const gallery: BlockDefinition<GalleryProps> = {
       },
     },
   ],
-  Render: ({ props, frame, headingLevel }) => (
+  Render: ({ props, frame, headingLevel, content }) => (
     <Band frame={frame}>
       <Stack gap={6}>
         {props.heading && <Heading level={headingLevel}>{props.heading}</Heading>}
         <Grid columns={props.columns ?? 3}>
           {props.items.map((item, i) => (
             <Stack key={`${item.src}-${i}`} gap={2}>
-              <Media {...item} ratio="4 / 3" />
+              <Media
+                {...item}
+                ratio="4 / 3"
+                srcSet={srcSetFor(item.src, content.images)}
+                // A grid cell is a fraction of the page, not all of it.
+                sizes={`(min-width: 768px) ${Math.round(100 / (props.columns ?? 3))}vw, 100vw`}
+              />
               {item.caption && (
                 <Text size="sm" tone="muted">
                   {item.caption}

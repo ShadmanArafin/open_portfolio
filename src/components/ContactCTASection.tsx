@@ -51,10 +51,13 @@ export const ContactCTASection: React.FC = () => {
             {/* Action Buttons (Strict 42px Height) */}
             <Reveal type="fade-up" delay={0.35} className="mt-8 sm:mt-9">
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-3.5">
+                {/* No aria-labels on these two: their visible text is the right
+                    name, and overriding it ("Go to Contact Page") meant a
+                    voice-control user saying the words on the button got
+                    nothing (WCAG 2.5.3). */}
                 {/* Primary Button — Contact Page */}
                 <Link
                   href={section?.primaryCtaUrl || '/contact'}
-                  aria-label="Go to Contact Page"
                   className="inline-flex items-center justify-center gap-2 h-[42px] px-6 rounded-full bg-text-primary text-bg font-body text-xs sm:text-[13px] font-medium uppercase tracking-wider hover:opacity-90 transition-all duration-250 hover:-translate-y-[1px] group cursor-pointer shadow-sm select-none"
                 >
                   <span>{section?.primaryCtaLabel}</span>
@@ -66,10 +69,12 @@ export const ContactCTASection: React.FC = () => {
                   href={whatsappUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label="Contact via WhatsApp"
                   className="inline-flex items-center justify-center gap-2 h-[42px] px-6 rounded-full bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] font-body text-xs sm:text-[13px] font-medium uppercase tracking-wider transition-all duration-250 hover:-translate-y-[1px] group cursor-pointer shadow-sm select-none"
                 >
-                  <FaWhatsapp className="w-4 h-4 text-white transition-transform duration-200 group-hover:scale-105 flex-shrink-0" />
+                  <FaWhatsapp
+                    aria-hidden="true"
+                    className="w-4 h-4 text-current transition-transform duration-200 group-hover:scale-105 flex-shrink-0"
+                  />
                   <span>
                     {section?.secondaryCtaLabel || data.microcopy.contactOnWhatsapp}
                     {data.settings.whatsappFormatted ? ` (${data.settings.whatsappFormatted})` : ''}

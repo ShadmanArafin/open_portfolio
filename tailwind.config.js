@@ -36,6 +36,14 @@ export default {
         border: 'var(--border-color)',
         'border-hover': 'var(--border-color-hover)',
       },
+      // `text-accent` is small text far more often than not — dates, numbers,
+      // eyebrow labels — so it takes the link colour, which is held to 4.5:1 on
+      // the page and on every card. The accent itself is held only to 3:1 (it
+      // is a fill and a focus ring, WCAG 1.4.11) and measured 2.83:1 as text
+      // in light mode. Fills, rings and borders keep the accent.
+      textColor: {
+        accent: 'var(--link-color)',
+      },
       // Resolved through CSS variables so the font picker in /admin/appearance
       // actually takes effect, and so the admin can override them for its own
       // UI without touching the site's typography. Defaults live in index.css.

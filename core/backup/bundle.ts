@@ -7,9 +7,9 @@ import { APP_VERSION } from '@/core/version';
 /**
  * Server-side backup bundle.
  *
- * Separate from the browser's `ContentBundle` in `src/cms/services/cmsService`
- * on purpose: that one embeds media bytes as data URLs from IndexedDB, which
- * makes sense when the bytes live in the editor's browser and nowhere else.
+ * The legacy editor's browser-side bundle embedded media bytes as data URLs
+ * from IndexedDB, which made sense when the bytes lived in the editor's
+ * browser and nowhere else (that client is gone; its format still imports).
  * Here the bytes live in the storage backend (disk, Postgres large objects,
  * Supabase Storage, Blob) — embedding them in JSON would mean downloading
  * every upload on export and re-uploading on import, and for hosted stores it

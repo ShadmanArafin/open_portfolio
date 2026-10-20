@@ -42,3 +42,17 @@ test('the public site renders without console errors', async ({ page }) => {
   await expect(page).toHaveURL(/\/(setup)?$/);
   expect(errors).toEqual([]);
 });
+
+test('a page with a form logs nothing red in the console', async ({ page }) => {
+  // Console errors, not only uncaught exceptions: a failed request is logged
+  // as one. The spam-protection key lookup answered 404 whenever Turnstile was
+  // off — most sites — and every visitor's console showed it.
+  const errors: string[] = [];
+  page.on('pageerror', (err) => errors.push(String(err)));
+  page.on('console', (message) => {
+    if (message.type() === 'error') errors.push(message.text());
+  });
+  const response = await page.goto('/contact', { waitUntil: 'networkidle' });
+  if (response?.status() === 404) return; // a site without the contact page
+  expect(errors).toEqual([]);
+});

@@ -29,11 +29,27 @@ for (const mode of MODES) {
           // Private browsing: the default theme stands in.
         }
       }, mode);
+      // Entrance animations fade text in from opacity 0, and axe measures
+      // contrast on whatever is painted at that instant — so without this the
+      // matrix failed a different page on every run, all of them mid-fade.
+      // `Reveal` honours reduced motion, which leaves the settled page.
+      await page.emulateMedia({ reducedMotion: 'reduce' });
       const response = await page.goto(route, { waitUntil: 'domcontentloaded' });
       if (response?.status() === 404) {
         await expect(page.locator('h1')).toHaveCount(1);
         return;
       }
+      // Sections that fade in when scrolled to are invisible until then, and
+      // axe would measure their contrast at opacity 0. Scroll the page the way
+      // a visitor does, then give the last fade time to finish.
+      await page.evaluate(async () => {
+        for (let y = 0; y <= document.body.scrollHeight; y += 400) {
+          window.scrollTo(0, y);
+          await new Promise((resolve) => setTimeout(resolve, 60));
+        }
+        window.scrollTo(0, 0);
+      });
+      await page.waitForTimeout(1200);
       const results = await new AxeBuilder({ page }).analyze();
       expect(
         results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.html).join(' | ')}`)

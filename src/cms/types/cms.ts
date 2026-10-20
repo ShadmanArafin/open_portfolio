@@ -350,6 +350,11 @@ export interface MediaItem {
   type: 'image' | 'pdf' | 'video' | 'svg';
   sizeBytes: number;
   dimensions?: string;
+  /**
+   * Widths of the smaller WebP copies made at upload (`core/media/variants`),
+   * each at `<url>.w<width>.webp`. Absent for files that have none.
+   */
+  variants?: number[];
   uploadedAt: string;
   altText: string;
   usageCount: number;

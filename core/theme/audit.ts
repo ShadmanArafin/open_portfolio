@@ -24,6 +24,10 @@ const PAIRS: { fg: string; bg: string; label: string; size: TextSize }[] = [
   { fg: '--link-color', bg: '--bg-primary', label: 'Links', size: 'body' },
   { fg: '--danger', bg: '--bg-primary', label: 'Error messages', size: 'body' },
   { fg: '--text-primary', bg: '--surface-primary', label: 'Text on cards', size: 'body' },
+  // The raised surface is the furthest step from the page, so muted text on
+  // it is the hardest pair a card can show; everything nearer passes if it does.
+  { fg: '--text-muted', bg: '--surface-raised', label: 'Muted text on cards', size: 'body' },
+  { fg: '--link-color', bg: '--surface-raised', label: 'Links on cards', size: 'body' },
   {
     fg: '--text-on-accent',
     bg: '--accent-color',

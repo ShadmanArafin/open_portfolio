@@ -5,6 +5,7 @@ import { requireOwner } from '@/core/auth/guard';
 import { RevisionConflictError } from '@/core/storage/contract';
 import { conflictMessage } from '@/core/content/changes';
 import type { CMSState } from '@/cms/types/cms';
+import { findVersion } from '@/core/content/versions';
 
 /**
  * Version restore, as a server action.
@@ -39,11 +40,12 @@ export async function restoreVersionAction(
   const meta = await adapter.readSnapshotMeta('draft');
   if (!meta) return { ok: false, error: 'There is no draft to restore into yet.' };
 
-  const target = (meta.state.versions ?? []).find((v) => v.id === versionId);
+  const published = await adapter.readSnapshotMeta('published');
+  const target = await findVersion(adapter, versionId, published?.state ?? meta.state);
   if (!target?.snapshot) return { ok: false, error: 'That snapshot is gone.' };
 
   const restored = structuredClone(target.snapshot) as CMSState;
-  restored.versions = meta.state.versions;
+  restored.versions = [];
   restored.messages = meta.state.messages;
   restored.activityLogs = [
     {

@@ -97,14 +97,6 @@ const SKIP_TEXT_SCAN = new Set([
 const ALLOWED = new Map([
   ['scripts/check-no-personal-data.mjs', 'this file defines the denylist'],
   [
-    'src/cms/services/cmsService.ts',
-    'accepts the pre-rename export bundle format so old backups still import',
-  ],
-  [
-    'src/cms/services/storage/localStore.ts',
-    'reads the pre-rename database and localStorage keys once, so existing content survives the upgrade',
-  ],
-  [
     'core/backup/bundle.ts',
     'accepts the pre-rename server backup format so old backups still import',
   ],

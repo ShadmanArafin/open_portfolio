@@ -21,6 +21,7 @@ import { ContactForm, CommentsFacade, EmbedFacade, NewsletterForm, VideoFacade }
 import type { BlockField } from './fields';
 import type { BlockDefinition } from './schema';
 import { sanitizeHref } from '@/core/security/urls';
+import { srcSetFor } from '@/core/media/srcset';
 
 /**
  * The blocks every mainstream builder ships, and this one did not.
@@ -750,7 +751,7 @@ const split: BlockDefinition<SplitProps> = {
   // the schema was written and no block read it, which is why the setting
   // existed and did nothing.
   frameCapabilities: ['width', 'spacing', 'surface', 'divider', 'flip'],
-  Render: ({ props, frame, headingLevel }) => {
+  Render: ({ props, frame, headingLevel, content }) => {
     const flipped = resolveFrame(frame).flip;
 
     const words = (
@@ -778,6 +779,9 @@ const split: BlockDefinition<SplitProps> = {
         alt={props.media.alt}
         decorative={props.media.decorative}
         ratio={props.ratio ?? '4 / 3'}
+        srcSet={srcSetFor(props.media.src, content.images)}
+        // Beside the text on a wide screen, so about half the page.
+        sizes="(min-width: 768px) 50vw, 100vw"
       />
     );
 

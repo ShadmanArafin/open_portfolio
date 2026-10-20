@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { BlockList, listBlockDefinitions, parsePage } from '../registry';
 import type { ParsedBlock } from '../schema';
+import { EMPTY_BLOCK_CONTENT } from '../content';
 
 /**
  * Blocks, actually rendered.
@@ -136,5 +137,39 @@ describe('the block/theme boundary holds in the output', () => {
   it('emits no hardcoded lengths outside of tokens', () => {
     const lengths = [...html.matchAll(/(\d+(?:\.\d+)?)(px|rem|em)\b/g)].map((m) => m[0]);
     expect(lengths).toEqual([]);
+  });
+});
+
+describe('responsive images', () => {
+  const url = '/api/media/photo-1.jpg';
+  const content = {
+    ...EMPTY_BLOCK_CONTENT,
+    images: { [url]: { widths: [640, 1280], original: 3000 } },
+  };
+  const media = { src: url, alt: 'A harbour at dawn' };
+
+  it('offers the smaller copies made at upload on every block that shows a photo', () => {
+    const html = renderToStaticMarkup(
+      <BlockList
+        blocks={parsePage([
+          block('image', { media }, 'one'),
+          block('gallery', { items: [media, media] }, 'two'),
+          block('split', { heading: 'h', paragraphs: ['p'], media }, 'three'),
+        ])}
+        content={content}
+      />
+    );
+    const srcsets = [...html.matchAll(/srcSet="([^"]+)"/gi)].map((m) => m[1]);
+    expect(srcsets).toHaveLength(4);
+    for (const srcset of srcsets) {
+      expect(srcset).toBe(`${url}.w640.webp 640w, ${url}.w1280.webp 1280w, ${url} 3000w`);
+    }
+  });
+
+  it('leaves an image without copies as a plain src', () => {
+    const html = renderToStaticMarkup(
+      <BlockList blocks={parsePage([block('image', { media })])} />
+    );
+    expect(html).not.toMatch(/srcset/i);
   });
 });

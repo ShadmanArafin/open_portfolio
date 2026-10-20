@@ -344,6 +344,8 @@ export function Media({
   ratio = '4 / 3',
   fit = 'cover',
   priority,
+  srcSet,
+  sizes = '100vw',
 }: {
   src: string;
   alt: string;
@@ -351,6 +353,10 @@ export function Media({
   ratio?: string;
   fit?: 'cover' | 'contain';
   priority?: boolean;
+  /** Smaller copies made at upload (`srcSetFor`); the browser picks one. */
+  srcSet?: string;
+  /** How wide the image is drawn, so the browser picks the right copy. */
+  sizes?: string;
 }) {
   // Nothing chosen yet. An <img src=""> makes the browser re-request the
   // current page as the image — a real network hit and a console warning — so
@@ -384,6 +390,8 @@ export function Media({
   return (
     <img
       src={safeSrc}
+      srcSet={srcSet}
+      sizes={srcSet ? sizes : undefined}
       alt={decorative ? '' : alt}
       role={decorative ? 'presentation' : undefined}
       // Lazy by default; `priority` opts the one above-the-fold image out.

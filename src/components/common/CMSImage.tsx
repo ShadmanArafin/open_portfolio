@@ -1,5 +1,9 @@
-import React from 'react';
+'use client';
+
+import React, { useMemo } from 'react';
 import { resolveAssetUrl } from '../../cms/utils/mediaUrls';
+import { useCMS } from '../../cms/context/CMSContext';
+import { buildImageIndex, srcSetFor } from '@/core/media/srcset';
 
 type CMSImageProps = Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'src'> & {
   /**
@@ -21,11 +25,28 @@ type CMSImageProps = Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'src'> & {
  */
 export const CMSImage: React.FC<CMSImageProps> = ({ src, hideWhenEmpty, alt = '', ...rest }) => {
   const resolved = resolveAssetUrl(src);
+  // Smaller copies of uploaded photos, looked up by URL (`clientView` keeps
+  // only the media items that have any).
+  const media = useCMS().data.media;
+  const index = useMemo(() => buildImageIndex(media), [media]);
+  const srcSet = srcSetFor(src, index);
   if (!resolved && hideWhenEmpty) return null;
   // Lazy + async decode by default: below-fold CMS images must not block the
   // first paint or shift layout work onto it. Callers rendering above-fold
   // content pass their own loading/decoding through `rest`, which wins.
-  // (Full next/image migration with remotePatterns + sharp is the follow-up;
-  // every call site needs real dimensions first.)
-  return <img src={resolved} alt={alt} loading="lazy" decoding="async" {...rest} />;
+  // Uploaded photos carry smaller copies made at upload (core/media/variants),
+  // so a phone fetches the 640px one. `sizes` defaults to the full width — an
+  // overestimate on a multi-column desktop layout, never an underestimate —
+  // and callers that know better pass their own.
+  return (
+    <img
+      src={resolved}
+      srcSet={srcSet}
+      sizes={srcSet ? '100vw' : undefined}
+      alt={alt}
+      loading="lazy"
+      decoding="async"
+      {...rest}
+    />
+  );
 };

@@ -38,6 +38,11 @@ through a letterbox. It now takes the window.
 
 ### You can now
 
+- **Send phones a phone-sized photo.** Large photos get WebP copies at 640,
+  1280 and 1920 pixels when uploaded, and every image on the site offers them
+  through `srcset`, so a phone downloads the small one instead of the
+  camera-sized original.
+
 - **Run a released image instead of building one.** Every version tag
   publishes `ghcr.io/shadmanarafin/open_portfolio` for amd64 and arm64, so a
   server — or a Raspberry Pi — pulls it rather than spending ten minutes and a
@@ -145,6 +150,18 @@ through a letterbox. It now takes the window.
 
 ### Changed
 
+- **Pages carry only what they show.** Every public page used to include every
+  published page's blocks, every piece of writing in full and every project's
+  case study, whatever page it was. They render on the server now and stay
+  there, so a page's size no longer grows with how much you have written.
+  About 1,300 lines of the old in-browser editor that every visitor downloaded
+  and never ran are gone with it.
+
+- **Version history is stored beside your site, not inside it.** Each publish
+  is its own record; the copy every visitor's page is built from no longer
+  carries twenty old copies of itself. Existing history moves across on your
+  next publish and is readable the whole time.
+
 - **CI walks the whole journey in a browser.** A new job builds the site,
   claims a fresh install, edits it, publishes and checks a visitor gets the
   change, and runs axe over the public pages and the admin. The browser tests
@@ -206,6 +223,22 @@ through a letterbox. It now takes the window.
   build and the tag you run just have to match each other.
 
 ### Fixed
+
+- **A preview showed the old colours.** Previewing a theme or colour change
+  painted the published palette until you published. Previews now show the
+  draft's colours and typefaces.
+
+- **Small grey and accent text was slightly too faint.** Captions, dates and
+  labels met the 4.5:1 contrast minimum on the page background but not on the
+  cards and bands they sit on (down to 4.39:1, and 2.83:1 for accent-coloured
+  text in light mode). Every theme now derives them against every surface, and
+  the publish check covers cards.
+
+- **Four links said something different to assistive technology than on
+  screen,** so voice-control users could not say the words they saw.
+
+- **Pages with a form logged an error in every visitor's console** when spam
+  protection was off.
 
 - **A brand-new site could not save anything.** After claiming, every editing
   screen — and the welcome wizard — answered "There is no draft to change yet".
