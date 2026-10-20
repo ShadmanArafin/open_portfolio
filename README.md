@@ -126,12 +126,27 @@ Open <http://localhost:3000> and follow the setup. That brings up the app and a
 Postgres database together; change `OPB_SETUP_TOKEN` and `OPB_SECRET_KEY` in
 `docker-compose.yml` first.
 
-Just the app, against a database you already have:
+Just the app, against a database you already have — from a released image, for
+amd64 or arm64, so nothing is built on your machine:
 
 ```bash
-docker build -t open-portfolio .
-docker run -p 3000:3000 -v opb-data:/data   -e OPB_POSTGRES_URL="postgres://…"   -e OPB_SETUP_TOKEN="a long phrase you invent"   -e OPB_SECRET_KEY="a different long phrase"   open-portfolio
+docker run -p 3000:3000 -v opb-data:/data \
+  -e OPB_POSTGRES_URL="postgres://…" \
+  -e OPB_SETUP_TOKEN="a long phrase you invent" \
+  -e OPB_SECRET_KEY="a different long phrase" \
+  ghcr.io/shadmanarafin/open_portfolio:latest
 ```
+
+Use your own phrases: the two examples above are public, so a site still running
+on them refuses to be claimed. Each released image carries a signed record of the
+commit and workflow that built it, which you can check before running it:
+
+```bash
+gh attestation verify oci://ghcr.io/shadmanarafin/open_portfolio:latest --owner ShadmanArafin
+```
+
+Building it yourself instead is `docker build -t open-portfolio .` and the same
+`docker run` with `open-portfolio` as the image.
 
 **The volume matters.** `/data` is where uploads and — if you are not using a
 database — your content live. Without it, replacing the container deletes your
@@ -140,7 +155,7 @@ like: that is exactly what updating does, and your content is untouched.
 
 ## Run it locally
 
-**Requirements:** Node.js 20.9 or newer, and npm. Nothing else — no database is
+**Requirements:** Node.js 22 or newer, and npm. Nothing else — no database is
 needed to try it, and no account anywhere.
 
 ```bash

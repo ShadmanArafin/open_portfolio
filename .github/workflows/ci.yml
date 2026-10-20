@@ -20,9 +20,9 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
           cache: npm
@@ -43,6 +43,42 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  e2e:
+    name: Browser tests (golden path, axe, smoke)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    # The production build in a real browser, against an empty store: claim a
+    # site, edit it, publish, and check a stranger receives it; axe on the
+    # public pages in both modes and on the admin; the guards and headers.
+    # Unit tests cover each step; this is what catches the seams between them.
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Install the browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Build
+        run: npm run build
+
+      - name: Run the browser tests
+        run: npm run e2e
+
+      - name: Keep the traces of a failure
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: e2e-traces
+          path: test-results/
+          retention-days: 7
 
   storage-conformance:
     name: Storage conformance against real Postgres
@@ -71,9 +107,9 @@ jobs:
           - 8025:8025
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
           cache: npm
@@ -90,7 +126,7 @@ jobs:
             curl -sSf http://127.0.0.1:8090/api/health && break || sleep 1
           done
 
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           distribution: temurin
           java-version: 21
@@ -158,13 +194,13 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # Full history: a file deleted in a later commit is still in the pack,
           # and a public repo hands out the whole pack.
           fetch-depth: 0
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
 
@@ -187,10 +223,10 @@ jobs:
 
     # Nothing here publishes the image — this only proves the Dockerfile is
     # valid, including the explicit miniflare/workerd copies the Cloudflare
-    # adapter needs at runtime. Signing (cosign, keyless via OIDC) attaches
-    # when image publishing is automated, not before.
+    # adapter needs at runtime. Publishing, with a signed build provenance and
+    # an SBOM, is release.yml's job, on a version tag.
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Build the image
         run: docker build -t open-portfolio:ci .

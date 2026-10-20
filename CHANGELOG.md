@@ -38,6 +38,13 @@ through a letterbox. It now takes the window.
 
 ### You can now
 
+- **Run a released image instead of building one.** Every version tag
+  publishes `ghcr.io/shadmanarafin/open_portfolio` for amd64 and arm64, so a
+  server — or a Raspberry Pi — pulls it rather than spending ten minutes and a
+  few gigabytes compiling. Each image carries an SBOM and a build provenance
+  record signed through Sigstore; `gh attestation verify` checks it came from
+  this repository's release workflow and nowhere else.
+
 - **Stop losing unsaved edits.** Every editing screen now says "Unsaved
   changes" next to Save as soon as something differs from what was loaded, asks
   before a link elsewhere in the admin throws the edits away, and holds the tab
@@ -137,6 +144,16 @@ through a letterbox. It now takes the window.
   the unsubscribe link, send the first one to yourself.
 
 ### Changed
+
+- **CI walks the whole journey in a browser.** A new job builds the site,
+  claims a fresh install, edits it, publishes and checks a visitor gets the
+  change, and runs axe over the public pages and the admin. The browser tests
+  existed but were never run by CI; this is the test that would have caught
+  the new-install save bug the day it landed.
+
+- **The project's own supply chain is checked.** CodeQL scans the code and the
+  workflows, OpenSSF Scorecard publishes a score, and every GitHub Action is
+  pinned to a commit rather than a movable tag.
 
 - **A screen that is out of date refuses to save instead of overwriting.**
   Each screen now carries a fingerprint of exactly the part of the draft it
