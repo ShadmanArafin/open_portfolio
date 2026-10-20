@@ -8,6 +8,7 @@ import { PROFESSIONS } from '@/cms/data/professions';
 import type { CMSState } from '@/cms/types/cms';
 import { applyWelcomeAnswers, WELCOME_ACCENTS, type WelcomeAnswers } from '@/core/content/welcome';
 import { publishDraftAction } from './publish';
+import { readDraftForWrite } from '@/core/content/draft';
 
 export interface WelcomeResult {
   ok: boolean;
@@ -60,8 +61,7 @@ export async function applyWelcomeAction(input: {
   if (!profession || !accent) return { ok: false, error: 'Those answers are not usable.' };
 
   const adapter = await getStorageAdapter();
-  const meta = await adapter.readSnapshotMeta('draft');
-  if (!meta) return { ok: false, error: 'There is no draft to change yet.' };
+  const meta = await readDraftForWrite(adapter);
 
   const answers: WelcomeAnswers = {
     fullName: input.fullName.slice(0, 120),

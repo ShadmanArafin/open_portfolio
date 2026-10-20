@@ -9,6 +9,7 @@ import { getStorageAdapter } from '@/core/storage/registry';
 import { RevisionConflictError } from '@/core/storage/contract';
 import { conflictMessage } from '@/core/content/changes';
 import type { CMSState, MediaItem } from '@/cms/types/cms';
+import { readDraftForWrite } from '@/core/content/draft';
 
 export interface MediaResult {
   ok: boolean;
@@ -36,10 +37,9 @@ const HARD_MAX_BYTES = 25 * 1024 * 1024;
 async function writeDraft(
   mutate: (draft: CMSState) => void,
   mayRetry = true
-): Promise<'ok' | 'missing' | { conflict: string }> {
+): Promise<'ok' | { conflict: string }> {
   const adapter = await getStorageAdapter();
-  const meta = await adapter.readSnapshotMeta('draft');
-  if (!meta) return 'missing';
+  const meta = await readDraftForWrite(adapter);
 
   const next = structuredClone(meta.state as CMSState);
   mutate(next);
@@ -132,7 +132,7 @@ export async function uploadMediaAction(form: FormData): Promise<MediaResult> {
   if (outcome !== 'ok') {
     return {
       ok: false,
-      conflict: outcome !== 'missing',
+      conflict: true,
       error:
         'The file was stored, but the library list could not be updated. Reload the page — ' +
         'if the file is missing from the library, upload it again.',
@@ -150,8 +150,7 @@ export async function deleteMediaAction(id: unknown): Promise<MediaResult> {
   }
 
   const adapter = await getStorageAdapter();
-  const meta = await adapter.readSnapshotMeta('draft');
-  if (!meta) return { ok: false, error: 'There is no draft to change yet.' };
+  const meta = await readDraftForWrite(adapter);
   const item = (meta.state as CMSState).media.find((m) => m.id === id);
 
   // The record goes first. If the draft write conflicts, nothing has been
@@ -162,8 +161,8 @@ export async function deleteMediaAction(id: unknown): Promise<MediaResult> {
   if (outcome !== 'ok') {
     return {
       ok: false,
-      conflict: outcome !== 'missing',
-      error: outcome === 'missing' ? 'There is no draft to change yet.' : outcome.conflict,
+      conflict: true,
+      error: outcome.conflict,
     };
   }
 
@@ -209,8 +208,8 @@ export async function updateResumeAction(url: unknown, name: unknown): Promise<M
   if (outcome !== 'ok') {
     return {
       ok: false,
-      conflict: outcome !== 'missing',
-      error: outcome === 'missing' ? 'There is no draft to change yet.' : outcome.conflict,
+      conflict: true,
+      error: outcome.conflict,
     };
   }
 

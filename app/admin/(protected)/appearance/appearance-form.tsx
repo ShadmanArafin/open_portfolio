@@ -6,6 +6,8 @@ import { applyThemeChoice, listThemeOverrides } from '@/core/theme/overrides';
 import { GOOGLE_FONTS_LIST } from '@/utils/googleFonts';
 import type { AppearanceSettings } from '@/cms/types/cms';
 import { updateAppearanceAction } from '../_actions/settings';
+import { ConflictNotice } from '../_components/conflict-notice';
+import { UnsavedNote, useSaveShortcut, useUnsavedChanges } from '../_components/unsaved-changes';
 
 const COLOR_FIELDS: { field: keyof AppearanceSettings; label: string; fallback: string }[] = [
   { field: 'accentDark', label: 'Accent — dark mode', fallback: '#35F2B3' },
@@ -44,11 +46,20 @@ const field = 'w-full rounded-xl border border-border bg-surface-primary px-3 te
  * Everything else is local state and one Save, so the draft gets one write
  * instead of one per keystroke.
  */
-export function AppearanceForm({ initial }: { initial: AppearanceSettings }) {
+export function AppearanceForm({
+  initial,
+  token: initialToken,
+}: {
+  initial: AppearanceSettings;
+  token?: string;
+}) {
   const [appearance, setAppearance] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [conflict, setConflict] = useState(false);
+  const [token, setToken] = useState(initialToken);
+  const { dirty, markSaved } = useUnsavedChanges(appearance);
   const [themeToChoose, setThemeToChoose] = useState<{ id: string; kept: number } | null>(null);
 
   const set = (field: string, value: string) =>
@@ -72,21 +83,31 @@ export function AppearanceForm({ initial }: { initial: AppearanceSettings }) {
     setBusy(true);
     setNote(null);
     setError(null);
+    setConflict(false);
     try {
-      const result = await updateAppearanceAction({
-        themeId: appearance.themeId ?? DEFAULT_THEME_ID,
-        accentDark: appearance.accentDark ?? '',
-        accentLight: appearance.accentLight ?? '',
-        backgroundDark: appearance.backgroundDark ?? '',
-        backgroundLight: appearance.backgroundLight ?? '',
-        strokeDark: appearance.strokeDark ?? '',
-        strokeLight: appearance.strokeLight ?? '',
-        displayFontFamily: appearance.displayFontFamily ?? '',
-        bodyFontFamily: appearance.bodyFontFamily ?? '',
-        monoFontFamily: appearance.monoFontFamily ?? '',
-      });
-      if (result.ok) setNote('Saved to your draft.');
-      else setError(result.error ?? 'The save did not go through.');
+      const result = await updateAppearanceAction(
+        {
+          themeId: appearance.themeId ?? DEFAULT_THEME_ID,
+          accentDark: appearance.accentDark ?? '',
+          accentLight: appearance.accentLight ?? '',
+          backgroundDark: appearance.backgroundDark ?? '',
+          backgroundLight: appearance.backgroundLight ?? '',
+          strokeDark: appearance.strokeDark ?? '',
+          strokeLight: appearance.strokeLight ?? '',
+          displayFontFamily: appearance.displayFontFamily ?? '',
+          bodyFontFamily: appearance.bodyFontFamily ?? '',
+          monoFontFamily: appearance.monoFontFamily ?? '',
+        },
+        token
+      );
+      if (result.ok) {
+        markSaved(appearance);
+        if (result.token) setToken(result.token);
+        setNote('Saved to your draft.');
+      } else {
+        setConflict(Boolean(result.conflict));
+        setError(result.error ?? 'The save did not go through.');
+      }
     } catch {
       setError('The save did not go through. Reload and try again.');
     } finally {
@@ -94,6 +115,7 @@ export function AppearanceForm({ initial }: { initial: AppearanceSettings }) {
     }
   };
 
+  useSaveShortcut(() => void save(), !busy);
   return (
     <div className="grid gap-6">
       <section aria-label="Theme" className="grid gap-4 rounded-2xl border border-border p-4">
@@ -299,15 +321,20 @@ export function AppearanceForm({ initial }: { initial: AppearanceSettings }) {
         >
           {busy ? 'Saving…' : 'Save'}
         </button>
+        <UnsavedNote dirty={dirty} />
         {note ? (
           <p role="status" className="m-0 text-sm text-text-secondary">
             {note}
           </p>
         ) : null}
         {error ? (
-          <p role="alert" className="m-0 text-sm text-danger">
-            {error}
-          </p>
+          conflict ? (
+            <ConflictNotice message={error} />
+          ) : (
+            <p role="alert" className="m-0 text-sm text-danger">
+              {error}
+            </p>
+          )
         ) : null}
       </div>
     </div>

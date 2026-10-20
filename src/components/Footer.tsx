@@ -1,6 +1,7 @@
 'use client';
 
 import { isShippedCopyright } from '@/core/content/identity';
+import { sanitizeHref } from '@/core/security/urls';
 import React, { useState } from 'react';
 import { trackEvent } from '../utils/analytics';
 import { Mail, Copy, Check, Download, ArrowUpRight } from 'lucide-react';
@@ -51,8 +52,14 @@ export const Footer: React.FC = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // Same rule as the social row block: a stored link that is not a safe
+  // destination is left out rather than rendered as a dead or hostile card.
   const socialLinks = (data.socialLinks || [])
     .filter((s) => s.visible !== false)
+    .flatMap((s) => {
+      const url = sanitizeHref(s.url);
+      return url ? [{ ...s, url }] : [];
+    })
     .sort((a, b) => a.sortOrder - b.sortOrder);
 
   return (
@@ -147,7 +154,9 @@ export const Footer: React.FC = () => {
                     key={card.id || card.label}
                     href={card.url}
                     target="_blank"
-                    rel="noopener noreferrer"
+                    // `me`: these are the owner's own profiles, and it is what
+                    // lets Mastodon and other IndieWeb verifiers link back.
+                    rel="me noopener noreferrer"
                     onClick={() => trackEvent('Social clicked', { platform: card.iconType })}
                     initial={{ opacity: 0, y: 12 }}
                     whileInView={{ opacity: 1, y: 0 }}

@@ -138,9 +138,9 @@ export function ServicesBuilder({
     <div className="grid gap-6">
       {!vaultAvailable ? (
         <Notice kind="warning" title="This site cannot store passwords safely yet">
-          Set OPB_SECRET_KEY in your hosting provider&apos;s environment variables and restart.
-          Until then, anything with a password has to be configured through environment variables
-          instead.
+          Set OPB_SECRET_KEY to a long phrase of your own (not the example from the documentation)
+          in your hosting provider&apos;s environment variables and restart. Until then, anything
+          with a password has to be configured through environment variables instead.
         </Notice>
       ) : null}
 

@@ -89,7 +89,7 @@ export function WelcomeWizard({ currentName }: { currentName: string }) {
           <h1 className="font-display text-3xl font-medium text-text-primary">
             Welcome. Let&apos;s make this yours.
           </h1>
-          <p className="mt-3 font-body text-sm text-text-secondary">
+          <p className="m-0 mt-3 font-body text-sm text-text-secondary">
             Four short steps. Everything here can be changed later, and you can skip straight to the
             editor if you would rather explore first.
           </p>
@@ -156,7 +156,7 @@ export function WelcomeWizard({ currentName }: { currentName: string }) {
           <h1 className="font-display text-3xl font-medium text-text-primary">
             What kind of work do you show?
           </h1>
-          <p className="mt-3 font-body text-sm text-text-secondary">
+          <p className="m-0 mt-3 font-body text-sm text-text-secondary">
             This renames the sections to language that fits your field. A photographer gets
             &ldquo;Series&rdquo; where a developer gets &ldquo;Projects&rdquo;. It changes wording
             only — nothing you write is moved or lost.
@@ -186,7 +186,7 @@ export function WelcomeWizard({ currentName }: { currentName: string }) {
       {step === 2 && (
         <section>
           <h1 className="font-display text-3xl font-medium text-text-primary">Pick a colour.</h1>
-          <p className="mt-3 font-body text-sm text-text-secondary">
+          <p className="m-0 mt-3 font-body text-sm text-text-secondary">
             Used for links, buttons and highlights. Each of these has been checked to stay readable
             in both light and dark mode.
           </p>
@@ -221,7 +221,7 @@ export function WelcomeWizard({ currentName }: { currentName: string }) {
           <h1 className="font-display text-3xl font-medium text-text-primary">
             That&apos;s the setup done.
           </h1>
-          <p className="mt-3 font-body text-sm text-text-secondary">
+          <p className="m-0 mt-3 font-body text-sm text-text-secondary">
             Publishing now puts <strong>{fullName.trim() || currentName}</strong> on the live site.
             The demo projects are still there as examples — replace or delete them whenever you
             like.
@@ -241,7 +241,7 @@ export function WelcomeWizard({ currentName }: { currentName: string }) {
           </ul>
 
           {error && (
-            <p role="alert" className="mt-6 font-body text-sm text-danger">
+            <p role="alert" className="m-0 mt-6 font-body text-sm text-danger">
               {error}
             </p>
           )}

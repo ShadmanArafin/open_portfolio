@@ -24,9 +24,16 @@ function nextNumber(items: CapabilityGroupItem[]): number {
  * Same number rules as the process steps: typed by hand, computed only for
  * new records, and never left colliding by a removal.
  */
-export function CapabilitiesBuilder({ initialGroups }: { initialGroups: CapabilityGroupItem[] }) {
+export function CapabilitiesBuilder({
+  initialGroups,
+  token,
+}: {
+  initialGroups: CapabilityGroupItem[];
+  token?: string;
+}) {
   return (
     <CollectionEditor<CapabilityGroupItem>
+      token={token}
       initialItems={initialGroups}
       addLabel="Add group"
       emptyTitle="No capability groups yet."
@@ -50,12 +57,13 @@ export function CapabilitiesBuilder({ initialGroups }: { initialGroups: Capabili
         id: newId('cap'),
         number: pad2(nextNumber(items)),
       })}
-      save={async (groups) => {
-        const result = await updateCapabilitiesAction(groups);
+      save={async (groups, token) => {
+        const result = await updateCapabilitiesAction(groups, token);
         return {
           ok: result.ok,
           error: result.error,
           conflict: result.conflict,
+          token: result.token,
           items: result.capabilityGroups,
         };
       }}

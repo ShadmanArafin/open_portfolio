@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { updateMicrocopyAction } from '../_actions/settings';
+import { ConflictNotice } from '../_components/conflict-notice';
+import { UnsavedNote, useSaveShortcut, useUnsavedChanges } from '../_components/unsaved-changes';
 
 /** Turn a camelCase key into a readable label. */
 function humanise(key: string): string {
@@ -19,12 +21,21 @@ function humanise(key: string): string {
  * The server action only writes keys the content already has, so a stale tab
  * cannot add fields.
  */
-export function MicrocopyForm({ initial }: { initial: Record<string, string> }) {
+export function MicrocopyForm({
+  initial,
+  token: initialToken,
+}: {
+  initial: Record<string, string>;
+  token?: string;
+}) {
   const [values, setValues] = useState(initial);
   const [query, setQuery] = useState('');
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [conflict, setConflict] = useState(false);
+  const [token, setToken] = useState(initialToken);
+  const { dirty, markSaved } = useUnsavedChanges(values);
 
   const q = query.trim().toLowerCase();
   const all = Object.entries(values);
@@ -36,10 +47,17 @@ export function MicrocopyForm({ initial }: { initial: Record<string, string> }) 
     setBusy(true);
     setNote(null);
     setError(null);
+    setConflict(false);
     try {
-      const result = await updateMicrocopyAction(values);
-      if (result.ok) setNote('Saved to your draft.');
-      else setError(result.error ?? 'The save did not go through.');
+      const result = await updateMicrocopyAction(values, token);
+      if (result.ok) {
+        markSaved(values);
+        if (result.token) setToken(result.token);
+        setNote('Saved to your draft.');
+      } else {
+        setConflict(Boolean(result.conflict));
+        setError(result.error ?? 'The save did not go through.');
+      }
     } catch {
       setError('The save did not go through. Reload and try again.');
     } finally {
@@ -47,6 +65,7 @@ export function MicrocopyForm({ initial }: { initial: Record<string, string> }) 
     }
   };
 
+  useSaveShortcut(() => void save(), !busy);
   return (
     <section aria-label="Microcopy" className="grid gap-4 rounded-2xl border border-border p-4">
       <label className="grid gap-1 text-sm">
@@ -102,15 +121,20 @@ export function MicrocopyForm({ initial }: { initial: Record<string, string> }) 
         >
           {busy ? 'Saving…' : 'Save'}
         </button>
+        <UnsavedNote dirty={dirty} />
         {note ? (
           <p role="status" className="m-0 text-sm text-text-secondary">
             {note}
           </p>
         ) : null}
         {error ? (
-          <p role="alert" className="m-0 text-sm text-danger">
-            {error}
-          </p>
+          conflict ? (
+            <ConflictNotice message={error} />
+          ) : (
+            <p role="alert" className="m-0 text-sm text-danger">
+              {error}
+            </p>
+          )
         ) : null}
       </div>
     </section>

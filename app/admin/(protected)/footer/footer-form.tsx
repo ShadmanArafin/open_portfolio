@@ -9,6 +9,8 @@ import {
 } from '@/cms/data/socialPlatforms';
 import type { SocialLinkItem, SocialPlatformId } from '@/cms/types/cms';
 import { updateFooterAction, updateSocialLinksAction } from '../_actions/settings';
+import { ConflictNotice } from '../_components/conflict-notice';
+import { UnsavedNote, useSaveShortcut, useUnsavedChanges } from '../_components/unsaved-changes';
 
 const secondary =
   'rounded-full border border-border px-4 text-sm text-text-secondary hover:text-text-primary disabled:opacity-50';
@@ -130,8 +132,11 @@ function SocialCard({
 
 export function FooterForm({
   initial,
+  tokens: initialTokens,
 }: {
   initial: { copyrightText: string; giantFooterText: string; links: SocialLinkItem[] };
+  /** Two writes, two parts of the draft: the footer text and the social links. */
+  tokens?: { footer: string; socialLinks: string };
 }) {
   const [copyrightText, setCopyrightText] = useState(initial.copyrightText);
   const [giantFooterText, setGiantFooterText] = useState(initial.giantFooterText);
@@ -140,6 +145,9 @@ export function FooterForm({
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [removeArmed, setRemoveArmed] = useState<string | null>(null);
+  const [conflict, setConflict] = useState(false);
+  const [tokens, setTokens] = useState(initialTokens);
+  const { dirty, markSaved } = useUnsavedChanges({ copyrightText, giantFooterText, links });
 
   const patchLink = (index: number, patch: Partial<SocialLinkItem>) =>
     setLinks((current) => current.map((link, i) => (i === index ? { ...link, ...patch } : link)));
@@ -174,17 +182,32 @@ export function FooterForm({
     setBusy(true);
     setNote(null);
     setError(null);
+    setConflict(false);
     try {
       // Sequential on purpose: both writes are revision-checked, and a
       // concurrent pair would make one of them lose the race with itself.
-      const texts = await updateFooterAction({ copyrightText, giantFooterText });
+      const texts = await updateFooterAction({ copyrightText, giantFooterText }, tokens?.footer);
       if (!texts.ok) {
+        setConflict(Boolean(texts.conflict));
         setError(texts.error ?? 'The save did not go through.');
         return;
       }
-      const socials = await updateSocialLinksAction(links);
-      if (socials.ok) setNote('Saved to your draft.');
-      else setError(socials.error ?? 'The save did not go through.');
+      const socials = await updateSocialLinksAction(links, tokens?.socialLinks);
+      setTokens((current) =>
+        current
+          ? {
+              footer: texts.token ?? current.footer,
+              socialLinks: socials.token ?? current.socialLinks,
+            }
+          : current
+      );
+      if (socials.ok) {
+        markSaved({ copyrightText, giantFooterText, links });
+        setNote('Saved to your draft.');
+      } else {
+        setConflict(Boolean(socials.conflict));
+        setError(socials.error ?? 'The save did not go through.');
+      }
     } catch {
       setError('The save did not go through. Reload and try again.');
     } finally {
@@ -192,6 +215,7 @@ export function FooterForm({
     }
   };
 
+  useSaveShortcut(() => void save(), !busy);
   return (
     <div className="grid gap-6">
       <section aria-label="Footer" className="grid gap-4 rounded-2xl border border-border p-4">
@@ -286,15 +310,20 @@ export function FooterForm({
         >
           {busy ? 'Saving…' : 'Save'}
         </button>
+        <UnsavedNote dirty={dirty} />
         {note ? (
           <p role="status" className="m-0 text-sm text-text-secondary">
             {note}
           </p>
         ) : null}
         {error ? (
-          <p role="alert" className="m-0 text-sm text-danger">
-            {error}
-          </p>
+          conflict ? (
+            <ConflictNotice message={error} />
+          ) : (
+            <p role="alert" className="m-0 text-sm text-danger">
+              {error}
+            </p>
+          )
         ) : null}
       </div>
     </div>

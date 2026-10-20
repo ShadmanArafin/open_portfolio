@@ -16,7 +16,9 @@ services:
       OPB_POSTGRES_URL: postgres://opb:opb@db:5432/opb
 
       # Change both of these. The first proves the site is yours on first run;
-      # the second encrypts service passwords stored from the admin.
+      # the second encrypts service passwords stored from the admin. While they
+      # are still these example values, claiming the site and saving passwords
+      # are both refused — anyone can read them here.
       OPB_SETUP_TOKEN: change-me-to-a-long-random-phrase
       OPB_SECRET_KEY: change-me-to-a-different-long-random-phrase
 

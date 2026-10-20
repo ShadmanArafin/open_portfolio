@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { getContentForChannel } from '@/core/content/read';
+import { screenToken } from '@/core/content/screen-token';
 import { ProjectsBuilder } from './projects-builder';
 
 export const metadata: Metadata = { title: 'Projects' };
@@ -21,13 +22,17 @@ export default async function ProjectsPage() {
       <div>
         <p className="m-0 font-mono text-xs uppercase tracking-widest text-text-muted">Work</p>
         <h1 className="font-display m-0 mt-1 text-3xl">Selected work</h1>
-        <p className="mt-1 text-text-secondary">
+        <p className="m-0 mt-1 text-text-secondary">
           Your projects, the links they point at, and the images that go with them. Save when you
           are done — nothing here is live until you publish.
         </p>
       </div>
 
-      <ProjectsBuilder initialProjects={projects} media={draft.media ?? []} />
+      <ProjectsBuilder
+        token={screenToken(draft, 'projects')}
+        initialProjects={projects}
+        media={draft.media ?? []}
+      />
     </div>
   );
 }

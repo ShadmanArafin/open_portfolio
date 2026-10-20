@@ -21,7 +21,7 @@ const field =
 
 function BackToSignIn() {
   return (
-    <p className="text-center text-sm">
+    <p className="m-0 text-center text-sm">
       <Link
         href="/admin/login"
         className="text-text-secondary underline-offset-4 hover:text-text-primary hover:underline"
@@ -92,14 +92,14 @@ export function ResetForm({ token }: { token?: string }) {
       <form onSubmit={(event) => void confirm(event)} className="grid gap-5">
         <div>
           <h1 className="font-display text-2xl font-semibold">Choose a new passphrase</h1>
-          <p className="mt-1 text-sm text-text-secondary">
+          <p className="m-0 mt-1 text-sm text-text-secondary">
             This link works once. Setting a passphrase signs you in here and signs out every other
             session.
           </p>
         </div>
 
         {error ? (
-          <p role="alert" className="text-sm text-danger">
+          <p role="alert" className="m-0 text-sm text-danger">
             {error}
           </p>
         ) : null}
@@ -140,7 +140,7 @@ export function ResetForm({ token }: { token?: string }) {
       <div className="grid gap-5">
         <div>
           <h1 className="font-display text-2xl font-semibold">Check your email</h1>
-          <p className="mt-1 text-sm text-text-secondary">
+          <p className="m-0 mt-1 text-sm text-text-secondary">
             If that address owns this site, a reset link is on its way. It works once, for 30
             minutes.
           </p>
@@ -154,13 +154,13 @@ export function ResetForm({ token }: { token?: string }) {
     <form onSubmit={(event) => void request(event)} className="grid gap-5">
       <div>
         <h1 className="font-display text-2xl font-semibold">Reset your passphrase</h1>
-        <p className="mt-1 text-sm text-text-secondary">
+        <p className="m-0 mt-1 text-sm text-text-secondary">
           Enter the email you used to claim this site.
         </p>
       </div>
 
       {error ? (
-        <p role="alert" className="text-sm text-danger">
+        <p role="alert" className="m-0 text-sm text-danger">
           {error}
         </p>
       ) : null}

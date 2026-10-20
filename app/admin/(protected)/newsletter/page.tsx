@@ -5,6 +5,7 @@ import { getStorageAdapter } from '@/core/storage/registry';
 import { resolveTransportWithStored } from '@/core/email/transport';
 import { NEWSLETTER_DEFAULTS, type Subscriber } from '@/core/newsletter/schema';
 import { NewsletterForm, RemoveSubscriber } from './newsletter-client';
+import { screenToken } from '@/core/content/screen-token';
 
 export const dynamic = 'force-dynamic';
 
@@ -65,7 +66,7 @@ export default async function NewsletterPage() {
           Newsletter
         </p>
         <h1 className="font-display m-0 mt-1 text-3xl">Sign-ups</h1>
-        <p className="mt-1 text-text-secondary">
+        <p className="m-0 mt-1 text-text-secondary">
           Collect email addresses on your site and take them anywhere. This does not send email — it
           gives you the list.
         </p>
@@ -92,6 +93,7 @@ export default async function NewsletterPage() {
           </p>
         </div>
         <NewsletterForm
+          token={draftMeta ? screenToken(draftMeta.state, 'newsletter') : undefined}
           initial={{
             enabled: settings.enabled,
             pitch: settings.pitch,

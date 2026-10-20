@@ -20,8 +20,16 @@ vi.mock('@/core/storage/registry', () => ({
   }),
 }));
 
-const { clearConfig, decrypt, encrypt, hintFor, readConfig, vaultAvailable, writeConfig } =
-  await import('../vault');
+const {
+  clearConfig,
+  decrypt,
+  encrypt,
+  hintFor,
+  readConfig,
+  vaultAvailable,
+  vaultKeyIsPlaceholder,
+  writeConfig,
+} = await import('../vault');
 
 const env = (secret: string) => ({ OPB_SECRET_KEY: secret }) as unknown as NodeJS.ProcessEnv;
 const ENV = env('a-server-secret-that-is-long-enough');
@@ -126,5 +134,29 @@ describe('what the browser is told', () => {
 
   it('does not leak a short secret by showing all of it', () => {
     expect(hintFor('abc').hint).toBe('••••');
+  });
+});
+
+describe('the documented example key', () => {
+  const example = {
+    NODE_ENV: 'production',
+    OPB_SECRET_KEY: 'change-me-to-a-different-long-random-phrase',
+  } as unknown as NodeJS.ProcessEnv;
+
+  it('refuses new secrets in production, because anyone can derive the key', () => {
+    expect(vaultKeyIsPlaceholder(example)).toBe(true);
+    expect(vaultAvailable(example)).toBe(false);
+    expect(() => encrypt('hunter2', example)).toThrow(/example OPB_SECRET_KEY/);
+  });
+
+  it('still reads what was saved under it, so a live site keeps working', () => {
+    const dev = { ...example, NODE_ENV: 'development' } as unknown as NodeJS.ProcessEnv;
+    const stored = encrypt('hunter2', dev);
+    expect(decrypt(stored, example)).toBe('hunter2');
+  });
+
+  it('is not enforced outside production', () => {
+    const dev = { ...example, NODE_ENV: 'development' } as unknown as NodeJS.ProcessEnv;
+    expect(vaultAvailable(dev)).toBe(true);
   });
 });

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { getContentForChannel } from '@/core/content/read';
+import { screenToken } from '@/core/content/screen-token';
 import { SeoForm } from './seo-form';
 
 export const metadata: Metadata = { title: 'SEO' };
@@ -16,12 +17,13 @@ export default async function SeoPage() {
       <div>
         <p className="m-0 font-mono text-xs uppercase tracking-widest text-text-muted">SEO</p>
         <h1 className="font-display m-0 mt-1 text-3xl">Search &amp; Social Previews</h1>
-        <p className="mt-1 text-text-secondary">
+        <p className="m-0 mt-1 text-text-secondary">
           Page title, meta description, and the image used when a link to your site is shared.
         </p>
       </div>
 
       <SeoForm
+        token={screenToken(draft, 'seo')}
         initial={{
           siteTitle: draft.seo.siteTitle ?? '',
           titleTemplate: draft.seo.titleTemplate ?? '',

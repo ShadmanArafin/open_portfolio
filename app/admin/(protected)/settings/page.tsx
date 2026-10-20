@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { getStorageAdapter } from '@/core/storage/registry';
 import { getContentForChannel } from '@/core/content/read';
+import { screenToken } from '@/core/content/screen-token';
 import { SiteForm } from './site-form';
 import { BackupPanel } from './backup-panel';
 import { PasskeyPanel } from './passkey-panel';
@@ -38,12 +39,13 @@ export default async function SettingsPage() {
       <div>
         <p className="m-0 font-mono text-xs uppercase tracking-widest text-text-muted">General</p>
         <h1 className="font-display m-0 mt-1 text-3xl">Site Settings &amp; Backup</h1>
-        <p className="mt-1 text-text-secondary">
+        <p className="m-0 mt-1 text-text-secondary">
           Your name, contact details, the About story, and tools to back up or restore all content.
         </p>
       </div>
 
       <SiteForm
+        token={screenToken(draft, 'site')}
         initial={{
           fullName: settings.fullName,
           role: settings.role,
@@ -54,6 +56,7 @@ export default async function SettingsPage() {
           whatsappUrl: settings.whatsappUrl,
           availabilityStatus: settings.availabilityStatus,
           aboutHeading: settings.aboutHeading ?? '',
+          language: settings.language ?? '',
           aboutStory: (settings.aboutStoryParagraphs ?? []).join('\n\n'),
         }}
       />

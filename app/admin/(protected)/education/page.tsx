@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { getContentForChannel } from '@/core/content/read';
+import { screenToken } from '@/core/content/screen-token';
 import { EducationBuilder } from './education-builder';
 
 export const metadata: Metadata = { title: 'Education' };
@@ -18,13 +19,13 @@ export default async function EducationPage() {
       <div>
         <p className="m-0 font-mono text-xs uppercase tracking-widest text-text-muted">Content</p>
         <h1 className="font-display m-0 mt-1 text-3xl">Education</h1>
-        <p className="mt-1 text-text-secondary">
+        <p className="m-0 mt-1 text-text-secondary">
           Degrees and academic chapters, in the order your About page lists them. Entries number
           themselves from that order.
         </p>
       </div>
 
-      <EducationBuilder initialEducation={education} />
+      <EducationBuilder token={screenToken(draft, 'education')} initialEducation={education} />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { getContentForChannel } from '@/core/content/read';
+import { screenToken } from '@/core/content/screen-token';
 import { NavigationBuilder } from './navigation-builder';
 
 export const metadata: Metadata = { title: 'Navigation' };
@@ -44,12 +45,16 @@ export default async function NavigationPage() {
           Navigation
         </p>
         <h1 className="font-display m-0 mt-1 text-3xl">Header Navigation</h1>
-        <p className="mt-1 text-text-secondary">
+        <p className="m-0 mt-1 text-text-secondary">
           Links in the top navigation bar, in order. The logo always links to the homepage.
         </p>
       </div>
 
-      <NavigationBuilder initialLinks={links} known={[...known].sort()} />
+      <NavigationBuilder
+        token={screenToken(draft, 'navLinks')}
+        initialLinks={links}
+        known={[...known].sort()}
+      />
     </div>
   );
 }

@@ -1,3 +1,5 @@
+import { isPlaceholderSecret } from './secrets';
+
 /**
  * Fail-fast boot checks, run once when the server starts.
  *
@@ -65,6 +67,24 @@ export function checkBootConfig(env: BootEnv = process.env): BootCheck {
     warnings.push(
       'OPB_SETUP_TOKEN is not set. First-run claim is closed until it is; add any long ' +
         'random string in your hosting dashboard and redeploy.'
+    );
+  }
+
+  if (isPlaceholderSecret(env.OPB_SETUP_TOKEN)) {
+    warnings.push(
+      'OPB_SETUP_TOKEN is still the example value from the documentation, which anyone can ' +
+        'read. Claiming this site is refused until it is changed to a phrase of your own.'
+    );
+  }
+
+  if (isPlaceholderSecret(env.OPB_SECRET_KEY || env.OPB_SESSION_SECRET)) {
+    // A warning, not a fatal error: a live site that has run on this value for
+    // months must keep serving after an update. New passwords are refused by
+    // the vault instead, and ones already stored stay readable until changed.
+    warnings.push(
+      'OPB_SECRET_KEY is still the example value from the documentation, so anyone can ' +
+        'derive the key that encrypts saved service passwords. New ones are refused until ' +
+        'it is changed; changing it means re-entering the ones already saved.'
     );
   }
 

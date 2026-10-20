@@ -5,13 +5,17 @@ import { getStorageAdapter } from '@/core/storage/registry';
 import { requireOwner } from '@/core/auth/guard';
 import { RevisionConflictError } from '@/core/storage/contract';
 import { conflictMessage } from '@/core/content/changes';
+import { screenToken, staleScreenError } from '@/core/content/screen-token';
 import { aboutChanges } from '@/core/content/sections';
 import type { CMSState, SectionConfig } from '@/cms/types/cms';
+import { readDraftForWrite } from '@/core/content/draft';
 
 export interface HomepageResult {
   ok: boolean;
   error?: string;
   conflict?: boolean;
+  /** The screen's new token, for the next save. See `core/content/screen-token`. */
+  token?: string;
 }
 
 /**
@@ -79,7 +83,10 @@ function cleanSection(raw: unknown): SectionPatch | null {
   return { id: entry.id, name: entry.name, visible: entry.visible, order: entry.order, text };
 }
 
-export async function updateHomepageAction(sections: unknown): Promise<HomepageResult> {
+export async function updateHomepageAction(
+  sections: unknown,
+  token?: string
+): Promise<HomepageResult> {
   await requireOwner();
   if (!Array.isArray(sections) || sections.length > 60) {
     return { ok: false, error: 'Those sections are not usable.' };
@@ -97,8 +104,9 @@ export async function updateHomepageAction(sections: unknown): Promise<HomepageR
   }
 
   const adapter = await getStorageAdapter();
-  const meta = await adapter.readSnapshotMeta('draft');
-  if (!meta) return { ok: false, error: 'There is no draft to change yet.' };
+  const meta = await readDraftForWrite(adapter);
+  const stale = staleScreenError(meta.state as CMSState, 'sections', token);
+  if (stale) return { ok: false, conflict: true, error: stale };
   const next = structuredClone(meta.state as CMSState);
 
   // Compare and mutate against the same pre-save copy.
@@ -152,5 +160,5 @@ export async function updateHomepageAction(sections: unknown): Promise<HomepageR
   }
 
   revalidatePath('/admin/homepage');
-  return { ok: true };
+  return { ok: true, token: screenToken(next, 'sections') };
 }

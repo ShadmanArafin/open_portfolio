@@ -117,12 +117,15 @@ function withImage(
 export function ProjectsBuilder({
   initialProjects,
   media = [],
+  token,
 }: {
   initialProjects: ProjectItem[];
   media?: MediaItem[];
+  token?: string;
 }) {
   return (
     <CollectionEditor<ProjectItem>
+      token={token}
       initialItems={initialProjects}
       addLabel="Add project"
       emptyTitle="No projects yet."
@@ -144,12 +147,13 @@ export function ProjectsBuilder({
       })}
       create={createProject}
       duplicate={duplicateProject}
-      save={async (projects) => {
-        const result = await updateProjectsAction(projects);
+      save={async (projects, token) => {
+        const result = await updateProjectsAction(projects, token);
         return {
           ok: result.ok,
           error: result.error,
           conflict: result.conflict,
+          token: result.token,
           items: result.projects,
         };
       }}

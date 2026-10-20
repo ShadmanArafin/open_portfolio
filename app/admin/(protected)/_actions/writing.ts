@@ -5,16 +5,20 @@ import { getStorageAdapter } from '@/core/storage/registry';
 import { requireOwner } from '@/core/auth/guard';
 import { RevisionConflictError } from '@/core/storage/contract';
 import { conflictMessage } from '@/core/content/changes';
+import { screenToken, staleScreenError } from '@/core/content/screen-token';
 import { normaliseSlug } from '@/core/pages/schema';
 import { cleanBlock, isText } from '@/core/blocks/clean';
 import { MAX_WRITING_ENTRIES, WRITING_DEFAULTS } from '@/core/writing/schema';
 import type { WritingEntry, WritingSettings } from '@/core/writing/schema';
 import type { CMSState } from '@/cms/types/cms';
+import { readDraftForWrite } from '@/core/content/draft';
 
 export interface WritingResult {
   ok: boolean;
   error?: string;
   conflict?: boolean;
+  /** The screen's new token, for the next save. See `core/content/screen-token`. */
+  token?: string;
   /** The stored result, so the editor can show the new revisions without a reload. */
   settings?: WritingSettings;
   writing?: WritingEntry[];
@@ -83,7 +87,8 @@ function cleanSeo(raw: unknown): WritingEntry['seo'] | null {
 
 export async function updateWritingAction(
   settings: unknown,
-  entries: unknown
+  entries: unknown,
+  token?: string
 ): Promise<WritingResult> {
   await requireOwner();
   if (!Array.isArray(entries) || entries.length > MAX_WRITING_ENTRIES) {
@@ -191,8 +196,9 @@ export async function updateWritingAction(
   }
 
   const adapter = await getStorageAdapter();
-  const meta = await adapter.readSnapshotMeta('draft');
-  if (!meta) return { ok: false, error: 'There is no draft to change yet.' };
+  const meta = await readDraftForWrite(adapter);
+  const stale = staleScreenError(meta.state as CMSState, 'writing', token);
+  if (stale) return { ok: false, conflict: true, error: stale };
   const next = structuredClone(meta.state as CMSState);
   const stored = next.writing ?? [];
 
@@ -229,5 +235,10 @@ export async function updateWritingAction(
   }
 
   revalidatePath('/admin/writing');
-  return { ok: true, settings: cleanStoredSettings, writing: stamped };
+  return {
+    ok: true,
+    settings: cleanStoredSettings,
+    writing: stamped,
+    token: screenToken(next, 'writing'),
+  };
 }

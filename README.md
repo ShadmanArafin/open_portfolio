@@ -222,7 +222,8 @@ Every step is skippable. None of it is permanent.
 
 ### Publish
 
-- **Draft and publish.** Edits save as you type into a draft. The live site keeps
+- **Draft and publish.** Each screen saves to a draft when you press Save (or
+  Cmd/Ctrl+S), and asks before you leave with changes unsaved. The live site keeps
   showing the published version until you publish.
 - **Preview before anyone else sees it**, at the page's real address, with a
   banner so you never mistake a draft for the live site.

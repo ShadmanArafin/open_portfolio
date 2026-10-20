@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from 'react';
 import { ConflictNotice } from './conflict-notice';
+import { UnsavedNote, useSaveShortcut, useUnsavedChanges } from './unsaved-changes';
 
 const secondary =
   'rounded-full border border-border px-3 text-sm text-text-secondary hover:text-text-primary disabled:opacity-50';
@@ -13,6 +14,8 @@ export interface SaveOutcome<T> {
   conflict?: boolean;
   /** The stored list, so the editor can show what was actually saved. */
   items?: T[];
+  /** The screen's token for its next save. See `core/content/screen-token`. */
+  token?: string;
 }
 
 /**
@@ -25,9 +28,14 @@ export interface SaveOutcome<T> {
  * confirmed a delete, some did not. Edits are local until Save, and the save
  * is one revision-checked write of the whole list, so a reorder or an add can
  * never land half-applied.
+ *
+ * The save carries the screen's token, so a list somebody changed in another
+ * tab since this one loaded is refused rather than overwritten; leaving with
+ * unsaved edits asks first, and Cmd/Ctrl+S saves.
  */
 export function CollectionEditor<T extends { id: string }>({
   initialItems,
+  token: initialToken,
   addLabel,
   emptyTitle,
   emptyHint,
@@ -46,6 +54,8 @@ export function CollectionEditor<T extends { id: string }>({
   renderFields,
 }: {
   initialItems: T[];
+  /** From the page: what this screen's part of the draft looked like on load. */
+  token?: string;
   addLabel: string;
   emptyTitle: string;
   emptyHint?: string;
@@ -56,7 +66,7 @@ export function CollectionEditor<T extends { id: string }>({
   badge?: (item: T) => { label: string; live: boolean } | null;
   create: (items: T[]) => T;
   duplicate: (item: T, items: T[]) => T;
-  save: (items: T[]) => Promise<SaveOutcome<T>>;
+  save: (items: T[], token?: string) => Promise<SaveOutcome<T>>;
   note?: string;
   headerExtra?: ReactNode;
   /** Replaces the Add button — the artifact screen uploads before it has a record. */
@@ -72,6 +82,8 @@ export function CollectionEditor<T extends { id: string }>({
   const [noteText, setNoteText] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [conflict, setConflict] = useState(false);
+  const [token, setToken] = useState(initialToken);
+  const { dirty, markSaved } = useUnsavedChanges(items);
 
   const mutateItem = (id: string, mutate: (item: T) => T) =>
     setItems((list) => list.map((item) => (item.id === id ? mutate(item) : item)));
@@ -113,9 +125,12 @@ export function CollectionEditor<T extends { id: string }>({
     setSaveError(null);
     setConflict(false);
     try {
-      const result = await save(items);
+      const result = await save(items, token);
       if (result.ok) {
-        if (result.items) setItems(result.items);
+        const saved = result.items ?? items;
+        setItems(saved);
+        markSaved(saved);
+        if (result.token) setToken(result.token);
         setNoteText('Saved to your draft.');
       } else {
         setConflict(Boolean(result.conflict));
@@ -127,6 +142,8 @@ export function CollectionEditor<T extends { id: string }>({
       setBusy(false);
     }
   };
+
+  useSaveShortcut(() => void saveAll(), !busy);
 
   return (
     <div className="grid gap-6">
@@ -272,6 +289,7 @@ export function CollectionEditor<T extends { id: string }>({
         >
           {busy ? 'Saving…' : 'Save'}
         </button>
+        <UnsavedNote dirty={dirty} />
         <p className="m-0 text-sm text-text-secondary">{note}</p>
         {noteText ? (
           <p role="status" className="m-0 text-sm text-text-secondary">

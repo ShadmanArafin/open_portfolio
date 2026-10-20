@@ -19,11 +19,14 @@ import { ImageField } from '../_components/image-field';
  */
 export function RecommendationsBuilder({
   initialRecommendations,
+  token,
 }: {
   initialRecommendations: RecommendationItem[];
+  token?: string;
 }) {
   return (
     <CollectionEditor<RecommendationItem>
+      token={token}
       initialItems={initialRecommendations}
       addLabel="Add recommendation"
       emptyTitle="No recommendations yet."
@@ -44,12 +47,13 @@ export function RecommendationsBuilder({
         visible: true,
       })}
       duplicate={(item) => ({ ...structuredClone(item), id: newId('rec') })}
-      save={async (recommendations) => {
-        const result = await updateRecommendationsAction(recommendations);
+      save={async (recommendations, token) => {
+        const result = await updateRecommendationsAction(recommendations, token);
         return {
           ok: result.ok,
           error: result.error,
           conflict: result.conflict,
+          token: result.token,
           items: result.recommendations,
         };
       }}

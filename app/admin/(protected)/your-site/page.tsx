@@ -92,7 +92,7 @@ export default async function YourSitePage() {
     <div className="grid gap-5" style={{ maxWidth: 'var(--measure)' }}>
       <div>
         <h1 className="font-display m-0 text-3xl">Your site</h1>
-        <p className="mt-1 text-text-secondary">
+        <p className="m-0 mt-1 text-text-secondary">
           The address to put on your CV, and how to swap it for one of your own.
         </p>
       </div>

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { getContentForChannel } from '@/core/content/read';
+import { screenToken } from '@/core/content/screen-token';
 import { CaseStudiesBuilder } from './case-studies-builder';
 
 export const metadata: Metadata = { title: 'Case studies' };
@@ -20,13 +21,16 @@ export default async function CaseStudiesPage() {
           Case studies
         </p>
         <h1 className="font-display m-0 mt-1 text-3xl">Case Studies &amp; Design Stories</h1>
-        <p className="mt-1 text-text-secondary">
+        <p className="m-0 mt-1 text-text-secondary">
           Longer stories about your work — the research, the decisions you made, and what came of
           them. Save when you are done — nothing here is live until you publish.
         </p>
       </div>
 
-      <CaseStudiesBuilder initialCaseStudies={caseStudies} />
+      <CaseStudiesBuilder
+        token={screenToken(draft, 'caseStudies')}
+        initialCaseStudies={caseStudies}
+      />
     </div>
   );
 }

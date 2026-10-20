@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { getContentForChannel } from '@/core/content/read';
+import { screenToken } from '@/core/content/screen-token';
 import { ProcessBuilder } from './process-builder';
 
 export const metadata: Metadata = { title: 'Process' };
@@ -18,13 +19,13 @@ export default async function ProcessPage() {
       <div>
         <p className="m-0 font-mono text-xs uppercase tracking-widest text-text-muted">Content</p>
         <h1 className="font-display m-0 mt-1 text-3xl">Process steps</h1>
-        <p className="mt-1 text-text-secondary">
+        <p className="m-0 mt-1 text-text-secondary">
           The steps in the “Design Process” section on the homepage. Deliverable and detail chips
           are optional — leave them empty to hide them.
         </p>
       </div>
 
-      <ProcessBuilder initialSteps={steps} />
+      <ProcessBuilder token={screenToken(draft, 'processSteps')} initialSteps={steps} />
     </div>
   );
 }

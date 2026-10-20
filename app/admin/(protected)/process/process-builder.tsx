@@ -25,9 +25,16 @@ function nextNumber(items: ProcessStepItem[]): number {
  * list rather than the list length, which is how the legacy "length + 1"
  * produced duplicates after a removal.
  */
-export function ProcessBuilder({ initialSteps }: { initialSteps: ProcessStepItem[] }) {
+export function ProcessBuilder({
+  initialSteps,
+  token,
+}: {
+  initialSteps: ProcessStepItem[];
+  token?: string;
+}) {
   return (
     <CollectionEditor<ProcessStepItem>
+      token={token}
       initialItems={initialSteps}
       addLabel="Add step"
       emptyTitle="No process steps yet."
@@ -53,12 +60,13 @@ export function ProcessBuilder({ initialSteps }: { initialSteps: ProcessStepItem
         id: newId('step'),
         number: pad2(nextNumber(items)),
       })}
-      save={async (processSteps) => {
-        const result = await updateProcessAction(processSteps);
+      save={async (processSteps, token) => {
+        const result = await updateProcessAction(processSteps, token);
         return {
           ok: result.ok,
           error: result.error,
           conflict: result.conflict,
+          token: result.token,
           items: result.processSteps,
         };
       }}

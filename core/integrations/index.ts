@@ -21,6 +21,7 @@ export {
   hintFor,
   readConfig,
   vaultAvailable,
+  vaultKeyIsPlaceholder,
   writeConfig,
   VaultUnavailableError,
   type SecretHint,
