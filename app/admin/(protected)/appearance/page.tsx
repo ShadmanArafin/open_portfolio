@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { getContentForChannel } from '@/core/content/read';
+import { screenToken } from '@/core/content/screen-token';
 import { AppearanceForm } from './appearance-form';
 
 export const metadata: Metadata = { title: 'Appearance' };
@@ -21,13 +22,13 @@ export default async function AppearancePage() {
           Appearance
         </p>
         <h1 className="font-display m-0 mt-1 text-3xl">Colours &amp; Typography</h1>
-        <p className="mt-1 text-text-secondary">
+        <p className="m-0 mt-1 text-text-secondary">
           Accent colours per theme, background tones, and the Google Fonts used for headings and
           body text.
         </p>
       </div>
 
-      <AppearanceForm initial={draft.appearance} />
+      <AppearanceForm token={screenToken(draft, 'appearance')} initial={draft.appearance} />
     </div>
   );
 }

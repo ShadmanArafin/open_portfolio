@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { getContentForChannel } from '@/core/content/read';
+import { screenToken } from '@/core/content/screen-token';
 import { WRITING_DEFAULTS, writingSettingsSchema } from '@/core/writing/schema';
 import type { WritingSettings } from '@/core/writing/schema';
 import { WritingBuilder } from './writing-builder';
@@ -24,13 +25,14 @@ export default async function WritingPage() {
       <div>
         <p className="m-0 font-mono text-xs uppercase tracking-widest text-text-muted">Writing</p>
         <h1 className="font-display m-0 mt-1 text-3xl">Writing</h1>
-        <p className="mt-1 text-text-secondary">
+        <p className="m-0 mt-1 text-text-secondary">
           Essays, notes, posts — whatever you want to call them. Built from the same blocks as your
           pages. Save when you are done — nothing here is live until you publish.
         </p>
       </div>
 
       <WritingBuilder
+        token={screenToken(draft, 'writing')}
         initialSettings={settings}
         initialEntries={draft.writing ?? []}
         media={draft.media ?? []}

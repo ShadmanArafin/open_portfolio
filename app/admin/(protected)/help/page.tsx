@@ -45,7 +45,7 @@ export default async function HelpPage() {
       <div>
         <p className="m-0 font-mono text-xs uppercase tracking-widest text-text-muted">Help</p>
         <h1 className="font-display m-0 mt-1 text-3xl">Help and feedback</h1>
-        <p className="mt-1 text-text-secondary">
+        <p className="m-0 mt-1 text-text-secondary">
           Report something broken, ask for something new, and see what changed in the latest
           version.
         </p>

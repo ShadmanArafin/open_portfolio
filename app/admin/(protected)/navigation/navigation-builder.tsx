@@ -19,12 +19,15 @@ import { newId } from '../_components/ids';
 export function NavigationBuilder({
   initialLinks,
   known,
+  token,
 }: {
   initialLinks: NavLinkItem[];
   known: string[];
+  token?: string;
 }) {
   return (
     <CollectionEditor<NavLinkItem>
+      token={token}
       initialItems={initialLinks}
       addLabel="Add link"
       emptyTitle="No links yet."
@@ -42,12 +45,13 @@ export function NavigationBuilder({
         sortOrder: links.length + 1,
       })}
       duplicate={(link) => ({ ...structuredClone(link), id: newId('nav') })}
-      save={async (links) => {
-        const result = await updateNavLinksAction(links);
+      save={async (links, token) => {
+        const result = await updateNavLinksAction(links, token);
         return {
           ok: result.ok,
           error: result.error,
           conflict: result.conflict,
+          token: result.token,
           items: result.links,
         };
       }}

@@ -149,7 +149,7 @@ export default async function StoragePage() {
     <div className="grid max-w-[measure] gap-5" style={{ maxWidth: 'var(--measure)' }}>
       <div>
         <h1 className="font-display m-0 text-3xl">Where your content lives</h1>
-        <p className="mt-1 text-text-secondary">
+        <p className="m-0 mt-1 text-text-secondary">
           Your pages, your pictures and the messages people send you are all kept in one place. This
           is which one, and what else you could move to.
         </p>

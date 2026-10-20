@@ -1003,7 +1003,7 @@ computed contrast, zero console errors throughout).
       5; the site is on 6.** … Publishing would change: … media (+1)" - each
       with the Reload control at 44px. Unit tests cover the sentence's three
       shapes (parts, no parts, no fresh state).
-- [ ] Collection writes refuse a stale save. **Found 2026-10-18 finishing the
+- [x] Collection writes refuse a stale save. **DONE 2026-10-20 as Phase E1, see §12.8.** **Found 2026-10-18 finishing the
       mobile pass, deliberately not started there.** The collection/settings
       editors write the revision they _just read_ (`writeList`, `writeDraft`),
       not the revision the screen loaded, so a stale save is not refused - the
@@ -2370,13 +2370,49 @@ explicit Save.
 
 **E1 — Safety and correctness (days)**
 
-- [ ] D5 JSON-LD escape helper, with a `</script>` regression test
-- [ ] D6 refuse placeholder and short secrets in production
-- [ ] Unsaved-changes guard + Cmd/Ctrl+S
-- [ ] D4 stale-save refusal for collections and settings
-- [ ] `settings.language` → `<html lang>`
-- [ ] `rel="me"` on footer social links and in `<head>`
-- [ ] README "save as you type" claim, and the dashboard house-rule fixes
+- [x] D5 JSON-LD escape helper, with a `</script>` regression test.
+      `core/content/json-ld.ts`; the writing page's Article block goes through it.
+- [x] D6 refuse placeholder secrets in production. **Narrowed on purpose:**
+      only the documented example values (`change-me…` and the README's two
+      phrases, `core/security/secrets.ts`), not a length rule. A short phrase
+      somebody invented is still theirs, and an update must not lock a working
+      site out. The claim is refused under the example token; the vault refuses
+      to _encrypt_ under the example key but still decrypts, so a live site
+      keeps sending mail; boot warns about both instead of failing.
+- [x] Unsaved-changes guard + Cmd/Ctrl+S. `_components/unsaved-changes.tsx`
+      (dirty = differs from last load/save as JSON; `beforeunload` plus a
+      capture-phase intercept on in-admin links; Cmd/Ctrl+S), wired into
+      `CollectionEditor` (ten screens) and the eight custom forms.
+- [x] D4 stale-save refusal — closes the open Phase C item above. Per-screen
+      fingerprints, not the document revision (`core/content/screen-token.ts`):
+      saving Brands in one tab must not refuse an open Projects screen in
+      another. Keys are sorted before hashing because Postgres `jsonb` reorders
+      them, which would otherwise make the second save from the same screen
+      look stale. An untokened save (an old tab open across the update) still
+      goes through.
+- [x] `settings.language` → `<html lang>`, BCP-47, canonicalised on save.
+- [x] `rel="me"` on footer social links and as `<link rel="me">` in `<head>`;
+      the footer now drops unsafe stored links like the socials block does.
+- [x] README "save as you type" claim, and the dashboard house-rule fixes (plus
+      `m-0` on every admin `<p>` that lacked it).
+- [x] **Found while verifying, and fixed: a brand-new site could not save.**
+      Nothing wrote the first draft row since the legacy client was deleted, so
+      every editor and the welcome wizard answered "There is no draft to change
+      yet" after claiming. `core/content/draft.ts` starts a missing draft from
+      the published site or the built-in content and creates it create-only
+      (expected revision 0, asserted by the conformance suite).
+
+  Verified 2026-10-20: typecheck, lint (0 errors, the 79-warning baseline),
+  format check and 1105 tests green; new tests for each item. Live in Chromium
+  against `next dev` on a freshly claimed local install: the chip appears on the
+  first edit, a link to Experience raised the leave question and stayed when
+  declined, Ctrl+S saved, a second save from the same screen went through, two
+  tabs on Brands — the second save was refused with "nothing was written",
+  while an Experience save after a Brands save in another tab was not; a bad
+  language code was refused, `pt-br` saved and published as `lang="pt-BR"`,
+  four `<link rel="me">` in the served HTML, zero console errors. The production
+  `next build` could not run in this sandbox (Turbopack cannot fetch Google
+  Fonts through its proxy); CI builds it.
 
 **E2 — Production pipeline (days)**
 

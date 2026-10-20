@@ -16,6 +16,8 @@ import { CheckField, Field } from '../_components/form-fields';
 import { newId } from '../_components/ids';
 import { updateWritingAction } from '../_actions/writing';
 import { MarkdownImport } from './markdown-import';
+import { ConflictNotice } from '../_components/conflict-notice';
+import { UnsavedNote, useSaveShortcut, useUnsavedChanges } from '../_components/unsaved-changes';
 
 /**
  * Writing — essays, notes, posts.
@@ -78,10 +80,12 @@ export function WritingBuilder({
   initialSettings,
   initialEntries,
   media,
+  token: initialToken,
 }: {
   initialSettings: WritingSettings;
   initialEntries: WritingEntry[];
   media: MediaItem[];
+  token?: string;
 }) {
   const [settings, setSettings] = useState<WritingSettings>({
     ...WRITING_DEFAULTS,
@@ -93,6 +97,9 @@ export function WritingBuilder({
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [conflict, setConflict] = useState(false);
+  const [token, setToken] = useState(initialToken);
+  const { dirty, markSaved } = useUnsavedChanges({ settings, entries });
 
   const arranged = arrange(entries, settings.order);
 
@@ -150,13 +157,21 @@ export function WritingBuilder({
     setBusy(true);
     setNote(null);
     setError(null);
+    setConflict(false);
     try {
-      const result = await updateWritingAction(settings, entries);
+      const result = await updateWritingAction(settings, entries, token);
       if (result.ok && result.writing && result.settings) {
-        setEntries(result.writing);
-        setSettings({ ...WRITING_DEFAULTS, ...result.settings });
+        const saved = {
+          settings: { ...WRITING_DEFAULTS, ...result.settings },
+          entries: result.writing,
+        };
+        setEntries(saved.entries);
+        setSettings(saved.settings);
+        markSaved(saved);
+        if (result.token) setToken(result.token);
         setNote('Saved to your draft.');
       } else {
+        setConflict(Boolean(result.conflict));
         setError(result.error ?? 'The save did not go through.');
       }
     } catch {
@@ -166,6 +181,7 @@ export function WritingBuilder({
     }
   };
 
+  useSaveShortcut(() => void save(), !busy);
   return (
     <div className="grid gap-6">
       <section
@@ -355,6 +371,7 @@ export function WritingBuilder({
         >
           {busy ? 'Saving…' : 'Save'}
         </button>
+        <UnsavedNote dirty={dirty} />
         <p className="m-0 text-sm text-text-secondary">
           Nothing on this screen is live until you publish.
         </p>
@@ -364,9 +381,13 @@ export function WritingBuilder({
           </p>
         ) : null}
         {error ? (
-          <p role="alert" className="m-0 text-sm text-danger">
-            {error}
-          </p>
+          conflict ? (
+            <ConflictNotice message={error} />
+          ) : (
+            <p role="alert" className="m-0 text-sm text-danger">
+              {error}
+            </p>
+          )
         ) : null}
       </div>
     </div>

@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { removeSubscriberAction, updateNewsletterSettingsAction } from '../_actions/newsletter';
+import { ConflictNotice } from '../_components/conflict-notice';
+import { UnsavedNote, useSaveShortcut, useUnsavedChanges } from '../_components/unsaved-changes';
 
 export interface NewsletterFormSettings {
   enabled: boolean;
@@ -11,25 +13,43 @@ export interface NewsletterFormSettings {
 }
 
 /** The form copy. Local state + one save; the list below it never waits on it. */
-export function NewsletterForm({ initial }: { initial: NewsletterFormSettings }) {
+export function NewsletterForm({
+  initial,
+  token: initialToken,
+}: {
+  initial: NewsletterFormSettings;
+  token?: string;
+}) {
   const [form, setForm] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
+  const [conflict, setConflict] = useState<string | null>(null);
+  const [token, setToken] = useState(initialToken);
+  const { dirty, markSaved } = useUnsavedChanges(form);
 
   const save = async () => {
     setBusy(true);
     setNote(null);
+    setConflict(null);
     try {
-      const result = await updateNewsletterSettingsAction(form);
-      setNote(
-        result.ok ? 'Saved to your draft.' : (result.error ?? 'The save did not go through.')
-      );
+      const result = await updateNewsletterSettingsAction(form, token);
+      if (result.ok) {
+        markSaved(form);
+        if (result.token) setToken(result.token);
+        setNote('Saved to your draft.');
+      } else if (result.conflict) {
+        setConflict(result.error ?? 'The save did not go through.');
+      } else {
+        setNote(result.error ?? 'The save did not go through.');
+      }
     } catch {
       setNote('The save did not go through. Reload and try again.');
     } finally {
       setBusy(false);
     }
   };
+
+  useSaveShortcut(() => void save(), !busy);
 
   return (
     <div className="grid gap-3">
@@ -95,12 +115,18 @@ export function NewsletterForm({ initial }: { initial: NewsletterFormSettings })
         >
           {busy ? 'Saving…' : 'Save form'}
         </button>
+        <UnsavedNote dirty={dirty} />
         {note ? (
           <span role="status" className="text-sm text-text-secondary">
             {note}
           </span>
         ) : null}
       </span>
+      {conflict ? (
+        <span className="flex flex-wrap items-center gap-3">
+          <ConflictNotice message={conflict} />
+        </span>
+      ) : null}
     </div>
   );
 }

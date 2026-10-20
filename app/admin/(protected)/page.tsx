@@ -52,8 +52,13 @@ export default async function DashboardPage() {
   if (!baseline) {
     return (
       <div className="grid gap-5" style={{ maxWidth: 'var(--measure)' }}>
-        <h1 className="font-display m-0 text-3xl">Welcome</h1>
-        <p role="status" className="text-text-secondary">
+        <div>
+          <p className="m-0 font-mono text-xs uppercase tracking-widest text-text-muted">
+            Overview
+          </p>
+          <h1 className="font-display m-0 mt-1 text-3xl">Welcome</h1>
+        </div>
+        <p role="status" className="m-0 text-text-secondary">
           Nothing is stored yet — finish setup and this screen fills in.
         </p>
       </div>
@@ -82,7 +87,7 @@ export default async function DashboardPage() {
           <h1 className="font-display m-0 mt-1 text-3xl">
             Welcome back, {baseline.settings?.fullName || 'there'}
           </h1>
-          <p className="mt-1 text-text-secondary">
+          <p className="m-0 mt-1 text-text-secondary">
             What is wrong with the site right now, and what to do about it.
           </p>
         </div>
@@ -253,7 +258,7 @@ export default async function DashboardPage() {
               ))}
             </ul>
           )}
-          <p className="mt-3 text-sm text-text-secondary">
+          <p className="m-0 mt-3 text-sm text-text-secondary">
             These are content checks, not visitor analytics. Traffic needs an analytics provider —
             connect one under Services.
           </p>

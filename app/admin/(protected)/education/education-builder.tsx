@@ -18,9 +18,16 @@ const STATUSES = ['In Progress', 'Graduated', 'Completed', 'Paused'];
  * place `isCurrent` is set, which is how the legacy screen kept the two
  * fields from disagreeing.
  */
-export function EducationBuilder({ initialEducation }: { initialEducation: EducationItem[] }) {
+export function EducationBuilder({
+  initialEducation,
+  token,
+}: {
+  initialEducation: EducationItem[];
+  token?: string;
+}) {
   return (
     <CollectionEditor<EducationItem>
+      token={token}
       initialItems={initialEducation}
       addLabel="Add entry"
       emptyTitle="No education yet."
@@ -41,12 +48,13 @@ export function EducationBuilder({ initialEducation }: { initialEducation: Educa
         visible: true,
       })}
       duplicate={(entry) => ({ ...structuredClone(entry), id: newId('edu') })}
-      save={async (education) => {
-        const result = await updateEducationAction(education);
+      save={async (education, token) => {
+        const result = await updateEducationAction(education, token);
         return {
           ok: result.ok,
           error: result.error,
           conflict: result.conflict,
+          token: result.token,
           items: result.education,
         };
       }}

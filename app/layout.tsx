@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { buildMetadata } from '@/core/content/metadata';
 import { getPublishedContent } from '@/core/content/read';
+import { siteLanguage } from '@/core/content/language';
+import { profileLinks } from '@/core/content/profiles';
 import { buildThemeStylesheet } from '@/core/theme/tokens';
 import { buildLayoutStylesheet } from '@/core/theme/layout-tokens';
 import { flattenAppearance, resolveAppearance } from '@/core/theme/resolve';
@@ -113,7 +115,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     // suppressHydrationWarning: the script above mutates <html> before React
     // sees it, so the server and client markup differ here by design.
     <html
-      lang="en"
+      lang={siteLanguage(content.settings)}
       data-theme="dark"
       className={`dark ${ALL_FONT_VARIABLES}`}
       suppressHydrationWarning
@@ -133,6 +135,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           type="application/json"
           dangerouslySetInnerHTML={{ __html: analyticsJson }}
         />
+        {profileLinks(content.socialLinks).map((href) => (
+          <link key={href} rel="me" href={href} />
+        ))}
       </head>
       {/* No `selection:` utilities here. `accent` resolves to a bare `var()`,
           which Tailwind cannot apply an opacity modifier to, so

@@ -1,6 +1,7 @@
 import 'server-only';
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:crypto';
 import { getStorageAdapter } from '@/core/storage/registry';
+import { isPlaceholderSecret } from '@/core/security/secrets';
 
 /**
  * Where third-party credentials live.
@@ -32,9 +33,11 @@ const NAMESPACE = 'config' as const;
 const PREFIX = 'v1';
 
 export class VaultUnavailableError extends Error {
-  constructor() {
+  constructor(reason: 'missing' | 'placeholder' = 'missing') {
     super(
-      'This site has no encryption key, so it cannot store service passwords safely. Set OPB_SECRET_KEY (or OPB_SESSION_SECRET) and restart.'
+      reason === 'placeholder'
+        ? 'This site is still using the example OPB_SECRET_KEY from the documentation, which anyone can read, so it cannot store service passwords safely. Change it to a phrase of your own and restart.'
+        : 'This site has no encryption key, so it cannot store service passwords safely. Set OPB_SECRET_KEY (or OPB_SESSION_SECRET) and restart.'
     );
     this.name = 'VaultUnavailableError';
   }
@@ -53,13 +56,26 @@ function key(env: NodeJS.ProcessEnv = process.env): Buffer | null {
   return createHash('sha256').update(`opb.integration.vault.v1:${secret}`).digest();
 }
 
+/**
+ * A published example key, in production. Writing is refused under it, since
+ * a ciphertext anyone can open is plaintext with extra steps. Reading is not:
+ * passwords saved before this check existed keep working until the key changes.
+ */
+export function vaultKeyIsPlaceholder(env: NodeJS.ProcessEnv = process.env): boolean {
+  return (
+    env.NODE_ENV === 'production' &&
+    isPlaceholderSecret(env.OPB_SECRET_KEY || env.OPB_SESSION_SECRET)
+  );
+}
+
 export function vaultAvailable(env: NodeJS.ProcessEnv = process.env): boolean {
-  return key(env) !== null;
+  return key(env) !== null && !vaultKeyIsPlaceholder(env);
 }
 
 export function encrypt(plaintext: string, env: NodeJS.ProcessEnv = process.env): string {
   const k = key(env);
   if (!k) throw new VaultUnavailableError();
+  if (vaultKeyIsPlaceholder(env)) throw new VaultUnavailableError('placeholder');
 
   // A fresh IV per encryption. Reusing one under GCM is not a weakening, it is
   // a break: two messages under the same key and IV leak their XOR.

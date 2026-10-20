@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { updateSeoAction } from '../_actions/settings';
+import { ConflictNotice } from '../_components/conflict-notice';
+import { UnsavedNote, useSaveShortcut, useUnsavedChanges } from '../_components/unsaved-changes';
 
 export interface SeoFormValues {
   siteTitle: string;
@@ -41,11 +43,20 @@ function Field({
   );
 }
 
-export function SeoForm({ initial }: { initial: SeoFormValues }) {
+export function SeoForm({
+  initial,
+  token: initialToken,
+}: {
+  initial: SeoFormValues;
+  token?: string;
+}) {
   const [form, setForm] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [conflict, setConflict] = useState(false);
+  const [token, setToken] = useState(initialToken);
+  const { dirty, markSaved } = useUnsavedChanges(form);
 
   const set = (key: keyof SeoFormValues, value: string) =>
     setForm((current) => ({ ...current, [key]: value }));
@@ -54,10 +65,17 @@ export function SeoForm({ initial }: { initial: SeoFormValues }) {
     setBusy(true);
     setNote(null);
     setError(null);
+    setConflict(false);
     try {
-      const result = await updateSeoAction({ ...form });
-      if (result.ok) setNote('Saved to your draft.');
-      else setError(result.error ?? 'The save did not go through.');
+      const result = await updateSeoAction({ ...form }, token);
+      if (result.ok) {
+        markSaved(form);
+        if (result.token) setToken(result.token);
+        setNote('Saved to your draft.');
+      } else {
+        setConflict(Boolean(result.conflict));
+        setError(result.error ?? 'The save did not go through.');
+      }
     } catch {
       setError('The save did not go through. Reload and try again.');
     } finally {
@@ -65,6 +83,7 @@ export function SeoForm({ initial }: { initial: SeoFormValues }) {
     }
   };
 
+  useSaveShortcut(() => void save(), !busy);
   return (
     <section
       aria-label="Search engine listing"
@@ -126,15 +145,20 @@ export function SeoForm({ initial }: { initial: SeoFormValues }) {
         >
           {busy ? 'Saving…' : 'Save'}
         </button>
+        <UnsavedNote dirty={dirty} />
         {note ? (
           <p role="status" className="m-0 text-sm text-text-secondary">
             {note}
           </p>
         ) : null}
         {error ? (
-          <p role="alert" className="m-0 text-sm text-danger">
-            {error}
-          </p>
+          conflict ? (
+            <ConflictNotice message={error} />
+          ) : (
+            <p role="alert" className="m-0 text-sm text-danger">
+              {error}
+            </p>
+          )
         ) : null}
       </div>
     </section>

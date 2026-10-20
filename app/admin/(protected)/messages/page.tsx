@@ -38,7 +38,7 @@ export default async function MessagesPage({
       <div>
         <p className="m-0 font-mono text-xs uppercase tracking-widest text-text-muted">Inbox</p>
         <h1 className="font-display m-0 mt-1 text-3xl">Messages ({messages.length})</h1>
-        <p className="mt-1 text-text-secondary">
+        <p className="m-0 mt-1 text-text-secondary">
           Enquiries sent through the contact form. Reply opens your email client.
         </p>
       </div>
@@ -126,7 +126,7 @@ export default async function MessagesPage({
                   </div>
                 ) : null}
               </dl>
-              <p className="mt-3 whitespace-pre-wrap rounded-2xl bg-surface-secondary p-4">
+              <p className="m-0 mt-3 whitespace-pre-wrap rounded-2xl bg-surface-secondary p-4">
                 {selected.message}
               </p>
             </article>

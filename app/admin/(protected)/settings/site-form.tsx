@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { updateSiteSettingsAction } from '../_actions/settings';
+import { ConflictNotice } from '../_components/conflict-notice';
+import { UnsavedNote, useSaveShortcut, useUnsavedChanges } from '../_components/unsaved-changes';
 
 export interface SiteFormValues {
   fullName: string;
@@ -14,6 +16,7 @@ export interface SiteFormValues {
   availabilityStatus: string;
   aboutHeading: string;
   aboutStory: string;
+  language: string;
 }
 
 function Field({
@@ -22,13 +25,16 @@ function Field({
   onChange,
   type = 'text',
   span = false,
+  hint,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   type?: string;
   span?: boolean;
+  hint?: string;
 }) {
+  const hintId = useId();
   return (
     <label className={`grid gap-1 text-sm ${span ? 'sm:col-span-2' : ''}`}>
       <span className="font-semibold">{label}</span>
@@ -36,9 +42,15 @@ function Field({
         type={type}
         value={value}
         onChange={(event) => onChange(event.target.value)}
+        aria-describedby={hint ? hintId : undefined}
         className="rounded-xl border border-border bg-surface-primary px-3 text-text-primary"
         style={{ minHeight: 44 }}
       />
+      {hint ? (
+        <span id={hintId} className="text-text-secondary">
+          {hint}
+        </span>
+      ) : null}
     </label>
   );
 }
@@ -48,11 +60,20 @@ function Field({
  * fields, the newsletter form's pattern: local state, explicit Save, the
  * server action writes the draft revision-checked.
  */
-export function SiteForm({ initial }: { initial: SiteFormValues }) {
+export function SiteForm({
+  initial,
+  token: initialToken,
+}: {
+  initial: SiteFormValues;
+  token?: string;
+}) {
   const [form, setForm] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [conflict, setConflict] = useState(false);
+  const [token, setToken] = useState(initialToken);
+  const { dirty, markSaved } = useUnsavedChanges(form);
 
   const set = (field: keyof SiteFormValues, value: string) =>
     setForm((current) => ({ ...current, [field]: value }));
@@ -61,23 +82,34 @@ export function SiteForm({ initial }: { initial: SiteFormValues }) {
     setBusy(true);
     setNote(null);
     setError(null);
+    setConflict(false);
     try {
-      const result = await updateSiteSettingsAction({
-        fullName: form.fullName,
-        role: form.role,
-        location: form.location,
-        email: form.email,
-        whatsappNumber: form.whatsappNumber,
-        whatsappFormatted: form.whatsappFormatted,
-        whatsappUrl: form.whatsappUrl,
-        availabilityStatus: form.availabilityStatus,
-        aboutHeading: form.aboutHeading,
-        aboutStoryParagraphs: form.aboutStory
-          .split(/\n\s*\n/)
-          .filter((paragraph) => paragraph.trim() !== ''),
-      });
-      if (result.ok) setNote('Saved to your draft.');
-      else setError(result.error ?? 'The save did not go through.');
+      const result = await updateSiteSettingsAction(
+        {
+          fullName: form.fullName,
+          role: form.role,
+          location: form.location,
+          email: form.email,
+          whatsappNumber: form.whatsappNumber,
+          whatsappFormatted: form.whatsappFormatted,
+          whatsappUrl: form.whatsappUrl,
+          availabilityStatus: form.availabilityStatus,
+          aboutHeading: form.aboutHeading,
+          language: form.language,
+          aboutStoryParagraphs: form.aboutStory
+            .split(/\n\s*\n/)
+            .filter((paragraph) => paragraph.trim() !== ''),
+        },
+        token
+      );
+      if (result.ok) {
+        markSaved(form);
+        if (result.token) setToken(result.token);
+        setNote('Saved to your draft.');
+      } else {
+        setConflict(Boolean(result.conflict));
+        setError(result.error ?? 'The save did not go through.');
+      }
     } catch {
       setError('The save did not go through. Reload and try again.');
     } finally {
@@ -85,6 +117,7 @@ export function SiteForm({ initial }: { initial: SiteFormValues }) {
     }
   };
 
+  useSaveShortcut(() => void save(), !busy);
   return (
     <div className="grid gap-6">
       <section
@@ -119,6 +152,13 @@ export function SiteForm({ initial }: { initial: SiteFormValues }) {
             value={form.availabilityStatus}
             onChange={(v) => set('availabilityStatus', v)}
           />
+          <Field
+            label="Site language"
+            span
+            value={form.language}
+            onChange={(v) => set('language', v)}
+            hint="The language your site is written in, as a short code: en, bn, es, pt-BR. Screen readers use it to pick a voice. Leave empty for English."
+          />
         </div>
       </section>
 
@@ -151,15 +191,20 @@ export function SiteForm({ initial }: { initial: SiteFormValues }) {
         >
           {busy ? 'Saving…' : 'Save'}
         </button>
+        <UnsavedNote dirty={dirty} />
         {note ? (
           <p role="status" className="m-0 text-sm text-text-secondary">
             {note}
           </p>
         ) : null}
         {error ? (
-          <p role="alert" className="m-0 text-sm text-danger">
-            {error}
-          </p>
+          conflict ? (
+            <ConflictNotice message={error} />
+          ) : (
+            <p role="alert" className="m-0 text-sm text-danger">
+              {error}
+            </p>
+          )
         ) : null}
       </div>
     </div>

@@ -5,15 +5,19 @@ import { getStorageAdapter } from '@/core/storage/registry';
 import { requireOwner } from '@/core/auth/guard';
 import { RevisionConflictError } from '@/core/storage/contract';
 import { conflictMessage } from '@/core/content/changes';
+import { screenToken, staleScreenError } from '@/core/content/screen-token';
 import { normaliseSlug } from '@/core/pages/schema';
 import type { PageRecord } from '@/core/pages/schema';
 import { cleanBlock, isText } from '@/core/blocks/clean';
 import type { CMSState } from '@/cms/types/cms';
+import { readDraftForWrite } from '@/core/content/draft';
 
 export interface PagesResult {
   ok: boolean;
   error?: string;
   conflict?: boolean;
+  /** The screen's new token, for the next save. See `core/content/screen-token`. */
+  token?: string;
   /** The stored result, so the editor can show the new revisions without a reload. */
   pages?: PageRecord[];
 }
@@ -76,7 +80,7 @@ function cleanNav(raw: unknown): PageRecord['nav'] | null {
   return nav;
 }
 
-export async function updatePagesAction(pages: unknown): Promise<PagesResult> {
+export async function updatePagesAction(pages: unknown, token?: string): Promise<PagesResult> {
   await requireOwner();
   if (!Array.isArray(pages) || pages.length > MAX_PAGES) {
     return { ok: false, error: 'Those pages are not usable.' };
@@ -136,8 +140,9 @@ export async function updatePagesAction(pages: unknown): Promise<PagesResult> {
   }
 
   const adapter = await getStorageAdapter();
-  const meta = await adapter.readSnapshotMeta('draft');
-  if (!meta) return { ok: false, error: 'There is no draft to change yet.' };
+  const meta = await readDraftForWrite(adapter);
+  const stale = staleScreenError(meta.state as CMSState, 'pages', token);
+  if (stale) return { ok: false, conflict: true, error: stale };
   const next = structuredClone(meta.state as CMSState);
   const stored = next.pages ?? [];
   const now = new Date().toISOString();
@@ -176,5 +181,5 @@ export async function updatePagesAction(pages: unknown): Promise<PagesResult> {
   }
 
   revalidatePath('/admin/pages');
-  return { ok: true, pages: stamped };
+  return { ok: true, pages: stamped, token: screenToken(next, 'pages') };
 }

@@ -4,6 +4,8 @@ import { useState } from 'react';
 import type { SectionConfig } from '@/cms/types/cms';
 import { anchorProblem, moveBand, splitSections, withBandOrders } from '@/core/content/sections';
 import { updateHomepageAction } from '../_actions/homepage';
+import { ConflictNotice } from '../_components/conflict-notice';
+import { UnsavedNote, useSaveShortcut, useUnsavedChanges } from '../_components/unsaved-changes';
 
 const field = 'w-full rounded-xl border border-border bg-surface-primary px-3 text-text-primary';
 const secondary =
@@ -58,11 +60,20 @@ function VisibleToggle({ checked, onChange }: { checked: boolean; onChange: () =
   );
 }
 
-export function SectionsBuilder({ initial }: { initial: SectionConfig[] }) {
+export function SectionsBuilder({
+  initial,
+  token: initialToken,
+}: {
+  initial: SectionConfig[];
+  token?: string;
+}) {
   const [sections, setSections] = useState<SectionConfig[]>(initial);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [conflict, setConflict] = useState(false);
+  const [token, setToken] = useState(initialToken);
+  const { dirty, markSaved } = useUnsavedChanges(sections);
 
   const { bands, headers } = splitSections(sections);
 
@@ -83,10 +94,17 @@ export function SectionsBuilder({ initial }: { initial: SectionConfig[] }) {
     setBusy(true);
     setNote(null);
     setError(null);
+    setConflict(false);
     try {
-      const result = await updateHomepageAction(sections);
-      if (result.ok) setNote('Saved to your draft.');
-      else setError(result.error ?? 'The save did not go through.');
+      const result = await updateHomepageAction(sections, token);
+      if (result.ok) {
+        markSaved(sections);
+        if (result.token) setToken(result.token);
+        setNote('Saved to your draft.');
+      } else {
+        setConflict(Boolean(result.conflict));
+        setError(result.error ?? 'The save did not go through.');
+      }
     } catch {
       setError('The save did not go through. Reload and try again.');
     } finally {
@@ -94,6 +112,7 @@ export function SectionsBuilder({ initial }: { initial: SectionConfig[] }) {
     }
   };
 
+  useSaveShortcut(() => void save(), !busy);
   return (
     <div className="grid gap-6">
       <section aria-label="Homepage bands" className="grid gap-3">
@@ -225,15 +244,20 @@ export function SectionsBuilder({ initial }: { initial: SectionConfig[] }) {
         >
           {busy ? 'Saving…' : 'Save'}
         </button>
+        <UnsavedNote dirty={dirty} />
         {note ? (
           <p role="status" className="m-0 text-sm text-text-secondary">
             {note}
           </p>
         ) : null}
         {error ? (
-          <p role="alert" className="m-0 text-sm text-danger">
-            {error}
-          </p>
+          conflict ? (
+            <ConflictNotice message={error} />
+          ) : (
+            <p role="alert" className="m-0 text-sm text-danger">
+              {error}
+            </p>
+          )
         ) : null}
       </div>
     </div>

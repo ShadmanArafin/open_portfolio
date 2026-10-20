@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { getContentForChannel } from '@/core/content/read';
+import { screenToken } from '@/core/content/screen-token';
 import { ArtifactsBuilder } from './artifacts-builder';
 
 export const metadata: Metadata = { title: 'Artifacts' };
@@ -18,13 +19,13 @@ export default async function ArtifactsPage() {
       <div>
         <p className="m-0 font-mono text-xs uppercase tracking-widest text-text-muted">Content</p>
         <h1 className="font-display m-0 mt-1 text-3xl">Visual explorations</h1>
-        <p className="mt-1 text-text-secondary">
+        <p className="m-0 mt-1 text-text-secondary">
           Interface shots shown in the visual explorations gallery on the About page. Upload several
           at once.
         </p>
       </div>
 
-      <ArtifactsBuilder initialArtifacts={artifacts} />
+      <ArtifactsBuilder token={screenToken(draft, 'artifacts')} initialArtifacts={artifacts} />
     </div>
   );
 }

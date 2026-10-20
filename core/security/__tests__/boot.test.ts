@@ -36,4 +36,17 @@ describe('boot config', () => {
     expect(errors).toEqual([]);
     expect(warnings.length).toBe(2);
   });
+
+  it('warns, without failing, when the documented example values are still in place', () => {
+    // Fatal would take a live site down on update; the claim and the vault
+    // refuse on their own instead.
+    const { errors, warnings } = checkBootConfig({
+      ...prodBase,
+      OPB_SETUP_TOKEN: 'change-me-to-a-long-random-phrase',
+      OPB_SECRET_KEY: 'change-me-to-a-different-long-random-phrase',
+    });
+    expect(errors).toEqual([]);
+    expect(warnings).toHaveLength(2);
+    expect(warnings.join(' ')).toContain('example value');
+  });
 });

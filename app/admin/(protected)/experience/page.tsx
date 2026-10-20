@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { getContentForChannel } from '@/core/content/read';
+import { screenToken } from '@/core/content/screen-token';
 import { ExperienceBuilder } from './experience-builder';
 
 export const metadata: Metadata = { title: 'Experience' };
@@ -18,13 +19,13 @@ export default async function ExperiencePage() {
       <div>
         <p className="m-0 font-mono text-xs uppercase tracking-widest text-text-muted">Content</p>
         <h1 className="font-display m-0 mt-1 text-3xl">Experience</h1>
-        <p className="mt-1 text-text-secondary">
+        <p className="m-0 mt-1 text-text-secondary">
           Roles, dates and highlights for the timeline on your About page. The label the site shows
           is written from the dates you pick, every time you save.
         </p>
       </div>
 
-      <ExperienceBuilder initialExperience={experience} />
+      <ExperienceBuilder token={screenToken(draft, 'experience')} initialExperience={experience} />
     </div>
   );
 }

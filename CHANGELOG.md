@@ -38,6 +38,18 @@ through a letterbox. It now takes the window.
 
 ### You can now
 
+- **Stop losing unsaved edits.** Every editing screen now says "Unsaved
+  changes" next to Save as soon as something differs from what was loaded, asks
+  before a link elsewhere in the admin throws the edits away, and holds the tab
+  open on close or reload. Cmd/Ctrl+S saves the screen instead of offering to
+  save the web page. Typing a word and deleting it again does not count as a
+  change.
+
+- **Set the language your site is written in.** Settings has a Site language
+  field (`bn`, `es`, `pt-BR`, …) that becomes `<html lang>`. It was hard-coded to
+  English, so a portfolio in any other language was read aloud by screen readers
+  in the wrong voice and failed WCAG 3.1.1.
+
 - **Keep automated submissions off the contact form.** Cloudflare Turnstile is
   the second integration, switched on from Services the way the mail server is:
   add the keys and the widget appears on every form that posts - the contact
@@ -126,6 +138,28 @@ through a letterbox. It now takes the window.
 
 ### Changed
 
+- **A screen that is out of date refuses to save instead of overwriting.**
+  Each screen now carries a fingerprint of exactly the part of the draft it
+  edits, and a save is refused — "nothing was written" — when that part was
+  changed in another tab or on another device since the screen opened. Until
+  now the check only caught a millisecond race, so a list left open in one tab
+  silently replaced the same list saved from another. Saving a different screen
+  in between never triggers it: the fingerprint is per part, not per document.
+
+- **The documented example secrets are refused in production.** A setup token
+  or encryption key still set to the `change-me-…` values in
+  `docker-compose.yml` (or the examples in the README) is public, so claiming
+  the site with that token is refused, and the vault will not encrypt new
+  service passwords under that key. Passwords already saved under it still
+  read, so a running site keeps working after the update; the boot log says
+  what to change.
+
+- **Your social profiles verify.** The theme footer's social cards now carry
+  `rel="me"`, as the social row block already did, and every page lists the
+  profiles as `<link rel="me">` in its head — which is where Mastodon's verifier
+  looks, since it reads the server's HTML and runs no script. A stored link that
+  is not a safe address is left out of the footer instead of rendered.
+
 - **Case studies and projects are one collection.** `/work` lists both now, a
   case-study write-up is a `story` on the project - the same block editor as a
   page, in the same Projects screen - and `/case-studies` and
@@ -155,6 +189,20 @@ through a letterbox. It now takes the window.
   build and the tag you run just have to match each other.
 
 ### Fixed
+
+- **A brand-new site could not save anything.** After claiming, every editing
+  screen — and the welcome wizard — answered "There is no draft to change yet".
+  The draft row used to be written by the legacy browser client on its first
+  load; when that client was deleted in the admin rewrite, nothing wrote it any
+  more. A missing draft now starts from what the screens already show (the
+  published site, or the built-in content) and is created on the first save,
+  create-only, so two first saves at once still end in one draft.
+
+- **Structured data could not hold a `<` safely.** The Article JSON-LD on a
+  writing page was `JSON.stringify` inside a `<script>`, so a title containing
+  `</script>` — which Markdown import can bring in from somebody else's file —
+  closed the tag. Every `<` is escaped as `\u003c` now, as the Next.js JSON-LD
+  guide prescribes.
 
 - **Emptying a Text block used to make it unopenable.** Clearing the text field
   writes an empty list - the editor writes what is in the box - and the block's

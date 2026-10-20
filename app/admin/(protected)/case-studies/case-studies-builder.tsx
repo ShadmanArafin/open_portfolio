@@ -131,11 +131,14 @@ function duplicateCaseStudy(item: CaseStudyItem, items: CaseStudyItem[]): CaseSt
 
 export function CaseStudiesBuilder({
   initialCaseStudies,
+  token,
 }: {
   initialCaseStudies: CaseStudyItem[];
+  token?: string;
 }) {
   return (
     <CollectionEditor<CaseStudyItem>
+      token={token}
       initialItems={initialCaseStudies}
       addLabel="Add case study"
       emptyTitle="No case studies yet."
@@ -157,12 +160,13 @@ export function CaseStudiesBuilder({
       })}
       create={createCaseStudy}
       duplicate={duplicateCaseStudy}
-      save={async (caseStudies) => {
-        const result = await updateCaseStudiesAction(caseStudies);
+      save={async (caseStudies, token) => {
+        const result = await updateCaseStudiesAction(caseStudies, token);
         return {
           ok: result.ok,
           error: result.error,
           conflict: result.conflict,
+          token: result.token,
           items: result.caseStudies,
         };
       }}

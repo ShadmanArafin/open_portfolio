@@ -3,6 +3,7 @@ import { timingSafeEqual } from 'node:crypto';
 import { getStorageAdapter } from '@/core/storage/registry';
 import { checkPassphraseStrength, hashPassphrase, isBreachedPassphrase } from './passphrase';
 import { createSession } from './session';
+import { isPlaceholderSecret } from '@/core/security/secrets';
 
 /**
  * First-run ownership.
@@ -32,6 +33,17 @@ export async function getClaimEligibility(): Promise<ClaimEligibility> {
   }
 
   if (process.env.OPB_SETUP_TOKEN) {
+    // The example value is printed in docker-compose.yml and the README, so it
+    // proves nothing about who deployed this copy.
+    if (process.env.NODE_ENV === 'production' && isPlaceholderSecret(process.env.OPB_SETUP_TOKEN)) {
+      return {
+        allowed: false,
+        requiresToken: true,
+        reason:
+          'OPB_SETUP_TOKEN is still the example value from the documentation, which anyone can ' +
+          'read. Change it to a long phrase of your own, restart, then enter it here.',
+      };
+    }
     return { allowed: true, requiresToken: true };
   }
 

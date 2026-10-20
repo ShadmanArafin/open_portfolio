@@ -7,6 +7,7 @@ import { getContentForChannel } from '@/core/content/read';
 import { currentChannel } from '@/core/pages/read';
 import { getPublicWriting, getWritingSettings, resolveWriting } from '@/core/writing/read';
 import { PreviewBanner } from '../../preview-banner';
+import { serializeJsonLd } from '@/core/content/json-ld';
 
 /** One piece, rendered through the same block system as every page. */
 
@@ -93,7 +94,7 @@ export default async function WritingEntryPage({ params }: { params: Promise<{ s
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(article) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(article) }}
       />
       {channel === 'draft' && (
         <PreviewBanner

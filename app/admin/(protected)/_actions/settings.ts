@@ -5,15 +5,20 @@ import { getStorageAdapter } from '@/core/storage/registry';
 import { requireOwner } from '@/core/auth/guard';
 import { RevisionConflictError } from '@/core/storage/contract';
 import { conflictMessage } from '@/core/content/changes';
+import { normaliseLanguage } from '@/core/content/language';
+import { screenToken, staleScreenError, type ScreenSlice } from '@/core/content/screen-token';
 import { THEME_PRESETS, DEFAULT_THEME_ID } from '@/core/theme/presets';
 import { INITIAL_CMS_STATE } from '@/cms/data/initialData';
 import { SOCIAL_PLATFORM_BY_ID } from '@/cms/data/socialPlatforms';
 import type { CMSState, SocialLinkItem, SocialPlatformId } from '@/cms/types/cms';
+import { readDraftForWrite } from '@/core/content/draft';
 
 export interface SettingsResult {
   ok: boolean;
   error?: string;
   conflict?: boolean;
+  /** The screen's new token, for the next save. See `core/content/screen-token`. */
+  token?: string;
 }
 
 export interface RestoreSummary {
@@ -38,11 +43,14 @@ const MAX_TEXT = 2000;
 
 async function writeDraft(
   path: string,
+  slice: ScreenSlice,
+  token: unknown,
   mutate: (draft: CMSState) => void
 ): Promise<SettingsResult> {
   const adapter = await getStorageAdapter();
-  const meta = await adapter.readSnapshotMeta('draft');
-  if (!meta) return { ok: false, error: 'There is no draft to change yet.' };
+  const meta = await readDraftForWrite(adapter);
+  const stale = staleScreenError(meta.state as CMSState, slice, token);
+  if (stale) return { ok: false, conflict: true, error: stale };
 
   const next = structuredClone(meta.state as CMSState);
   mutate(next);
@@ -63,7 +71,7 @@ async function writeDraft(
     throw err;
   }
   revalidatePath(path);
-  return { ok: true };
+  return { ok: true, token: screenToken(next, slice) };
 }
 
 function isText(value: unknown, max = MAX_TEXT): value is string {
@@ -84,12 +92,25 @@ const SITE_SETTING_FIELDS = [
 ] as const;
 
 export async function updateSiteSettingsAction(
-  patch: Record<string, unknown>
+  patch: Record<string, unknown>,
+  token?: string
 ): Promise<SettingsResult> {
   await requireOwner();
   if (!patch || typeof patch !== 'object') return { ok: false, error: 'Nothing to save.' };
 
+  const clean: Record<string, unknown> = { ...patch };
   for (const [key, value] of Object.entries(patch)) {
+    if (key === 'language') {
+      const tag = normaliseLanguage(value);
+      if (tag === null) {
+        return {
+          ok: false,
+          error: 'That is not a language code. Try one like en, bn, es or pt-BR.',
+        };
+      }
+      clean.language = tag;
+      continue;
+    }
     if (key === 'aboutStoryParagraphs') {
       if (!Array.isArray(value) || value.length > 50 || value.some((p) => !isText(p, 5000))) {
         return { ok: false, error: 'Those values are not usable.' };
@@ -102,8 +123,8 @@ export async function updateSiteSettingsAction(
     if (!isText(value, 500)) return { ok: false, error: 'Those values are not usable.' };
   }
 
-  return writeDraft('/admin/settings', (draft) => {
-    for (const [key, value] of Object.entries(patch)) {
+  return writeDraft('/admin/settings', 'site', token, (draft) => {
+    for (const [key, value] of Object.entries(clean)) {
       (draft.settings as unknown as Record<string, unknown>)[key] = value;
     }
   });
@@ -123,7 +144,8 @@ const APPEARANCE_FONT_FIELDS = ['displayFontFamily', 'bodyFontFamily', 'monoFont
 const THEME_IDS = new Set([DEFAULT_THEME_ID, ...THEME_PRESETS.map((preset) => preset.id)]);
 
 export async function updateAppearanceAction(
-  patch: Record<string, unknown>
+  patch: Record<string, unknown>,
+  token?: string
 ): Promise<SettingsResult> {
   await requireOwner();
   if (!patch || typeof patch !== 'object') return { ok: false, error: 'Nothing to save.' };
@@ -154,7 +176,7 @@ export async function updateAppearanceAction(
     return { ok: false, error: 'Unknown setting.' };
   }
 
-  return writeDraft('/admin/appearance', (draft) => {
+  return writeDraft('/admin/appearance', 'appearance', token, (draft) => {
     for (const [key, value] of Object.entries(patch)) {
       (draft.appearance as unknown as Record<string, unknown>)[key] = value;
     }
@@ -171,7 +193,10 @@ const SEO_FIELDS: Record<string, number> = {
   robots: 200,
 };
 
-export async function updateSeoAction(patch: Record<string, unknown>): Promise<SettingsResult> {
+export async function updateSeoAction(
+  patch: Record<string, unknown>,
+  token?: string
+): Promise<SettingsResult> {
   await requireOwner();
   if (!patch || typeof patch !== 'object') return { ok: false, error: 'Nothing to save.' };
 
@@ -181,7 +206,7 @@ export async function updateSeoAction(patch: Record<string, unknown>): Promise<S
     if (!isText(value, max)) return { ok: false, error: 'Those values are not usable.' };
   }
 
-  return writeDraft('/admin/seo', (draft) => {
+  return writeDraft('/admin/seo', 'seo', token, (draft) => {
     for (const [key, value] of Object.entries(patch)) {
       (draft.seo as unknown as Record<string, unknown>)[key] = value;
     }
@@ -189,7 +214,8 @@ export async function updateSeoAction(patch: Record<string, unknown>): Promise<S
 }
 
 export async function updateMicrocopyAction(
-  patch: Record<string, string>
+  patch: Record<string, string>,
+  token?: string
 ): Promise<SettingsResult> {
   await requireOwner();
   if (!patch || typeof patch !== 'object') return { ok: false, error: 'Nothing to save.' };
@@ -202,7 +228,7 @@ export async function updateMicrocopyAction(
     }
   }
 
-  return writeDraft('/admin/microcopy', (draft) => {
+  return writeDraft('/admin/microcopy', 'microcopy', token, (draft) => {
     const microcopy = draft.microcopy as unknown as Record<string, string>;
     // Only keys the content already has. A stale screen cannot add fields.
     for (const [key, value] of entries) {
@@ -211,23 +237,29 @@ export async function updateMicrocopyAction(
   });
 }
 
-export async function updateFooterAction(input: {
-  copyrightText: string;
-  giantFooterText: string;
-}): Promise<SettingsResult> {
+export async function updateFooterAction(
+  input: {
+    copyrightText: string;
+    giantFooterText: string;
+  },
+  token?: string
+): Promise<SettingsResult> {
   await requireOwner();
   if (!input || typeof input !== 'object') return { ok: false, error: 'Nothing to save.' };
   if (!isText(input.copyrightText, 500) || !isText(input.giantFooterText, 200)) {
     return { ok: false, error: 'Those values are not usable.' };
   }
 
-  return writeDraft('/admin/footer', (draft) => {
+  return writeDraft('/admin/footer', 'footer', token, (draft) => {
     draft.settings.copyrightText = input.copyrightText;
     draft.appearance.giantFooterText = input.giantFooterText;
   });
 }
 
-export async function updateSocialLinksAction(links: unknown): Promise<SettingsResult> {
+export async function updateSocialLinksAction(
+  links: unknown,
+  token?: string
+): Promise<SettingsResult> {
   await requireOwner();
   if (!Array.isArray(links) || links.length > 30) {
     return { ok: false, error: 'Those links are not usable.' };
@@ -263,7 +295,7 @@ export async function updateSocialLinksAction(links: unknown): Promise<SettingsR
     });
   }
 
-  return writeDraft('/admin/footer', (draft) => {
+  return writeDraft('/admin/footer', 'socialLinks', token, (draft) => {
     draft.socialLinks = clean;
   });
 }

@@ -26,7 +26,7 @@ export default async function MediaPage() {
       <div>
         <p className="m-0 font-mono text-xs uppercase tracking-widest text-text-muted">Media</p>
         <h1 className="font-display m-0 mt-1 text-3xl">Media Library</h1>
-        <p className="mt-1 text-text-secondary">
+        <p className="m-0 mt-1 text-text-secondary">
           Images and PDFs used across the site. Files live in your storage backend and can be picked
           from any image field in the admin. Uploaded PDFs can be set as the downloadable résumé.
         </p>

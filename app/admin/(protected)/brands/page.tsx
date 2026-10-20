@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { getContentForChannel } from '@/core/content/read';
+import { screenToken } from '@/core/content/screen-token';
 import { BrandsBuilder } from './brands-builder';
 
 export const metadata: Metadata = { title: 'Brands' };
@@ -19,13 +20,13 @@ export default async function BrandsPage() {
       <div>
         <p className="m-0 font-mono text-xs uppercase tracking-widest text-text-muted">Content</p>
         <h1 className="font-display m-0 mt-1 text-3xl">Clients & logos</h1>
-        <p className="mt-1 text-text-secondary">
+        <p className="m-0 mt-1 text-text-secondary">
           The logos shown in the strip on your homepage. Clients, tools, publications — whatever
           fits your field.
         </p>
       </div>
 
-      <BrandsBuilder initialBrands={brands} />
+      <BrandsBuilder token={screenToken(draft, 'brands')} initialBrands={brands} />
     </div>
   );
 }

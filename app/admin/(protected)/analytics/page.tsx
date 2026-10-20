@@ -94,7 +94,7 @@ export default async function AnalyticsPage() {
       <div>
         <p className="m-0 font-mono text-xs uppercase tracking-widest text-text-muted">Analytics</p>
         <h1 className="font-display m-0 mt-1 text-3xl">Audience &amp; Enquiries</h1>
-        <p className="mt-1 text-text-secondary">
+        <p className="m-0 mt-1 text-text-secondary">
           What the site can measure about the people using it, and what it needs to measure more.
         </p>
       </div>
@@ -177,7 +177,7 @@ export default async function AnalyticsPage() {
               ))}
             </ul>
           )}
-          <p className="mt-2 text-sm text-text-secondary">
+          <p className="m-0 mt-2 text-sm text-text-secondary">
             Counted from the contact form, so these are exact — every one is a message in your
             inbox.
           </p>
@@ -227,7 +227,7 @@ export default async function AnalyticsPage() {
                   }}
                 />
               ) : (
-                <p className="text-sm text-text-secondary">
+                <p className="m-0 text-sm text-text-secondary">
                   Add a read-only share link in the provider&apos;s Services settings to see the
                   charts here instead of on the provider&apos;s site.
                 </p>
@@ -244,7 +244,7 @@ export default async function AnalyticsPage() {
                   Visitor counts, per-project views and click-throughs are not being recorded yet.
                 </p>
               </div>
-              <p className="text-sm">
+              <p className="m-0 text-sm">
                 A static site cannot count its own visitors — nothing runs on a server, so a page
                 view has nowhere to be stored that you could read later. The site is already
                 instrumented, so the numbers start the moment a provider is connected under
@@ -270,7 +270,7 @@ export default async function AnalyticsPage() {
               </li>
             ))}
           </ul>
-          <p className="mt-2 text-sm text-text-secondary">
+          <p className="m-0 mt-2 text-sm text-text-secondary">
             Your own visits to /admin are never counted, and neither is the draft preview.
           </p>
         </section>

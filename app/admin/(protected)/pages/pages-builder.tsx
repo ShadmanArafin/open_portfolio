@@ -16,6 +16,8 @@ import { CheckField, Field } from '../_components/form-fields';
 import { newId } from '../_components/ids';
 import { SharePanel } from './share-panel';
 import { updatePagesAction } from '../_actions/pages';
+import { ConflictNotice } from '../_components/conflict-notice';
+import { UnsavedNote, useSaveShortcut, useUnsavedChanges } from '../_components/unsaved-changes';
 
 /**
  * Building a page.
@@ -205,9 +207,11 @@ function PageEditor({
 export function PagesBuilder({
   initialPages,
   media,
+  token: initialToken,
 }: {
   initialPages: PageRecord[];
   media: MediaItem[];
+  token?: string;
 }) {
   const [pages, setPages] = useState<PageRecord[]>(sortHomeFirst(initialPages));
   const [savedIds, setSavedIds] = useState<string[]>(initialPages.map((page) => page.id));
@@ -216,6 +220,9 @@ export function PagesBuilder({
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [conflict, setConflict] = useState(false);
+  const [token, setToken] = useState(initialToken);
+  const { dirty, markSaved } = useUnsavedChanges(pages);
 
   const hasHome = pages.some(isHomePage);
 
@@ -264,13 +271,18 @@ export function PagesBuilder({
     setBusy(true);
     setNote(null);
     setError(null);
+    setConflict(false);
     try {
-      const result = await updatePagesAction(pages);
+      const result = await updatePagesAction(pages, token);
       if (result.ok && result.pages) {
-        setPages(sortHomeFirst(result.pages));
+        const saved = sortHomeFirst(result.pages);
+        setPages(saved);
+        markSaved(saved);
+        if (result.token) setToken(result.token);
         setSavedIds(result.pages.map((page) => page.id));
         setNote('Saved to your draft.');
       } else {
+        setConflict(Boolean(result.conflict));
         setError(result.error ?? 'The save did not go through.');
       }
     } catch {
@@ -280,6 +292,7 @@ export function PagesBuilder({
     }
   };
 
+  useSaveShortcut(() => void save(), !busy);
   return (
     <div className="grid gap-6">
       <div className="flex flex-wrap gap-3">
@@ -439,6 +452,7 @@ export function PagesBuilder({
         >
           {busy ? 'Saving…' : 'Save'}
         </button>
+        <UnsavedNote dirty={dirty} />
         <p className="m-0 text-sm text-text-secondary">
           Nothing on this screen is live until you publish.
         </p>
@@ -448,9 +462,13 @@ export function PagesBuilder({
           </p>
         ) : null}
         {error ? (
-          <p role="alert" className="m-0 text-sm text-danger">
-            {error}
-          </p>
+          conflict ? (
+            <ConflictNotice message={error} />
+          ) : (
+            <p role="alert" className="m-0 text-sm text-danger">
+              {error}
+            </p>
+          )
         ) : null}
       </div>
     </div>

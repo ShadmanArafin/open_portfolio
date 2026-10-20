@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { getContentForChannel } from '@/core/content/read';
+import { screenToken } from '@/core/content/screen-token';
 import { PagesBuilder } from './pages-builder';
 
 export const metadata: Metadata = { title: 'Pages' };
@@ -21,14 +22,18 @@ export default async function PagesPage() {
       <div>
         <p className="m-0 font-mono text-xs uppercase tracking-widest text-text-muted">Pages</p>
         <h1 className="font-display m-0 mt-1 text-3xl">Pages Builder</h1>
-        <p className="mt-1 text-text-secondary">
+        <p className="m-0 mt-1 text-text-secondary">
           Build pages out of blocks. Reorder them, hide sections you are not ready to show, and give
           each page its own web address. Save when you are done — nothing here is live until you
           publish.
         </p>
       </div>
 
-      <PagesBuilder initialPages={draft.pages ?? []} media={draft.media ?? []} />
+      <PagesBuilder
+        token={screenToken(draft, 'pages')}
+        initialPages={draft.pages ?? []}
+        media={draft.media ?? []}
+      />
     </div>
   );
 }

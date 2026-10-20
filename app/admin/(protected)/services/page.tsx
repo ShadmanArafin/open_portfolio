@@ -24,7 +24,7 @@ export default async function ServicesPage() {
       <div>
         <p className="m-0 font-mono text-xs uppercase tracking-widest text-text-muted">Services</p>
         <h1 className="font-display m-0 mt-1 text-3xl">Connected Services</h1>
-        <p className="mt-1 text-text-secondary">
+        <p className="m-0 mt-1 text-text-secondary">
           Optional things this site can connect to. Everything here has a free plan, and the site
           keeps working without any of them.
         </p>

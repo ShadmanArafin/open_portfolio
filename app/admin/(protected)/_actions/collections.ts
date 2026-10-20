@@ -5,6 +5,7 @@ import { requireOwner } from '@/core/auth/guard';
 import { normaliseSlug } from '@/core/pages/schema';
 import { RevisionConflictError } from '@/core/storage/contract';
 import { conflictMessage } from '@/core/content/changes';
+import { screenToken, staleScreenError, type ScreenSlice } from '@/core/content/screen-token';
 import { getStorageAdapter } from '@/core/storage/registry';
 import type {
   BrandItem,
@@ -25,11 +26,14 @@ import type {
 } from '@/cms/types/cms';
 import { formatPeriod } from '@/cms/utils/dates';
 import { cleanBlock } from '@/core/blocks/clean';
+import { readDraftForWrite } from '@/core/content/draft';
 
 export interface ProjectsResult {
   ok: boolean;
   error?: string;
   conflict?: boolean;
+  /** The screen's new token, for the next save. See `core/content/screen-token`. */
+  token?: string;
   /** The stored list, so the editor can show what was actually saved. */
   projects?: ProjectItem[];
 }
@@ -38,6 +42,8 @@ export interface CaseStudiesResult {
   ok: boolean;
   error?: string;
   conflict?: boolean;
+  /** The screen's new token, for the next save. See `core/content/screen-token`. */
+  token?: string;
   caseStudies?: CaseStudyItem[];
 }
 
@@ -45,6 +51,8 @@ export interface BrandsResult {
   ok: boolean;
   error?: string;
   conflict?: boolean;
+  /** The screen's new token, for the next save. See `core/content/screen-token`. */
+  token?: string;
   brands?: BrandItem[];
 }
 
@@ -52,6 +60,8 @@ export interface ExperienceResult {
   ok: boolean;
   error?: string;
   conflict?: boolean;
+  /** The screen's new token, for the next save. See `core/content/screen-token`. */
+  token?: string;
   experience?: ExperienceItem[];
 }
 
@@ -59,6 +69,8 @@ export interface EducationResult {
   ok: boolean;
   error?: string;
   conflict?: boolean;
+  /** The screen's new token, for the next save. See `core/content/screen-token`. */
+  token?: string;
   education?: EducationItem[];
 }
 
@@ -66,6 +78,8 @@ export interface ProcessResult {
   ok: boolean;
   error?: string;
   conflict?: boolean;
+  /** The screen's new token, for the next save. See `core/content/screen-token`. */
+  token?: string;
   processSteps?: ProcessStepItem[];
 }
 
@@ -73,6 +87,8 @@ export interface CapabilitiesResult {
   ok: boolean;
   error?: string;
   conflict?: boolean;
+  /** The screen's new token, for the next save. See `core/content/screen-token`. */
+  token?: string;
   capabilityGroups?: CapabilityGroupItem[];
 }
 
@@ -80,6 +96,8 @@ export interface RecommendationsResult {
   ok: boolean;
   error?: string;
   conflict?: boolean;
+  /** The screen's new token, for the next save. See `core/content/screen-token`. */
+  token?: string;
   recommendations?: RecommendationItem[];
 }
 
@@ -87,6 +105,8 @@ export interface ArtifactsResult {
   ok: boolean;
   error?: string;
   conflict?: boolean;
+  /** The screen's new token, for the next save. See `core/content/screen-token`. */
+  token?: string;
   artifacts?: VisualArtifactItem[];
 }
 
@@ -94,6 +114,8 @@ export interface NavLinksResult {
   ok: boolean;
   error?: string;
   conflict?: boolean;
+  /** The screen's new token, for the next save. See `core/content/screen-token`. */
+  token?: string;
   links?: NavLinkItem[];
 }
 
@@ -620,22 +642,27 @@ function cleanCaseStudy(raw: unknown): CaseStudyItem | null {
 /* -------------------------------------------------------------------- saving */
 
 async function writeList(
+  slice: ScreenSlice,
+  token: unknown,
   mutate: (draft: CMSState) => void
-): Promise<'ok' | 'missing' | { conflict: string }> {
+): Promise<{ token: string } | { conflict: string }> {
   const adapter = await getStorageAdapter();
-  const meta = await adapter.readSnapshotMeta('draft');
-  if (!meta) return 'missing';
+  const meta = await readDraftForWrite(adapter);
+
+  // The screen's own staleness first: a list changed elsewhere since this
+  // screen loaded would otherwise be replaced wholesale by this save.
+  const stale = staleScreenError(meta.state as CMSState, slice, token);
+  if (stale) return { conflict: stale };
 
   const next = structuredClone(meta.state as CMSState);
   mutate(next);
 
   try {
     await adapter.writeSnapshot('draft', next, meta.revision);
-    return 'ok';
+    return { token: screenToken(next, slice) };
   } catch (err) {
     if (err instanceof RevisionConflictError) {
-      // A race, not an editing session: these screens write the revision they
-      // just read, so this fires only when another save landed in between.
+      // A race: another save landed between the read above and this write.
       // Re-read for the diff rather than compare against our own read.
       const fresh = await adapter.readSnapshotMeta('draft');
       return {
@@ -646,13 +673,14 @@ async function writeList(
   }
 }
 
-const NO_DRAFT_MESSAGE = 'There is no draft to change yet.';
-
 function sharedAddressError(kind: string): string {
   return `Two ${kind} share the same web address. Give each one its own.`;
 }
 
-export async function updateProjectsAction(projects: unknown): Promise<ProjectsResult> {
+export async function updateProjectsAction(
+  projects: unknown,
+  token?: string
+): Promise<ProjectsResult> {
   await requireOwner();
   if (!Array.isArray(projects) || projects.length > MAX_RECORDS) {
     return { ok: false, error: 'Those projects are not usable.' };
@@ -678,17 +706,19 @@ export async function updateProjectsAction(projects: unknown): Promise<ProjectsR
   }
 
   const stamped = clean.map((project, index) => ({ ...project, sortOrder: index + 1 }));
-  const outcome = await writeList((draft) => {
+  const outcome = await writeList('projects', token, (draft) => {
     draft.projects = stamped;
   });
-  if (outcome === 'missing') return { ok: false, error: NO_DRAFT_MESSAGE };
-  if (outcome !== 'ok') return { ok: false, conflict: true, error: outcome.conflict };
+  if ('conflict' in outcome) return { ok: false, conflict: true, error: outcome.conflict };
 
   revalidatePath('/admin/projects');
-  return { ok: true, projects: stamped };
+  return { ok: true, projects: stamped, token: outcome.token };
 }
 
-export async function updateCaseStudiesAction(caseStudies: unknown): Promise<CaseStudiesResult> {
+export async function updateCaseStudiesAction(
+  caseStudies: unknown,
+  token?: string
+): Promise<CaseStudiesResult> {
   await requireOwner();
   if (!Array.isArray(caseStudies) || caseStudies.length > MAX_RECORDS) {
     return { ok: false, error: 'Those case studies are not usable.' };
@@ -720,14 +750,13 @@ export async function updateCaseStudiesAction(caseStudies: unknown): Promise<Cas
   // check the owner would save a case study, see it in this list, and never
   // find it on the site.
   const clash = { slug: '' };
-  const outcome = await writeList((draft) => {
+  const outcome = await writeList('caseStudies', token, (draft) => {
     const projectSlugs = new Set((draft.projects ?? []).map((project) => project.slug));
     clash.slug = stamped.find((study) => projectSlugs.has(study.slug))?.slug ?? '';
     if (clash.slug) return;
     draft.caseStudies = stamped;
   });
-  if (outcome === 'missing') return { ok: false, error: NO_DRAFT_MESSAGE };
-  if (outcome !== 'ok') return { ok: false, conflict: true, error: outcome.conflict };
+  if ('conflict' in outcome) return { ok: false, conflict: true, error: outcome.conflict };
   if (clash.slug) {
     return {
       ok: false,
@@ -736,7 +765,7 @@ export async function updateCaseStudiesAction(caseStudies: unknown): Promise<Cas
   }
 
   revalidatePath('/admin/case-studies');
-  return { ok: true, caseStudies: stamped };
+  return { ok: true, caseStudies: stamped, token: outcome.token };
 }
 
 /* ---------------------------------------------------- the small collections */
@@ -764,8 +793,10 @@ async function saveCollection<T extends { id: string; sortOrder: number }>(
   clean: (raw: unknown) => T | null,
   stamp: (items: T[]) => T[],
   apply: (draft: CMSState, items: T[]) => void,
-  path: string
-): Promise<{ ok: boolean; error?: string; conflict?: boolean; items?: T[] }> {
+  path: string,
+  slice: ScreenSlice,
+  token: unknown
+): Promise<{ ok: boolean; error?: string; conflict?: boolean; items?: T[]; token?: string }> {
   if (!Array.isArray(payload) || payload.length > MAX_RECORDS) {
     return { ok: false, error: notUsable };
   }
@@ -780,12 +811,11 @@ async function saveCollection<T extends { id: string; sortOrder: number }>(
   }
 
   const stamped = stamp(kept);
-  const outcome = await writeList((draft) => apply(draft, stamped));
-  if (outcome === 'missing') return { ok: false, error: NO_DRAFT_MESSAGE };
-  if (outcome !== 'ok') return { ok: false, conflict: true, error: outcome.conflict };
+  const outcome = await writeList(slice, token, (draft) => apply(draft, stamped));
+  if ('conflict' in outcome) return { ok: false, conflict: true, error: outcome.conflict };
 
   revalidatePath(path);
-  return { ok: true, items: stamped };
+  return { ok: true, items: stamped, token: outcome.token };
 }
 
 /** Position in the list is position in the order — the same rule as the work lists. */
@@ -1062,9 +1092,15 @@ function stampEducation(items: EducationItem[]): EducationItem[] {
   }));
 }
 
-export async function updateBrandsAction(brands: unknown): Promise<BrandsResult> {
+export async function updateBrandsAction(brands: unknown, token?: string): Promise<BrandsResult> {
   await requireOwner();
-  const { ok, error, conflict, items } = await saveCollection(
+  const {
+    ok,
+    error,
+    conflict,
+    items,
+    token: nextToken,
+  } = await saveCollection(
     brands,
     'Those brands are not usable.',
     cleanBrand,
@@ -1072,14 +1108,25 @@ export async function updateBrandsAction(brands: unknown): Promise<BrandsResult>
     (draft, list) => {
       draft.brands = list;
     },
-    '/admin/brands'
+    '/admin/brands',
+    'brands',
+    token
   );
-  return { ok, error, conflict, brands: items };
+  return { ok, error, conflict, brands: items, token: nextToken };
 }
 
-export async function updateExperienceAction(experience: unknown): Promise<ExperienceResult> {
+export async function updateExperienceAction(
+  experience: unknown,
+  token?: string
+): Promise<ExperienceResult> {
   await requireOwner();
-  const { ok, error, conflict, items } = await saveCollection(
+  const {
+    ok,
+    error,
+    conflict,
+    items,
+    token: nextToken,
+  } = await saveCollection(
     experience,
     'That experience list is not usable.',
     cleanExperience,
@@ -1087,14 +1134,25 @@ export async function updateExperienceAction(experience: unknown): Promise<Exper
     (draft, list) => {
       draft.experience = list;
     },
-    '/admin/experience'
+    '/admin/experience',
+    'experience',
+    token
   );
-  return { ok, error, conflict, experience: items };
+  return { ok, error, conflict, experience: items, token: nextToken };
 }
 
-export async function updateEducationAction(education: unknown): Promise<EducationResult> {
+export async function updateEducationAction(
+  education: unknown,
+  token?: string
+): Promise<EducationResult> {
   await requireOwner();
-  const { ok, error, conflict, items } = await saveCollection(
+  const {
+    ok,
+    error,
+    conflict,
+    items,
+    token: nextToken,
+  } = await saveCollection(
     education,
     'That education list is not usable.',
     cleanEducation,
@@ -1102,14 +1160,25 @@ export async function updateEducationAction(education: unknown): Promise<Educati
     (draft, list) => {
       draft.education = list;
     },
-    '/admin/education'
+    '/admin/education',
+    'education',
+    token
   );
-  return { ok, error, conflict, education: items };
+  return { ok, error, conflict, education: items, token: nextToken };
 }
 
-export async function updateProcessAction(processSteps: unknown): Promise<ProcessResult> {
+export async function updateProcessAction(
+  processSteps: unknown,
+  token?: string
+): Promise<ProcessResult> {
   await requireOwner();
-  const { ok, error, conflict, items } = await saveCollection(
+  const {
+    ok,
+    error,
+    conflict,
+    items,
+    token: nextToken,
+  } = await saveCollection(
     processSteps,
     'Those process steps are not usable.',
     cleanProcessStep,
@@ -1117,14 +1186,25 @@ export async function updateProcessAction(processSteps: unknown): Promise<Proces
     (draft, list) => {
       draft.processSteps = list;
     },
-    '/admin/process'
+    '/admin/process',
+    'processSteps',
+    token
   );
-  return { ok, error, conflict, processSteps: items };
+  return { ok, error, conflict, processSteps: items, token: nextToken };
 }
 
-export async function updateCapabilitiesAction(groups: unknown): Promise<CapabilitiesResult> {
+export async function updateCapabilitiesAction(
+  groups: unknown,
+  token?: string
+): Promise<CapabilitiesResult> {
   await requireOwner();
-  const { ok, error, conflict, items } = await saveCollection(
+  const {
+    ok,
+    error,
+    conflict,
+    items,
+    token: nextToken,
+  } = await saveCollection(
     groups,
     'Those capability groups are not usable.',
     cleanCapabilityGroup,
@@ -1132,16 +1212,25 @@ export async function updateCapabilitiesAction(groups: unknown): Promise<Capabil
     (draft, list) => {
       draft.capabilityGroups = list;
     },
-    '/admin/capabilities'
+    '/admin/capabilities',
+    'capabilityGroups',
+    token
   );
-  return { ok, error, conflict, capabilityGroups: items };
+  return { ok, error, conflict, capabilityGroups: items, token: nextToken };
 }
 
 export async function updateRecommendationsAction(
-  recommendations: unknown
+  recommendations: unknown,
+  token?: string
 ): Promise<RecommendationsResult> {
   await requireOwner();
-  const { ok, error, conflict, items } = await saveCollection(
+  const {
+    ok,
+    error,
+    conflict,
+    items,
+    token: nextToken,
+  } = await saveCollection(
     recommendations,
     'Those recommendations are not usable.',
     cleanRecommendation,
@@ -1149,14 +1238,25 @@ export async function updateRecommendationsAction(
     (draft, list) => {
       draft.recommendations = list;
     },
-    '/admin/recommendations'
+    '/admin/recommendations',
+    'recommendations',
+    token
   );
-  return { ok, error, conflict, recommendations: items };
+  return { ok, error, conflict, recommendations: items, token: nextToken };
 }
 
-export async function updateArtifactsAction(artifacts: unknown): Promise<ArtifactsResult> {
+export async function updateArtifactsAction(
+  artifacts: unknown,
+  token?: string
+): Promise<ArtifactsResult> {
   await requireOwner();
-  const { ok, error, conflict, items } = await saveCollection(
+  const {
+    ok,
+    error,
+    conflict,
+    items,
+    token: nextToken,
+  } = await saveCollection(
     artifacts,
     'Those artifacts are not usable.',
     cleanArtifact,
@@ -1164,9 +1264,11 @@ export async function updateArtifactsAction(artifacts: unknown): Promise<Artifac
     (draft, list) => {
       draft.artifacts = list;
     },
-    '/admin/artifacts'
+    '/admin/artifacts',
+    'artifacts',
+    token
   );
-  return { ok, error, conflict, artifacts: items };
+  return { ok, error, conflict, artifacts: items, token: nextToken };
 }
 
 /**
@@ -1175,9 +1277,18 @@ export async function updateArtifactsAction(artifacts: unknown): Promise<Artifac
  * refusal — the legacy screen saved those too, and a link the owner typed on
  * purpose is not the admin's call.
  */
-export async function updateNavLinksAction(links: unknown): Promise<NavLinksResult> {
+export async function updateNavLinksAction(
+  links: unknown,
+  token?: string
+): Promise<NavLinksResult> {
   await requireOwner();
-  const { ok, error, conflict, items } = await saveCollection(
+  const {
+    ok,
+    error,
+    conflict,
+    items,
+    token: nextToken,
+  } = await saveCollection(
     links,
     'Those navigation links are not usable.',
     cleanNavLink,
@@ -1185,7 +1296,9 @@ export async function updateNavLinksAction(links: unknown): Promise<NavLinksResu
     (draft, list) => {
       draft.navLinks = list;
     },
-    '/admin/navigation'
+    '/admin/navigation',
+    'navLinks',
+    token
   );
-  return { ok, error, conflict, links: items };
+  return { ok, error, conflict, links: items, token: nextToken };
 }

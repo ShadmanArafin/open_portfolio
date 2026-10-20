@@ -35,7 +35,7 @@ export default async function HistoryPage() {
     <div className="grid gap-5" style={{ maxWidth: 'var(--measure)' }}>
       <div>
         <h1 className="font-display m-0 text-3xl">Version history ({versions.length})</h1>
-        <p className="mt-1 text-text-secondary">
+        <p className="m-0 mt-1 text-text-secondary">
           Every publish is snapshotted. Restoring loads one back into your draft — publish again to
           make it live.
         </p>
@@ -44,7 +44,7 @@ export default async function HistoryPage() {
       {versions.length === 0 ? (
         <div role="status" className="rounded-2xl border border-border p-6 text-center">
           <p className="m-0 font-semibold">No snapshots yet</p>
-          <p className="mt-1 text-sm text-text-secondary">
+          <p className="m-0 mt-1 text-sm text-text-secondary">
             A snapshot is taken each time you publish. The last 20 are kept.
           </p>
         </div>
@@ -81,7 +81,7 @@ export default async function HistoryPage() {
         </ol>
       )}
 
-      <p className="text-sm text-text-secondary">
+      <p className="m-0 text-sm text-text-secondary">
         History is capped at 20 snapshots so stored content cannot grow without bound.
       </p>
     </div>

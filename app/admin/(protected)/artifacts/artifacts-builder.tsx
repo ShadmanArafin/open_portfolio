@@ -114,9 +114,16 @@ function UploadImages({ add }: { add: (items: VisualArtifactItem[]) => void }) {
  * list, filtered by `visible` and sorted by hand here — so the screen keeps
  * the legacy semantics rather than inventing new ones.
  */
-export function ArtifactsBuilder({ initialArtifacts }: { initialArtifacts: VisualArtifactItem[] }) {
+export function ArtifactsBuilder({
+  initialArtifacts,
+  token,
+}: {
+  initialArtifacts: VisualArtifactItem[];
+  token?: string;
+}) {
   return (
     <CollectionEditor<VisualArtifactItem>
+      token={token}
       initialItems={initialArtifacts}
       addLabel="Upload images"
       emptyTitle="No visual explorations yet."
@@ -146,12 +153,13 @@ export function ArtifactsBuilder({ initialArtifacts }: { initialArtifacts: Visua
       })}
       duplicate={(item) => ({ ...structuredClone(item), id: newId('art') })}
       customAdd={(add) => <UploadImages add={add} />}
-      save={async (artifacts) => {
-        const result = await updateArtifactsAction(artifacts);
+      save={async (artifacts, token) => {
+        const result = await updateArtifactsAction(artifacts, token);
         return {
           ok: result.ok,
           error: result.error,
           conflict: result.conflict,
+          token: result.token,
           items: result.artifacts,
         };
       }}

@@ -19,9 +19,16 @@ import { ImageField } from '../_components/image-field';
  * `url` and `size` stay as the seed authored them, the way the legacy screen
  * left them: the block the logos feed ignores both today.
  */
-export function BrandsBuilder({ initialBrands }: { initialBrands: BrandItem[] }) {
+export function BrandsBuilder({
+  initialBrands,
+  token,
+}: {
+  initialBrands: BrandItem[];
+  token?: string;
+}) {
   return (
     <CollectionEditor<BrandItem>
+      token={token}
       initialItems={initialBrands}
       addLabel="Add brand"
       emptyTitle="No brands yet."
@@ -40,12 +47,13 @@ export function BrandsBuilder({ initialBrands }: { initialBrands: BrandItem[] })
         visible: true,
       })}
       duplicate={(brand) => ({ ...structuredClone(brand), id: newId('brand') })}
-      save={async (brands) => {
-        const result = await updateBrandsAction(brands);
+      save={async (brands, token) => {
+        const result = await updateBrandsAction(brands, token);
         return {
           ok: result.ok,
           error: result.error,
           conflict: result.conflict,
+          token: result.token,
           items: result.brands,
         };
       }}

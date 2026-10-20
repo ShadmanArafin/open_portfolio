@@ -65,6 +65,11 @@ export interface SiteSettings {
   copyrightText: string;
   timezone: string;
   siteUrl: string;
+  /**
+   * BCP-47 tag for `<html lang>`, such as `bn` or `pt-BR`. Optional so content
+   * written before it existed keeps loading; absent means English.
+   */
+  language?: string;
   aboutHeading?: string;
   aboutStoryParagraphs?: string[];
 }

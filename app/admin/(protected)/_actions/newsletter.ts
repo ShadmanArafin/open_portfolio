@@ -6,11 +6,15 @@ import { requireOwner } from '@/core/auth/guard';
 import { NEWSLETTER_DEFAULTS } from '@/core/newsletter/schema';
 import { RevisionConflictError } from '@/core/storage/contract';
 import { conflictMessage } from '@/core/content/changes';
+import { screenToken, staleScreenError } from '@/core/content/screen-token';
+import { readDraftForWrite } from '@/core/content/draft';
 
 export interface NewsletterActionResult {
   ok: boolean;
   error?: string;
   conflict?: boolean;
+  /** The screen's new token, for the next save. See `core/content/screen-token`. */
+  token?: string;
 }
 
 /**
@@ -18,12 +22,15 @@ export interface NewsletterActionResult {
  * exported with everything else — which is why this writes the draft
  * snapshot rather than touching the subscribers surface.
  */
-export async function updateNewsletterSettingsAction(settings: {
-  enabled: boolean;
-  pitch: string;
-  buttonLabel: string;
-  pendingMessage: string;
-}): Promise<NewsletterActionResult> {
+export async function updateNewsletterSettingsAction(
+  settings: {
+    enabled: boolean;
+    pitch: string;
+    buttonLabel: string;
+    pendingMessage: string;
+  },
+  token?: string
+): Promise<NewsletterActionResult> {
   await requireOwner();
   if (
     typeof settings.enabled !== 'boolean' ||
@@ -35,8 +42,9 @@ export async function updateNewsletterSettingsAction(settings: {
   }
 
   const adapter = await getStorageAdapter();
-  const meta = await adapter.readSnapshotMeta('draft');
-  if (!meta) return { ok: false, error: 'There is no draft to change yet.' };
+  const meta = await readDraftForWrite(adapter);
+  const stale = staleScreenError(meta.state, 'newsletter', token);
+  if (stale) return { ok: false, conflict: true, error: stale };
 
   const next = structuredClone(meta.state);
   next.newsletter = {
@@ -64,7 +72,7 @@ export async function updateNewsletterSettingsAction(settings: {
     throw err;
   }
   revalidatePath('/admin/newsletter');
-  return { ok: true };
+  return { ok: true, token: screenToken(next, 'newsletter') };
 }
 
 export async function removeSubscriberAction(id: string): Promise<NewsletterActionResult> {

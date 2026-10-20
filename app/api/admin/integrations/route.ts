@@ -7,6 +7,8 @@ import {
   listIntegrationViews,
   readConfig,
   vaultAvailable,
+  vaultKeyIsPlaceholder,
+  VaultUnavailableError,
   writeConfig,
   clearConfig,
 } from '@/core/integrations';
@@ -77,8 +79,8 @@ export async function PUT(req: Request) {
     return NextResponse.json(
       {
         ok: false,
-        error:
-          'This site has no encryption key, so it cannot store passwords safely. Set OPB_SECRET_KEY and restart.',
+        error: new VaultUnavailableError(vaultKeyIsPlaceholder() ? 'placeholder' : 'missing')
+          .message,
       },
       { status: 409 }
     );

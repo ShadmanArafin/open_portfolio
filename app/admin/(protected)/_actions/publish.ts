@@ -10,6 +10,7 @@ import { looksLikeContent } from '@/core/content/validate';
 import { RevisionConflictError } from '@/core/storage/contract';
 import { conflictMessage, describeChanges } from '@/core/content/changes';
 import type { CMSState, ContentVersion } from '@/cms/types/cms';
+import { readDraftForWrite } from '@/core/content/draft';
 
 export interface PublishResult {
   ok: boolean;
@@ -35,8 +36,8 @@ export async function publishDraftAction(expectedRevision?: number): Promise<Pub
   await requireOwner();
 
   const adapter = await getStorageAdapter();
-  const draftMeta = await adapter.readSnapshotMeta('draft');
-  if (!draftMeta) return { ok: false, error: 'There is no draft to publish yet.' };
+  // A site nobody has edited yet publishes what it is already showing.
+  const draftMeta = await readDraftForWrite(adapter);
   if (!looksLikeContent(draftMeta.state)) {
     return { ok: false, error: 'That does not look like site content.' };
   }

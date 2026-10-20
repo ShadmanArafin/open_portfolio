@@ -148,13 +148,13 @@ export function LoginForm({ next, demoHint }: { next?: string; demoHint: string 
     <form onSubmit={(event) => void submit(event)} className="grid gap-5">
       <div>
         <h1 className="font-display text-2xl font-semibold">Sign in</h1>
-        <p className="mt-1 text-sm text-text-secondary">
+        <p className="m-0 mt-1 text-sm text-text-secondary">
           {demoHint ?? 'Use the email and passphrase you chose when you set this site up.'}
         </p>
       </div>
 
       {error ? (
-        <p role="alert" className="text-sm text-danger">
+        <p role="alert" className="m-0 text-sm text-danger">
           {error}
         </p>
       ) : null}
@@ -243,7 +243,7 @@ export function LoginForm({ next, demoHint }: { next?: string; demoHint: string 
       )}
 
       {otpStatus ? (
-        <p role="status" className="text-sm text-text-secondary">
+        <p role="status" className="m-0 text-sm text-text-secondary">
           {otpStatus}
         </p>
       ) : null}

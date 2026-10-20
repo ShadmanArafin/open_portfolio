@@ -49,9 +49,16 @@ function DateField({
  * date fields are the truth — the action rewrites `period` from them on every
  * save, so the label follows the dates.
  */
-export function ExperienceBuilder({ initialExperience }: { initialExperience: ExperienceItem[] }) {
+export function ExperienceBuilder({
+  initialExperience,
+  token,
+}: {
+  initialExperience: ExperienceItem[];
+  token?: string;
+}) {
   return (
     <CollectionEditor<ExperienceItem>
+      token={token}
       initialItems={initialExperience}
       addLabel="Add role"
       emptyTitle="No roles yet."
@@ -77,12 +84,13 @@ export function ExperienceBuilder({ initialExperience }: { initialExperience: Ex
         visible: true,
       })}
       duplicate={(item) => ({ ...structuredClone(item), id: newId('exp') })}
-      save={async (experience) => {
-        const result = await updateExperienceAction(experience);
+      save={async (experience, token) => {
+        const result = await updateExperienceAction(experience, token);
         return {
           ok: result.ok,
           error: result.error,
           conflict: result.conflict,
+          token: result.token,
           items: result.experience,
         };
       }}
