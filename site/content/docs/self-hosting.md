@@ -24,7 +24,17 @@ Change two values first:
 - `OPB_SETUP_TOKEN` — proves the site is yours on first run. Anything long.
 - `OPB_SECRET_KEY` — encrypts service credentials saved from the admin, such as SMTP passwords. Changing it later makes previously saved credentials unreadable, so they have to be re-entered.
 
-On an ARM machine such as a Raspberry Pi, build the image for both architectures so the same tag runs on x86 and ARM:
+Every version tag publishes a ready image, `ghcr.io/shadmanarafin/open_portfolio`, for both amd64 and arm64 — a Raspberry Pi pulls the same tag as a VPS. Tags are `:<version>`, `:<major>.<minor>` and `:latest`. To use it with the compose file, replace `build: .` with `image: ghcr.io/shadmanarafin/open_portfolio:<version>`.
+
+Each image carries a build provenance attestation, signed through Sigstore with the release workflow's own identity, and an SBOM listing every package inside it. Check where an image came from before running it:
+
+```bash
+gh attestation verify oci://ghcr.io/shadmanarafin/open_portfolio:<version> --owner ShadmanArafin
+```
+
+`OPB_SETUP_TOKEN` and `OPB_SECRET_KEY` must be phrases of your own. The example values in `docker-compose.yml` and the README are public, so in production a site still using them refuses to be claimed and will not encrypt new service passwords.
+
+To build the image yourself instead, for both architectures:
 
 ```bash
 docker buildx build --platform linux/amd64,linux/arm64 -t open-portfolio .

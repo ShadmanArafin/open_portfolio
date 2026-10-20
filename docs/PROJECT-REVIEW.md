@@ -2416,9 +2416,29 @@ explicit Save.
 
 **E2 — Production pipeline (days)**
 
-- [ ] D7 e2e + axe in CI, with a golden-path spec
-- [ ] D8 GHCR multi-arch release + attestations + SBOM
-- [ ] D9 CodeQL + Scorecard + SHA-pinned actions
+- [x] D7 e2e + axe in CI, with a golden-path spec. New `e2e` job in `ci.yml`
+      (production build, Chromium, traces kept on failure).
+      `e2e/golden-path.spec.ts` claims a fresh store, edits Settings, checks a
+      session-less visitor does not see the draft, publishes, and polls until
+      the visitor does; then axe on four admin screens. The Playwright server
+      now boots on a temporary empty store with its own setup token.
+      **Proved it catches what it is for:** with the E1 first-draft fix
+      reverted, it fails at "Saved to your draft."; with it, all 17 browser
+      tests pass (run here against `next dev`, since the production build
+      cannot fetch fonts in this sandbox).
+- [x] D8 GHCR multi-arch release + attestations + SBOM. `release.yml` on a `v*`
+      tag: amd64 + arm64, `:<version>`, `:<major>.<minor>`, `:latest`, a
+      BuildKit SBOM and max-mode provenance, plus a Sigstore-signed GitHub
+      attestation pushed to the registry. README and the self-hosting doc
+      show `docker run ghcr.io/…` and `gh attestation verify`. **Not exercised
+      yet** — it runs on the first tag. The package may need setting to public
+      once in GitHub's package settings.
+- [x] D9 CodeQL + Scorecard + SHA-pinned actions. `codeql.yml` scans the
+      TypeScript and the workflows (security-extended); `scorecard.yml`
+      publishes the OpenSSF score; every `uses:` in every workflow is pinned
+      to a commit with its tag in a comment, which the existing Dependabot
+      `github-actions` entry keeps current. `actionlint` 1.7.7 is clean on all
+      six workflows.
 
 **E3 — Public performance (1–2 weeks)**
 
