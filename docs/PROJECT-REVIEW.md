@@ -30,6 +30,8 @@ as the build log; keep this file as the backlog.
 8. [Missing features + QoL backlog (prioritized)](#8-missing-features--qol-backlog-prioritized)
 9. [Action plan — phased checklist](#9-action-plan--phased-checklist)
 10. [Sources + verification notes](#10-sources--verification-notes)
+11. [Verified 2026 research](#11-verified-2026-research-webfetch-oct-2026)
+12. [Second pass — 2026-10-20 (Phase E)](#12-second-pass--2026-10-20)
 
 ---
 
@@ -772,7 +774,7 @@ computed contrast, zero console errors throughout).
 - [x] Analytics definitions on existing instrumentation; view counts on
       dashboard. **DONE 2026-10-18 (collection + view counts):**
       `definitions/umami.ts` (self-host first) + `definitions/plausible.ts`
-      (self-host edition), runtime `core/integrations/analytics.ts` (OPB_* env > vault > legacy NEXT_PUBLIC_*), server-embedded JSON config in
+      (self-host edition), runtime `core/integrations/analytics.ts` (OPB*\* env > vault > legacy NEXT_PUBLIC*\*), server-embedded JSON config in
       `app/layout.tsx` (escaped, no extra request), client reads it with env
       fallback, Analytics page guide rewritten to Services (no more
       `.env.local` steps). View counts: optional `apiKey` secret on both
@@ -2210,3 +2212,242 @@ patterns 2026` (w3.org/WAI/ARIA/apg/patterns, task-force minutes Jun 2026
 _End of review. Start with Phase A — it is days of work, unblocks everything
 below it, and contains the only items that can lose a user in their first
 hour._
+
+---
+
+## 12. Second pass — 2026-10-20
+
+A second A-to-Z pass after the 2026-10-18 admin rewrite. This section does not
+repeat anything above: it lists only what is still wrong or missing in the
+current tree, each with the file that shows it. The free-only rule at the top of
+this file still binds every recommendation here.
+
+### 12.1 Verdict
+
+The engineering is strong, and the admin is now a coherent server-first app.
+Five gaps remain:
+
+1. **What the public site ships contradicts the server-first story.** Every
+   public page hydrates the whole published document, plus a client data layer
+   that never runs.
+2. **The rewrite made editing less safe.** Edits stay local until Save, and
+   nothing stops you from navigating away from unsaved work. Cmd/Ctrl+K went
+   with Astryx. Collection saves still overwrite blindly.
+3. **The ownership promise breaks at the exit.** Backups hold no media bytes,
+   and there is no static export.
+4. **Production hardening that a public self-hosted OSS product is expected to
+   have is missing.** There is no published image. E2E and axe tests do not run
+   in CI. Placeholder secrets are accepted.
+5. **The public site does little for writers and recruiters.** There are no tag
+   archives, no table of contents, no reading time, no search, no print or CV
+   view, and no way to set the site language.
+
+### 12.2 Developer / architecture
+
+| #   | Finding                                                                                                                                                                                                                                                           | Evidence                                                                        | Fix                                                                                                                                                                                                                                                         |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D1  | **Every public page serialises the whole published document.** `publicView` keeps every published page, the full blocks of every writing entry, and every project story. A writer with 200 posts ships all 200 bodies on `/contact`.                              | `app/(site)/layout.tsx:28` → `core/content/sanitise.ts:54-77` → `SiteProviders` | Move the themed `src/views/*` and `src/components/*` (all `'use client'` + `useCMS`) to RSC that read on the server. Until then, pass a per-route slice (settings, nav, footer, appearance).                                                                |
+| D2  | **A dead client data layer ships to every visitor.** Only the public site mounts `CMSProvider`, and it always passes `initialData`. So `cmsService` (931 lines), the `localStore` IndexedDB layer (337 lines) and the 22 KB demo seed are imported but never run. | `src/cms/context/CMSContext.tsx:5,81-147`                                       | Delete the IndexedDB, auth and publish branches. Leave a thin read-only context. Move the types `core/backup/bundle.ts` imports to a types-only module.                                                                                                     |
+| D3  | **Caching is still `revalidate = 60` + `revalidatePath`.** The layout's comment says it is waiting for server-side publish, which now exists.                                                                                                                     | `app/(site)/layout.tsx:10-16`, `_actions/publish.ts:117`                        | Use Next 16 Cache Components: `'use cache'` + `cacheTag` on the published read, and `updateTag` from the publish action. Scheduled writing needs a `cacheLife` that matches the next `scheduledFor`. Check the API in `node_modules/next/dist/docs/` first. |
+| D4  | **Collection saves do not refuse stale writes.** This is the open Phase C item above.                                                                                                                                                                             | `_actions/collections.ts`                                                       | Pass the loaded revision through `CollectionEditor.save` into every action. Refuse a stale save with `conflictMessage` + `ConflictNotice`.                                                                                                                  |
+| D5  | **JSON-LD is not escaped.** A title containing `</script>` breaks out of the tag, and Markdown import makes third-party titles a real input.                                                                                                                      | `app/(site)/writing/[slug]/page.tsx:96`                                         | Use one helper: `JSON.stringify(x).replace(/</g, '\\u003c')`, as the Next.js JSON-LD guide says.                                                                                                                                                            |
+| D6  | **Placeholder secrets are accepted.** `docker-compose.yml` ships `change-me-…` values for `OPB_SETUP_TOKEN` and `OPB_SECRET_KEY`. Anyone can claim a fresh install with a phrase that is published on GitHub, and the vault key is public.                        | `docker-compose.yml`, `core/security/boot.ts`, `core/auth/claim.ts:34,78`       | In production, refuse known placeholders and anything under 24 characters (fail fast in `instrumentation.ts`).                                                                                                                                              |
+| D7  | **The Playwright smoke test and axe check exist, but CI never runs them.** There is also no golden-path test (claim → edit → publish → a visitor sees the change).                                                                                                | `.github/workflows/ci.yml`, `e2e/`                                              | Add an e2e job after the build, with one golden-path spec and one admin axe pass.                                                                                                                                                                           |
+| D8  | **No published image and no release pipeline.** Nobody can `docker pull`.                                                                                                                                                                                         | `Dockerfile`, workflows                                                         | Add a tag-driven release workflow: multi-arch buildx → GHCR, plus GitHub artifact attestations (Sigstore keyless, free) and an SBOM.                                                                                                                        |
+| D9  | **No CodeQL, no OpenSSF Scorecard, no audit gate.** All three are free for public repos.                                                                                                                                                                          | workflows                                                                       | Turn on CodeQL default setup, add the Scorecard action, and pin actions by SHA.                                                                                                                                                                             |
+| D10 | **The published document nests 20 full snapshots.** Every render reads all of it.                                                                                                                                                                                 | `_actions/publish.ts:20,70-77`                                                  | Store versions as separate kv rows and keep only an index in the document.                                                                                                                                                                                  |
+| D11 | **Test coverage is scoped to `core/**`.** The admin has 3 test files, and `src/` has effectively none.                                                                                                                                                            | `vitest.config.ts`                                                              | Widen the scope as D1 moves views to RSC. Add action-level tests for the `requireOwner` and revision paths.                                                                                                                                                 |
+| D12 | **The front door still has two sources of truth.** The legacy `/admin/homepage` sections editor sits beside the home page built as a page.                                                                                                                        | `app/admin/(protected)/homepage/*`, `_actions/homepage.ts`                      | Add a one-click "Convert theme layout to blocks", then retire sections editing after a deprecation release.                                                                                                                                                 |
+
+Minor: the dashboard breaks the house rules in two places. A `<p className="mt-1 …">` has no `m-0`, and the
+empty-state `<h1>` has no eyebrow (`app/admin/(protected)/page.tsx:51,78`).
+`README.md:225` says edits "save as you type", but every screen now has an
+explicit Save.
+
+### 12.3 UI/UX + UX laws — admin
+
+- **Unsaved changes can be lost (error prevention).** Builders keep edits local
+  until Save, and `grep beforeunload app` finds nothing. Add a shared dirty
+  guard: `beforeunload` plus an intercept on nav links, and an "Unsaved
+  changes" chip beside Save.
+- **The Cmd/Ctrl+K palette is gone.** Phase A added it, and the Astryx deletion
+  took it with it. Rebuild it as a plain-Tailwind client island over
+  `ADMIN_SECTIONS` plus record titles (Hick's and Fitts' laws).
+- **Cmd/Ctrl+S on every builder**, and an **Undo** toast after a delete.
+- **The nav is 25 flat links (Hick's and Miller's laws).** Group them:
+  - _Build_: Pages, Writing, Work, Media
+  - _Profile_: Experience, Education, Brands, Recommendations, Capabilities,
+    Process, Artifacts
+  - _Audience_: Messages, Newsletter, Analytics
+  - _Look & reach_: Appearance, Navigation, SEO
+  - _System_: Settings, Services, Storage, Your site, History, Help
+
+  Drop **Case studies** now that work is merged, or label it as legacy.
+
+- **The live side-by-side preview is gone.** This is the biggest
+  perceived-quality gap against Framer and Carrd. Add an optional split view:
+  an iframe of `/api/preview?path=` that reloads after Save, with a device-width
+  toggle. Same-origin framing is already allowed.
+- **Block fields need progressive disclosure.** Show the essentials, and put the
+  rest under "More options".
+- **The dashboard needs a launch checklist with progress (Zeigarnik effect).**
+  It should hide itself at 100%.
+
+### 12.4 UI/UX — public site
+
+- **The site language is hard-coded** to `lang="en"` (`app/layout.tsx:116`). A
+  non-English portfolio fails WCAG 3.1.1. Add `settings.language` (BCP-47) with
+  an optional per-page override.
+- **Footer social links lack `rel="me"`** (`src/components/Footer.tsx:150`). The
+  socials block has it (`core/blocks/standard.tsx:1070`). Also emit
+  `<link rel="me">` in `<head>`, because Mastodon's verifier reads only the
+  server HTML. Optionally add `fediverse:creator`.
+- **Writing:** add reading time, a table of contents built from block headings,
+  previous/next links, a related strip, and tag archives. `tags` already exists
+  in `core/writing/schema.ts:56`, but nothing renders it.
+- **Recruiter path:** add a print stylesheet (there is none) and a `/cv` page
+  built from experience, education and capabilities.
+- **Search:** a server-side route over the published document. No third party
+  needed.
+- **Motion:** prefer CSS View Transitions for route changes over more `motion`
+  JavaScript (six public components import it today).
+- **Images:** `next/image` is still unused. Record dimensions at upload, then
+  either use narrow per-adapter `remotePatterns`, or generate widths plus
+  AVIF/WebP at upload with `sharp`. Note CVE-2026-64644: permissive
+  `remotePatterns` let an attacker exhaust CPU on `/_next/image`.
+
+### 12.5 Product
+
+- **Make the exit complete.** Backups carry a media manifest, not the bytes
+  (`core/backup/bundle.ts:13-17`), so a move from Vercel Blob to a VPS loses
+  every image. Add:
+  - a streamed `.zip` with the JSON and the media, plus the matching restore
+  - a **static HTML export**, so the site survives even if this project dies
+- **Acquisition wedge.** Bento.me shut down on 2026-02-13 after Linktree bought
+  it. Ship link-list and CSV importers (the CSV half of Import v1 is still
+  open). Add "moving off X" pages beside `alternatives/[brand]` on the
+  marketing site.
+- **Retention.** Send the owner a monthly digest by email, using their own SMTP:
+  views, top pages, new enquiries, and what is left unfinished.
+- **Page scheduling** (P1 item 13) is still open. Reuse the writing predicate.
+- **Optional AI assist, off by default and free only:**
+  - alt-text suggestions in the browser via transformers.js (WASM or WebGPU, no
+    key)
+  - copy and SEO-description suggestions through an OpenAI-compatible endpoint
+    the owner supplies, such as a local Ollama, registered as an integration
+    definition
+
+  Never promote a paid model.
+
+- **Sustainability.** Link GitHub Sponsors or Open Collective, keep a public
+  roadmap, and label good-first-issues.
+
+### 12.6 SEO / discoverability
+
+- Add `ProfilePage` / `Person` JSON-LD on home and about: Person as `mainEntity`,
+  with `sameAs` from the social links. Add `WebSite` on home, and
+  `BreadcrumbList` on detail pages. Reuse the D5 helper.
+- Generate an optional `/llms.txt` from published pages and writing. Present it
+  as an agent-access convention, not a ranking signal.
+
+### 12.7 Tech stack (deltas only)
+
+- **Adopt:**
+  - Cache Components (`'use cache'`, `cacheTag`, `updateTag`)
+  - GHCR with attestations
+  - CodeQL and Scorecard
+  - `schema-dts` types for JSON-LD (dev-only, MIT)
+- **Passkeys:**
+  - Add conditional-mediation autofill on the login field, behind a
+    `PublicKeyCredential.isConditionalMediationAvailable()` check.
+  - Then add conditional create after a passphrase sign-in.
+- **Evaluate only:** Puck (MIT core, JSON output), if a canvas editor is ever
+  wanted. Its AI layer is hosted, which the free-only rule excludes. A live
+  split preview is the cheaper win.
+- **Drop:** `react-icons` from the public bundle once D1 lands.
+
+### 12.8 Phase E — checklist
+
+**E1 — Safety and correctness (days)**
+
+- [ ] D5 JSON-LD escape helper, with a `</script>` regression test
+- [ ] D6 refuse placeholder and short secrets in production
+- [ ] Unsaved-changes guard + Cmd/Ctrl+S
+- [ ] D4 stale-save refusal for collections and settings
+- [ ] `settings.language` → `<html lang>`
+- [ ] `rel="me"` on footer social links and in `<head>`
+- [ ] README "save as you type" claim, and the dashboard house-rule fixes
+
+**E2 — Production pipeline (days)**
+
+- [ ] D7 e2e + axe in CI, with a golden-path spec
+- [ ] D8 GHCR multi-arch release + attestations + SBOM
+- [ ] D9 CodeQL + Scorecard + SHA-pinned actions
+
+**E3 — Public performance (1–2 weeks)**
+
+- [ ] D2 delete the dead client data layer
+- [ ] D1 per-route data, then RSC themed views
+- [ ] D3 Cache Components + `updateTag`
+- [ ] Image dimensions + responsive variants
+- [ ] D10 versions out of the published document
+
+**E4 — Editor quality of life (1–2 weeks)**
+
+- [ ] Cmd/Ctrl+K palette
+- [ ] Grouped nav; retire the Case studies entry
+- [ ] Live split preview
+- [ ] Undo after delete
+- [ ] Launch checklist
+- [ ] D12 convert the theme layout to blocks
+
+**E5 — Ownership and growth (2–3 weeks)**
+
+- [ ] Full `.zip` backup and restore, with media
+- [ ] Static HTML export
+- [ ] Owner monthly digest
+- [ ] Page scheduling
+- [ ] CSV import (fixed per-screen templates)
+- [ ] ProfilePage / Person / WebSite / Breadcrumb JSON-LD
+- [ ] `/llms.txt`
+- [ ] Writing: table of contents, reading time, tag archives, previous/next
+- [ ] Print stylesheet + `/cv`
+
+**E6 — Optional AI assist, free only and off by default**
+
+- [ ] In-browser alt-text suggestions
+- [ ] Copy assist through an endpoint the owner supplies (OpenAI-compatible or
+      Ollama)
+
+**How each item is verified:**
+
+- Every item: the AGENTS.md gate (`npm ci`, typecheck, lint, format check, test,
+  build).
+- D1–D3: compare the HTML and RSC payload size before and after with `curl`, and
+  check that no writing bodies appear on `/contact`.
+- D5 and D6: unit tests.
+- D7: a green CI job.
+- Backup `.zip`: a round trip between two adapters, with image hashes compared.
+
+### 12.9 Sources (fetched 2026-10-20)
+
+- Next.js JSON-LD guide (escape `<` as `<`):
+  <https://nextjs.org/docs/app/guides/json-ld>
+- Cache Components / `updateTag` (secondary; verify against the bundled docs):
+  <https://noqta.tn/en/tutorials/nextjs-16-cache-components-use-cache-guide-2026>
+- CVE-2026-64644, `/_next/image` CPU exhaustion:
+  <https://corgea.com/advisories/vulnerabilities/CVE-2026-64644>
+- Bento.me shutdown:
+  <https://alternativeto.net/news/2025/12/bento-to-shut-down-in-2026-as-linktree-takes-over-and-offers-migration-path/>
+- Google ProfilePage structured data:
+  <https://developers.google.com/search/docs/appearance/structured-data/profile-page>
+- llms.txt adoption: <https://www.rankability.com/llms-report/>
+- Mastodon `rel="me"` verification (server HTML only):
+  <https://forum.ghost.org/t/verifying-mastodon-account-with-rel-me/34227>
+- Passkey conditional UI support:
+  <https://mojoauth.com/blog/conditional-ui-browser-support-passkey-autofill>
+- Puck (MIT core, hosted AI layer): <https://puckeditor.com/blog/puck-ai>
+- Portfolio-builder AI trends:
+  <https://website-builders.cybernews.com/best-portfolio-website-builders/>
+- Container signing and provenance:
+  <https://oneuptime.com/blog/post/2026-01-25-cosign-container-image-signing/markdown>
