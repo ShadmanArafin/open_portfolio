@@ -9,6 +9,10 @@
 > The unannotated original is archived at [PLAN-ORIGINAL.md](PLAN-ORIGINAL.md)
 > if you want the reasoning as it stood before any code was written.
 >
+> The open backlog lives in [PROJECT-REVIEW.md](PROJECT-REVIEW.md); its
+> [§12 second pass (2026-10-20)](PROJECT-REVIEW.md#12-second-pass--2026-10-20)
+> holds Phase E, which is what remains after the admin rewrite.
+>
 > Last updated: 2026-08-11 · Version 0.5.0 · CI green on `main`.
 > Read [Handoff notes](#handoff-notes-for-whoever-picks-this-up) first if you
 > are starting on a new machine — it carries the running instructions, the
