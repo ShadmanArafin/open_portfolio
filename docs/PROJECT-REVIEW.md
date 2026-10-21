@@ -2621,9 +2621,37 @@ row against `next start`.
 
 **E6 — Optional AI assist, free only and off by default**
 
-- [ ] In-browser alt-text suggestions
-- [ ] Copy assist through an endpoint the owner supplies (OpenAI-compatible or
-      Ollama)
+- [x] ~~In-browser alt-text suggestions~~ — **changed on implementation**: alt
+      text goes through the same owner-supplied endpoint, using a vision model
+      (`llava` or `qwen2.5vl` on Ollama). transformers.js would have added
+      onnxruntime to every install for a feature most leave off, downloaded a
+      few hundred MB of model into the owner's browser, and needed the admin's
+      CSP opened to a model host and a script CDN. The admin is the most
+      privileged page, so widening it was the deciding cost. The suggestion
+      uses the 640px WebP copy when one exists, and only pictures in the media
+      library (`/api/media/<key>`) can be described, so the endpoint cannot be
+      pointed at arbitrary URLs.
+- [x] Copy assist through an endpoint the owner supplies. The `ai-assist`
+      integration definition stores the address, the writing model, an
+      optional picture model and an optional key; the key is encrypted and
+      never sent to the browser. Its Test lists `/models` and names any
+      missing model. The buttons are "Suggest a description" (page SEO),
+      "Suggest a summary" (writing) and "Suggest alt text" (image picker), and
+      they render only when the integration is connected. An answer is shown,
+      applied only on "Use it", and kept only by the screen's Save. Prompts
+      and answer cleaning are pure (`core/ai/prompts.ts`): they strip
+      preambles, quotes, Markdown and `<think>`, and cut on a sentence or word
+      within the limit. `/api/admin/assist` is owner-only and rate-limited
+      (60 an hour).
+
+  Verified: unit tests for the prompts, the cleaning, the integration's Test,
+  the server call (URL, key, body) and the button (hidden when off, applied
+  only on "Use it"). A live pass against a fake OpenAI-compatible server on
+  `next start`: no buttons before connecting; Test passes; the key is absent
+  from the integrations payload and present on the model requests; a
+  description is suggested, shown, and applied with the "Unsaved changes"
+  chip; the alt request carried the picture; a foreign image URL got 422 and
+  a stranger 401.
 
 **How each item is verified:**
 

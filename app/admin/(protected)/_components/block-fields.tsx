@@ -5,6 +5,7 @@ import type { MediaItem } from '@/cms/types/cms';
 import { getPath, setPath, type BlockField } from '@/core/blocks/fields';
 import { uploadMediaAction } from '../_actions/media';
 import { probeDimensions } from './probe-dimensions';
+import { Suggest } from './assist';
 
 /**
  * One form for every block type.
@@ -373,6 +374,16 @@ function MediaField({
               Read aloud to people who cannot see the picture.
             </span>
           </label>
+          {value ? (
+            <Suggest
+              task="alt"
+              source={() => ({ imageUrl: value })}
+              onUse={(text) => {
+                setAltDraft(text);
+                onPick({ url: value, altText: text });
+              }}
+            />
+          ) : null}
 
           {items.length > 0 ? (
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">

@@ -21,7 +21,7 @@ import { z } from 'zod';
  *   can act on.
  */
 
-export type IntegrationCategory = 'email' | 'analytics' | 'spam' | 'comments' | 'media';
+export type IntegrationCategory = 'email' | 'analytics' | 'spam' | 'comments' | 'media' | 'assist';
 
 export interface IntegrationField {
   name: string;

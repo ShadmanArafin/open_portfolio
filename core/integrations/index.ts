@@ -14,6 +14,7 @@ import './definitions/turnstile';
 import './definitions/umami';
 import './definitions/plausible';
 import './definitions/giscus';
+import './definitions/ai-assist';
 
 export * from './registry';
 export {
