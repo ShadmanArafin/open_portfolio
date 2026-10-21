@@ -132,3 +132,52 @@ export function SelectField({
     </label>
   );
 }
+
+/** An ISO instant as the `YYYY-MM-DDTHH:mm` a datetime-local input shows, in local time. */
+function toLocalInput(iso: string | undefined): string {
+  if (!iso) return '';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
+    date.getHours()
+  )}:${pad(date.getMinutes())}`;
+}
+
+/**
+ * A moment in time, picked in the owner's own clock and stored as an exact
+ * instant (ISO, UTC).
+ *
+ * Scheduling used a text box, and whatever was typed was later read by the
+ * server in *its* timezone — "09:00" meant 09:00 UTC on most hosts, hours
+ * away from what the owner meant. The browser knows the owner's timezone, so
+ * the conversion happens here, once, and the stored value is unambiguous.
+ */
+export function DateTimeField({
+  label,
+  value,
+  onChange,
+  hint,
+}: {
+  label: string;
+  value: string | undefined;
+  onChange: (iso: string) => void;
+  hint?: string;
+}) {
+  return (
+    <label className="grid gap-1 text-sm">
+      <span className="font-semibold">{label}</span>
+      <input
+        type="datetime-local"
+        value={toLocalInput(value)}
+        onChange={(event) => {
+          const date = new Date(event.target.value);
+          onChange(Number.isNaN(date.getTime()) ? '' : date.toISOString());
+        }}
+        className={field}
+        style={{ minHeight: 44 }}
+      />
+      {hint ? <span className="text-text-secondary">{hint}</span> : null}
+    </label>
+  );
+}

@@ -3,6 +3,7 @@
 import type { RecommendationItem } from '@/cms/types/cms';
 import { updateRecommendationsAction } from '../_actions/collections';
 import { CollectionEditor } from '../_components/collection-editor';
+import { recommendationsCsv } from '@/core/import/csv-templates';
 import { CheckField, Field } from '../_components/form-fields';
 import { newId } from '../_components/ids';
 import { ImageField } from '../_components/image-field';
@@ -36,6 +37,7 @@ export function RecommendationsBuilder({
       title={(item) => item.name}
       summary={(item) => item.company}
       badge={(item) => (item.visible ? null : { label: 'Hidden', live: false })}
+      csv={recommendationsCsv}
       create={(items) => ({
         id: newId('rec'),
         name: 'New name',

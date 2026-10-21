@@ -64,13 +64,29 @@ Two things to know:
 
 ## Backups
 
-Two things to keep, and they are separate.
+**Settings → Backup & restore → Download everything** is the whole site in one `.zip`: the published site and the draft, the publish history, and every uploaded file. Restore it from the same screen, on this install or any other, whatever storage either one uses; files the store already has are left alone and missing ones are put back. That is the backup to keep off-site.
 
-**Content.** Either `pg_dump` the database, or press **Export** in the admin for one JSON file. The export is the more portable of the two and it is what to keep off-site.
+**Content only (.json)** is smaller and leaves the files where they are. Use it with `pg_dump`, or a copy of `OPB_DATA_DIR/media` or the bucket, if you back those up some other way.
 
-**Files.** Whatever is under `OPB_DATA_DIR/media`, or the bucket if you are using object storage. The content export references images; it does not contain them.
+## A static copy
 
-Restoring is the same in reverse: import the JSON, put the files back where they were.
+**Settings → Backup & restore → Static copy** downloads the published site as plain HTML, one `folder/index.html` per page, with its scripts, styles, fonts and pictures. Upload the folder to any static host and it keeps working, with the same addresses, even without this app. The contact form and the newsletter need the app, so they won't work in the copy.
+
+The app builds the copy by requesting its own pages, from `http://127.0.0.1:$PORT` by default. If it listens somewhere else, set `OPB_INTERNAL_URL` (for example `http://app:3000`). It is never taken from a request header.
+
+## The monthly digest
+
+Once a month the owner can get an email: last month's visitors and most-read pages (when analytics is connected), new and unread messages, whether there are unpublished changes, and what is left on the launch checklist. It needs a mail server (`OPB_SMTP_*`) and a secret, and it is sent by calling `/api/cron/digest` with that secret:
+
+```bash
+# .env
+CRON_SECRET=a-long-random-string        # openssl rand -hex 32
+
+# crontab -e — daily; the app sends at most one digest per calendar month
+17 8 * * * curl -fsS -H "Authorization: Bearer $CRON_SECRET" https://your.site/api/cron/digest
+```
+
+On Vercel, `vercel.json` already schedules the call, and Vercel sends `CRON_SECRET` itself once you set it. To turn the digest off, set `OPB_DIGEST=off`.
 
 ## Behind a reverse proxy
 

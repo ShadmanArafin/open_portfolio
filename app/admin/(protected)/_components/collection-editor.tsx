@@ -6,6 +6,8 @@ import { UnsavedNote, useSaveShortcut, useUnsavedChanges } from './unsaved-chang
 import { useRequestedRecord } from './requested-record';
 import { UndoNotice } from './undo-remove';
 import { useUndoableRemove } from './use-undoable-remove';
+import { CsvImport } from './csv-import';
+import type { CsvImporter } from '@/core/import/csv-templates';
 
 const secondary =
   'rounded-full border border-border px-3 text-sm text-text-secondary hover:text-text-primary disabled:opacity-50';
@@ -52,6 +54,7 @@ export function CollectionEditor<T extends { id: string }>({
   save,
   note = 'Nothing on this screen is live until you publish.',
   headerExtra,
+  csv,
   customAdd,
   leading,
   renderFields,
@@ -72,6 +75,8 @@ export function CollectionEditor<T extends { id: string }>({
   save: (items: T[], token?: string) => Promise<SaveOutcome<T>>;
   note?: string;
   headerExtra?: ReactNode;
+  /** Rows from a spreadsheet, against this screen's fixed template. */
+  csv?: CsvImporter<T>;
   /** Replaces the Add button — the artifact screen uploads before it has a record. */
   customAdd?: (add: (items: T[]) => void) => ReactNode;
   /** A preview before the title, for screens whose records are pictures. */
@@ -169,6 +174,13 @@ export function CollectionEditor<T extends { id: string }>({
             {addLabel}
           </button>
         )}
+        {csv ? (
+          <CsvImport
+            importer={csv}
+            create={(made) => create([...items, ...made])}
+            onImport={addItems}
+          />
+        ) : null}
         {headerExtra}
       </div>
 

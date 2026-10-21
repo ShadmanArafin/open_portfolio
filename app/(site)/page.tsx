@@ -1,3 +1,4 @@
+import { isPageLive } from '@/core/pages/schema';
 import type { Metadata } from 'next';
 import { buildMetadata } from '@/core/content/metadata';
 import { BlockList } from '@/core/blocks/registry';
@@ -6,6 +7,8 @@ import { getContentForChannel } from '@/core/content/read';
 import { currentChannel, resolveHomePage } from '@/core/pages/read';
 import { HomePage } from '@/views/HomePage';
 import { PreviewBanner } from './preview-banner';
+import { JsonLd } from '@/core/content/json-ld-script';
+import { websiteFor } from '@/core/content/structured-data';
 
 /**
  * The front door — either built from blocks, or the theme's own sections.
@@ -38,11 +41,24 @@ export default async function Page() {
   const resolved = await resolveHomePage(channel);
   const content = await getContentForChannel(channel);
 
-  if (!resolved) return <HomePage />;
+  // Who the site is, for search engines — on whichever home is showing.
+  const website = <JsonLd data={websiteFor(content)} />;
+
+  if (!resolved) {
+    return (
+      <>
+        {website}
+        <HomePage />
+      </>
+    );
+  }
 
   return (
     <>
-      {channel === 'draft' && <PreviewBanner status={resolved.page.status} path="/" />}
+      {website}
+      {channel === 'draft' && (
+        <PreviewBanner status={isPageLive(resolved.page) ? 'published' : 'draft'} path="/" />
+      )}
       <BlockList blocks={resolved.blocks} content={blockContentFrom(content)} />
     </>
   );

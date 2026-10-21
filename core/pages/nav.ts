@@ -1,5 +1,5 @@
 import type { NavLinkItem } from '@/cms/types/cms';
-import type { PageRecord } from './schema';
+import { isPageLive, type PageRecord } from './schema';
 
 /**
  * Getting built pages into the site's navigation.
@@ -24,7 +24,7 @@ export function navEntriesFromPages(
 ): NavLinkItem[] {
   return (pages ?? [])
     .filter((page) => page.nav.show)
-    .filter((page) => page.status === 'published' || options.includeDrafts)
+    .filter((page) => isPageLive(page) || options.includeDrafts)
     .map((page) => ({
       id: `page:${page.id}`,
       label: page.nav.label || page.title,

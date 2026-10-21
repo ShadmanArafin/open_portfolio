@@ -1,6 +1,7 @@
 import 'server-only';
 import type { CMSState } from '@/cms/types/cms';
 import { mergeWork } from './work';
+import { isPageLive } from '@/core/pages/schema';
 
 /**
  * Takes the contact inbox out of a content document before it is published.
@@ -66,7 +67,7 @@ export function publicView(state: CMSState): CMSState {
 
   return {
     ...state,
-    pages: (state.pages ?? []).filter((page) => page.status === 'published'),
+    pages: (state.pages ?? []).filter((page) => isPageLive(page)),
     writing: (state.writing ?? []).filter(isLiveWriting),
     projects,
     caseStudies: [],

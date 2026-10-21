@@ -32,6 +32,8 @@ export const RESERVED_TOP_LEVEL: readonly string[] = [
   'api',
   'case-studies',
   'contact',
+  'cv',
+  'llms.txt',
   'newsletter',
   'setup',
   'share',
@@ -151,7 +153,9 @@ export const pageSchema = z.object({
    * which is the failure the block system exists to prevent.
    */
   blocks: z.array(z.unknown()),
-  status: z.enum(['draft', 'published']),
+  status: z.enum(['draft', 'published', 'scheduled']),
+  /** When a `scheduled` page goes live: an ISO instant. */
+  scheduledFor: z.string().optional(),
   seo: pageSeoSchema,
   nav: z.object({
     show: z.boolean(),
@@ -299,6 +303,22 @@ export function createHomePage(): PageRecord {
     updatedAt: new Date().toISOString(),
     revision: 1,
   };
+}
+
+/**
+ * Whether visitors see a page now: published, or scheduled and due. The same
+ * rule writing uses (`isLive` in core/writing/schema), so "scheduled" means the
+ * same thing everywhere. The site renders on a 60-second cycle, so a page
+ * appears within a minute of its moment with nothing running in between.
+ */
+export function isPageLive(
+  page: { status: string; scheduledFor?: string },
+  now: Date = new Date()
+): boolean {
+  if (page.status === 'published') return true;
+  if (page.status !== 'scheduled' || !page.scheduledFor) return false;
+  const due = Date.parse(page.scheduledFor);
+  return Number.isFinite(due) && due <= now.getTime();
 }
 
 export function isHomePage(page: { slug: string }): boolean {

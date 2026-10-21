@@ -39,7 +39,7 @@ export interface PagesResult {
 
 const MAX_PAGES = 50;
 const MAX_BLOCKS = 120;
-const STATUSES = new Set(['draft', 'published']);
+const STATUSES = new Set(['draft', 'published', 'scheduled']);
 const ID_PATTERN = /^[A-Za-z0-9_-]{1,100}$/;
 
 function cleanSeo(raw: unknown): PageRecord['seo'] | null {
@@ -91,7 +91,8 @@ export async function updatePagesAction(pages: unknown, token?: string): Promise
     slug: string;
     title: string;
     blocks: Record<string, unknown>[];
-    status: 'draft' | 'published';
+    status: 'draft' | 'published' | 'scheduled';
+    scheduledFor?: string;
     seo: PageRecord['seo'];
     nav: PageRecord['nav'];
   }
@@ -121,6 +122,16 @@ export async function updatePagesAction(pages: unknown, token?: string): Promise
       blocks.push(cleaned);
     }
 
+    // An exact instant, or nothing: a scheduled page with no usable date
+    // would simply never appear, which is a worse surprise than a refusal.
+    let scheduledFor: string | undefined;
+    if (entry.status === 'scheduled') {
+      if (!isText(entry.scheduledFor, 100) || !Number.isFinite(Date.parse(entry.scheduledFor))) {
+        return { ok: false, error: 'A scheduled page needs the date and time it should appear.' };
+      }
+      scheduledFor = new Date(entry.scheduledFor).toISOString();
+    }
+
     const seo = cleanSeo(entry.seo ?? {});
     if (!seo) return { ok: false, error: 'Those pages are not usable.' };
     const nav = cleanNav(entry.nav ?? { show: false, order: 0 });
@@ -133,7 +144,8 @@ export async function updatePagesAction(pages: unknown, token?: string): Promise
       slug: normaliseSlug(entry.slug),
       title: entry.title,
       blocks,
-      status: entry.status as 'draft' | 'published',
+      status: entry.status as 'draft' | 'published' | 'scheduled',
+      ...(scheduledFor ? { scheduledFor } : {}),
       seo,
       nav,
     });
@@ -155,6 +167,7 @@ export async function updatePagesAction(pages: unknown, token?: string): Promise
       title: page.title,
       blocks: page.blocks,
       status: page.status,
+      ...(page.scheduledFor ? { scheduledFor: page.scheduledFor } : {}),
       seo: page.seo,
       nav: page.nav,
       updatedAt: now,

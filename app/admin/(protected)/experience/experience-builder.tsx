@@ -4,6 +4,7 @@ import { formatPeriod } from '@/cms/utils/dates';
 import type { ExperienceItem } from '@/cms/types/cms';
 import { updateExperienceAction } from '../_actions/collections';
 import { CollectionEditor } from '../_components/collection-editor';
+import { experienceCsv } from '@/core/import/csv-templates';
 import { CheckField, Field, SelectField } from '../_components/form-fields';
 import { newId } from '../_components/ids';
 
@@ -70,6 +71,7 @@ export function ExperienceBuilder({
       badge={(item) =>
         item.current ? { label: 'Current', live: true } : { label: 'Past', live: false }
       }
+      csv={experienceCsv}
       create={(items) => ({
         id: newId('exp'),
         period: '',

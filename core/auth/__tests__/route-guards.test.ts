@@ -50,6 +50,8 @@ const PUBLIC_ROUTES: Record<string, string> = {
   health: 'Liveness for orchestrators. Adapter id and a boolean only, never error text.',
   'spam/sitekey':
     'The Turnstile site key, which is public by design. Reveals nothing; without it the widget cannot render at all.',
+  'cron/digest':
+    'Called by a scheduler with nobody signed in. Authorised by the CRON_SECRET shared secret, compared in constant time, and refuses everything until one is set.',
   'preview/end':
     'Turning your own preview off grants nothing. Requiring a session here would strand someone in preview when it expired.',
 };

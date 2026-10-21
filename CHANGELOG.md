@@ -38,6 +38,39 @@ through a letterbox. It now takes the window.
 
 ### You can now
 
+- **Take everything with you in one file.** Settings → Backup & restore →
+  Download everything is a .zip holding your site, your draft, your publish
+  history and every picture, and it restores onto any install, whatever storage
+  it uses. Moving from Vercel Blob to your own server no longer loses images.
+
+- **Keep a static copy of your site.** One button saves the published site as
+  plain HTML, with its styles, fonts and pictures. It works from GitHub Pages,
+  Netlify, a bucket or a USB stick, even if this app is gone.
+
+- **Bring a spreadsheet.** Experience, Education and Recommendations import a
+  CSV. Download the template, fill it in, then check the rows on screen and
+  Save. Columns match in any order. Rows that can't be used are named, by line
+  number.
+
+- **Schedule a page.** A page can go live at a time you pick, like writing
+  already could.
+
+- **Send a CV.** `/cv` is your experience, education and skills on one page,
+  laid out for paper. "Print or save as PDF" turns it into a PDF.
+
+- **Give readers more to go on.** Writing shows the reading time, a table of
+  contents for longer pieces, tags that link to their own archive pages, and
+  the previous and next piece.
+
+- **Hear how the month went.** With email and a cron secret set, the owner gets
+  a monthly digest: visitors, most-read pages, new messages, and what is left
+  before launch.
+
+- **Be understood by search engines and AI tools.** The site now describes you
+  as a Person on a ProfilePage, the home page as a WebSite, and detail pages
+  with breadcrumbs. `/llms.txt` gives AI assistants a plain map of the site,
+  unless you've asked search engines to stay away.
+
 - **Jump anywhere with Cmd/Ctrl+K.** Type a few letters of a section, a page,
   a piece of writing or a project and press Enter; a record opens in its
   editor, ready to change.
@@ -244,6 +277,10 @@ through a letterbox. It now takes the window.
   build and the tag you run just have to match each other.
 
 ### Fixed
+
+- Restoring a backup now shows on the public site straight away. Before, pages
+  kept the old content for up to a minute.
+- Printing in a dark theme no longer gives you white headings on white paper.
 
 - **Preview could open on the wrong address** behind a proxy or under
   `next start`: it redirected to the server's own idea of its host instead of

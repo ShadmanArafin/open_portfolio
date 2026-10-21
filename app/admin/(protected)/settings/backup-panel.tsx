@@ -12,6 +12,8 @@ interface RestoreOutcome {
     manifestEntries: number;
     filesPresent: number;
     filesMissing: number;
+    filesRestored?: number;
+    filesRefused?: number;
   };
   note?: string;
 }
@@ -36,7 +38,7 @@ export function BackupPanel() {
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [pendingImport, setPendingImport] = useState<{ name: string; text: string } | null>(null);
+  const [pendingImport, setPendingImport] = useState<{ name: string; file: File } | null>(null);
   const [resetArmed, setResetArmed] = useState(false);
   const [confirmText, setConfirmText] = useState('');
 
@@ -48,8 +50,12 @@ export function BackupPanel() {
     try {
       const res = await fetch('/api/admin/backup', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: pendingImport.text,
+        headers: {
+          'Content-Type': pendingImport.name.toLowerCase().endsWith('.zip')
+            ? 'application/zip'
+            : 'application/json',
+        },
+        body: pendingImport.file,
       });
       const body = (await res.json().catch(() => ({}))) as RestoreOutcome;
       if (res.ok && body.ok && body.restored) {
@@ -61,6 +67,8 @@ export function BackupPanel() {
             r.manifestEntries
           } file${r.manifestEntries === 1 ? '' : 's'} present in storage${
             r.filesMissing > 0 ? `, ${r.filesMissing} missing` : ''
+          }${r.filesRestored ? `; ${r.filesRestored} put back from the archive` : ''}${
+            r.filesRefused ? `; ${r.filesRefused} refused as not a usable file` : ''
           }.`
         );
       } else {
@@ -80,7 +88,7 @@ export function BackupPanel() {
     if (!file) return;
     setNote(null);
     setError(null);
-    setPendingImport({ name: file.name, text: await file.text() });
+    setPendingImport({ name: file.name, file });
   };
 
   const handleReset = async () => {
@@ -113,19 +121,35 @@ export function BackupPanel() {
       <div>
         <h2 className="m-0 text-xl">Backup &amp; restore</h2>
         <p className="m-0 mt-1 text-sm text-text-secondary">
-          Export downloads your published site and your draft as one JSON file, plus a manifest of
-          your media. Restoring replaces both from such a file. Media bytes travel with your storage
-          volume, not the file.
+          <strong className="text-text-primary">Download everything</strong> is your whole site in
+          one .zip — content, publish history and every picture — and restores onto this install or
+          any other, whatever storage it uses. The content-only JSON is smaller and leaves your
+          pictures where they are. A static copy is the published site as plain HTML for any static
+          host, in case you ever leave this app. Restoring replaces your published site and draft.
         </p>
       </div>
 
       <div className="flex flex-wrap gap-3">
         <a
-          href="/api/admin/backup"
+          href="/api/admin/backup?format=zip"
           className="inline-flex rounded-full bg-text-primary px-4 text-sm font-semibold text-bg no-underline"
           style={{ minHeight: 44, alignItems: 'center' }}
         >
-          Export content
+          Download everything (.zip)
+        </a>
+        <a
+          href="/api/admin/backup"
+          className={`${secondary} inline-flex no-underline`}
+          style={{ minHeight: 44, alignItems: 'center' }}
+        >
+          Content only (.json)
+        </a>
+        <a
+          href="/api/admin/export-static"
+          className={`${secondary} inline-flex no-underline`}
+          style={{ minHeight: 44, alignItems: 'center' }}
+        >
+          Static copy (.zip)
         </a>
 
         <button
@@ -140,7 +164,7 @@ export function BackupPanel() {
         <input
           ref={fileInput}
           type="file"
-          accept="application/json,.json"
+          accept="application/json,.json,application/zip,.zip"
           className="hidden"
           onChange={(e) => void handleFile(e)}
         />

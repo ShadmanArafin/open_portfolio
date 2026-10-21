@@ -1,5 +1,6 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { signIn } from './owner';
 
 /**
  * The one journey the product exists for, end to end: claim a fresh site,
@@ -16,33 +17,7 @@ import AxeBuilder from '@axe-core/playwright';
  * pointed at a long-running local server too.
  */
 
-const OWNER = {
-  email: 'e2e-owner@example.test',
-  passphrase: 'quiet harbour lantern violet seventy-two',
-};
-
 test.describe.configure({ mode: 'serial' });
-
-async function signIn(page: Page, baseURL: string) {
-  const headers = { origin: baseURL, 'content-type': 'application/json' };
-  const eligibility = await (await page.request.get('/api/setup/claim')).json();
-  const response = eligibility.allowed
-    ? await page.request.post('/api/setup/claim', {
-        headers,
-        data: { ...OWNER, setupToken: process.env.OPB_SETUP_TOKEN },
-      })
-    : await page.request.post('/api/auth/login', { headers, data: OWNER });
-  expect(response.status(), await response.text()).toBe(200);
-
-  // The welcome wizard is its own journey; this one starts after it.
-  await page.addInitScript(() => {
-    try {
-      window.localStorage.setItem('opb.welcome.dismissed', '1');
-    } catch {
-      // A private window: the wizard redirect would show, and fail loudly.
-    }
-  });
-}
 
 test('claim → edit → publish → a visitor sees it', async ({ page, browser, baseURL }) => {
   await signIn(page, baseURL!);

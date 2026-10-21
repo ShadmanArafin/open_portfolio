@@ -43,6 +43,8 @@ export default defineConfig({
           // Plain http on 127.0.0.1: the documented case for a non-__Host-
           // session cookie (core/auth/constants.ts).
           OPB_ALLOW_INSECURE_COOKIES: '1',
+          // A deployed site knows its address; structured data needs it.
+          OPB_SITE_URL: baseURL,
         },
       },
 });

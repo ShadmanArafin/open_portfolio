@@ -7,6 +7,8 @@ import { currentChannel } from '@/core/pages/read';
 import { BlockList, parsePage } from '@/core/blocks/registry';
 import { blockContentFrom } from '@/core/blocks/content';
 import { ProjectDetailPage } from '@/views/ProjectDetailPage';
+import { JsonLd } from '@/core/content/json-ld-script';
+import { breadcrumbsFor } from '@/core/content/structured-data';
 
 /**
  * Pre-render the projects that exist at build time; anything added later is
@@ -51,11 +53,22 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   // to draw on — a story block can list writing or work, which the client copy
   // of the content (`clientView`) no longer carries.
   const content = publicView(await getContentForChannel(await currentChannel()));
-  const blocks = content.projects.find((project) => project.slug === slug)?.story?.blocks;
+  const project = content.projects.find((candidate) => candidate.slug === slug);
+  const blocks = project?.story?.blocks;
   const story =
     Array.isArray(blocks) && blocks.length > 0 ? (
       <BlockList blocks={parsePage(blocks)} content={blockContentFrom(content)} />
     ) : undefined;
 
-  return <ProjectDetailPage story={story} />;
+  return (
+    <>
+      <JsonLd
+        data={breadcrumbsFor(content, [
+          { name: 'Work', path: '/work' },
+          { name: project?.title || project?.name || slug, path: `/work/${slug}` },
+        ])}
+      />
+      <ProjectDetailPage story={story} />
+    </>
+  );
 }

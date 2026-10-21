@@ -68,7 +68,7 @@ function RenderOne({
     content: BlockContent;
   }>;
 
-  return (
+  const rendered = (
     <Component
       props={block.props}
       frame={{ ...definition.frameDefaults, ...block.frame }}
@@ -76,6 +76,16 @@ function RenderOne({
       headingLevel={headingLevel}
       content={content}
     />
+  );
+  // `anchor` was in the block schema and rendered nowhere, so an in-page link
+  // to a block could never land. A wrapper only when there is one, so pages
+  // without anchors keep exactly the markup they had.
+  return block.anchor ? (
+    <div id={block.anchor} style={{ scrollMarginBlockStart: 'var(--space-20)' }}>
+      {rendered}
+    </div>
+  ) : (
+    rendered
   );
 }
 
@@ -90,8 +100,14 @@ function RenderOne({
 export function BlockList({
   blocks,
   content = EMPTY_BLOCK_CONTENT,
+  firstLevel = 1,
 }: {
   blocks: ParsedBlock[];
+  /**
+   * 2 when the page already has its `h1` above the blocks — a writing entry's
+   * title — so the first block heading does not become a second one.
+   */
+  firstLevel?: 1 | 2;
   /**
    * Defaulted rather than required, so the routes and tests that predate
    * collection views keep working unchanged. A collection block with no content
@@ -110,7 +126,7 @@ export function BlockList({
           <RenderOne
             key={id}
             entry={entry}
-            headingLevel={clampLevel(id === firstRenderableId ? 1 : 2)}
+            headingLevel={clampLevel(id === firstRenderableId ? firstLevel : 2)}
             content={content}
           />
         );

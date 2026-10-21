@@ -3,6 +3,7 @@
 import type { EducationItem } from '@/cms/types/cms';
 import { updateEducationAction } from '../_actions/collections';
 import { CollectionEditor } from '../_components/collection-editor';
+import { educationCsv } from '@/core/import/csv-templates';
 import { CheckField, Field, SelectField } from '../_components/form-fields';
 import { newId } from '../_components/ids';
 
@@ -37,6 +38,7 @@ export function EducationBuilder({
       title={(entry) => entry.degree}
       summary={(entry) => entry.institution}
       badge={(entry) => ({ label: entry.status, live: entry.status === 'Graduated' })}
+      csv={educationCsv}
       create={(entries) => ({
         id: newId('edu'),
         number: '',

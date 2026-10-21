@@ -2558,15 +2558,66 @@ row against `next start`.
 
 **E5 — Ownership and growth (2–3 weeks)**
 
-- [ ] Full `.zip` backup and restore, with media
-- [ ] Static HTML export
-- [ ] Owner monthly digest
-- [ ] Page scheduling
-- [ ] CSV import (fixed per-screen templates)
-- [ ] ProfilePage / Person / WebSite / Breadcrumb JSON-LD
-- [ ] `/llms.txt`
-- [ ] Writing: table of contents, reading time, tag archives, previous/next
-- [ ] Print stylesheet + `/cv`
+- [x] Full `.zip` backup and restore, with media. `?format=zip` carries
+      `backup.json`, `versions.json` and `media/*` (a `MISSING.txt` names any
+      file the store could not read). Restore puts back only files the store
+      lacks, each checked by its bytes like an upload. The zip writer is
+      ~150 lines on `node:zlib` (`core/backup/zip.ts`), with no dependency.
+      **Found while verifying:** every entry was dated month 0 of 1980, which
+      `unzip` printed as `1980-00-00`; entries now carry the write time.
+      Restore now also revalidates the public pages, which before showed the
+      old site for up to a minute.
+- [x] Static HTML export (`core/export/static-site.ts`,
+      `/api/admin/export-static`). It crawls the published site with no
+      session and saves each page as `path/index.html`, plus every asset the
+      pages and stylesheets reference. The origin comes from
+      `OPB_INTERNAL_URL` or `127.0.0.1:$PORT`, never from a header.
+      **Found while verifying:** the build's stylesheets load fonts by
+      relative path (`url(../media/…)`), so the first copy had no fonts.
+      References in CSS now resolve against the stylesheet.
+- [x] Owner monthly digest (`core/notify/digest.ts`, `/api/cron/digest`,
+      `vercel.json`). At most one per calendar month. It needs
+      `CRON_SECRET`/`OPB_CRON_SECRET` (compared in constant time) and is off
+      with `OPB_DIGEST=off`.
+- [x] Page scheduling. Pages gain `status: 'scheduled'` and `scheduledFor`
+      behind one `isPageLive()`, which the router, nav, sitemap, client view
+      and preview banner all use. Times are entered in local time and stored
+      as ISO (`DateTimeField`, which writing now uses too).
+- [x] CSV import (`core/import/csv.ts`, `csv-templates.ts`). Experience,
+      Education and Recommendations each have a fixed template. Columns match
+      in any order and any case. Unknown columns and unusable rows are named
+      back. Semicolon files and BOMs are read. Rows become unsaved records, so
+      the screen's Save and token check apply.
+- [x] ProfilePage / Person / WebSite / Breadcrumb JSON-LD
+      (`core/content/structured-data.ts`), all through the escaping helper.
+      They are emitted only when the site knows its address, because the
+      `@id`s must be absolute.
+- [x] `/llms.txt`. It is built from the same indexable content as the sitemap,
+      returns 404 when robots says noindex, and is read per request so a
+      publish shows at once.
+- [x] Writing: table of contents (from 3 headings; anchors are unique across
+      repeated headings and keep non-Latin letters), reading time at 220 wpm,
+      tag archives (404 for an empty tag), previous/next. Blocks start at
+      `h2` under the title's `h1`.
+- [x] Print stylesheet + `/cv`. **Found while verifying:** in a dark theme the
+      print tokens lost to the theme's later `<style>`, which printed white
+      headings on white paper. They are `!important` now.
+
+  Verified: typecheck, lint (0 errors), format, 1172 unit tests, production
+  build, browser suite 22/22 twice (it gains `e2e/ownership.spec.ts`: a picture
+  out and back through the zip, the static copy's files, 401 for a stranger,
+  `/cv`, `/llms.txt`, WebSite JSON-LD). Live checks against two fresh
+  `next start` stores:
+  - CSV with a quoted comma, a row missing its role and an unknown column:
+    2 added, both problems named.
+  - A future scheduled page 404s; a past one serves.
+  - Repeated headings get `#why-this` and `#why-this-2`; a tag archive
+    matches across case.
+  - A 38 KB JPEG zipped from store A restored onto store B byte-identical.
+  - The static copy, served by `python -m http.server`, loads six pages with
+    no failed requests and navigates.
+  - The digest endpoint returns 503 without a secret, 401 with a wrong one,
+    and `no-mail` without SMTP.
 
 **E6 — Optional AI assist, free only and off by default**
 
