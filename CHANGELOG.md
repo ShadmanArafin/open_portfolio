@@ -38,6 +38,24 @@ through a letterbox. It now takes the window.
 
 ### You can now
 
+- **Jump anywhere with Cmd/Ctrl+K.** Type a few letters of a section, a page,
+  a piece of writing or a project and press Enter; a record opens in its
+  editor, ready to change.
+
+- **See the page while you build it.** On a wide screen, "Preview beside"
+  docks the real page next to the editor at phone, tablet or full width, and
+  it reloads each time you save.
+
+- **Undo a delete,** until you save.
+
+- **Know what is left before launch.** The dashboard opens with a seven-step
+  launch checklist — your name, your work, your email, a mail server, a search
+  description, your address, publish — and puts it away once it is done.
+
+- **Turn the theme's home page into blocks without losing a word.** Building a
+  home page now starts from what your home page shows today, section by
+  section, instead of from an empty page.
+
 - **Send phones a phone-sized photo.** Large photos get WebP copies at 640,
   1280 and 1920 pixels when uploaded, and every image on the site offers them
   through `srcset`, so a phone downloads the small one instead of the
@@ -150,6 +168,9 @@ through a letterbox. It now takes the window.
 
 ### Changed
 
+- **The admin menu is grouped** into Build, Profile, Audience, Look & reach
+  and System, and Case studies only appears on sites that still have them.
+
 - **Pages carry only what they show.** Every public page used to include every
   published page's blocks, every piece of writing in full and every project's
   case study, whatever page it was. They render on the server now and stay
@@ -223,6 +244,14 @@ through a letterbox. It now takes the window.
   build and the tag you run just have to match each other.
 
 ### Fixed
+
+- **Preview could open on the wrong address** behind a proxy or under
+  `next start`: it redirected to the server's own idea of its host instead of
+  the one you were using.
+
+- **A brand-new site's dashboard was empty** ("Nothing is stored yet") until
+  the first save; it shows the checklist and the readiness checks from the
+  start now.
 
 - **A preview showed the old colours.** Previewing a theme or colour change
   painted the published palette until you published. Previews now show the

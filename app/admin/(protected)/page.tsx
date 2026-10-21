@@ -1,12 +1,14 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getStorageAdapter } from '@/core/storage/registry';
+import { getContentForChannel } from '@/core/content/read';
 import { analyseContent } from '@/cms/utils/contentHealth';
 import { countMediaUsage, describeChanges, hasUnpublishedChanges } from '@/core/content/changes';
 import { audienceSummary } from '@/core/integrations/stats';
 import { resolveTransportWithStored } from '@/core/email/transport';
 import type { CMSState } from '@/cms/types/cms';
 import { PublishButton } from './publish-button';
+import { launchSteps } from '@/core/content/launch';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,24 +48,13 @@ export default async function DashboardPage() {
     resolveTransportWithStored().catch(() => ({ kind: 'none' as const })),
   ]);
 
-  const draft = draftMeta?.state as CMSState | undefined;
+  // A brand-new site has nothing stored until the first save, and that is
+  // exactly when this screen — the checklist above all — matters most. It
+  // reads what the editors start from (`getContentForChannel` falls back to the
+  // built-in content), instead of answering "nothing is stored yet".
+  const draft = (draftMeta?.state as CMSState | undefined) ?? (await getContentForChannel('draft'));
   const published = publishedMeta?.state as CMSState | undefined;
   const baseline = published ?? draft;
-  if (!baseline) {
-    return (
-      <div className="grid gap-5" style={{ maxWidth: 'var(--measure)' }}>
-        <div>
-          <p className="m-0 font-mono text-xs uppercase tracking-widest text-text-muted">
-            Overview
-          </p>
-          <h1 className="font-display m-0 mt-1 text-3xl">Welcome</h1>
-        </div>
-        <p role="status" className="m-0 text-text-secondary">
-          Nothing is stored yet — finish setup and this screen fills in.
-        </p>
-      </div>
-    );
-  }
 
   const analysed: CMSState = { ...baseline, messages: inbox };
   const report = analyseContent(analysed, (id) => countMediaUsage(analysed, id), {
@@ -76,6 +67,11 @@ export default async function DashboardPage() {
     report.score >= 90 ? 'All clear' : report.score >= 65 ? 'Getting there' : 'Needs work';
   const blocking = report.issues.filter((i) => i.severity === 'blocking').length;
   const views = await audienceSummary().catch(() => null);
+  const steps = launchSteps(draft, {
+    published: Boolean(published?.lastPublishedAt),
+    emailConfigured: transport.kind !== 'none',
+  });
+  const stepsDone = steps.filter((step) => step.done).length;
 
   return (
     <div className="grid gap-6">
@@ -99,6 +95,56 @@ export default async function DashboardPage() {
           Pages
         </Link>
       </div>
+
+      {stepsDone < steps.length ? (
+        <section
+          aria-labelledby="launch-heading"
+          className="grid gap-3 rounded-2xl border border-border p-4"
+        >
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 id="launch-heading" className="m-0 text-xl">
+              Launch checklist
+            </h2>
+            <p className="m-0 text-sm text-text-secondary">
+              {stepsDone} of {steps.length} done
+            </p>
+          </div>
+          <progress
+            value={stepsDone}
+            max={steps.length}
+            aria-label={`Launch checklist: ${stepsDone} of ${steps.length} done`}
+            className="h-2 w-full overflow-hidden rounded-full accent-[var(--accent-color)]"
+          />
+          <ol className="m-0 grid list-none gap-1 p-0">
+            {steps.map((step) => (
+              <li key={step.id} className="flex items-center gap-3 text-sm">
+                <span
+                  aria-hidden="true"
+                  className={`inline-flex h-5 w-5 items-center justify-center rounded-full border text-xs ${
+                    step.done ? 'border-text-primary bg-text-primary text-bg' : 'border-border'
+                  }`}
+                >
+                  {step.done ? '✓' : ''}
+                </span>
+                {step.done ? (
+                  <span className="text-text-muted">
+                    {step.label}
+                    <span className="sr-only"> (done)</span>
+                  </span>
+                ) : (
+                  <Link
+                    href={step.href}
+                    className="flex items-center text-text-primary"
+                    style={{ minHeight: 44 }}
+                  >
+                    {step.label} →
+                  </Link>
+                )}
+              </li>
+            ))}
+          </ol>
+        </section>
+      ) : null}
 
       <div
         className="grid gap-4"

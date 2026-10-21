@@ -18,6 +18,9 @@ import { updateWritingAction } from '../_actions/writing';
 import { MarkdownImport } from './markdown-import';
 import { ConflictNotice } from '../_components/conflict-notice';
 import { UnsavedNote, useSaveShortcut, useUnsavedChanges } from '../_components/unsaved-changes';
+import { useRequestedRecord } from '../_components/requested-record';
+import { UndoNotice } from '../_components/undo-remove';
+import { useUndoableRemove } from '../_components/use-undoable-remove';
 
 /**
  * Writing — essays, notes, posts.
@@ -93,6 +96,7 @@ export function WritingBuilder({
   });
   const [entries, setEntries] = useState<WritingEntry[]>(initialEntries);
   const [openId, setOpenId] = useState<string | null>(null);
+  useRequestedRecord(setOpenId);
   const [deleteArmed, setDeleteArmed] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
@@ -147,8 +151,9 @@ export function WritingBuilder({
     );
   };
 
+  const undoable = useUndoableRemove(entries, setEntries);
   const remove = (id: string) => {
-    setEntries((list) => list.filter((entry) => entry.id !== id));
+    undoable.remove(id, entries.find((entry) => entry.id === id)?.title ?? '');
     if (openId === id) setOpenId(null);
     setDeleteArmed(null);
   };
@@ -184,6 +189,9 @@ export function WritingBuilder({
   useSaveShortcut(() => void save(), !busy);
   return (
     <div className="grid gap-6">
+      {undoable.removed ? (
+        <UndoNotice label={undoable.removed.label} onUndo={() => setOpenId(undoable.undo())} />
+      ) : null}
       <section
         aria-label="How this section works"
         className="grid gap-3 rounded-2xl border border-border p-4"
@@ -269,7 +277,11 @@ export function WritingBuilder({
           {arranged.map((entry, index) => {
             const open = openId === entry.id;
             return (
-              <li key={entry.id} className="grid gap-3 rounded-2xl border border-border p-4">
+              <li
+                key={entry.id}
+                id={`record-${entry.id}`}
+                className="grid scroll-mt-6 gap-3 rounded-2xl border border-border p-4"
+              >
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <button
                     type="button"

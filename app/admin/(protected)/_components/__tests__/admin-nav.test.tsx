@@ -44,7 +44,7 @@ describe('the admin section nav', () => {
     // aria-controls has to name an element that is actually there, or the
     // attribute is decoration.
     const list = body.querySelector(`#${button?.getAttribute('aria-controls')}`);
-    expect(list?.tagName).toBe('UL');
+    expect(list?.querySelectorAll('ul').length).toBeGreaterThan(1);
     expect(list?.className).toContain('hidden');
   });
 
@@ -84,5 +84,14 @@ describe('the admin section nav', () => {
     expect(
       results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.html).join(' | ')}`)
     ).toEqual([]);
+  });
+
+  it('groups the sections under labels, each group its own named list', () => {
+    const lists = [...renderNav().querySelectorAll('#admin-sections ul')];
+    const names = lists
+      .map((list) => list.getAttribute('aria-labelledby'))
+      .filter(Boolean)
+      .map((id) => document.getElementById(id!)?.textContent);
+    expect(names).toEqual(['Build', 'Profile', 'Audience', 'Look & reach', 'System']);
   });
 });
