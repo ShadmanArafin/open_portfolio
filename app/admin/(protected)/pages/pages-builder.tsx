@@ -18,6 +18,10 @@ import { SharePanel } from './share-panel';
 import { updatePagesAction } from '../_actions/pages';
 import { ConflictNotice } from '../_components/conflict-notice';
 import { UnsavedNote, useSaveShortcut, useUnsavedChanges } from '../_components/unsaved-changes';
+import { useRequestedRecord } from '../_components/requested-record';
+import { UndoNotice } from '../_components/undo-remove';
+import { useUndoableRemove } from '../_components/use-undoable-remove';
+import { PreviewPane } from '../_components/preview-pane';
 
 /**
  * Building a page.
@@ -55,12 +59,14 @@ function PageEditor({
   media,
   saved,
   onMutate,
+  onPreviewBeside,
 }: {
   page: PageRecord;
   otherSlugs: string[];
   media: MediaItem[];
   saved: boolean;
   onMutate: (mutate: (page: PageRecord) => PageRecord) => void;
+  onPreviewBeside: (path: string) => void;
 }) {
   const home = isHomePage(page);
   const slugProblem = checkSlug(page.slug, { existingSlugs: otherSlugs, isHome: home });
@@ -134,7 +140,16 @@ function PageEditor({
           </>
         ) : null}
 
-        <div>
+        <div className="flex flex-wrap gap-2">
+          {/* Wide screens only, where the panel has room beside the editor. */}
+          <button
+            type="button"
+            onClick={() => onPreviewBeside(`/${home ? '' : page.slug}`)}
+            className={`${secondary} hidden xl:inline-flex xl:items-center`}
+            style={{ minHeight: 44 }}
+          >
+            Preview beside
+          </button>
           <button
             type="button"
             onClick={() =>
@@ -208,20 +223,31 @@ export function PagesBuilder({
   initialPages,
   media,
   token: initialToken,
+  homeStarter,
 }: {
   initialPages: PageRecord[];
   media: MediaItem[];
   token?: string;
+  /**
+   * The theme's current home layout as blocks (`homePageFromSections`), so
+   * building a home page starts from what the site shows now, not from blank.
+   */
+  homeStarter?: PageRecord;
 }) {
   const [pages, setPages] = useState<PageRecord[]>(sortHomeFirst(initialPages));
   const [savedIds, setSavedIds] = useState<string[]>(initialPages.map((page) => page.id));
   const [openId, setOpenId] = useState<string | null>(null);
+  useRequestedRecord(setOpenId);
   const [deleteArmed, setDeleteArmed] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [conflict, setConflict] = useState(false);
   const [token, setToken] = useState(initialToken);
+  // The docked preview: which page, and a counter bumped on each save so it
+  // reloads to show what was just written.
+  const [previewPath, setPreviewPath] = useState<string | null>(null);
+  const [previewVersion, setPreviewVersion] = useState(0);
   const { dirty, markSaved } = useUnsavedChanges(pages);
 
   const hasHome = pages.some(isHomePage);
@@ -247,7 +273,7 @@ export function PagesBuilder({
   };
 
   const buildHome = () => {
-    setPages((list) => [createHomePage(), ...list]);
+    setPages((list) => [homeStarter ?? createHomePage(), ...list]);
     setOpenId('page_home');
   };
 
@@ -261,8 +287,9 @@ export function PagesBuilder({
       return next;
     });
 
+  const undoable = useUndoableRemove(pages, setPages);
   const removePage = (id: string) => {
-    setPages((list) => list.filter((page) => page.id !== id));
+    undoable.remove(id, pages.find((page) => page.id === id)?.title ?? '');
     if (openId === id) setOpenId(null);
     setDeleteArmed(null);
   };
@@ -279,6 +306,7 @@ export function PagesBuilder({
         setPages(saved);
         markSaved(saved);
         if (result.token) setToken(result.token);
+        setPreviewVersion((version) => version + 1);
         setSavedIds(result.pages.map((page) => page.id));
         setNote('Saved to your draft.');
       } else {
@@ -295,10 +323,20 @@ export function PagesBuilder({
   useSaveShortcut(() => void save(), !busy);
   return (
     <div className="grid gap-6">
+      {previewPath ? (
+        <PreviewPane
+          path={previewPath}
+          version={previewVersion}
+          onClose={() => setPreviewPath(null)}
+        />
+      ) : null}
+      {undoable.removed ? (
+        <UndoNotice label={undoable.removed.label} onUndo={() => setOpenId(undoable.undo())} />
+      ) : null}
       <div className="flex flex-wrap gap-3">
         {!hasHome ? (
           <button type="button" onClick={buildHome} className={secondary} style={{ minHeight: 44 }}>
-            Build my home page
+            Build my home page from what it shows now
           </button>
         ) : null}
         <button
@@ -340,7 +378,11 @@ export function PagesBuilder({
             const home = isHomePage(page);
             const open = openId === page.id;
             return (
-              <li key={page.id} className="grid gap-3 rounded-2xl border border-border p-4">
+              <li
+                key={page.id}
+                id={`record-${page.id}`}
+                className="grid scroll-mt-6 gap-3 rounded-2xl border border-border p-4"
+              >
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <button
                     type="button"
@@ -434,6 +476,7 @@ export function PagesBuilder({
                       .filter((other) => other.id !== page.id)
                       .map((other) => other.slug)}
                     onMutate={(mutate) => mutatePage(page.id, mutate)}
+                    onPreviewBeside={setPreviewPath}
                   />
                 ) : null}
               </li>

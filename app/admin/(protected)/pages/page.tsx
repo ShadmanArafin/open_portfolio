@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { getContentForChannel } from '@/core/content/read';
 import { screenToken } from '@/core/content/screen-token';
+import { homePageFromSections } from '@/core/pages/home-from-sections';
 import { PagesBuilder } from './pages-builder';
 
 export const metadata: Metadata = { title: 'Pages' };
@@ -33,6 +34,7 @@ export default async function PagesPage() {
         token={screenToken(draft, 'pages')}
         initialPages={draft.pages ?? []}
         media={draft.media ?? []}
+        homeStarter={homePageFromSections(draft.sections, draft.settings)}
       />
     </div>
   );

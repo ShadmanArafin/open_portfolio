@@ -18,5 +18,11 @@ export async function GET(req: Request) {
   const path = safeRedirectPath(url.searchParams.get('path'), '/');
 
   (await draftMode()).disable();
-  return NextResponse.redirect(new URL(path, url.origin), 303);
+  // A relative Location, resolved by the browser against the address it used.
+  // `url.origin` is the server's own idea of where it is — `localhost` under
+  // `next start`, the container's hostname behind a proxy — so an absolute
+  // redirect built from it sent the owner to a different host, and inside the
+  // admin's preview panel `upgrade-insecure-requests` then turned that into an
+  // https request that failed. `safeRedirectPath` guarantees a same-site path.
+  return new NextResponse(null, { status: 303, headers: { Location: path } });
 }

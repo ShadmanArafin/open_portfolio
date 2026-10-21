@@ -3,6 +3,9 @@
 import { useState, type ReactNode } from 'react';
 import { ConflictNotice } from './conflict-notice';
 import { UnsavedNote, useSaveShortcut, useUnsavedChanges } from './unsaved-changes';
+import { useRequestedRecord } from './requested-record';
+import { UndoNotice } from './undo-remove';
+import { useUndoableRemove } from './use-undoable-remove';
 
 const secondary =
   'rounded-full border border-border px-3 text-sm text-text-secondary hover:text-text-primary disabled:opacity-50';
@@ -77,6 +80,7 @@ export function CollectionEditor<T extends { id: string }>({
 }) {
   const [items, setItems] = useState<T[]>(initialItems);
   const [openId, setOpenId] = useState<string | null>(null);
+  useRequestedRecord(setOpenId);
   const [deleteArmed, setDeleteArmed] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [noteText, setNoteText] = useState<string | null>(null);
@@ -113,8 +117,10 @@ export function CollectionEditor<T extends { id: string }>({
       return next;
     });
 
+  const undoable = useUndoableRemove(items, setItems);
   const remove = (id: string) => {
-    setItems((list) => list.filter((item) => item.id !== id));
+    const item = items.find((candidate) => candidate.id === id);
+    undoable.remove(id, item ? title(item) : '');
     if (openId === id) setOpenId(null);
     setDeleteArmed(null);
   };
@@ -147,6 +153,9 @@ export function CollectionEditor<T extends { id: string }>({
 
   return (
     <div className="grid gap-6">
+      {undoable.removed ? (
+        <UndoNotice label={undoable.removed.label} onUndo={() => setOpenId(undoable.undo())} />
+      ) : null}
       <div className="flex flex-wrap gap-3">
         {customAdd ? (
           customAdd(addItems)
@@ -174,7 +183,11 @@ export function CollectionEditor<T extends { id: string }>({
             const open = openId === item.id;
             const itemBadge = badge?.(item) ?? null;
             return (
-              <li key={item.id} className="grid gap-3 rounded-2xl border border-border p-4">
+              <li
+                key={item.id}
+                id={`record-${item.id}`}
+                className="grid scroll-mt-6 gap-3 rounded-2xl border border-border p-4"
+              >
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <span className="flex flex-wrap items-center gap-3">
                     {leading ? leading(item) : null}

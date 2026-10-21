@@ -2513,12 +2513,48 @@ row against `next start`.
 
 **E4 — Editor quality of life (1–2 weeks)**
 
-- [ ] Cmd/Ctrl+K palette
-- [ ] Grouped nav; retire the Case studies entry
-- [ ] Live split preview
-- [ ] Undo after delete
-- [ ] Launch checklist
-- [ ] D12 convert the theme layout to blocks
+- [x] Cmd/Ctrl+K palette. `_components/command-palette.tsx`: a native
+      `<dialog>` (browser focus trap, Esc, inert page) holding the ARIA
+      combobox pattern; searches the sections and the owner's own pages,
+      writing and projects, every word in any order. A record result opens its
+      editor on that record via `?open=<id>` (`requested-record.ts`), which the
+      collection, Pages and Writing editors honour, scrolling to it.
+- [x] Grouped nav. Five labelled groups (Build, Profile, Audience, Look &
+      reach, System), each its own named list; Case studies shows only on
+      sites that still hold legacy case studies.
+- [x] Live split preview. "Preview beside" on a page docks the real page —
+      `/api/preview`, owner-only draft mode — beside the editor on screens
+      ≥1280px, with phone/tablet/full widths, reloading after each Save.
+      **Found while verifying:** `/api/preview` and `/api/preview/end`
+      redirected to `url.origin`, the server's own idea of its host
+      (`localhost` under `next start`, the container name behind a proxy), so
+      the owner landed on a different host; both send a relative `Location`
+      now (`303 location: /about`, measured). **Known limit:** on a plain-http
+      install the site's `upgrade-insecure-requests` upgrades the frame's
+      navigation to https and the panel cannot load; the new-tab preview still
+      works. Verified with that one directive dropped from a throwaway build:
+      the panel showed the draft home page and its Preview banner.
+- [x] Undo after delete — one level, in the collection, Pages and Writing
+      editors (deletes are local until Save, so undo is putting it back).
+- [x] Launch checklist (`core/content/launch.ts`): seven milestones with a
+      count and a progress bar, each undone one a link to its screen; it hides
+      itself when all are done. Seed projects do not count as the owner's work.
+      **Found while verifying:** on a brand-new install the dashboard said
+      "Nothing is stored yet" and showed nothing — no draft row exists until the
+      first save. It reads the same built-in fallback as the editors now.
+- [x] D12 convert the theme layout to blocks. `homePageFromSections` turns
+      the theme's home sections into blocks — same words, order and hidden
+      state, the About band from its settings — so "Build my home page from
+      what it shows now" starts from the current home, not from blank. The
+      seeded result parses with nothing quarantined and renders one `h1`.
+
+  Verified: typecheck, lint (0 errors, 76 warnings), format, 1134 unit tests,
+  production build, browser suite 18/18 twice; and a live pass against
+  `next start`: the checklist at 0 of 7 on a fresh claim, the five group
+  labels with no Case studies link, Ctrl+K → "northwind" → Enter landing on
+  `/admin/projects?open=project-northwind` with that record open, delete →
+  "Deleted “Northwind”" → Undo restoring 5 of 5 with no unsaved chip, and the
+  home starter producing its blocks, saving, and previewing.
 
 **E5 — Ownership and growth (2–3 weeks)**
 

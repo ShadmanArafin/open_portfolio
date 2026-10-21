@@ -6,7 +6,8 @@ import { getContentForChannel } from '@/core/content/read';
 import { isWelcomePlaceholder } from '@/core/content/welcome';
 import { AdminNav } from './_components/admin-nav';
 import { OfflineNotice } from './_components/offline-notice';
-import { ADMIN_SECTIONS } from './_components/sections';
+import { CommandPalette, type PaletteRecord } from './_components/command-palette';
+import { withLegacyCaseStudies } from './_components/sections';
 import { ErrorCollector } from './error-collector';
 import { WelcomeGate } from './welcome-gate';
 
@@ -46,6 +47,28 @@ export default async function ProtectedAdminLayout({ children }: { children: Rea
   // browser has already skipped the wizard".
   const draft = await getContentForChannel('draft');
 
+  const sections = withLegacyCaseStudies((draft.caseStudies ?? []).length > 0);
+
+  // What the command palette can jump to besides the sections: the owner's own
+  // pages, writing and work, each opening its editor on that record.
+  const records: PaletteRecord[] = [
+    ...(draft.pages ?? []).map((page) => ({
+      label: page.title || `/${page.slug}`,
+      kind: 'Page',
+      href: `/admin/pages?open=${encodeURIComponent(page.id)}`,
+    })),
+    ...(draft.writing ?? []).map((entry) => ({
+      label: entry.title || 'Untitled',
+      kind: 'Writing',
+      href: `/admin/writing?open=${encodeURIComponent(entry.id)}`,
+    })),
+    ...(draft.projects ?? []).map((project) => ({
+      label: project.title || project.name || 'Untitled',
+      kind: 'Project',
+      href: `/admin/projects?open=${encodeURIComponent(project.id)}`,
+    })),
+  ];
+
   return (
     <div className="min-h-screen bg-bg font-body text-text-primary">
       <WelcomeGate looksUnconfigured={isWelcomePlaceholder(draft.settings?.fullName)} />
@@ -61,7 +84,8 @@ export default async function ProtectedAdminLayout({ children }: { children: Rea
           <Link href="/admin" className="font-display text-lg font-semibold no-underline">
             Admin
           </Link>
-          <AdminNav sections={ADMIN_SECTIONS} />
+          <AdminNav sections={sections} />
+          <CommandPalette sections={sections} records={records} />
           <OfflineNotice />
         </div>
       </header>
