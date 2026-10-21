@@ -73,6 +73,20 @@ Cookieless, and nothing is recorded until set.
 | `NEXT_PUBLIC_ANALYTICS_WEBSITE_ID` | Umami only               |
 | `NEXT_PUBLIC_ANALYTICS_SRC`        | A self-hosted script URL |
 
+## Scheduled jobs and the static copy
+
+| Variable           | Meaning                                                                                                                        |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| `CRON_SECRET`      | Turns on the owner's monthly digest. Send it as `Authorization: Bearer …` to `/api/cron/digest`. `OPB_CRON_SECRET` also works. |
+| `OPB_DIGEST`       | `off` to stop the digest without removing the secret.                                                                          |
+| `OPB_INTERNAL_URL` | Where the app reaches itself when it builds a static copy. Defaults to `http://127.0.0.1:$PORT`.                               |
+
+## Writing assistant
+
+Off unless you connect one under **Services → Writing assistant**. It is not an environment variable, because the address and the key are kept encrypted in your storage, like the mail settings.
+
+Connect it to any server that speaks the OpenAI-compatible chat API. Free options run on your own machine: [Ollama](https://ollama.com), LM Studio, or llama.cpp's server. Once it is connected, three buttons appear: **Suggest a description** on a page, **Suggest a summary** on a piece of writing, and **Suggest alt text** on a picture (this one needs a model that can see pictures, such as `llava`). A suggestion is shown first, and only goes into the field when you press **Use it**. What you write goes to the address you gave and nowhere else.
+
 ## A note on secrets
 
 A build-time check greps the client bundle for the value of every secret and fails if one appears. This exists because the project's own first version compiled its admin passcode into the public JavaScript.

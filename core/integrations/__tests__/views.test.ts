@@ -37,6 +37,7 @@ describe('listIntegrationViews', () => {
     // Sorted by id, not registration order: the registry's insertion order
     // depends on which definition file the running bundle imported first.
     expect(views.map((view) => view.id)).toEqual([
+      'ai-assist',
       'giscus',
       'listmonk',
       'plausible',

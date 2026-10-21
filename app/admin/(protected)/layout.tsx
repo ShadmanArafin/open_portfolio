@@ -10,6 +10,8 @@ import { CommandPalette, type PaletteRecord } from './_components/command-palett
 import { withLegacyCaseStudies } from './_components/sections';
 import { ErrorCollector } from './error-collector';
 import { WelcomeGate } from './welcome-gate';
+import { AssistProvider } from './_components/assist';
+import { assistCapabilities } from '@/core/ai/assist';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,6 +48,10 @@ export default async function ProtectedAdminLayout({ children }: { children: Rea
   // name is still in the draft — and the client leaf adds "unless this
   // browser has already skipped the wizard".
   const draft = await getContentForChannel('draft');
+
+  // Whether the owner connected their own model; the Suggest buttons hide
+  // themselves otherwise.
+  const assist = await assistCapabilities();
 
   const sections = withLegacyCaseStudies((draft.caseStudies ?? []).length > 0);
 
@@ -90,7 +96,7 @@ export default async function ProtectedAdminLayout({ children }: { children: Rea
         </div>
       </header>
       <main id="admin-main" className="mx-auto max-w-[1280px] px-6 py-8">
-        {children}
+        <AssistProvider value={assist}>{children}</AssistProvider>
       </main>
     </div>
   );

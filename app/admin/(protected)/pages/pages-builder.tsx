@@ -22,6 +22,7 @@ import { useRequestedRecord } from '../_components/requested-record';
 import { UndoNotice } from '../_components/undo-remove';
 import { useUndoableRemove } from '../_components/use-undoable-remove';
 import { PreviewPane } from '../_components/preview-pane';
+import { Suggest } from '../_components/assist';
 
 /**
  * Building a page.
@@ -210,6 +211,13 @@ function PageEditor({
             onMutate((current) => ({ ...current, seo: { ...current.seo, description: value } }))
           }
           hint="One or two sentences. This is what people read under the link."
+        />
+        <Suggest
+          task="description"
+          source={() => ({ title: page.title, blocks: page.blocks })}
+          onUse={(value) =>
+            onMutate((current) => ({ ...current, seo: { ...current.seo, description: value } }))
+          }
         />
         <CheckField
           label="Keep out of search engines"

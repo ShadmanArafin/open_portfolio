@@ -21,6 +21,7 @@ import { UnsavedNote, useSaveShortcut, useUnsavedChanges } from '../_components/
 import { useRequestedRecord } from '../_components/requested-record';
 import { UndoNotice } from '../_components/undo-remove';
 import { useUndoableRemove } from '../_components/use-undoable-remove';
+import { Suggest } from '../_components/assist';
 
 /**
  * Writing — essays, notes, posts.
@@ -433,6 +434,11 @@ function EntryEditor({
         value={entry.summary}
         onChange={(value) => onMutate((current) => ({ ...current, summary: value }))}
         hint="One or two lines. Shown in the list, and used as the description in search results."
+      />
+      <Suggest
+        task="summary"
+        source={() => ({ title: entry.title, blocks: entry.blocks })}
+        onUse={(value) => onMutate((current) => ({ ...current, summary: value }))}
       />
 
       <Field

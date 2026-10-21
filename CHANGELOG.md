@@ -38,6 +38,12 @@ through a letterbox. It now takes the window.
 
 ### You can now
 
+- **Get a first draft from your own model.** Connect Ollama, or any
+  OpenAI-compatible server, under Services. Suggest buttons then appear for page
+  descriptions, writing summaries and alt text. Each suggestion appears first,
+  and goes into the field only when you press Use it. Your words go only to the
+  address you gave. Off, and invisible, until you connect one.
+
 - **Take everything with you in one file.** Settings → Backup & restore →
   Download everything is a .zip holding your site, your draft, your publish
   history and every picture, and it restores onto any install, whatever storage
