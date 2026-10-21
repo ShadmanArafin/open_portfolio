@@ -137,3 +137,85 @@
     justify-content: center !important;
   }
 }
+
+/*
+ * Print. A recruiter printing the CV — or anyone printing a case study — gets
+ * the content in black on white, whatever the theme: no navigation, footer,
+ * banners or buttons, link addresses written out after the link text (paper
+ * cannot be clicked), and no card or entry split across two pages. Unlayered
+ * and last, so it wins over everything above.
+ */
+@media print {
+  /*
+   * Paper is white whatever the theme. `!important` because the theme's own
+   * tokens arrive in a later <style> with the same specificity.
+   */
+  :root,
+  :root[data-theme='dark'],
+  :root[data-theme='light'] {
+    color-scheme: light;
+    --bg-primary: #fff !important;
+    --surface-primary: #fff !important;
+    --surface-secondary: #fff !important;
+    --surface-raised: #fff !important;
+    --surface-sunken: #fff !important;
+    --text-primary: #000 !important;
+    --text-secondary: #222 !important;
+    --text-muted: #444 !important;
+    --border-color: #bbb !important;
+    --link-color: #000 !important;
+    --accent-color: #000 !important;
+    --section-hero: #fff !important;
+    --section-work: #fff !important;
+    --section-about: #fff !important;
+    --section-capabilities: #fff !important;
+    --section-experience: #fff !important;
+    --section-contact: #fff !important;
+    --section-footer: #fff !important;
+  }
+
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  header:has(nav),
+  nav:not([aria-label='Contents']),
+  footer,
+  [data-print-hide],
+  [role='status'],
+  a[href='#main'] {
+    display: none !important;
+  }
+
+  /* Entrance animations would print mid-fade. */
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+  [style*='opacity:0'],
+  [style*='opacity: 0'] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  main a[href^='http']::after {
+    content: ' (' attr(href) ')';
+    font-size: 0.85em;
+    word-break: break-all;
+  }
+
+  section,
+  article > div,
+  li,
+  figure,
+  img {
+    break-inside: avoid;
+  }
+
+  h1,
+  h2,
+  h3 {
+    break-after: avoid;
+  }
+}

@@ -12,7 +12,7 @@ import {
   type PageRecord,
 } from '@/core/pages/schema';
 import { BlocksEditor } from '../_components/blocks-editor';
-import { CheckField, Field } from '../_components/form-fields';
+import { CheckField, DateTimeField, Field } from '../_components/form-fields';
 import { newId } from '../_components/ids';
 import { SharePanel } from './share-panel';
 import { updatePagesAction } from '../_actions/pages';
@@ -114,8 +114,17 @@ function PageEditor({
           >
             <option value="draft">Draft — only you can see it</option>
             <option value="published">Published — anyone can see it</option>
+            <option value="scheduled">Scheduled — appears on a date</option>
           </select>
         </label>
+        {page.status === 'scheduled' ? (
+          <DateTimeField
+            label="Appears on"
+            value={page.scheduledFor}
+            onChange={(value) => onMutate((current) => ({ ...current, scheduledFor: value }))}
+            hint="In your own time zone. It appears on its own within a minute of that moment, once published. Nothing needs to be running."
+          />
+        ) : null}
 
         {!home ? (
           <>
@@ -402,7 +411,11 @@ export function PagesBuilder({
                             : 'border-border text-text-muted'
                         }`}
                       >
-                        {page.status === 'published' ? 'Live' : 'Draft'}
+                        {page.status === 'published'
+                          ? 'Live'
+                          : page.status === 'scheduled'
+                            ? 'Scheduled'
+                            : 'Draft'}
                       </span>
                     </span>
                     <span className="text-sm text-text-secondary">

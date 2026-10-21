@@ -5,7 +5,7 @@ import type { Channel } from '@/core/storage/contract';
 import { getContentForChannel } from '@/core/content/read';
 import { parsePage } from '@/core/blocks/registry';
 import type { ParsedBlock } from '@/core/blocks/schema';
-import { HOME_SLUG, isHomePage, pageSchema, type PageRecord } from './schema';
+import { HOME_SLUG, isHomePage, isPageLive, pageSchema, type PageRecord } from './schema';
 
 /**
  * Reading pages, for both the public site and the preview.
@@ -61,7 +61,7 @@ export const getPages = cache(async (channel: Channel): Promise<PageRecord[]> =>
  */
 export async function getRoutablePages(channel: Channel): Promise<PageRecord[]> {
   const pages = await getPages(channel);
-  return channel === 'draft' ? pages : pages.filter((page) => page.status === 'published');
+  return channel === 'draft' ? pages : pages.filter((page) => isPageLive(page));
 }
 
 export async function getPageBySlug(slug: string, channel: Channel): Promise<PageRecord | null> {

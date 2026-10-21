@@ -156,3 +156,82 @@ export function signInCode(input: SignInCodeInput) {
 
   return { subject: `Your ${input.siteName} sign-in code`, text, html };
 }
+
+export interface DigestInput {
+  siteName: string;
+  /** "October 2026" — the month just ended. */
+  month: string;
+  views: {
+    visitors: number | null;
+    pageviews: number | null;
+    topPages: { path: string; views: number }[];
+  } | null;
+  newMessages: number;
+  unread: number;
+  unpublished: boolean;
+  /** Launch-checklist steps still open, with where to do each. */
+  todo: { label: string; url: string }[];
+  adminUrl: string;
+}
+
+/**
+ * The monthly note to the owner. Short on purpose: a portfolio is edited a few
+ * times a year, and the reason to open it again is one line — someone wrote,
+ * people looked, something is half-done — not a report.
+ */
+export function monthlyDigest(input: DigestInput) {
+  const lines: string[] = [];
+  if (input.views && (input.views.visitors ?? input.views.pageviews) !== null) {
+    const parts = [
+      input.views.visitors !== null ? `${input.views.visitors} visitors` : null,
+      input.views.pageviews !== null ? `${input.views.pageviews} page views` : null,
+    ].filter(Boolean);
+    lines.push(`In the last 30 days: ${parts.join(', ')}.`);
+    const top = input.views.topPages.slice(0, 3);
+    if (top.length)
+      lines.push(`Most read: ${top.map((page) => `${page.path} (${page.views})`).join(', ')}.`);
+  }
+  lines.push(
+    input.newMessages === 0
+      ? 'No new enquiries this month.'
+      : `${input.newMessages} new ${input.newMessages === 1 ? 'enquiry' : 'enquiries'} this month${
+          input.unread ? `, ${input.unread} still unread` : ''
+        }.`
+  );
+  if (input.unpublished) lines.push('You have changes saved in your draft that are not live yet.');
+
+  const text = [
+    `Your ${input.month} on ${input.siteName}:`,
+    '',
+    ...lines,
+    ...(input.todo.length
+      ? [
+          '',
+          'Still to do before your site is fully launched:',
+          ...input.todo.map((step) => `- ${step.label}: ${step.url}`),
+        ]
+      : []),
+    '',
+    `Open your admin: ${input.adminUrl}`,
+    '',
+    'You get this once a month. To stop it, set OPB_DIGEST=off in your hosting settings.',
+  ].join('\n');
+
+  const html = [
+    `<p>Your ${escapeHtml(input.month)} on ${escapeHtml(input.siteName)}:</p>`,
+    `<ul>${lines.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ul>`,
+    input.todo.length
+      ? `<p>Still to do before your site is fully launched:</p><ul>${input.todo
+          .map((step) => `<li><a href="${escapeHtml(step.url)}">${escapeHtml(step.label)}</a></li>`)
+          .join('')}</ul>`
+      : '',
+    `<p><a href="${escapeHtml(input.adminUrl)}">Open your admin</a></p>`,
+    '<p style="color:#666;font-size:12px">You get this once a month. To stop it, set OPB_DIGEST=off in your hosting settings.</p>',
+  ].join('');
+
+  const subject =
+    input.newMessages > 0
+      ? `${input.siteName}: ${input.newMessages} new ${input.newMessages === 1 ? 'enquiry' : 'enquiries'} in ${input.month}`
+      : `${input.siteName} in ${input.month}`;
+  return { subject, text, html };
+}

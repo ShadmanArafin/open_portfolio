@@ -1,3 +1,4 @@
+import { isPageLive } from '@/core/pages/schema';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { buildMetadata } from '@/core/content/metadata';
@@ -73,7 +74,10 @@ export default async function Page({ params }: { params: Promise<{ slug: string[
   return (
     <>
       {channel === 'draft' && (
-        <PreviewBanner status={resolved.page.status} path={`/${resolved.page.slug}`} />
+        <PreviewBanner
+          status={isPageLive(resolved.page) ? 'published' : 'draft'}
+          path={`/${resolved.page.slug}`}
+        />
       )}
       <BlockList blocks={resolved.blocks} content={blockContentFrom(content)} />
     </>

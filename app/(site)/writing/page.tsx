@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import { TagList } from './_ui/entry-parts';
 import { buildMetadata } from '@/core/content/metadata';
 import { currentChannel } from '@/core/pages/read';
 import { getPublicWriting, getWritingSettings } from '@/core/writing/read';
@@ -112,6 +113,12 @@ export default async function WritingIndex() {
                     </time>
                   )}
                 </Link>
+                {/* Outside the link: each tag is its own link. */}
+                {entry.tags?.length ? (
+                  <div style={{ marginTop: 'var(--space-2)' }}>
+                    <TagList tags={entry.tags} />
+                  </div>
+                ) : null}
               </li>
             ))}
           </ul>

@@ -12,7 +12,7 @@ import {
   type WritingSettings,
 } from '@/core/writing/schema';
 import { BlocksEditor } from '../_components/blocks-editor';
-import { CheckField, Field } from '../_components/form-fields';
+import { CheckField, DateTimeField, Field } from '../_components/form-fields';
 import { newId } from '../_components/ids';
 import { updateWritingAction } from '../_actions/writing';
 import { MarkdownImport } from './markdown-import';
@@ -463,12 +463,11 @@ function EntryEditor({
       </label>
 
       {entry.status === 'scheduled' ? (
-        <Field
+        <DateTimeField
           label="Appears on"
-          value={entry.scheduledFor ?? ''}
-          placeholder="2026-09-01T09:00"
+          value={entry.scheduledFor}
           onChange={(value) => onMutate((current) => ({ ...current, scheduledFor: value }))}
-          hint="It appears on its own, the first time anybody loads the site after that moment. Nothing needs to be running."
+          hint="In your own time zone. It appears on its own within a minute of that moment, once published. Nothing needs to be running."
         />
       ) : null}
 

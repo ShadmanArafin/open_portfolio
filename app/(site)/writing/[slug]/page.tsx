@@ -7,7 +7,10 @@ import { getContentForChannel } from '@/core/content/read';
 import { currentChannel } from '@/core/pages/read';
 import { getPublicWriting, getWritingSettings, resolveWriting } from '@/core/writing/read';
 import { PreviewBanner } from '../../preview-banner';
-import { serializeJsonLd } from '@/core/content/json-ld';
+import { JsonLd } from '@/core/content/json-ld-script';
+import { breadcrumbsFor } from '@/core/content/structured-data';
+import { neighbours, readingMinutes, withContents } from '@/core/writing/reading';
+import { Contents, EntryHeader, Neighbours } from '../_ui/entry-parts';
 
 /** One piece, rendered through the same block system as every page. */
 
@@ -45,10 +48,11 @@ export async function generateMetadata({
 export default async function WritingEntryPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const channel = await currentChannel();
-  const [settings, resolved, content] = await Promise.all([
+  const [settings, resolved, content, all] = await Promise.all([
     getWritingSettings(channel),
     resolveWriting(slug, channel),
     getContentForChannel(channel),
+    getPublicWriting(channel),
   ]);
 
   if (!settings.enabled || !resolved) notFound();
@@ -90,11 +94,16 @@ export default async function WritingEntryPage({ params }: { params: Promise<{ s
     ...(resolved.entry.updatedAt ? { dateModified: resolved.entry.updatedAt } : {}),
   };
 
+  const contents = withContents(resolved.blocks);
+
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: serializeJsonLd(article) }}
+      <JsonLd data={article} />
+      <JsonLd
+        data={breadcrumbsFor(content, [
+          { name: settings.label || 'Writing', path: '/writing' },
+          { name: resolved.entry.title, path: `/writing/${resolved.entry.slug}` },
+        ])}
       />
       {channel === 'draft' && (
         <PreviewBanner
@@ -102,7 +111,17 @@ export default async function WritingEntryPage({ params }: { params: Promise<{ s
           path={`/writing/${resolved.entry.slug}`}
         />
       )}
-      <BlockList blocks={resolved.blocks} content={blockContentFrom(content)} />
+      <EntryHeader
+        title={resolved.entry.title}
+        summary={resolved.entry.summary}
+        date={settings.showDates ? resolved.entry.publishedAt : undefined}
+        minutes={readingMinutes(resolved.blocks)}
+        tags={resolved.entry.tags ?? []}
+      />
+      <Contents toc={contents.toc} />
+      {/* The title above is the page's h1, so the blocks start at h2. */}
+      <BlockList blocks={contents.blocks} content={blockContentFrom(content)} firstLevel={2} />
+      <Neighbours {...neighbours(all, resolved.entry.slug)} />
     </>
   );
 }
