@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { PanelRight, Trash2 } from 'lucide-react';
-import { getBlockDefinition, parsePage, runBlockChecks } from '../../../core/blocks/registry';
+import { getBlockDefinition, parsePage, runBlockChecks } from '../../../core/blocks/lookup';
 import { PERSONAS, type Persona, type PersonaId } from '@/lib/demo/personas';
 import { THEMES, blockContentFor, vocabulary } from '@/lib/demo/render';
 import type { PageBlock } from '@/lib/demo/types';
