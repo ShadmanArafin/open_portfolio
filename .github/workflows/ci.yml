@@ -44,6 +44,39 @@ jobs:
       - name: Build
         run: npm run build
 
+  site:
+    name: Marketing site typecheck and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    # site/ is its own app, deployed by Vercel, but its demo imports the
+    # product's core/ — so a change to core/ can break it without touching a
+    # file under site/. Installs both trees exactly as the Vercel project's
+    # install command does (see site/next.config.ts).
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            site/package-lock.json
+
+      - run: npm ci
+
+      - run: npm ci
+        working-directory: site
+
+      - name: Typecheck
+        run: npm run typecheck
+        working-directory: site
+
+      - name: Build (contrast check, then next build)
+        run: npm run build
+        working-directory: site
+
   e2e:
     name: Browser tests (golden path, axe, smoke)
     runs-on: ubuntu-latest
