@@ -56,7 +56,7 @@ describe('clientView', () => {
     const wire = JSON.stringify(view);
     expect(wire).not.toContain(BODY);
     expect(view.writing).toEqual([]);
-    expect(view.projects.some((project) => 'story' in project)).toBe(false);
+    expect(view.projects).toEqual([]);
     expect(view.media).toEqual([]);
   });
 
@@ -76,5 +76,22 @@ describe('clientView', () => {
     const state = writer(0);
     state.pages = [{ ...state.pages![0], status: 'draft' }];
     expect(clientView(state).pages).toEqual([]);
+  });
+
+  it('ships none of the lists the server components render', () => {
+    const view = clientView(writer(0));
+    for (const key of [
+      'projects',
+      'brands',
+      'experience',
+      'education',
+      'processSteps',
+      'capabilityGroups',
+      'recommendations',
+      'artifacts',
+      'socialLinks',
+    ] as const) {
+      expect(view[key], key).toEqual([]);
+    }
   });
 });

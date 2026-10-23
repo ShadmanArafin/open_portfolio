@@ -1,12 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, ViewTransition } from 'react';
 import { trackEvent } from '../utils/analytics';
 import { ProjectItem } from '../cms/types/cms';
 import { formatYearRange } from '../cms/utils/dates';
 import { CMSImage } from './common/CMSImage';
 import { ArrowUpRight } from 'lucide-react';
-import { motion } from 'motion/react';
 import { ImageLightboxModal } from './common/ImageLightboxModal';
 
 import Link from 'next/link';
@@ -52,12 +51,7 @@ export const ProjectPreview: React.FC<ProjectPreviewProps> = ({ project }) => {
           {/* =================================================================== */}
           <div className="lg:col-span-5 lg:sticky lg:top-32 transition-colors duration-300">
             {/* Subtle Opacity & Translate Entrance Reveal */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-10% 0px' }}
-              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            >
+            <div className="opb-reveal">
               {/* Year & Company Pill Signal */}
               <div className="flex flex-wrap items-center gap-2.5 mb-5">
                 <span className="px-3.5 py-1 rounded-full text-xs font-medium font-body bg-surface-primary text-text-primary border border-border">
@@ -169,7 +163,7 @@ export const ProjectPreview: React.FC<ProjectPreviewProps> = ({ project }) => {
                   </div>
                 )}
               </div>
-            </motion.div>
+            </div>
           </div>
 
           {/* =================================================================== */}
@@ -178,43 +172,45 @@ export const ProjectPreview: React.FC<ProjectPreviewProps> = ({ project }) => {
           <div className="lg:col-span-7 flex flex-col space-y-8 sm:space-y-10">
             {project.images.map((imgItem, imgIdx) => {
               const hasRealUrl = !!imgItem.url;
+              const open = () => imgItem.url && openLightbox(imgItem.url, imgItem.alt);
+              // A button only when there is a picture to open: the role, the
+              // tab stop and the handlers come together or not at all.
+              const interactive = hasRealUrl
+                ? {
+                    role: 'button' as const,
+                    tabIndex: 0,
+                    'aria-label': `Expand image: ${imgItem.alt || project.title}`,
+                    onClick: open,
+                    onKeyDown: (e: React.KeyboardEvent) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        open();
+                      }
+                    },
+                  }
+                : {};
 
               return (
-                <motion.div
+                <div
                   key={imgItem.id}
-                  initial={{ opacity: 0, scale: 1.015 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true, margin: '-5% 0px' }}
-                  transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-                  data-cursor-text={hasRealUrl ? 'VIEW ↗' : undefined}
-                  role={hasRealUrl ? 'button' : undefined}
-                  tabIndex={hasRealUrl ? 0 : undefined}
-                  aria-label={
-                    hasRealUrl ? `Expand image: ${imgItem.alt || project.title}` : undefined
-                  }
-                  onClick={() => {
-                    if (hasRealUrl && imgItem.url) {
-                      openLightbox(imgItem.url, imgItem.alt);
-                    }
-                  }}
-                  onKeyDown={(e) => {
-                    if (!hasRealUrl || !imgItem.url) return;
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      openLightbox(imgItem.url, imgItem.alt);
-                    }
-                  }}
-                  className={`w-full aspect-[16/10] rounded-2xl sm:rounded-3xl overflow-hidden border border-border bg-surface-secondary relative shadow-sm group ${hasRealUrl ? 'cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent' : ''}`}
+                  {...interactive}
+                  className={`opb-reveal-scale w-full aspect-[16/10] rounded-2xl sm:rounded-3xl overflow-hidden border border-border bg-surface-secondary relative shadow-sm group ${hasRealUrl ? 'cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent' : ''}`}
                 >
                   {hasRealUrl && imgItem.url ? (
                     /* Clean Image Rendering without Floating Text Overlay Bars */
-                    <div className="w-full h-full relative overflow-hidden">
-                      <CMSImage
-                        src={imgItem.url}
-                        alt={imgItem.alt}
-                        className="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-[1.025]"
-                      />
-                    </div>
+                    <ViewTransition
+                      name={imgIdx === 0 ? `project-hero-${project.slug}` : undefined}
+                      share={imgIdx === 0 ? 'morph' : undefined}
+                      default="none"
+                    >
+                      <div className="w-full h-full relative overflow-hidden">
+                        <CMSImage
+                          src={imgItem.url}
+                          alt={imgItem.alt}
+                          className="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-[1.025]"
+                        />
+                      </div>
+                    </ViewTransition>
                   ) : (
                     /* Fallback Editorial Wireframe Graphic Artwork */
                     <div
@@ -259,7 +255,7 @@ export const ProjectPreview: React.FC<ProjectPreviewProps> = ({ project }) => {
                       </div>
                     </div>
                   )}
-                </motion.div>
+                </div>
               );
             })}
           </div>

@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Mail } from 'lucide-react';
 import { useCMS } from '../cms/context/CMSContext';
-import { NEWSLETTER_DEFAULTS } from '@/core/newsletter/schema';
+import { NEWSLETTER_DEFAULTS } from '@/core/newsletter/defaults';
 import { TurnstileWidget } from '@/core/blocks/forms';
 
 /**

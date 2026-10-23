@@ -2,7 +2,6 @@
 
 import React, { useEffect } from 'react';
 import { resolveAssetUrl } from '../../cms/utils/mediaUrls';
-import { motion, AnimatePresence } from 'motion/react';
 import { X, ZoomIn, Play } from 'lucide-react';
 
 export interface GalleryMediaItem {
@@ -90,19 +89,24 @@ export const MediaLightboxModal: React.FC<MediaLightboxModalProps> = ({
   if (!isOpen || !item) return null;
 
   return (
-    <AnimatePresence>
-      <motion.div
+    <>
+      <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label={item.title || item.alt || 'Media preview'}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.25 }}
-        onClick={onClose}
-        className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-8 bg-black/90 backdrop-blur-md cursor-zoom-out select-none"
+        className="opb-fade fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-8 bg-black/90 backdrop-blur-md select-none"
       >
+        {/* The backdrop is a button of its own: a click outside the picture
+            closes it. Out of the tab order — the close button and Escape
+            already give keyboards a way out, and one is enough. */}
+        <button
+          type="button"
+          tabIndex={-1}
+          aria-hidden="true"
+          onClick={onClose}
+          className="absolute inset-0 cursor-zoom-out"
+        />
         {/* Close Button Top Right */}
         <button
           ref={closeRef}
@@ -114,14 +118,7 @@ export const MediaLightboxModal: React.FC<MediaLightboxModalProps> = ({
         </button>
 
         {/* Centered Media Container */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.92, y: 10 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.92, y: 10 }}
-          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-          onClick={(e) => e.stopPropagation()}
-          className="relative max-w-5xl max-h-[85vh] w-auto h-auto flex flex-col items-center justify-center cursor-default"
-        >
+        <div className="opb-pop relative max-w-5xl max-h-[85vh] w-auto h-auto flex flex-col items-center justify-center cursor-default">
           {item.type === 'video' ? (
             <video
               src={item.src}
@@ -153,8 +150,8 @@ export const MediaLightboxModal: React.FC<MediaLightboxModalProps> = ({
               {item.title} — {item.caption || item.alt}
             </span>
           </div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
+        </div>
+      </div>
+    </>
   );
 };

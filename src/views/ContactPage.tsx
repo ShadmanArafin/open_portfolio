@@ -16,10 +16,8 @@ import {
   Loader2,
   ChevronDown,
 } from 'lucide-react';
-import { FaWhatsapp } from 'react-icons/fa6';
 import { cn } from '../utils/cn';
 import { useToast } from '../context/ToastContext';
-import { motion, AnimatePresence } from 'motion/react';
 import { useCMS } from '../cms/context/CMSContext';
 import { ContactMessage } from '../cms/types/cms';
 import { TurnstileWidget } from '@/core/blocks/forms';
@@ -48,7 +46,11 @@ async function postContactMessage(
   }
 }
 
-export const ContactPage: React.FC = () => {
+/**
+ * `whatsappIcon` arrives rendered from the server page: an icon is markup, and
+ * passing it in keeps the icon library out of the browser bundle entirely.
+ */
+export const ContactPage: React.FC<{ whatsappIcon?: React.ReactNode }> = ({ whatsappIcon }) => {
   const [copied, setCopied] = useState(false);
   const { showToast } = useToast();
   const { data } = useCMS();
@@ -185,8 +187,7 @@ export const ContactPage: React.FC = () => {
                     </span>
 
                     {/* Animated Copy Button Pill */}
-                    <motion.div
-                      layout
+                    <div
                       className={cn(
                         'px-3.5 py-1.5 rounded-xl border font-body transition-all duration-300 flex items-center gap-1.5 flex-shrink-0 select-none',
                         copied
@@ -194,38 +195,24 @@ export const ContactPage: React.FC = () => {
                           : 'bg-surface-secondary border-border text-text-secondary group-hover:border-text-primary/40 group-hover:text-text-primary'
                       )}
                     >
-                      <AnimatePresence mode="wait" initial={false}>
+                      <>
                         {copied ? (
-                          <motion.div
-                            key="copied"
-                            initial={{ opacity: 0, scale: 0.6, rotate: -15 }}
-                            animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                            exit={{ opacity: 0, scale: 0.6, rotate: 15 }}
-                            transition={{ duration: 0.22, ease: 'backOut' }}
-                            className="flex items-center gap-1.5"
-                          >
+                          <div key="copied" className="opb-pop flex items-center gap-1.5">
                             <Check className="w-3.5 h-3.5 text-accent stroke-[2.5]" />
                             <span className="text-[11px] font-medium text-accent font-body tracking-wider">
                               Copied!
                             </span>
-                          </motion.div>
+                          </div>
                         ) : (
-                          <motion.div
-                            key="copy"
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.8 }}
-                            transition={{ duration: 0.2 }}
-                            className="flex items-center gap-1.5"
-                          >
+                          <div key="copy" className="opb-pop flex items-center gap-1.5">
                             <Copy className="w-3.5 h-3.5 text-text-secondary group-hover:text-text-primary transition-colors" />
                             <span className="text-[11px] font-medium font-body uppercase tracking-wider">
                               Copy
                             </span>
-                          </motion.div>
+                          </div>
                         )}
-                      </AnimatePresence>
-                    </motion.div>
+                      </>
+                    </div>
                   </div>
                 </button>
 
@@ -241,7 +228,7 @@ export const ContactPage: React.FC = () => {
                   rel="noopener noreferrer"
                   className="w-full h-[42px] px-6 rounded-full bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] font-body text-xs sm:text-[13px] font-medium uppercase tracking-wider transition-all duration-250 shadow-sm hover:-translate-y-[1px] inline-flex items-center justify-center gap-2 group cursor-pointer select-none"
                 >
-                  <FaWhatsapp className="w-4 h-4 transition-transform duration-200 group-hover:scale-105" />
+                  {whatsappIcon}
                   <span>CONTACT ON WHATSAPP ({settings.whatsappFormatted})</span>
                 </a>
               </div>

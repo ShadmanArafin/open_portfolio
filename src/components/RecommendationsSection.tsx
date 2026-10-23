@@ -1,16 +1,12 @@
-'use client';
-
-import React from 'react';
 import { Section } from './common/Section';
 import { Container } from './common/Container';
 import { SectionLabel } from './common/SectionLabel';
 import { Reveal } from './common/Reveal';
-import { motion } from 'motion/react';
-import { useCMS } from '../cms/context/CMSContext';
+import { siteContent } from '../cms/server';
 import { CMSImage } from './common/CMSImage';
 
-export const RecommendationsSection: React.FC = () => {
-  const { data } = useCMS();
+export async function RecommendationsSection() {
+  const data = await siteContent();
 
   const recConfig = data.sections.find((s) => s.id === 'recommendations');
   const recommendations = (data.recommendations || [])
@@ -38,14 +34,10 @@ export const RecommendationsSection: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
-          {recommendations.map((rec, idx) => (
-            <motion.div
+          {recommendations.map((rec) => (
+            <div
               key={rec.id}
-              initial={{ opacity: 0, y: 14 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: idx * 0.1 }}
-              className="p-8 rounded-2xl bg-surface-primary border border-border flex flex-col justify-between space-y-6 shadow-sm"
+              className="opb-reveal p-8 rounded-2xl bg-surface-primary border border-border flex flex-col justify-between space-y-6 shadow-sm"
             >
               <p className="text-base sm:text-lg font-body text-text-secondary leading-relaxed italic font-normal">
                 "{rec.quote}"
@@ -72,10 +64,10 @@ export const RecommendationsSection: React.FC = () => {
                   </p>
                 </div>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       </Container>
     </Section>
   );
-};
+}

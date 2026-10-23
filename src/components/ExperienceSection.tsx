@@ -1,15 +1,12 @@
-'use client';
-
-import React from 'react';
 import { Section } from './common/Section';
 import { Container } from './common/Container';
 import { SectionLabel } from './common/SectionLabel';
 import { Reveal } from './common/Reveal';
-import { useCMS } from '../cms/context/CMSContext';
+import { siteContent } from '../cms/server';
 import { formatPeriod } from '../cms/utils/dates';
 
-export const ExperienceSection: React.FC = () => {
-  const { data } = useCMS();
+export async function ExperienceSection() {
+  const data = await siteContent();
   const expConfig = data.sections.find((s) => s.id === 'experience');
   const expList = data.experience
     .filter((e) => e.visible !== false)
@@ -112,4 +109,4 @@ export const ExperienceSection: React.FC = () => {
       </Container>
     </Section>
   );
-};
+}

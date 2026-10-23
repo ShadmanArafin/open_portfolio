@@ -6,6 +6,7 @@ import { Footer } from '@/components/Footer';
 import { SideSectionIndicator } from '@/components/common/SideSectionIndicator';
 import { SiteProviders } from './providers';
 import { DemoBanner } from './demo-banner';
+import { ViewTransition } from 'react';
 
 /**
  * Content lives in storage and can change without a rebuild, so pages cannot be
@@ -41,7 +42,10 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         <Navbar />
         <SideSectionIndicator />
         <main id="main" className="flex-grow">
-          {children}
+          {/* Page changes crossfade (a navigation is a transition, so React
+              runs it through the View Transitions API). Browsers without it
+              swap pages as before; reduced motion turns it off in CSS. */}
+          <ViewTransition>{children}</ViewTransition>
         </main>
         <Footer />
       </div>

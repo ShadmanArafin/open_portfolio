@@ -175,7 +175,8 @@ function actionFiles(): string[] {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       const full = join(dir, entry.name);
       if (entry.isDirectory()) {
-        visit(full);
+        // Tests of the actions live beside them and are not actions.
+        if (entry.name !== '__tests__') visit(full);
       } else if (entry.name.endsWith('.ts') || entry.name.endsWith('.tsx')) {
         // Only files inside an `_actions` directory: pages and islands in
         // the same tree are rendering, not mutating.

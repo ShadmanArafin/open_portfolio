@@ -1,19 +1,15 @@
-'use client';
-
-import React from 'react';
 import { ArrowUpRight } from 'lucide-react';
-import { motion } from 'motion/react';
 import { Container } from './common/Container';
 import { Section } from './common/Section';
 import { SectionLabel } from './common/SectionLabel';
 import { Reveal } from './common/Reveal';
-import { useCMS } from '../cms/context/CMSContext';
+import { siteContent } from '../cms/server';
 import { CMSImage } from './common/CMSImage';
 import { isCaseStudy } from '@/core/content/work';
 
 import Link from 'next/link';
-export const CaseStudiesSection: React.FC = () => {
-  const { data } = useCMS();
+export async function CaseStudiesSection() {
+  const data = await siteContent();
   const section = data.sections.find((s) => s.id === 'case-studies');
 
   // Deep case studies are the case-study end of the work collection: records
@@ -52,13 +48,7 @@ export const CaseStudiesSection: React.FC = () => {
         {/* 2-Column Editorial Grid for Case Study Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-14">
           {featuredCaseStudies.map((study, index) => (
-            <motion.div
-              key={study.id}
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-5% 0px' }}
-              transition={{ duration: 0.6, delay: index * 0.12, ease: [0.16, 1, 0.3, 1] }}
-            >
+            <div key={study.id} className="opb-reveal">
               <Link href={`/work/${study.slug}`} className="group flex flex-col block h-full">
                 {/* Image Container with Hover Scale */}
                 <div className="w-full aspect-[16/10] rounded-2xl overflow-hidden border border-border bg-surface-secondary mb-6 relative shadow-sm">
@@ -119,7 +109,7 @@ export const CaseStudiesSection: React.FC = () => {
                   </div>
                 </div>
               </Link>
-            </motion.div>
+            </div>
           ))}
         </div>
 
@@ -139,4 +129,4 @@ export const CaseStudiesSection: React.FC = () => {
       </Container>
     </Section>
   );
-};
+}

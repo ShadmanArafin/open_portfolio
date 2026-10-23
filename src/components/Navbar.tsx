@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { ThemeToggle } from './common/ThemeToggle';
 import { ArrowUpRight, Menu, X } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
 import { Container } from './common/Container';
 import { cn } from '../utils/cn';
 import { useCMS } from '../cms/context/CMSContext';
@@ -140,18 +139,14 @@ export const Navbar: React.FC = () => {
       </header>
 
       {/* MOBILE OVERLAY MENU */}
-      <AnimatePresence>
+      <>
         {mobileMenuOpen && (
-          <motion.div
+          <div
             id="mobile-menu"
             role="dialog"
             aria-modal="true"
             aria-label="Site menu"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed inset-0 z-40 bg-bg pt-28 px-8 pb-12 flex flex-col justify-between lg:hidden"
+            className="opb-pop fixed inset-0 z-40 bg-bg pt-28 px-8 pb-12 flex flex-col justify-between lg:hidden"
           >
             <nav className="flex flex-col gap-6">
               {navLinks.map((link) => (
@@ -176,9 +171,9 @@ export const Navbar: React.FC = () => {
                 LET'S TALK ↗
               </Link>
             </div>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
+      </>
     </>
   );
 };

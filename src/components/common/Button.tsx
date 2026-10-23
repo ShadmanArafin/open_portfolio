@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { cn } from '../../utils/cn';
+import { trackEvent } from '../../utils/analytics';
 
 import Link from 'next/link';
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -12,6 +13,12 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   iconPosition?: 'left' | 'right';
   children: React.ReactNode;
   className?: string;
+  /**
+   * An analytics event to record when it is used. Data, not a callback, so a
+   * server component can set it; and it works on links too — the link
+   * variants used to drop `onClick`, so "Live site clicked" was never sent.
+   */
+  track?: { name: string; props?: Record<string, unknown> };
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -22,8 +29,10 @@ export const Button: React.FC<ButtonProps> = ({
   iconPosition = 'right',
   children,
   className,
+  track,
   ...props
 }) => {
+  const onTrack = track ? () => trackEvent(track.name, track.props) : undefined;
   // Global Button Height: EXACTLY 42px across desktop, tablet, and mobile
   const baseStyles =
     'inline-flex items-center justify-center gap-2 h-[42px] px-5 sm:px-6 rounded-full font-sans text-[13px] sm:text-sm font-medium uppercase tracking-wider transition-all duration-250 ease-out whitespace-nowrap group cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent';
@@ -59,7 +68,7 @@ export const Button: React.FC<ButtonProps> = ({
 
   if (to) {
     return (
-      <Link href={to} className={cn(baseStyles, variants[variant], className)}>
+      <Link href={to} onClick={onTrack} className={cn(baseStyles, variants[variant], className)}>
         {content}
       </Link>
     );
@@ -71,6 +80,7 @@ export const Button: React.FC<ButtonProps> = ({
         href={href}
         target="_blank"
         rel="noopener noreferrer"
+        onClick={onTrack}
         className={cn(baseStyles, variants[variant], className)}
       >
         {content}
@@ -79,7 +89,14 @@ export const Button: React.FC<ButtonProps> = ({
   }
 
   return (
-    <button className={cn(baseStyles, variants[variant], className)} {...props}>
+    <button
+      className={cn(baseStyles, variants[variant], className)}
+      {...props}
+      onClick={(event) => {
+        onTrack?.();
+        props.onClick?.(event);
+      }}
+    >
       {content}
     </button>
   );

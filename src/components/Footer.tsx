@@ -1,56 +1,16 @@
-'use client';
-
 import { isShippedCopyright } from '@/core/content/identity';
 import { sanitizeHref } from '@/core/security/urls';
-import React, { useState } from 'react';
-import { trackEvent } from '../utils/analytics';
-import { Mail, Copy, Check, Download, ArrowUpRight } from 'lucide-react';
-import { motion } from 'motion/react';
+import { Mail, Download, ArrowUpRight } from 'lucide-react';
 import { getSocialPlatform } from '../cms/data/socialPlatforms';
 import { Container } from './common/Container';
-import { useToast } from '../context/ToastContext';
-import { cn } from '../utils/cn';
-import { useCMS } from '../cms/context/CMSContext';
+import { siteContent } from '../cms/server';
+import { CopyEmailButton, TrackedLink } from './footer-actions';
 import { CMSImage } from './common/CMSImage';
 import { NewsletterSignup } from './NewsletterSignup';
 import { resolveAssetUrl } from '../cms/utils/mediaUrls';
 
-export const Footer: React.FC = () => {
-  const [copied, setCopied] = useState(false);
-  const { showToast } = useToast();
-  const { data } = useCMS();
-
-  const handleCopyEmail = (e?: React.MouseEvent) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-
-    const emailToCopy = data.settings.email;
-
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(emailToCopy).catch(() => {
-        const el = document.createElement('textarea');
-        el.value = emailToCopy;
-        document.body.appendChild(el);
-        el.select();
-        document.execCommand('copy');
-        document.body.removeChild(el);
-      });
-    } else {
-      const el = document.createElement('textarea');
-      el.value = emailToCopy;
-      document.body.appendChild(el);
-      el.select();
-      document.execCommand('copy');
-      document.body.removeChild(el);
-    }
-
-    setCopied(true);
-    trackEvent('Email copied');
-    showToast('Email address copied to clipboard.', 'success');
-    setTimeout(() => setCopied(false), 2000);
-  };
+export async function Footer() {
+  const data = await siteContent();
 
   // Same rule as the social row block: a stored link that is not a safe
   // destination is left out rather than rendered as a dead or hostile card.
@@ -65,20 +25,14 @@ export const Footer: React.FC = () => {
   return (
     <footer
       id="contact"
-      className="w-full border-t border-border bg-[var(--section-footer)] text-text-primary pt-24 sm:pt-32 lg:pt-36 transition-colors duration-300 relative overflow-hidden font-sans scroll-mt-28"
+      className="w-full border-t border-border bg-[var(--section-footer)] text-text-primary pt-24 sm:pt-32 lg:pt-36 transition-colors duration-300 relative overflow-clip font-sans scroll-mt-28"
     >
       <Container>
         {/* FOOTER MAIN 12-COLUMN EDITORIAL GRID */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start pb-20 sm:pb-24 border-b border-border">
           {/* LEFT 7 COLUMNS: IDENTITY & CONTACT INFO */}
           <div className="lg:col-span-7 space-y-8 sm:space-y-10">
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="flex items-center gap-4"
-            >
+            <div className="opb-reveal flex items-center gap-4">
               <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden border border-border flex-shrink-0 shadow-sm">
                 <CMSImage
                   src={data.settings.avatarPath || '/demo/avatar.svg'}
@@ -98,26 +52,14 @@ export const Footer: React.FC = () => {
                   {data.settings.role}
                 </span>
               </div>
-            </motion.div>
+            </div>
 
-            <motion.h2
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.15 }}
-              className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-[56px] font-medium tracking-tight leading-[1.18] max-w-xl text-text-primary"
-            >
+            <h2 className="opb-reveal font-display text-3xl sm:text-4xl md:text-5xl lg:text-[56px] font-medium tracking-tight leading-[1.18] max-w-xl text-text-primary">
               {data.microcopy.letsWorkTogetherTitle ||
                 "Let's build something exceptional together."}
-            </motion.h2>
+            </h2>
 
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.25 }}
-              className="flex flex-wrap items-center gap-4"
-            >
+            <div className="opb-reveal flex flex-wrap items-center gap-4">
               <a
                 href={`mailto:${data.settings.email}`}
                 className="h-[42px] px-6 rounded-full bg-text-primary text-bg font-body text-xs sm:text-[13px] font-medium uppercase tracking-wider hover:opacity-90 transition-all flex items-center gap-2 shadow-sm"
@@ -130,39 +72,36 @@ export const Footer: React.FC = () => {
                   through the resolver or the href is dead. No résumé, no
                   button — an empty download link is worse than none. */}
               {data.settings.resumeUrl && (
-                <a
+                <TrackedLink
+                  event="Resume downloaded"
                   href={resolveAssetUrl(data.settings.resumeUrl)}
                   download={data.settings.resumeFilename || 'resume.pdf'}
-                  onClick={() => trackEvent('Resume downloaded')}
                   className="h-[42px] px-6 rounded-full border border-border bg-surface-secondary text-text-primary font-body text-xs sm:text-[13px] font-medium uppercase tracking-wider hover:border-text-primary/40 transition-all flex items-center gap-2"
                 >
                   <Download className="w-4 h-4 text-accent" />
                   <span>{data.microcopy.myResume || 'DOWNLOAD RESUME'}</span>
-                </a>
+                </TrackedLink>
               )}
-            </motion.div>
+            </div>
           </div>
 
           {/* RIGHT 5 COLUMNS: SOCIAL CARDS & EMAIL COPY */}
           <div className="lg:col-span-5 space-y-6">
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {socialLinks.map((card, idx) => {
+              {socialLinks.map((card) => {
                 const IconComponent = getSocialPlatform(card.iconType).icon;
 
                 return (
-                  <motion.a
+                  <TrackedLink
                     key={card.id || card.label}
+                    event="Social clicked"
+                    eventProps={{ platform: card.iconType }}
                     href={card.url}
                     target="_blank"
                     // `me`: these are the owner's own profiles, and it is what
                     // lets Mastodon and other IndieWeb verifiers link back.
                     rel="me noopener noreferrer"
-                    onClick={() => trackEvent('Social clicked', { platform: card.iconType })}
-                    initial={{ opacity: 0, y: 12 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.4, delay: idx * 0.05 }}
-                    className="p-4 rounded-2xl bg-surface-primary border border-border hover:border-text-primary/30 transition-all duration-200 group flex flex-col justify-between h-24"
+                    className="opb-reveal p-4 rounded-2xl bg-surface-primary border border-border hover:border-text-primary/30 transition-all duration-200 group flex flex-col justify-between h-24"
                   >
                     <div className="flex items-center justify-between text-text-muted group-hover:text-accent transition-colors">
                       <span className="text-[10px] font-mono uppercase tracking-wider">
@@ -177,7 +116,7 @@ export const Footer: React.FC = () => {
                       </span>
                       <ArrowUpRight className="w-3.5 h-3.5 text-text-muted opacity-0 group-hover:opacity-100 transition-all duration-200 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                     </div>
-                  </motion.a>
+                  </TrackedLink>
                 );
               })}
             </div>
@@ -187,13 +126,7 @@ export const Footer: React.FC = () => {
                 made the whole card a div-button wrapping a second button,
                 which nests interactive controls (WCAG 4.1.2) and announces
                 twice. One control, one announcement. */}
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.45 }}
-              className="p-5 rounded-[22px] bg-surface-primary border border-border flex flex-col justify-between gap-3 hover:border-text-primary/30 transition-all group"
-            >
+            <div className="opb-reveal p-5 rounded-[22px] bg-surface-primary border border-border flex flex-col justify-between gap-3 hover:border-text-primary/30 transition-all group">
               <div className="flex items-center gap-2 text-[11px] font-medium text-text-muted font-body">
                 <Mail className="w-3.5 h-3.5 text-text-muted group-hover:text-accent transition-colors" />
                 <span>{data.microcopy.directEmailLabel || 'Or, feel free to send me a mail'}</span>
@@ -204,37 +137,9 @@ export const Footer: React.FC = () => {
                   {data.settings.email}
                 </span>
 
-                <motion.button
-                  type="button"
-                  onClick={(e) => {
-                    handleCopyEmail(e);
-                  }}
-                  aria-label={`Copy email address ${data.settings.email}`}
-                  className={cn(
-                    'px-3.5 py-1.5 rounded-xl border font-body transition-all duration-300 flex items-center gap-1.5 flex-shrink-0 cursor-pointer',
-                    copied
-                      ? 'bg-accent/15 border-accent/40 text-accent font-medium'
-                      : 'bg-surface-secondary border-border text-text-secondary group-hover:border-text-primary/40 group-hover:text-text-primary'
-                  )}
-                >
-                  {copied ? (
-                    <div className="flex items-center gap-1.5">
-                      <Check className="w-3.5 h-3.5 text-accent stroke-[2.5]" />
-                      <span className="text-[11px] font-medium text-accent font-body tracking-wider">
-                        Copied!
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-1.5">
-                      <Copy className="w-3.5 h-3.5 text-text-secondary group-hover:text-text-primary" />
-                      <span className="text-[11px] font-medium font-body uppercase tracking-wider hidden xs:inline-block">
-                        Copy
-                      </span>
-                    </div>
-                  )}
-                </motion.button>
+                <CopyEmailButton email={data.settings.email} />
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
 
@@ -255,13 +160,7 @@ export const Footer: React.FC = () => {
       </Container>
 
       {/* GIANT OVERSIZED TYPOGRAPHY */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.8, delay: 0.2 }}
-        className="w-full overflow-hidden select-none pointer-events-none mt-6 relative flex justify-center items-center"
-      >
+      <div className="opb-reveal w-full overflow-hidden select-none pointer-events-none mt-6 relative flex justify-center items-center">
         {/*
          * A watermark, not a heading.
          *
@@ -283,7 +182,7 @@ export const Footer: React.FC = () => {
           {data.appearance?.giantFooterText || 'PORTFOLIO'}
         </div>
         <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[var(--section-footer)] to-transparent pointer-events-none" />
-      </motion.div>
+      </div>
     </footer>
   );
-};
+}

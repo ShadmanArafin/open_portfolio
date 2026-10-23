@@ -51,12 +51,7 @@ export const newsletterSettingsSchema = z.object({
 
 export type NewsletterSettings = z.infer<typeof newsletterSettingsSchema>;
 
-export const NEWSLETTER_DEFAULTS: NewsletterSettings = {
-  enabled: false,
-  pitch: '',
-  buttonLabel: 'Subscribe',
-  pendingMessage: 'Almost there — check your email and click the link to confirm.',
-};
+export { NEWSLETTER_DEFAULTS } from './defaults';
 
 /**
  * A pending subscriber that has never confirmed is not a subscriber.

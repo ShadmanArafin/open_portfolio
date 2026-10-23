@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { buildMetadata } from '@/core/content/metadata';
 import { getPublishedContent } from '@/core/content/read';
+import { FaWhatsapp } from 'react-icons/fa6';
 import { ContactPage } from '@/views/ContactPage';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -14,5 +15,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default function Page() {
-  return <ContactPage />;
+  return (
+    <ContactPage
+      whatsappIcon={
+        <FaWhatsapp className="w-4 h-4 transition-transform duration-200 group-hover:scale-105" />
+      }
+    />
+  );
 }
