@@ -135,8 +135,9 @@ export async function updateHomepageAction(
     target.name = patch.name;
     target.visible = patch.visible;
     target.order = patch.order;
-    for (const [field, value] of Object.entries(patch.text)) {
-      (target as unknown as Record<string, unknown>)[field] = value;
+    for (const field of TEXT_FIELDS) {
+      const value = patch.text[field];
+      if (value !== undefined) (target as unknown as Record<string, unknown>)[field] = value;
     }
   }
 
