@@ -13,9 +13,9 @@ export default defineConfig({
         import.meta.dirname,
         './core/storage/__tests__/server-only-stub.ts'
       ),
-      // `next/font/google` loaders only exist under the Next compiler (see the
-      // stub for why echoing variables is all the catalogue tests need).
-      'next/font/google': path.resolve(
+      // `next/font/local` only exists under the Next compiler (see the stub
+      // for why echoing variables is all the catalogue tests need).
+      'next/font/local': path.resolve(
         import.meta.dirname,
         './core/theme/__tests__/next-font-stub.ts'
       ),

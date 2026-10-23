@@ -376,15 +376,16 @@ adapter serialises writes per path because of this, and the same fix caused
 `ENOENT` on Linux before it was made per-path. A test passing on one platform is
 not evidence about the other — Docker is right there.
 
-**A build that fails on somebody else's dice.** Google Fonts occasionally
-answers a `next/font/google` stylesheet request with extensionless
-`/l/font?kit=…` URLs instead of `/s/…/*.woff2` — roughly 1–2% of responses per
-family (`vercel/next.js#99114`, open at the time of writing). Turbopack 16.3
-cannot parse those, and `core/theme/fonts.ts` loads thirty-four families, so
-every fresh `npm run build` rolls thirty-four dice; worse, a bad response is
-cached, so every retry replays it and six builds in a row can all name the same
-family. **Delete `.next` and build again until it passes — the failure is the
-dice, not your change.**
+**A build that failed on somebody else's dice (fixed 2026-10-23).** Google
+Fonts occasionally answered a `next/font/google` stylesheet request with
+extensionless `/l/font?kit=…` URLs instead of `/s/…/*.woff2` — roughly 1–2% of
+responses per family (`vercel/next.js#99114`). Turbopack 16.3 could not parse
+them ("next/font/google queries have exactly one entry"), and with thirty-five
+catalogue families every fresh build rolled thirty-five dice; CI lost a run to
+it on PR #25. The catalogue now loads through `next/font/local` from each
+family's Fontsource package, so the files arrive with `npm ci` and the build
+makes no font request at all — it passes with the network switched off. Do not
+move a family back to `next/font/google`.
 
 **Prettier does not read `.gitignore`.** Generated and scratch directories have
 to be listed in `.prettierignore` separately, or `format:check` fails on files
