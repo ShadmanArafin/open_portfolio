@@ -16,12 +16,15 @@ const secondary =
  */
 export function CsvImport<T>({
   importer,
+  existing,
   create,
   onImport,
 }: {
   importer: CsvImporter<T>;
-  /** A fresh record, given the ones made so far in this import. */
-  create: (made: T[]) => T;
+  /** The records already on the screen, so names and addresses stay unique. */
+  existing: T[];
+  /** The screen's own new record, given every record so far. */
+  create: (items: T[]) => T;
   onImport: (records: T[]) => void;
 }) {
   const input = useRef<HTMLInputElement>(null);
@@ -38,7 +41,10 @@ export function CsvImport<T>({
     }
     const { rows, problems } = readCsv(await file.text(), importer.template);
     const made: T[] = [];
-    for (const row of rows) made.push(importer.apply(row, create(made)));
+    for (const row of rows) {
+      const all = [...existing, ...made];
+      made.push(importer.apply(row, create(all), all));
+    }
     onImport(made);
     setReport([
       made.length === 0

@@ -1,4 +1,14 @@
-import type { EducationItem, ExperienceItem, RecommendationItem } from '@/cms/types/cms';
+import type {
+  BrandItem,
+  CapabilityGroupItem,
+  EducationItem,
+  ExperienceItem,
+  ProjectItem,
+  RecommendationItem,
+  VisualArtifactItem,
+} from '@/cms/types/cms';
+import { normaliseSlug } from '@/core/pages/schema';
+import { formatYearRange } from '@/cms/utils/dates';
 import { csvBoolean, csvDate, type CsvTemplate } from './csv';
 
 /**
@@ -10,7 +20,8 @@ import { csvBoolean, csvDate, type CsvTemplate } from './csv';
 
 export interface CsvImporter<T> {
   template: CsvTemplate;
-  apply: (row: Record<string, string>, base: T) => T;
+  /** `others` is every record already on the screen or made earlier in this import. */
+  apply: (row: Record<string, string>, base: T, others: T[]) => T;
 }
 
 const EDUCATION_STATUSES: EducationItem['status'][] = [
@@ -120,4 +131,156 @@ export const recommendationsCsv: CsvImporter<RecommendationItem> = {
     company: row.company ?? '',
     featured: csvBoolean(row.featured, base.featured),
   }),
+};
+
+/** Pipe-separated cells: `Research|Design|Handoff`. */
+function list(cell: string | undefined): string[] {
+  return (cell ?? '')
+    .split('|')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+/** A picture address a spreadsheet may carry: this site's own, or https. */
+function imageAddress(cell: string | undefined): string {
+  const value = (cell ?? '').trim();
+  return /^https:\/\//i.test(value) || value.startsWith('/') ? value : '';
+}
+
+export const projectsCsv: CsvImporter<ProjectItem> = {
+  template: {
+    name: 'work',
+    columns: [
+      { key: 'title', required: true, hint: 'The project’s name.', example: 'Harbour booking app' },
+      {
+        key: 'slug',
+        hint: 'Its address, /work/…; made from the title when empty.',
+        example: 'harbour-booking',
+      },
+      { key: 'company', hint: 'Who it was for.', example: 'Harbour Studio' },
+      { key: 'category', hint: 'Product, Branding, Web…', example: 'Product design' },
+      { key: 'start_year', hint: 'YYYY.', example: '2023' },
+      { key: 'end_year', hint: 'YYYY; empty while ongoing.', example: '2024' },
+      {
+        key: 'summary',
+        hint: 'One line, shown on the card.',
+        example: 'Booking in three taps instead of twelve.',
+      },
+      { key: 'role', hint: 'What you did.', example: 'Lead designer' },
+      {
+        key: 'deliverables',
+        hint: 'Separate several with |.',
+        example: 'Research|Interface|Design system',
+      },
+      { key: 'live_url', hint: 'Optional https link.', example: 'https://example.com' },
+      { key: 'published', hint: 'yes to publish with the site; no keeps a draft.', example: 'no' },
+    ],
+  },
+  apply: (row, base, others) => {
+    // One segment: /work/<slug> has no room for a slash.
+    const wanted = normaliseSlug(row.slug || row.title).replace(/\//g, '-') || base.slug;
+    let slug = wanted;
+    for (let n = 2; others.some((other) => other.slug === slug); n++) slug = `${wanted}-${n}`;
+    const live = /^https?:\/\//i.test(row.live_url ?? '') ? row.live_url : '';
+    const startYear = /^\d{4}$/.test(row.start_year ?? '') ? row.start_year : undefined;
+    const endYear = startYear && /^\d{4}$/.test(row.end_year ?? '') ? row.end_year : undefined;
+    return {
+      ...base,
+      slug,
+      title: row.title,
+      name: row.title,
+      company: row.company ?? '',
+      category: row.category ?? '',
+      startYear,
+      endYear,
+      year: formatYearRange({ startYear, endYear, year: base.year }),
+      shortDescription: row.summary || base.shortDescription,
+      role: row.role ?? '',
+      deliverables: list(row.deliverables),
+      liveUrl: live,
+      status: csvBoolean(row.published, false) ? 'published' : 'draft',
+    };
+  },
+};
+
+export const brandsCsv: CsvImporter<BrandItem> = {
+  template: {
+    name: 'brands',
+    columns: [
+      { key: 'name', required: true, hint: 'The client or company.', example: 'Northwind' },
+      {
+        key: 'logo',
+        hint: 'An https address, or one from your media library (/api/media/…).',
+        example: 'https://example.com/logo.svg',
+      },
+      { key: 'url', hint: 'Optional link to their site.', example: 'https://example.com' },
+      { key: 'size', hint: 'small, default or wide.', example: 'default' },
+    ],
+  },
+  apply: (row, base) => {
+    const size = (['small', 'default', 'wide'] as const).find(
+      (value) => value === row.size?.toLowerCase()
+    );
+    return {
+      ...base,
+      name: row.name,
+      logo: imageAddress(row.logo),
+      alt: `${row.name} logo`,
+      url: /^https?:\/\//i.test(row.url ?? '') ? row.url : undefined,
+      size: size ?? base.size,
+    };
+  },
+};
+
+export const capabilitiesCsv: CsvImporter<CapabilityGroupItem> = {
+  template: {
+    name: 'capabilities',
+    columns: [
+      { key: 'title', required: true, hint: 'The group’s name.', example: 'Research' },
+      { key: 'description', hint: 'One sentence.', example: 'Finding out what people need.' },
+      {
+        key: 'capabilities',
+        hint: 'Separate several with |.',
+        example: 'Interviews|Usability tests|Synthesis',
+      },
+    ],
+  },
+  apply: (row, base) => ({
+    ...base,
+    title: row.title,
+    description: row.description ?? '',
+    capabilities: list(row.capabilities),
+  }),
+};
+
+export const artifactsCsv: CsvImporter<VisualArtifactItem> = {
+  template: {
+    name: 'artifacts',
+    columns: [
+      {
+        key: 'image',
+        required: true,
+        hint: 'An https address, or one from your media library (/api/media/…).',
+        example: 'https://example.com/shot.png',
+      },
+      {
+        key: 'alt',
+        required: true,
+        hint: 'What the picture shows.',
+        example: 'Checkout screen, mobile',
+      },
+      { key: 'category', hint: 'ui, systems or mobile.', example: 'mobile' },
+    ],
+  },
+  apply: (row, base) => {
+    const category = (['ui', 'systems', 'mobile'] as const).find(
+      (value) => value === row.category?.toLowerCase()
+    );
+    return {
+      ...base,
+      src: imageAddress(row.image),
+      alt: row.alt,
+      category: category ?? base.category,
+    };
+  },
 };

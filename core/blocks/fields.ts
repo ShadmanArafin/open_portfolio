@@ -18,6 +18,12 @@ export interface FieldBase {
   label: string;
   /** Shown under the field. Say what it is for, not what it is. */
   help?: string;
+  /**
+   * How it looks rather than what it says — shape, columns, how many. Folded
+   * under "More options" so a block opens on its words (progressive
+   * disclosure: the defaults are good, and most people never change them).
+   */
+  advanced?: boolean;
 }
 
 export type BlockField =

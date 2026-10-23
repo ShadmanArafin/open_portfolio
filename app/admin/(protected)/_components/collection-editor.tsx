@@ -175,11 +175,7 @@ export function CollectionEditor<T extends { id: string }>({
           </button>
         )}
         {csv ? (
-          <CsvImport
-            importer={csv}
-            create={(made) => create([...items, ...made])}
-            onImport={addItems}
-          />
+          <CsvImport importer={csv} existing={items} create={create} onImport={addItems} />
         ) : null}
         {headerExtra}
       </div>

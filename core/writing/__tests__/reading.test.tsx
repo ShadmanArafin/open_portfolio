@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { BlockList, parsePage } from '@/core/blocks/registry';
-import { neighbours, readingMinutes, slugifyHeading, withContents } from '../reading';
+import { neighbours, readingMinutes, related, slugifyHeading, withContents } from '../reading';
 
 const text = (heading: string | undefined, words: number, id: string) => ({
   id,
@@ -56,5 +56,19 @@ describe('reading a piece', () => {
     expect(neighbours(list, 'b')).toEqual({ previous: { slug: 'a' }, next: { slug: 'c' } });
     expect(neighbours(list, 'a').previous).toBeNull();
     expect(neighbours(list, 'zzz')).toEqual({ previous: null, next: null });
+  });
+});
+
+describe('related', () => {
+  const entries = [
+    { slug: 'a', tags: ['Design', 'Process'] },
+    { slug: 'b', tags: ['design'] },
+    { slug: 'c', tags: [] },
+    { slug: 'd', tags: ['process', 'design'] },
+    { slug: 'e', tags: ['Design'] },
+  ];
+  it('ranks by shared tags, skips the neighbours, and is empty without tags', () => {
+    expect(related(entries, 'a').map((e) => e.slug)).toEqual(['d', 'e']);
+    expect(related(entries, 'c')).toEqual([]);
   });
 });

@@ -3,6 +3,7 @@
 import type { BrandItem } from '@/cms/types/cms';
 import { updateBrandsAction } from '../_actions/collections';
 import { CollectionEditor } from '../_components/collection-editor';
+import { brandsCsv } from '@/core/import/csv-templates';
 import { CheckField, Field } from '../_components/form-fields';
 import { newId } from '../_components/ids';
 import { ImageField } from '../_components/image-field';
@@ -37,6 +38,7 @@ export function BrandsBuilder({
       deleteWarning="The brand leaves your draft, wherever it was shown. This cannot be undone without restoring a version."
       title={(brand) => brand.name}
       badge={(brand) => (brand.visible ? null : { label: 'Hidden', live: false })}
+      csv={brandsCsv}
       create={(brands) => ({
         id: newId('brand'),
         name: 'New client',

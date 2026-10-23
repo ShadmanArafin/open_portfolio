@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { SearchForm } from './search/search-form';
 
 /**
  * The branded dead end, inside the site chrome.
@@ -54,6 +55,9 @@ export default function NotFound() {
         The address changed, the page was removed, or it was never written. The rest of the site is
         one press away.
       </p>
+      <div style={{ width: '100%', maxWidth: 'var(--measure-narrow)', textAlign: 'start' }}>
+        <SearchForm />
+      </div>
       <div style={{ display: 'flex', gap: 'var(--space-3)', marginTop: 'var(--space-4)' }}>
         <Link
           href="/"

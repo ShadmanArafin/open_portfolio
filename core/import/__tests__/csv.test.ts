@@ -1,7 +1,21 @@
 import { describe, expect, it } from 'vitest';
 import { csvDate, parseCsv, readCsv, templateCsv } from '../csv';
-import { educationCsv, experienceCsv, recommendationsCsv } from '../csv-templates';
-import type { ExperienceItem, RecommendationItem } from '@/cms/types/cms';
+import {
+  artifactsCsv,
+  brandsCsv,
+  capabilitiesCsv,
+  educationCsv,
+  experienceCsv,
+  projectsCsv,
+  recommendationsCsv,
+} from '../csv-templates';
+import type {
+  BrandItem,
+  ExperienceItem,
+  ProjectItem,
+  RecommendationItem,
+  VisualArtifactItem,
+} from '@/cms/types/cms';
 
 describe('parseCsv', () => {
   it('reads quotes, doubled quotes, commas and newlines inside quotes, CRLF and a BOM', () => {
@@ -43,7 +57,15 @@ describe('readCsv', () => {
   });
 
   it('round-trips its own template', () => {
-    for (const { template } of [experienceCsv, educationCsv, recommendationsCsv]) {
+    for (const { template } of [
+      experienceCsv,
+      educationCsv,
+      recommendationsCsv,
+      projectsCsv,
+      brandsCsv,
+      capabilitiesCsv,
+      artifactsCsv,
+    ]) {
       const { rows, problems } = readCsv(templateCsv(template), template);
       expect(problems).toEqual([]);
       expect(rows).toHaveLength(1);
@@ -69,7 +91,7 @@ describe('templates', () => {
       'role,company,start,end,highlights\nDesigner,Harbour,2021-3,2023,Shipped v2| Grew team ',
       experienceCsv.template
     ).rows;
-    const item = experienceCsv.apply(row, base);
+    const item = experienceCsv.apply(row, base, []);
     expect(item).toMatchObject({
       id: 'exp-1',
       role: 'Designer',
@@ -84,11 +106,49 @@ describe('templates', () => {
   it('reads yes and no as people type them', () => {
     const base = { featured: true } as RecommendationItem;
     const [row] = readCsv('name,quote,featured\nSam,Hi,No', recommendationsCsv.template).rows;
-    expect(recommendationsCsv.apply(row, base).featured).toBe(false);
+    expect(recommendationsCsv.apply(row, base, []).featured).toBe(false);
   });
 
   it('accepts partial dates and rejects anything else', () => {
     expect(csvDate('2024')).toBe('2024-01-01');
     expect(csvDate('March 2024')).toBeUndefined();
+  });
+});
+
+describe('the remaining screens', () => {
+  it('gives each imported project its own address, made from its title', () => {
+    const base = { slug: 'new-project', year: '2026', status: 'draft' } as ProjectItem;
+    const taken = [{ slug: 'harbour-app' } as ProjectItem];
+    const [row] = readCsv(
+      'title,start_year,end_year,deliverables,published,live_url\nHarbour / App!,2023,2024,Research| UI ,yes,javascript:alert(1)',
+      projectsCsv.template
+    ).rows;
+    expect(projectsCsv.apply(row, base, taken)).toMatchObject({
+      slug: 'harbour-app-2',
+      title: 'Harbour / App!',
+      year: '2023 — 2024',
+      deliverables: ['Research', 'UI'],
+      status: 'published',
+      liveUrl: '',
+    });
+  });
+
+  it('keeps only https or the site’s own picture addresses', () => {
+    const [ok, bad] = readCsv(
+      'name,logo\nNorthwind,https://example.com/n.svg\nEvil,javascript:alert(1)',
+      brandsCsv.template
+    ).rows;
+    expect(brandsCsv.apply(ok, { size: 'default' } as BrandItem, []).logo).toBe(
+      'https://example.com/n.svg'
+    );
+    expect(brandsCsv.apply(bad, { size: 'default' } as BrandItem, []).logo).toBe('');
+    const [art] = readCsv(
+      'image,alt,category\n/api/media/a.png,A screen,MOBILE',
+      artifactsCsv.template
+    ).rows;
+    expect(artifactsCsv.apply(art, { category: 'ui' } as VisualArtifactItem, [])).toMatchObject({
+      src: '/api/media/a.png',
+      category: 'mobile',
+    });
   });
 });

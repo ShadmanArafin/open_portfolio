@@ -5,6 +5,7 @@ import { normaliseSlug } from '@/core/pages/schema';
 import type { MediaItem, ProjectImageItem, ProjectItem } from '@/cms/types/cms';
 import { updateProjectsAction } from '../_actions/collections';
 import { CollectionEditor } from '../_components/collection-editor';
+import { projectsCsv } from '@/core/import/csv-templates';
 import { CheckField, Field, SelectField } from '../_components/form-fields';
 import { newId } from '../_components/ids';
 import { ImageField } from '../_components/image-field';
@@ -145,6 +146,7 @@ export function ProjectsBuilder({
               : 'Draft',
         live: project.status === 'published',
       })}
+      csv={projectsCsv}
       create={createProject}
       duplicate={duplicateProject}
       save={async (projects, token) => {

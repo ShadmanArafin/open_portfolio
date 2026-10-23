@@ -78,6 +78,34 @@ export function neighbours<T extends { slug: string }>(
   return { previous: entries[index - 1] ?? null, next: entries[index + 1] ?? null };
 }
 
+/**
+ * Up to `limit` other pieces that share a tag with this one, most shared tags
+ * first, then in the collection's own order. The previous and next pieces are
+ * left out, since they are already linked just above. No shared tag, no strip:
+ * "related" filled with whatever is newest would be a list, not a relation.
+ */
+export function related<T extends { slug: string; tags?: string[] }>(
+  entries: T[],
+  slug: string,
+  limit = 3
+): T[] {
+  const self = entries.find((entry) => entry.slug === slug);
+  const mine = new Set((self?.tags ?? []).map((tag) => tag.toLowerCase()));
+  if (mine.size === 0) return [];
+  const { previous, next } = neighbours(entries, slug);
+  const skip = new Set([slug, previous?.slug, next?.slug]);
+  return entries
+    .map((entry, order) => ({
+      entry,
+      order,
+      shared: (entry.tags ?? []).filter((tag) => mine.has(tag.toLowerCase())).length,
+    }))
+    .filter(({ entry, shared }) => shared > 0 && !skip.has(entry.slug))
+    .sort((a, b) => b.shared - a.shared || a.order - b.order)
+    .slice(0, limit)
+    .map(({ entry }) => entry);
+}
+
 /** Where a tag's archive lives. Tags match without regard to case. */
 export function tagHref(tag: string): string {
   return `/writing/tag/${encodeURIComponent(tag.toLowerCase())}`;

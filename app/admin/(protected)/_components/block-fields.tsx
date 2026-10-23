@@ -39,18 +39,38 @@ export function BlockFields({
   media: MediaItem[];
   prefix?: string;
 }) {
+  const render = (definition: BlockField) => (
+    <OneField
+      key={definition.path}
+      definition={definition}
+      props={props}
+      onChange={onChange}
+      media={media}
+      prefix={prefix}
+    />
+  );
+  const essential = fields.filter((definition) => !definition.advanced);
+  const advanced = fields.filter((definition) => definition.advanced);
+  // Nothing to fold away when a block is all options (a spacer) or has one.
+  if (essential.length === 0 || advanced.length === 0) {
+    return <div className="grid gap-3">{fields.map(render)}</div>;
+  }
   return (
     <div className="grid gap-3">
-      {fields.map((definition) => (
-        <OneField
-          key={definition.path}
-          definition={definition}
-          props={props}
-          onChange={onChange}
-          media={media}
-          prefix={prefix}
-        />
-      ))}
+      {essential.map(render)}
+      <details className="group rounded-xl border border-border">
+        <summary
+          className="flex cursor-pointer list-none items-center gap-2 px-3 text-sm text-text-secondary hover:text-text-primary"
+          style={{ minHeight: 44 }}
+        >
+          <span aria-hidden className="transition-transform group-open:rotate-90">
+            ›
+          </span>
+          More options
+          <span className="text-text-muted">({advanced.length})</span>
+        </summary>
+        <div className="grid gap-3 px-3 pb-3">{advanced.map(render)}</div>
+      </details>
     </div>
   );
 }

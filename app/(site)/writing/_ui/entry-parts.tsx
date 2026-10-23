@@ -195,3 +195,60 @@ export function Neighbours({
     </nav>
   );
 }
+
+/** Pieces that share a tag with this one; nothing when none do. */
+export function Related({
+  entries,
+}: {
+  entries: { slug: string; title: string; summary?: string }[];
+}) {
+  if (entries.length === 0) return null;
+  return (
+    <section
+      aria-labelledby="related-heading"
+      style={{
+        ...column,
+        paddingBottom: 'var(--section-y)',
+        display: 'grid',
+        gap: 'var(--space-4)',
+      }}
+    >
+      <h2 id="related-heading" style={{ ...meta, margin: 0, fontWeight: 400 }}>
+        Related
+      </h2>
+      <ul
+        style={{
+          listStyle: 'none',
+          margin: 0,
+          padding: 0,
+          display: 'grid',
+          gap: 'var(--space-4)',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(14rem, 1fr))',
+        }}
+      >
+        {entries.map((entry) => (
+          <li key={entry.slug}>
+            <Link
+              href={`/writing/${entry.slug}`}
+              style={{
+                display: 'grid',
+                gap: 'var(--space-1)',
+                color: 'inherit',
+                textDecoration: 'none',
+              }}
+            >
+              <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-lg)' }}>
+                {entry.title}
+              </span>
+              {entry.summary ? (
+                <span style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)' }}>
+                  {entry.summary}
+                </span>
+              ) : null}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
