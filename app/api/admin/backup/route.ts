@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
+import { PUBLISHED_TAG } from '@/core/content/read';
 import { requireOwner, UnauthorizedError } from '@/core/auth/guard';
 import { clientKey, rateLimit } from '@/core/auth/ratelimit';
 import { getStorageAdapter } from '@/core/storage/registry';
@@ -10,8 +11,6 @@ import { isSafeMediaKey, readMediaBytes } from '@/core/media/read-bytes';
 import { UploadRejected, validateUpload } from '@/core/media/validate';
 import { listVersions, VERSIONS_COLLECTION } from '@/core/content/versions';
 import type { ContentVersion } from '@/cms/types/cms';
-
-export const dynamic = 'force-dynamic';
 
 /**
  * Server-side backup: export and restore.
@@ -244,6 +243,9 @@ export async function POST(req: Request) {
   // A restore changes the published site as much as a publish does, so the
   // cached public pages go the same way; without this a restored site showed
   // the old pages until their minute was up.
+  // Route handlers cannot `updateTag`; an immediate expiry is the same
+  // promise — the next visitor waits for the new content.
+  revalidateTag(PUBLISHED_TAG, { expire: 0 });
   revalidatePath('/', 'layout');
 
   const presentKeys = new Set((await adapter.media.list().catch(() => [])).map((m) => m.key));

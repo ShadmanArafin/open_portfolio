@@ -1,3 +1,5 @@
+import { siteNow } from '@/core/content/now';
+import { atLeastOne, SHELL_SLUG } from '@/core/pages/static-params';
 import type { Metadata } from 'next';
 import type { Article, WithContext } from 'schema-dts';
 import { notFound } from 'next/navigation';
@@ -17,10 +19,13 @@ import { Contents, EntryHeader, Neighbours, Related } from '../_ui/entry-parts';
 
 export async function generateStaticParams() {
   try {
-    return (await getPublicWriting('published')).map((entry) => ({ slug: entry.slug }));
+    return atLeastOne(
+      (await getPublicWriting('published')).map((entry) => ({ slug: entry.slug })),
+      { slug: SHELL_SLUG }
+    );
   } catch {
     // A paused free-tier database must never be the reason a deploy goes red.
-    return [];
+    return [{ slug: SHELL_SLUG }];
   }
 }
 
@@ -118,7 +123,11 @@ export default async function WritingEntryPage({ params }: { params: Promise<{ s
       />
       <Contents toc={contents.toc} />
       {/* The title above is the page's h1, so the blocks start at h2. */}
-      <BlockList blocks={contents.blocks} content={blockContentFrom(content)} firstLevel={2} />
+      <BlockList
+        blocks={contents.blocks}
+        content={blockContentFrom(content, await siteNow())}
+        firstLevel={2}
+      />
       <Neighbours {...neighbours(all, resolved.entry.slug)} />
       <Related entries={related(all, resolved.entry.slug)} />
     </>

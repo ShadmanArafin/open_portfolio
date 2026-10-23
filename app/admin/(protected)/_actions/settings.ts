@@ -1,6 +1,7 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
+import { PUBLISHED_TAG } from '@/core/content/read';
 import { getStorageAdapter } from '@/core/storage/registry';
 import { requireOwner } from '@/core/auth/guard';
 import { RevisionConflictError } from '@/core/storage/contract';
@@ -313,6 +314,7 @@ export async function resetContentAction(): Promise<SettingsResult> {
   const adapter = await getStorageAdapter();
   await adapter.writeSnapshot('published', structuredClone(INITIAL_CMS_STATE));
   await adapter.writeSnapshot('draft', structuredClone(INITIAL_CMS_STATE));
+  updateTag(PUBLISHED_TAG);
   revalidatePath('/', 'layout');
   revalidatePath('/admin', 'layout');
   return { ok: true };

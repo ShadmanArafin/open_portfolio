@@ -4,8 +4,6 @@ import { getStorageAdapter } from '@/core/storage/registry';
 import { PushNotifications } from '../_components/push-notifications';
 import { DeleteMessage, ReadToggle } from './message-actions';
 
-export const dynamic = 'force-dynamic';
-
 export const metadata: Metadata = {
   title: 'Messages',
   robots: { index: false, follow: false },

@@ -9,8 +9,6 @@ import {
   startDeviceFlow,
 } from '@/core/support/github-auth';
 
-export const dynamic = 'force-dynamic';
-
 /**
  * Connecting and disconnecting a GitHub account.
  *

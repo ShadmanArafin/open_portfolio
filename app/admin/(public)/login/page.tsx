@@ -2,6 +2,9 @@ import type { Metadata } from 'next';
 import { DEMO_EMAIL, DEMO_PASSPHRASE, isDemoMode } from '@/core/demo/config';
 import { LoginForm } from './login-form';
 
+// Request-time by nature (Cache Components may block here). Reads the address (`?next=`) and the session per request.
+export const instant = false;
+
 export const metadata: Metadata = { title: 'Sign in' };
 
 /**

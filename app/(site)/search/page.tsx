@@ -7,6 +7,9 @@ import { getPublicWriting, getWritingSettings } from '@/core/writing/read';
 import { buildSearchIndex, MAX_QUERY, searchIndex } from '@/core/content/search';
 import { SearchForm } from './search-form';
 
+// Request-time by nature (Cache Components may block here). The query is the page.
+export const instant = false;
+
 /**
  * Search, rendered on the server from the published site.
  *

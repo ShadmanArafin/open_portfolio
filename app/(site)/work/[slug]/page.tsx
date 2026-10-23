@@ -1,3 +1,5 @@
+import { siteNow } from '@/core/content/now';
+import { atLeastOne, SHELL_SLUG } from '@/core/pages/static-params';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { buildMetadata } from '@/core/content/metadata';
@@ -19,9 +21,12 @@ import { breadcrumbsFor } from '@/core/content/structured-data';
 export async function generateStaticParams() {
   try {
     const projects = await getPublishedProjects();
-    return projects.map((p) => ({ slug: p.slug }));
+    return atLeastOne(
+      projects.map((p) => ({ slug: p.slug })),
+      { slug: SHELL_SLUG }
+    );
   } catch {
-    return [];
+    return [{ slug: SHELL_SLUG }];
   }
 }
 
@@ -52,12 +57,12 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   // The case-study story renders here, on the server, with the whole document
   // to draw on — a story block can list writing or work, which the client copy
   // of the content (`clientView`) no longer carries.
-  const content = publicView(await getContentForChannel(await currentChannel()));
+  const content = publicView(await getContentForChannel(await currentChannel()), await siteNow());
   const project = content.projects.find((candidate) => candidate.slug === slug);
   const blocks = project?.story?.blocks;
   const story =
     Array.isArray(blocks) && blocks.length > 0 ? (
-      <BlockList blocks={parsePage(blocks)} content={blockContentFrom(content)} />
+      <BlockList blocks={parsePage(blocks)} content={blockContentFrom(content, await siteNow())} />
     ) : undefined;
 
   return (

@@ -1,4 +1,5 @@
 import 'server-only';
+import { cacheLife, cacheTag } from 'next/cache';
 import { readConfig } from './vault';
 import { umamiScriptSrc, type UmamiSettings } from './definitions/umami';
 import { plausibleScriptSrc, type PlausibleSettings } from './definitions/plausible';
@@ -48,7 +49,28 @@ function legacy(): ResolvedAnalytics {
  * screen writes with no redeploy; then the legacy build-time variables, so
  * nobody's existing setup goes dark on update.
  */
+/** Expired when an integration is saved or cleared (`/api/admin/integrations`). */
+export const INTEGRATIONS_TAG = 'integrations';
+
+/**
+ * Cached across requests: the root layout asks on every page, and the answer
+ * changes only when the owner saves a service. Only this public result is
+ * cached — never the vault, whose values include secrets. Demo mode reads per
+ * visitor's sandbox, chosen by a cookie, so it is never cached.
+ */
 export async function resolveAnalytics(): Promise<ResolvedAnalytics> {
+  if (process.env.OPB_DEMO_MODE === '1') return resolveAnalyticsNow();
+  return resolveAnalyticsCached();
+}
+
+async function resolveAnalyticsCached(): Promise<ResolvedAnalytics> {
+  'use cache';
+  cacheTag(INTEGRATIONS_TAG);
+  cacheLife('max');
+  return resolveAnalyticsNow();
+}
+
+async function resolveAnalyticsNow(): Promise<ResolvedAnalytics> {
   const provider = (
     process.env.OPB_ANALYTICS_PROVIDER ??
     (await configuredProvider()) ??

@@ -13,8 +13,6 @@ import { buildLlmsTxt } from '@/core/content/llms-txt';
  * the sitemap, and absent (404) when the owner has asked search engines to stay
  * away — the robots setting is the owner's answer to "may machines read this".
  */
-// Read per request, like the feed: a publish shows here at once.
-export const dynamic = 'force-dynamic';
 
 export async function GET() {
   const content = await getPublishedContent();

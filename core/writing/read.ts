@@ -1,3 +1,4 @@
+import { siteNow } from '@/core/content/now';
 import 'server-only';
 import { cache } from 'react';
 import type { Channel } from '@/core/storage/contract';
@@ -44,7 +45,8 @@ export async function getPublicWriting(channel: Channel): Promise<WritingEntry[]
     getWritingSettings(channel),
   ]);
 
-  const visible = channel === 'draft' ? entries : entries.filter((entry) => isLive(entry));
+  const now = await siteNow();
+  const visible = channel === 'draft' ? entries : entries.filter((entry) => isLive(entry, now));
   return arrange(visible, settings.order);
 }
 

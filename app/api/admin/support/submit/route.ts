@@ -5,8 +5,6 @@ import { submitIssue } from '@/core/support/github-auth';
 import { buildBody, isReportReady, type Report } from '@/core/support/report';
 import type { Diagnostics } from '@/core/support/diagnostics';
 
-export const dynamic = 'force-dynamic';
-
 /**
  * Sends the report, as the connected account, without leaving the admin.
  *

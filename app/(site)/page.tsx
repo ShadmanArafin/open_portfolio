@@ -1,3 +1,4 @@
+import { siteNow } from '@/core/content/now';
 import { isPageLive } from '@/core/pages/schema';
 import type { Metadata } from 'next';
 import { buildMetadata } from '@/core/content/metadata';
@@ -59,7 +60,7 @@ export default async function Page() {
       {channel === 'draft' && (
         <PreviewBanner status={isPageLive(resolved.page) ? 'published' : 'draft'} path="/" />
       )}
-      <BlockList blocks={resolved.blocks} content={blockContentFrom(content)} />
+      <BlockList blocks={resolved.blocks} content={blockContentFrom(content, await siteNow())} />
     </>
   );
 }

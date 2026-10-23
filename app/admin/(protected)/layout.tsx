@@ -13,8 +13,6 @@ import { WelcomeGate } from './welcome-gate';
 import { AssistProvider } from './_components/assist';
 import { assistCapabilities } from '@/core/ai/assist';
 
-export const dynamic = 'force-dynamic';
-
 /**
  * Guard by existence: the App Router admin's first mechanism.
  *
@@ -30,6 +28,14 @@ export const dynamic = 'force-dynamic';
  * deleted, so every admin URL in the nav below is a real route in this group.
  * See `docs/ADMIN-REWRITE.md` for the slices and the kill criteria.
  */
+
+/*
+ * Every admin screen is per-request by nature: it checks the session cookie
+ * before anything renders. `instant = false` says so to Cache Components —
+ * this segment is allowed to block — instead of wrapping the whole admin in a
+ * Suspense fallback that would flash before the guard decides.
+ */
+export const instant = false;
 
 export const metadata: Metadata = {
   title: { default: 'Admin', template: '%s — Admin' },

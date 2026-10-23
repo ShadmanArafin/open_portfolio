@@ -4,8 +4,6 @@ import { clientKey, rateLimit } from '@/core/auth/ratelimit';
 import { findSimilar } from '@/core/support/search';
 import { APP_VERSION } from '@/core/version';
 
-export const dynamic = 'force-dynamic';
-
 /**
  * Looks for reports that already say this.
  *

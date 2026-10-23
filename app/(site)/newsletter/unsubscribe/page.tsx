@@ -1,12 +1,13 @@
 import type { Metadata } from 'next';
 import { TokenAction } from '../token-action';
 
+// Request-time by nature (Cache Components may block here). A token in the address decides everything here.
+export const instant = false;
+
 export const metadata: Metadata = {
   title: 'Unsubscribe',
   robots: { index: false, follow: false },
 };
-
-export const dynamic = 'force-dynamic';
 
 export default async function UnsubscribePage({
   searchParams,

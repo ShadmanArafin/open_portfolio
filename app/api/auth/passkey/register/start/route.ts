@@ -3,8 +3,6 @@ import { requireOwner, UnauthorizedError } from '@/core/auth/guard';
 import { clientKey, rateLimit } from '@/core/auth/ratelimit';
 import { relyingParty, startPasskeyRegistration } from '@/core/auth/passkey';
 
-export const dynamic = 'force-dynamic';
-
 /**
  * Begins enrolling this device as a passkey.
  *

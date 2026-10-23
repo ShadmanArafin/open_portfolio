@@ -4,6 +4,7 @@ import { Mail, Download, ArrowUpRight } from 'lucide-react';
 import { getSocialPlatform } from '../cms/data/socialPlatforms';
 import { Container } from './common/Container';
 import { siteContent } from '../cms/server';
+import { siteNow } from '@/core/content/now';
 import { CopyEmailButton, TrackedLink } from './footer-actions';
 import { CMSImage } from './common/CMSImage';
 import { NewsletterSignup } from './NewsletterSignup';
@@ -11,6 +12,7 @@ import { resolveAssetUrl } from '../cms/utils/mediaUrls';
 
 export async function Footer() {
   const data = await siteContent();
+  const year = (await siteNow()).getFullYear();
 
   // Same rule as the social row block: a stored link that is not a safe
   // destination is left out rather than rendered as a dead or hostile card.
@@ -152,9 +154,9 @@ export async function Footer() {
         <div className="flex items-center justify-center py-6 border-t border-border text-xs text-text-secondary font-body font-normal text-center w-full">
           <span>
             {isShippedCopyright(data.settings.copyrightText)
-              ? `Handmade with care ✦ © ${new Date().getFullYear()} ${data.settings.fullName}`
+              ? `Handmade with care ✦ © ${year} ${data.settings.fullName}`
               : data.settings.copyrightText ||
-                `Handmade with care ✦ © ${new Date().getFullYear()} ${data.settings.fullName}`}
+                `Handmade with care ✦ © ${year} ${data.settings.fullName}`}
           </span>
         </div>
       </Container>

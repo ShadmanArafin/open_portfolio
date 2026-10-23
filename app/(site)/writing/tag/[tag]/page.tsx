@@ -5,6 +5,9 @@ import { buildMetadata } from '@/core/content/metadata';
 import { currentChannel } from '@/core/pages/read';
 import { getPublicWriting, getWritingSettings } from '@/core/writing/read';
 
+// Request-time by nature (Cache Components may block here). Any tag can be asked for; each is read when it is.
+export const instant = false;
+
 /**
  * Every piece carrying one tag.
  *

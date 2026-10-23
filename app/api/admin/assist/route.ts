@@ -4,8 +4,6 @@ import { clientKey, rateLimit } from '@/core/auth/ratelimit';
 import { AssistError, suggest } from '@/core/ai/assist';
 import { MAX_SOURCE_CHARS, textOfBlocks, type AssistTask } from '@/core/ai/prompts';
 
-export const dynamic = 'force-dynamic';
-
 /**
  * One suggestion from the owner's own model. Owner-only: it spends their
  * machine's time and reads their media library.

@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server';
 import { requireOwner, UnauthorizedError } from '@/core/auth/guard';
 import { getStorageAdapter } from '@/core/storage/registry';
 
-export const dynamic = 'force-dynamic';
-
 /**
  * The owner's enrolled passkeys, for the settings screen.
  *

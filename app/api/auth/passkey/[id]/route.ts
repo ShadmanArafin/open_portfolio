@@ -3,8 +3,6 @@ import { requireOwner, UnauthorizedError } from '@/core/auth/guard';
 import { clientKey, rateLimit } from '@/core/auth/ratelimit';
 import { getStorageAdapter } from '@/core/storage/registry';
 
-export const dynamic = 'force-dynamic';
-
 /**
  * Removes one enrolled passkey.
  *

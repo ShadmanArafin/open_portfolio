@@ -5,8 +5,6 @@ import { listVersions } from '@/core/content/versions';
 import type { CMSState } from '@/cms/types/cms';
 import { RestoreButton } from './restore-button';
 
-export const dynamic = 'force-dynamic';
-
 export const metadata: Metadata = {
   title: 'Version history',
   robots: { index: false, follow: false },

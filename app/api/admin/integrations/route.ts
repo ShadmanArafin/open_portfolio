@@ -1,3 +1,5 @@
+import { revalidateTag } from 'next/cache';
+import { INTEGRATIONS_TAG } from '@/core/integrations/analytics';
 import { demoRestrictionMessage, isDemoMode } from '@/core/demo/config';
 import { NextResponse } from 'next/server';
 import { requireOwner, UnauthorizedError } from '@/core/auth/guard';
@@ -12,8 +14,6 @@ import {
   writeConfig,
   clearConfig,
 } from '@/core/integrations';
-
-export const dynamic = 'force-dynamic';
 
 /**
  * Configuring third-party services from the admin.
@@ -111,6 +111,7 @@ export async function PUT(req: Request) {
   }
 
   await writeConfig(definition.id, body?.values ?? {}, definition.secretFields);
+  revalidateTag(INTEGRATIONS_TAG, { expire: 0 });
   return NextResponse.json({ ok: true });
 }
 
@@ -124,6 +125,7 @@ export async function DELETE(req: Request) {
   }
 
   await clearConfig(id);
+  revalidateTag(INTEGRATIONS_TAG, { expire: 0 });
   return NextResponse.json({ ok: true });
 }
 

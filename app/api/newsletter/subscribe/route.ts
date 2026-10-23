@@ -10,8 +10,6 @@ import { requestSignup, sweepStalePending } from '@/core/newsletter/store';
 import { getPublishedContent } from '@/core/content/read';
 import { siteOrigin } from '@/core/newsletter/urls';
 
-export const dynamic = 'force-dynamic';
-
 /**
  * "Send me updates."
  *

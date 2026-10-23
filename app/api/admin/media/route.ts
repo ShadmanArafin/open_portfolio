@@ -5,8 +5,6 @@ import { assertSameOrigin, requireOwner, UnauthorizedError } from '@/core/auth/g
 import { clientKey, rateLimit } from '@/core/auth/ratelimit';
 import { makeMediaKey, UploadRejected, validateUpload } from '@/core/media/validate';
 
-export const dynamic = 'force-dynamic';
-
 /**
  * Uploads, at last on the server.
  *

@@ -1,11 +1,11 @@
-import { NextResponse } from 'next/server';
+import { connection, NextResponse } from 'next/server';
 import { claimInstance, getClaimEligibility } from '@/core/auth/claim';
 import { assertSameOrigin } from '@/core/auth/guard';
 import { clientKey, rateLimit } from '@/core/auth/ratelimit';
 
-export const dynamic = 'force-dynamic';
-
 export async function GET() {
+  // Whether this install is still unclaimed changes the moment it is claimed.
+  await connection();
   return NextResponse.json(await getClaimEligibility());
 }
 

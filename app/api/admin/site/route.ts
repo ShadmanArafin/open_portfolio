@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireOwner, UnauthorizedError } from '@/core/auth/guard';
-import { getPublishedContent } from '@/core/content/read';
+import { getPublishedContentFresh } from '@/core/content/read';
 import { resolveSiteUrl } from '@/core/content/metadata';
-
-export const dynamic = 'force-dynamic';
 
 /**
  * Where this site actually is on the internet, and who is hosting it.
@@ -25,7 +23,7 @@ export async function GET() {
     return NextResponse.json({ ok: false, error: 'Not signed in.' }, { status });
   }
 
-  const content = await getPublishedContent();
+  const content = await getPublishedContentFresh();
   const url = resolveSiteUrl(content) ?? null;
 
   const platform = process.env.VERCEL

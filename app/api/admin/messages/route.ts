@@ -3,8 +3,6 @@ import { getStorageAdapter } from '@/core/storage/registry';
 import { requireOwner, UnauthorizedError } from '@/core/auth/guard';
 import { resolveTransportWithStored } from '@/core/email/transport';
 
-export const dynamic = 'force-dynamic';
-
 /**
  * The inbox.
  *

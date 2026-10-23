@@ -3,6 +3,7 @@ import { cache } from 'react';
 import { getContentForChannel } from '@/core/content/read';
 import { publicView } from '@/core/content/sanitise';
 import { currentChannel } from '@/core/pages/read';
+import { siteNow } from '@/core/content/now';
 import type { CMSState } from './types/cms';
 
 /**
@@ -15,5 +16,5 @@ import type { CMSState } from './types/cms';
  * page blocks and stories: nothing here is serialised to the browser.
  */
 export const siteContent = cache(async (): Promise<CMSState> => {
-  return publicView(await getContentForChannel(await currentChannel()));
+  return publicView(await getContentForChannel(await currentChannel()), await siteNow());
 });

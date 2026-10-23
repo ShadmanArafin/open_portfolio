@@ -10,11 +10,18 @@ import { mergeNavLinks } from '@/core/pages/nav';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-export const Navbar: React.FC = () => {
+/**
+ * The navbar with its current-page highlight. `usePathname()` suspends while
+ * a route's address is not yet known (a share link, a tag archive), so the
+ * layout renders this inside Suspense with `NavbarFrame` as its fallback: the
+ * same bar without the highlight, so nothing moves when the address arrives.
+ */
+export const Navbar: React.FC = () => <NavbarFrame pathname={usePathname()} />;
+
+export const NavbarFrame: React.FC<{ pathname: string | null }> = ({ pathname }) => {
   const { data } = useCMS();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const pathname = usePathname();
   const menuButtonRef = React.useRef<HTMLButtonElement>(null);
 
   useEffect(() => {

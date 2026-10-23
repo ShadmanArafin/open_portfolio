@@ -1,13 +1,11 @@
 import { NextResponse } from 'next/server';
 import { requireOwner, UnauthorizedError } from '@/core/auth/guard';
 import { getStorageAdapter } from '@/core/storage/registry';
-import { getPublishedContent } from '@/core/content/read';
+import { getPublishedContentFresh } from '@/core/content/read';
 import { resolveTransportWithStored } from '@/core/email/transport';
 import { detectHost, summariseContent } from '@/core/support/diagnostics';
 import { checkForUpdates } from '@/core/updates/check';
 import { APP_VERSION } from '@/core/version';
-
-export const dynamic = 'force-dynamic';
 
 /**
  * Everything the Help screen needs: what this is, and whether it is current.
@@ -27,7 +25,7 @@ export async function GET(req: Request) {
 
   const [adapter, content, transport] = await Promise.all([
     getStorageAdapter(),
-    getPublishedContent(),
+    getPublishedContentFresh(),
     resolveTransportWithStored(),
   ]);
 

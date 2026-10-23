@@ -1,8 +1,7 @@
+import { connection } from 'next/server';
 import type { Metadata } from 'next';
 import { getStorageAdapter } from '@/core/storage/registry';
 import { BACKEND_GUIDES, type BackendGuide } from '@/core/storage/guides';
-
-export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Storage',
@@ -143,6 +142,8 @@ function GuideCard({ guide, active }: { guide: BackendGuide; active: boolean }) 
 }
 
 export default async function StoragePage() {
+  // Live figures, measured now: never prerendered.
+  await connection();
   const status = await readStatus();
 
   return (

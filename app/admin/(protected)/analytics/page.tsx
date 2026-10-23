@@ -1,10 +1,9 @@
+import { connection } from 'next/server';
 import type { Metadata } from 'next';
 import { getStorageAdapter } from '@/core/storage/registry';
 import { resolveAnalytics } from '@/core/integrations/analytics';
 import { audienceSummary } from '@/core/integrations/stats';
 import { TRACKED_EVENTS } from '@/utils/analytics';
-
-export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Analytics',
@@ -69,6 +68,8 @@ function Card({ label, value, unit }: { label: string; value: string; unit: stri
 }
 
 export default async function AnalyticsPage() {
+  // Live figures, measured now: never prerendered.
+  await connection();
   const adapter = await getStorageAdapter();
   const [inbox, draftMeta, publishedMeta, analytics, audience] = await Promise.all([
     adapter.messages.list().catch(() => []),

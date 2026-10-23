@@ -114,7 +114,10 @@ function byOrder<T extends { sortOrder: number }>(items: T[]): T[] {
  * function's to fix. Legacy case studies are folded in so a block sees one work
  * collection rather than two that can disagree.
  */
-export function blockContentFrom(state: CMSState | undefined): BlockContent {
+export function blockContentFrom(
+  state: CMSState | undefined,
+  now: Date = new Date()
+): BlockContent {
   if (!state) return EMPTY_BLOCK_CONTENT;
 
   const visible = <T extends { visible: boolean; sortOrder: number }>(items: T[] | undefined) =>
@@ -140,7 +143,7 @@ export function blockContentFrom(state: CMSState | undefined): BlockContent {
     // "published, or scheduled and the date has passed". The predicate lives
     // with the schema so every reader agrees about what live means.
     writing: arrange(
-      (state.writing ?? []).filter((entry) => isLive(entry)),
+      (state.writing ?? []).filter((entry) => isLive(entry, now)),
       settings.order
     ),
     writingSettings: { label: settings.label, showDates: settings.showDates },

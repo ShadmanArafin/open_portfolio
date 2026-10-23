@@ -7,8 +7,6 @@ import { NEWSLETTER_DEFAULTS, type Subscriber } from '@/core/newsletter/schema';
 import { NewsletterForm, RemoveSubscriber } from './newsletter-client';
 import { screenToken } from '@/core/content/screen-token';
 
-export const dynamic = 'force-dynamic';
-
 export const metadata: Metadata = {
   title: 'Newsletter',
   robots: { index: false, follow: false },

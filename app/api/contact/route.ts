@@ -7,8 +7,6 @@ import { verifyTurnstileToken } from '@/core/integrations/turnstile';
 import { enquiryNotification } from '@/core/email/templates';
 import type { ContactMessage } from '@/cms/types/cms';
 
-export const dynamic = 'force-dynamic';
-
 /**
  * Contact form submissions.
  *

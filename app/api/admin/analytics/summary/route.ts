@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server';
 import { requireOwner, UnauthorizedError } from '@/core/auth/guard';
 import { audienceSummary } from '@/core/integrations/stats';
 
-export const dynamic = 'force-dynamic';
-
 /**
  * View counts for the dashboard.
  *
