@@ -43,6 +43,7 @@ import type { BlockDefinition } from './schema';
 const limitField = {
   kind: 'choice' as const,
   path: 'limit',
+  advanced: true,
   label: 'How many',
   options: [
     { value: 0, label: 'All of them' },
@@ -142,6 +143,7 @@ const collection: BlockDefinition<CollectionProps> = {
     {
       kind: 'toggle',
       path: 'featuredOnly',
+      advanced: true,
       label: 'Featured only',
       help: 'Uses the star you set on each record, so the page changes when the record does.',
     },
@@ -149,6 +151,7 @@ const collection: BlockDefinition<CollectionProps> = {
     {
       kind: 'choice',
       path: 'columns',
+      advanced: true,
       label: 'Across',
       options: [
         { value: 2, label: 'Two' },
@@ -319,6 +322,7 @@ const logoWall: BlockDefinition<LogoWallProps> = {
     {
       kind: 'choice',
       path: 'columns',
+      advanced: true,
       label: 'Across',
       options: [
         { value: 3, label: 'Three' },
@@ -379,11 +383,12 @@ const testimonials: BlockDefinition<TestimonialsProps> = {
   defaults: () => ({ heading: 'What people say', limit: 3 }),
   fields: [
     headingField,
-    { kind: 'toggle', path: 'featuredOnly', label: 'Featured only' },
+    { kind: 'toggle', path: 'featuredOnly', advanced: true, label: 'Featured only' },
     limitField,
     {
       kind: 'choice',
       path: 'columns',
+      advanced: true,
       label: 'Across',
       options: [
         { value: 2, label: 'Two' },
@@ -447,6 +452,7 @@ const skills: BlockDefinition<SkillsProps> = {
     {
       kind: 'choice',
       path: 'columns',
+      advanced: true,
       label: 'Across',
       options: [
         { value: 2, label: 'Two' },
@@ -507,6 +513,7 @@ const steps: BlockDefinition<StepsProps> = {
     {
       kind: 'toggle',
       path: 'showDetails',
+      advanced: true,
       label: 'Include the detail under each stage',
       help: 'Off keeps it to a summary, which reads better on a phone.',
     },
@@ -585,8 +592,8 @@ const writingList: BlockDefinition<WritingListProps> = {
       help: 'Leave blank to use whatever you called the section.',
     },
     limitField,
-    { kind: 'toggle', path: 'showSummaries', label: 'Show the one-line summary' },
-    { kind: 'toggle', path: 'moreLink', label: 'Link to everything at the bottom' },
+    { kind: 'toggle', path: 'showSummaries', advanced: true, label: 'Show the one-line summary' },
+    { kind: 'toggle', path: 'moreLink', advanced: true, label: 'Link to everything at the bottom' },
   ],
   checks: [
     emptyCheck<WritingListProps>('empty', (content) => content.writing.length, 'published pieces'),

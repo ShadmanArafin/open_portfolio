@@ -35,6 +35,7 @@ export const RESERVED_TOP_LEVEL: readonly string[] = [
   'cv',
   'llms.txt',
   'newsletter',
+  'search',
   'setup',
   'share',
   'work',

@@ -9,6 +9,10 @@
  * the field can use.
  */
 
+import { textOfBlocks } from '@/core/blocks/text';
+
+export { textOfBlocks };
+
 export type AssistTask = 'description' | 'summary' | 'alt';
 
 export interface ChatMessage {
@@ -30,35 +34,6 @@ export const LIMITS: Record<AssistTask, number> = {
 
 const SYSTEM =
   'You help a person write the words on their own portfolio website. Answer with the requested text only: no preamble, no quotation marks, no Markdown, no options. Write in the same language as the source text. Never invent facts that are not in the source.';
-
-const isUrlish = (text: string) => /^(https?:|\/|#|mailto:|data:)/i.test(text.trim());
-
-/** The readable words in raw block envelopes, for a prompt. */
-export function textOfBlocks(blocks: unknown[]): string {
-  const out: string[] = [];
-  const walk = (value: unknown, key = '') => {
-    if (typeof value === 'string') {
-      // Ids, links, colours and layout names are not prose.
-      if (
-        value.trim() &&
-        !isUrlish(value) &&
-        !/^(id|type|href|src|url|variant|tone|layout|anchor)$/i.test(key)
-      ) {
-        out.push(value.trim());
-      }
-    } else if (Array.isArray(value)) {
-      for (const item of value) walk(item, key);
-    } else if (value && typeof value === 'object') {
-      for (const [name, item] of Object.entries(value)) walk(item, name);
-    }
-  };
-  for (const block of blocks) {
-    if (block && typeof block === 'object' && !(block as { hidden?: boolean }).hidden) {
-      walk((block as { props?: unknown }).props);
-    }
-  }
-  return out.join('\n').slice(0, MAX_SOURCE_CHARS);
-}
 
 export function buildMessages(
   task: AssistTask,

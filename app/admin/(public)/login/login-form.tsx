@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
 /**
@@ -47,6 +47,7 @@ export function LoginForm({ next, demoHint }: { next?: string; demoHint: string 
       });
       const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
       if (res.ok && data.ok) {
+        await offerPasskey();
         go();
         return;
       }
@@ -55,6 +56,100 @@ export function LoginForm({ next, demoHint }: { next?: string; demoHint: string 
       setError('Could not reach the server.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  /** Hands a browser assertion to the server; true when it signed in. */
+  const finishPasskey = async (challengeId: string, assertion: unknown) => {
+    const finish = await (
+      await fetch('/api/auth/passkey/login/finish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ challengeId, response: assertion }),
+      })
+    ).json();
+    if (!finish.ok) setError(finish.error ?? 'Passkey sign-in failed.');
+    return Boolean(finish.ok);
+  };
+
+  /**
+   * Passkeys in the email field's autofill (conditional mediation): the
+   * browser lists this site's passkeys under the field, and picking one signs
+   * in, with no button and no modal. Started once, quietly; a browser without
+   * it, or a site without passkeys, simply shows the form as before.
+   */
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const { browserSupportsWebAuthnAutofill, startAuthentication } =
+          await import('@simplewebauthn/browser');
+        if (!(await browserSupportsWebAuthnAutofill()) || cancelled) return;
+        const start = await (
+          await fetch('/api/auth/passkey/login/start', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ autofill: true }),
+          })
+        ).json();
+        if (!start.ok || cancelled) return;
+        const assertion = await startAuthentication({
+          optionsJSON: start.options,
+          useBrowserAutofill: true,
+        });
+        if (await finishPasskey(start.challengeId, assertion)) go();
+      } catch {
+        // Aborted by the passkey button, dismissed, or unsupported: the form
+        // is still there.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // Once per visit to the page.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /**
+   * After a passphrase sign-in, ask the password manager that just filled it
+   * to save a passkey too (conditional create). The browser does it without a
+   * prompt, or not at all; either way this is capped at a few seconds so it
+   * never holds up the way in. Only while the site has no passkey, so it does
+   * not add one per sign-in.
+   */
+  const offerPasskey = async () => {
+    try {
+      const capabilities = await (
+        PublicKeyCredential as unknown as {
+          getClientCapabilities?: () => Promise<Record<string, boolean>>;
+        }
+      ).getClientCapabilities?.();
+      if (!capabilities?.conditionalCreate) return;
+      const list = await (await fetch('/api/auth/passkey/list')).json();
+      if (!list.ok || list.credentials.length > 0) return;
+      const { startRegistration } = await import('@simplewebauthn/browser');
+      const start = await (
+        await fetch('/api/auth/passkey/register/start', { method: 'POST' })
+      ).json();
+      if (!start.ok) return;
+      const attempt = (async () => {
+        const response = await startRegistration({
+          optionsJSON: start.options,
+          useAutoRegister: true,
+        });
+        await fetch('/api/auth/passkey/register/finish', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            challengeId: start.challengeId,
+            response,
+            deviceName: 'Saved by your password manager',
+          }),
+        });
+      })();
+      await Promise.race([attempt, new Promise((resolve) => setTimeout(resolve, 4000))]);
+    } catch {
+      // Declined, unsupported or already saved: the passphrase still worked.
     }
   };
 
@@ -73,18 +168,7 @@ export function LoginForm({ next, demoHint }: { next?: string; demoHint: string 
         return;
       }
       const assertion = await startAuthentication({ optionsJSON: start.options });
-      const finish = await (
-        await fetch('/api/auth/passkey/login/finish', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ challengeId: start.challengeId, response: assertion }),
-        })
-      ).json();
-      if (finish.ok) {
-        go();
-      } else {
-        setError(finish.error ?? 'Passkey sign-in failed.');
-      }
+      if (await finishPasskey(start.challengeId, assertion)) go();
     } catch (err) {
       // The person cancelling the browser's own prompt is not an error.
       if (!(err instanceof Error && err.name === 'NotAllowedError')) {
@@ -165,7 +249,7 @@ export function LoginForm({ next, demoHint }: { next?: string; demoHint: string 
           <input
             type="email"
             name="email"
-            autoComplete="email"
+            autoComplete="email webauthn"
             required
             value={email}
             onChange={(event) => setEmail(event.target.value)}

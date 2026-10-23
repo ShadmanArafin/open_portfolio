@@ -19,3 +19,28 @@ export function profileLinks(links: SocialLinkItem[] | undefined): string[] {
   }
   return [...seen];
 }
+
+/**
+ * `@you@mastodon.social` from a Mastodon profile link, for the
+ * `fediverse:creator` meta tag: Mastodon then credits the owner, with a link
+ * to their profile, under every preview of a page from this site.
+ *
+ * Only links marked as Mastodon count. `https://host/@name` is also how
+ * Medium, TikTok, YouTube and Threads address people, and crediting a
+ * fediverse account that does not exist is worse than crediting none.
+ */
+export function fediverseCreator(links: SocialLinkItem[] | undefined): string | null {
+  for (const link of links ?? []) {
+    if (link.visible === false || link.iconType !== 'mastodon') continue;
+    const href = sanitizeHref(link.url);
+    if (!href) continue;
+    try {
+      const url = new URL(href);
+      const match = /^\/@([A-Za-z0-9_]{1,30})\/?$/.exec(url.pathname);
+      if (url.protocol === 'https:' && match) return `@${match[1]}@${url.hostname}`;
+    } catch {
+      // Not a URL; the next link may be.
+    }
+  }
+  return null;
+}

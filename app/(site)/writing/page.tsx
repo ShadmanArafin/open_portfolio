@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { TagList } from './_ui/entry-parts';
+import { SearchForm } from '../search/search-form';
 import { buildMetadata } from '@/core/content/metadata';
 import { currentChannel } from '@/core/pages/read';
 import { getPublicWriting, getWritingSettings } from '@/core/writing/read';
@@ -57,6 +58,12 @@ export default async function WritingIndex() {
         >
           {settings.label}
         </h1>
+
+        {entries.length > 5 ? (
+          <div style={{ marginBottom: 'var(--space-8)' }}>
+            <SearchForm />
+          </div>
+        ) : null}
 
         {entries.length === 0 ? (
           <p style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-body)' }}>

@@ -105,7 +105,13 @@ const hero: BlockDefinition<HeroProps> = {
   schema: heroProps,
   defaults: () => ({ headline: 'A short, specific statement about what you do.' }),
   fields: [
-    { kind: 'text', path: 'eyebrow', label: 'Small line above', placeholder: 'Designer' },
+    {
+      kind: 'text',
+      path: 'eyebrow',
+      advanced: true,
+      label: 'Small line above',
+      placeholder: 'Designer',
+    },
     {
       kind: 'textarea',
       path: 'headline',
@@ -253,6 +259,7 @@ const image: BlockDefinition<ImageProps> = {
     {
       kind: 'choice',
       path: 'ratio',
+      advanced: true,
       label: 'Shape',
       options: [
         { value: '16 / 9', label: 'Wide' },
@@ -315,6 +322,7 @@ const gallery: BlockDefinition<GalleryProps> = {
     {
       kind: 'choice',
       path: 'columns',
+      advanced: true,
       label: 'Across',
       help: 'A maximum, not a promise — the grid uses fewer when there is no room.',
       options: [
@@ -522,6 +530,7 @@ const cards: BlockDefinition<CardsProps> = {
     {
       kind: 'choice',
       path: 'columns',
+      advanced: true,
       label: 'Across',
       options: [
         { value: 2, label: 'Two' },

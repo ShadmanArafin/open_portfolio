@@ -346,6 +346,7 @@ const video: BlockDefinition<VideoProps> = {
     {
       kind: 'choice',
       path: 'ratio',
+      advanced: true,
       label: 'Shape',
       options: [
         { value: '16 / 9', label: 'Widescreen' },
@@ -454,6 +455,7 @@ const embed: BlockDefinition<EmbedProps> = {
     {
       kind: 'choice',
       path: 'ratio',
+      advanced: true,
       label: 'Shape',
       options: [
         { value: '1 / 1', label: 'Square' },
@@ -623,6 +625,7 @@ const socialPost: BlockDefinition<SocialPostProps> = {
     {
       kind: 'choice',
       path: 'ratio',
+      advanced: true,
       label: 'Shape',
       options: [
         { value: '4 / 5', label: 'Portrait' },
@@ -707,13 +710,14 @@ const split: BlockDefinition<SplitProps> = {
     media: { src: '', alt: '' },
   }),
   fields: [
-    { kind: 'text', path: 'eyebrow', label: 'Small line above' },
+    { kind: 'text', path: 'eyebrow', advanced: true, label: 'Small line above' },
     headingField,
     { kind: 'paragraphs', path: 'paragraphs', label: 'Text' },
     ...mediaFields('media'),
     {
       kind: 'choice',
       path: 'ratio',
+      advanced: true,
       label: 'Picture shape',
       options: [
         { value: '4 / 3', label: 'Landscape' },
@@ -968,6 +972,7 @@ const comments: BlockDefinition<CommentsBlockProps> = {
     {
       kind: 'choice',
       path: 'mapping',
+      advanced: true,
       label: 'Match discussions by',
       options: [
         { value: 'pathname', label: 'Page address' },
@@ -1034,6 +1039,7 @@ const socialRow: BlockDefinition<SocialRowProps> = {
     {
       kind: 'toggle',
       path: 'showHandles',
+      advanced: true,
       label: 'Show the handle as well as the platform',
     },
   ],

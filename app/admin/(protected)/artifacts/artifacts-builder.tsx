@@ -5,6 +5,7 @@ import type { VisualArtifactItem } from '@/cms/types/cms';
 import { updateArtifactsAction } from '../_actions/collections';
 import { uploadMediaAction } from '../_actions/media';
 import { CollectionEditor } from '../_components/collection-editor';
+import { artifactsCsv } from '@/core/import/csv-templates';
 import { CheckField, Field, SelectField } from '../_components/form-fields';
 import { newId } from '../_components/ids';
 import { ImageField } from '../_components/image-field';
@@ -143,6 +144,7 @@ export function ArtifactsBuilder({
           <span aria-hidden className="h-12 w-12 rounded-lg border border-dashed border-border" />
         )
       }
+      csv={artifactsCsv}
       create={(items) => ({
         id: newId('art'),
         category: 'ui',

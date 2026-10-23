@@ -1,7 +1,7 @@
 import { serializeJsonLd } from './json-ld';
 
 /** A JSON-LD block, escaped (see `serializeJsonLd`). Renders nothing for null. */
-export function JsonLd({ data }: { data: Record<string, unknown> | null }) {
+export function JsonLd({ data }: { data: object | null }) {
   if (!data) return null;
   return (
     <script

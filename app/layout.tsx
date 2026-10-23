@@ -3,7 +3,7 @@ import { buildMetadata } from '@/core/content/metadata';
 import { getContentForChannel, getPublishedContent } from '@/core/content/read';
 import { currentChannel } from '@/core/pages/read';
 import { siteLanguage } from '@/core/content/language';
-import { profileLinks } from '@/core/content/profiles';
+import { fediverseCreator, profileLinks } from '@/core/content/profiles';
 import { buildThemeStylesheet } from '@/core/theme/tokens';
 import { buildLayoutStylesheet } from '@/core/theme/layout-tokens';
 import { flattenAppearance, resolveAppearance } from '@/core/theme/resolve';
@@ -110,6 +110,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // so the client tracker reads the same answer with no extra request — and
   // every value here is public by design (script URL, site id, share link).
   const analytics = await resolveAnalytics();
+  const fediverse = fediverseCreator(content.socialLinks);
   const analyticsJson = JSON.stringify({
     provider: analytics.provider,
     scriptSrc: analytics.scriptSrc,
@@ -145,6 +146,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {profileLinks(content.socialLinks).map((href) => (
           <link key={href} rel="me" href={href} />
         ))}
+        {fediverse ? <meta name="fediverse:creator" content={fediverse} /> : null}
       </head>
       {/* No `selection:` utilities here. `accent` resolves to a bare `var()`,
           which Tailwind cannot apply an opacity modifier to, so

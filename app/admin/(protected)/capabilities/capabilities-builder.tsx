@@ -3,6 +3,7 @@
 import type { CapabilityGroupItem } from '@/cms/types/cms';
 import { updateCapabilitiesAction } from '../_actions/collections';
 import { CollectionEditor } from '../_components/collection-editor';
+import { capabilitiesCsv } from '@/core/import/csv-templates';
 import { CheckField, Field } from '../_components/form-fields';
 import { newId } from '../_components/ids';
 
@@ -43,6 +44,7 @@ export function CapabilitiesBuilder({
       title={(group) => group.title}
       summary={(group) => `${group.capabilities.length} capabilities`}
       badge={(group) => (group.number ? { label: group.number, live: false } : null)}
+      csv={capabilitiesCsv}
       create={(items) => ({
         id: newId('cap'),
         number: pad2(nextNumber(items)),

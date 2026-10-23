@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { SESSION_COOKIE, SESSION_COOKIE_SECURE } from '@/core/auth/constants';
 import { DEMO_SESSION_COOKIE, DEMO_TTL_SECONDS } from '@/core/demo/config';
+import { arrivedOverHttps, plainHttpContentSecurityPolicy } from '@/core/security/csp';
 
 /**
  * Routing convenience for the admin, and nothing more.
@@ -22,8 +23,12 @@ export function proxy(req: NextRequest) {
   const inbound = req.headers.get('x-request-id')?.slice(0, 64);
   const requestId = inbound && /^[A-Za-z0-9_-]+$/.test(inbound) ? inbound : crypto.randomUUID();
 
+  const plainHttp = !arrivedOverHttps(req.nextUrl, req.headers.get('x-forwarded-proto'));
   const withId = (res: NextResponse): NextResponse => {
     res.headers.set('x-request-id', requestId);
+    // See core/security/csp.ts: upgrading a plain-http site's own addresses
+    // to https breaks them, the admin's preview frame first.
+    if (plainHttp) res.headers.set('Content-Security-Policy', plainHttpContentSecurityPolicy);
     return res;
   };
 

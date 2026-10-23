@@ -1,3 +1,4 @@
+import type { BreadcrumbList, Person, ProfilePage, WebSite, WithContext } from 'schema-dts';
 import type { CMSState } from '@/cms/types/cms';
 import { profileLinks } from './profiles';
 import { resolveSiteUrl } from './metadata';
@@ -17,7 +18,8 @@ import { isWelcomePlaceholder } from './welcome';
  * identity worth publishing.
  */
 
-type Json = Record<string, unknown>;
+/** A Person with the `@id` the other objects point at, which schema-dts types loosely. */
+type IdentifiedPerson = Exclude<Person, string> & { '@id': string; name: string };
 
 function absolute(siteUrl: string, path: string | undefined): string | undefined {
   if (!path) return undefined;
@@ -25,7 +27,7 @@ function absolute(siteUrl: string, path: string | undefined): string | undefined
   return path.startsWith('/') ? `${siteUrl}${path}` : undefined;
 }
 
-export function personFor(content: CMSState): Json | null {
+export function personFor(content: CMSState): IdentifiedPerson | null {
   const siteUrl = resolveSiteUrl(content);
   const name = content.settings?.fullName?.trim();
   if (!siteUrl || !name || isWelcomePlaceholder(name)) return null;
@@ -42,7 +44,7 @@ export function personFor(content: CMSState): Json | null {
   };
 }
 
-export function websiteFor(content: CMSState): Json | null {
+export function websiteFor(content: CMSState): WithContext<WebSite> | null {
   const siteUrl = resolveSiteUrl(content);
   const person = personFor(content);
   if (!siteUrl || !person) return null;
@@ -51,14 +53,14 @@ export function websiteFor(content: CMSState): Json | null {
     '@type': 'WebSite',
     '@id': `${siteUrl}/#website`,
     url: siteUrl,
-    name: content.seo?.siteTitle?.trim() || (person.name as string),
+    name: content.seo?.siteTitle?.trim() || person.name,
     ...(content.seo?.metaDescription ? { description: content.seo.metaDescription } : {}),
     publisher: { '@id': person['@id'] },
     ...(content.settings?.language ? { inLanguage: content.settings.language } : {}),
   };
 }
 
-export function profilePageFor(content: CMSState): Json | null {
+export function profilePageFor(content: CMSState): WithContext<ProfilePage> | null {
   const siteUrl = resolveSiteUrl(content);
   const person = personFor(content);
   if (!siteUrl || !person) return null;
@@ -74,7 +76,7 @@ export function profilePageFor(content: CMSState): Json | null {
 export function breadcrumbsFor(
   content: CMSState,
   trail: { name: string; path: string }[]
-): Json | null {
+): WithContext<BreadcrumbList> | null {
   const siteUrl = resolveSiteUrl(content);
   if (!siteUrl || trail.length === 0) return null;
   return {

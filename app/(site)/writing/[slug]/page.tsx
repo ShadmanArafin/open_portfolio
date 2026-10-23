@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import type { Article, WithContext } from 'schema-dts';
 import { notFound } from 'next/navigation';
 import { buildMetadata, resolveSiteUrl } from '@/core/content/metadata';
 import { BlockList } from '@/core/blocks/registry';
@@ -9,8 +10,8 @@ import { getPublicWriting, getWritingSettings, resolveWriting } from '@/core/wri
 import { PreviewBanner } from '../../preview-banner';
 import { JsonLd } from '@/core/content/json-ld-script';
 import { breadcrumbsFor } from '@/core/content/structured-data';
-import { neighbours, readingMinutes, withContents } from '@/core/writing/reading';
-import { Contents, EntryHeader, Neighbours } from '../_ui/entry-parts';
+import { neighbours, readingMinutes, related, withContents } from '@/core/writing/reading';
+import { Contents, EntryHeader, Neighbours, Related } from '../_ui/entry-parts';
 
 /** One piece, rendered through the same block system as every page. */
 
@@ -70,26 +71,23 @@ export default async function WritingEntryPage({ params }: { params: Promise<{ s
       ? `${siteUrl}/writing/${resolved.entry.slug}/opengraph-image`
       : undefined;
 
-  const article = {
+  const article: WithContext<Article> = {
     '@context': 'https://schema.org',
     '@type': 'Article',
     headline: resolved.entry.title,
     ...(resolved.entry.summary ? { description: resolved.entry.summary } : {}),
     ...(articleUrl ? { mainEntityOfPage: { '@type': 'WebPage', '@id': articleUrl } } : {}),
     ...(imageUrl ? { image: [imageUrl] } : {}),
-    author: content.settings.fullName
+    ...(content.settings.fullName
       ? {
-          '@type': 'Person',
-          name: content.settings.fullName,
-          ...(siteUrl ? { url: siteUrl } : {}),
+          author: {
+            '@type': 'Person',
+            name: content.settings.fullName,
+            ...(siteUrl ? { url: siteUrl } : {}),
+          },
+          publisher: { '@type': 'Person', name: content.settings.fullName },
         }
-      : undefined,
-    publisher: content.settings.fullName
-      ? {
-          '@type': 'Person',
-          name: content.settings.fullName,
-        }
-      : undefined,
+      : {}),
     ...(resolved.entry.publishedAt ? { datePublished: resolved.entry.publishedAt } : {}),
     ...(resolved.entry.updatedAt ? { dateModified: resolved.entry.updatedAt } : {}),
   };
@@ -122,6 +120,7 @@ export default async function WritingEntryPage({ params }: { params: Promise<{ s
       {/* The title above is the page's h1, so the blocks start at h2. */}
       <BlockList blocks={contents.blocks} content={blockContentFrom(content)} firstLevel={2} />
       <Neighbours {...neighbours(all, resolved.entry.slug)} />
+      <Related entries={related(all, resolved.entry.slug)} />
     </>
   );
 }

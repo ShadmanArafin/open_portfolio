@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import { contentSecurityPolicy } from './core/security/csp';
 
 /**
  * Security headers.
@@ -20,19 +21,7 @@ import type { NextConfig } from 'next';
  * bug a second list invites. Also `base-uri`/`form-action` locked to self. A
  * per-request nonce policy is the follow-up, not today's change.
  */
-export const contentSecurityPolicy = [
-  "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:",
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https:",
-  "font-src 'self' data:",
-  "connect-src 'self' https:",
-  "frame-src 'self' https://www.youtube-nocookie.com https://player.vimeo.com https://challenges.cloudflare.com https://cal.com https://calendly.com https://instagram.com https://www.instagram.com https://behance.net https://www.behance.net https://*.substack.com",
-  "object-src 'none'",
-  "base-uri 'self'",
-  "form-action 'self'",
-  'upgrade-insecure-requests',
-].join('; ');
+export { contentSecurityPolicy };
 
 const securityHeaders = [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
