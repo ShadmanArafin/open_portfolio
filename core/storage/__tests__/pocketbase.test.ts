@@ -59,7 +59,9 @@ if (TEST_URL) {
       const listed = await fetch(
         `${TEST_URL.replace(/\/$/, '')}/api/collections/opb_media/records?perPage=1`
       );
-      expect(listed.status).toBe(401);
+      // Older PocketBase answered 401; v0.23+ answers 403 ("Only superusers").
+      expect([401, 403]).toContain(listed.status);
+      expect(JSON.stringify(await listed.json())).not.toContain('public.png');
 
       await adapter.media.remove('public.png');
       expect(await adapter.media.resolveUrl('public.png')).toBeNull();
