@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { BlockList, parsePage } from '../../../core/blocks/registry';
+import { BlockList } from '../../../core/blocks/registry';
+import { parsePage } from '../../../core/blocks/lookup';
 import type { Persona } from '@/lib/demo/personas';
 import { blockContentFor, themeStyle, vocabulary } from '@/lib/demo/render';
 import type { PageBlock } from '@/lib/demo/types';

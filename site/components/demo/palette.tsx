@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { Plus } from 'lucide-react';
-import { listBlockDefinitions } from '../../../core/blocks/registry';
+import { listBlockDefinitions } from '../../../core/blocks/lookup';
 
 /**
  * Add a block.
