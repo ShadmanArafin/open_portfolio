@@ -61,6 +61,7 @@ const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
       { href: '/alternatives/squarespace', label: 'Squarespace' },
       { href: '/alternatives/wix', label: 'Wix' },
       { href: '/alternatives/framer', label: 'Framer' },
+      { href: '/moving-off/bento', label: 'Moving off Bento' },
       { href: '/is-this-right-for-you', label: 'Right for you?' },
     ],
   },

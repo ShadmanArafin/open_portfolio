@@ -38,6 +38,24 @@ through a letterbox. It now takes the window.
 
 ### You can now
 
+- **Bring every list in a spreadsheet.** Work, Brands, Capabilities and
+  Artifacts take a CSV too, each with its own template.
+
+- **Let visitors search your site.** `/search` looks through your published
+  pages, work and writing. It also appears on the "page not found" screen.
+
+- **Show related writing.** Each piece lists others that share its tags.
+
+- **Sign in with a passkey from the email field.** Your browser offers your
+  passkey as you click in. After signing in with your passphrase, your password
+  manager may offer to save a passkey for next time.
+
+- **Edit blocks without the clutter.** Layout settings (shape, columns, how
+  many) sit under "More options".
+
+- **Get credit on Mastodon.** Add your Mastodon profile to your social links,
+  and links to your site shared on Mastodon show you as the author.
+
 - **Get a first draft from your own model.** Connect Ollama, or any
   OpenAI-compatible server, under Services. Suggest buttons then appear for page
   descriptions, writing summaries and alt text. Each suggestion appears first,
@@ -207,6 +225,19 @@ through a letterbox. It now takes the window.
 
 ### Changed
 
+- **Pages are much lighter.** Every public page now loads about 43% less
+  JavaScript (295 KB down to 168 KB, compressed). The theme renders on the
+  server, animations are done in CSS, and icons are drawn on the server. Content
+  is no longer invisible until a script runs, and nothing moves if you've asked
+  your device for reduced motion.
+
+- **Moving between pages crossfades** in browsers that support it, and a
+  project's picture carries over into its case study.
+
+- **Publishing shows on the site immediately.** Content caching is now tied to
+  publishing, so a publish or a restore clears it at once. Scheduled pages
+  still appear within about a minute of their time.
+
 - **The admin menu is grouped** into Build, Profile, Audience, Look & reach
   and System, and Case studies only appears on sites that still have them.
 
@@ -283,6 +314,12 @@ through a letterbox. It now takes the window.
   build and the tag you run just have to match each other.
 
 ### Fixed
+
+- The home page headline now gets its intended size; it was rendering far
+  too small.
+- Clicks on "Visit live project" are now recorded in analytics.
+- The preview panel beside the editor now works on sites served over plain
+  http.
 
 - Restoring a backup now shows on the public site straight away. Before, pages
   kept the old content for up to a minute.

@@ -140,6 +140,17 @@ export const CLAIMS = {
     caveat:
       'We are not claiming a deprecation. Draw your own conclusion from the threads and from Adobe discontinuing Animate on 1 March 2026.',
   },
+  bentoShutdown: {
+    claim:
+      'Bento (bento.me), the link-in-bio service Linktree acquired, announced it would shut down on 13 February 2026. Bento said user and profile data would then be permanently deleted, and bento.me links would redirect to Linktree.',
+    source:
+      'https://alternativeto.net/news/2025/12/bento-to-shut-down-in-2026-as-linktree-takes-over-and-offers-migration-path/',
+    sourceLabel: 'AlternativeTo',
+    checked: '23 October 2026',
+    status: 'third-party',
+    caveat:
+      'Bento’s own announcement page could not be read on that date; AlternativeTo reported it at the time, and every other report we found agrees on the date.',
+  },
 } as const satisfies Record<string, Fact>;
 
 export type ClaimKey = keyof typeof CLAIMS;
