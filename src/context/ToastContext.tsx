@@ -1,6 +1,7 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import { ToastContext } from './use-toast';
+import React, { useState, useCallback } from 'react';
 import { Download, Check } from 'lucide-react';
 
 interface ToastMessage {
@@ -8,12 +9,6 @@ interface ToastMessage {
   text: string;
   type?: 'download' | 'success';
 }
-
-interface ToastContextType {
-  showToast: (text: string, type?: 'download' | 'success') => void;
-}
-
-const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [toast, setToast] = useState<ToastMessage | null>(null);
@@ -46,12 +41,4 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       </>
     </ToastContext.Provider>
   );
-};
-
-export const useToast = (): ToastContextType => {
-  const context = useContext(ToastContext);
-  if (!context) {
-    throw new Error('useToast must be used within a ToastProvider');
-  }
-  return context;
 };

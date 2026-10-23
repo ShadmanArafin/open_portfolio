@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createElement } from 'react';
 import { INITIAL_CMS_STATE } from '@/cms/data/initialData';
-import { BlockList, parsePage } from '@/core/blocks/registry';
+import { BlockList } from '@/core/blocks/registry';
+import { parsePage } from '@/core/blocks/lookup';
 import { homePageFromSections } from '../home-from-sections';
 
 /** Sections that configure other pages (`work-page`, `contact-page`, …). */

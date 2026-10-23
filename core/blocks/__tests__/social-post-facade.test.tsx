@@ -3,7 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import React from 'react';
-import { BlockList, parsePage } from '../registry';
+import { BlockList } from '../registry';
+import { parsePage } from '../lookup';
 import { EMPTY_BLOCK_CONTENT } from '../content';
 
 /**

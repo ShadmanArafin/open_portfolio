@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { resolveAssetUrl } from '../../cms/utils/mediaUrls';
-import { useCMS } from '../../cms/context/CMSContext';
+import { useCMS } from '../../cms/context/use-cms';
 import { buildImageIndex, srcSetFor } from '@/core/media/srcset';
 
 type CMSImageProps = Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'src'> & {

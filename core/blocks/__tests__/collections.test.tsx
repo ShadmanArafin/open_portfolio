@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { BlockList, parsePage, runBlockChecks } from '../registry';
+import { BlockList } from '../registry';
+import { parsePage, runBlockChecks } from '../lookup';
 import { blockContentFrom, EMPTY_BLOCK_CONTENT, type BlockContent } from '../content';
 import type { CMSState } from '@/cms/types/cms';
 

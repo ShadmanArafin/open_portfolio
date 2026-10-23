@@ -3,7 +3,8 @@
 import { useId, useState } from 'react';
 import { updateSiteSettingsAction } from '../_actions/settings';
 import { ConflictNotice } from '../_components/conflict-notice';
-import { UnsavedNote, useSaveShortcut, useUnsavedChanges } from '../_components/unsaved-changes';
+import { useSaveShortcut, useUnsavedChanges } from '../_components/unsaved-changes';
+import { UnsavedNote } from '../_components/unsaved-note';
 
 export interface SiteFormValues {
   fullName: string;

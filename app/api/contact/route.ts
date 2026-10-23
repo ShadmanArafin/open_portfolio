@@ -28,7 +28,6 @@ function clean(value: unknown, limit: number): string {
   if (typeof value !== 'string') return '';
   // Strip control characters: they serve no purpose in a form field and are a
   // classic way to smuggle headers into a notification email later.
-  // eslint-disable-next-line no-control-regex
   return Array.from(value)
     .filter((ch) => {
       const code = ch.charCodeAt(0);

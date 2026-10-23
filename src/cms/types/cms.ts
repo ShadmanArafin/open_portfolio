@@ -177,7 +177,7 @@ export interface CaseStudyBlock {
     | 'prototype-embed'
     | 'outcome'
     | 'learnings';
-  content: Record<string, any>;
+  content: Record<string, unknown>;
   order: number;
 }
 
@@ -460,7 +460,7 @@ export interface ContentVersion {
   editor: string;
   action: string;
   summary: string;
-  snapshot: any;
+  snapshot: CMSState;
 }
 
 export interface ActivityLog {

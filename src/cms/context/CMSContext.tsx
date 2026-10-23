@@ -1,6 +1,7 @@
 'use client';
 
-import React, { createContext, useContext, useMemo } from 'react';
+import { CMSContext } from './use-cms';
+import React, { useMemo } from 'react';
 import type { CMSState } from '../types/cms';
 
 /**
@@ -19,11 +20,6 @@ import type { CMSState } from '../types/cms';
  * typefaces come from the root layout's stylesheet, also channel-aware, so
  * there is nothing to apply from here.
  */
-interface CMSContextType {
-  data: CMSState;
-}
-
-const CMSContext = createContext<CMSContextType | undefined>(undefined);
 
 export const CMSProvider: React.FC<{ children: React.ReactNode; initialData: CMSState }> = ({
   children,
@@ -31,12 +27,4 @@ export const CMSProvider: React.FC<{ children: React.ReactNode; initialData: CMS
 }) => {
   const value = useMemo(() => ({ data: initialData }), [initialData]);
   return <CMSContext.Provider value={value}>{children}</CMSContext.Provider>;
-};
-
-export const useCMS = () => {
-  const context = useContext(CMSContext);
-  if (!context) {
-    throw new Error('useCMS must be used within a CMSProvider');
-  }
-  return context;
 };

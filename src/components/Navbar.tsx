@@ -5,7 +5,7 @@ import { ThemeToggle } from './common/ThemeToggle';
 import { ArrowUpRight, Menu, X } from 'lucide-react';
 import { Container } from './common/Container';
 import { cn } from '../utils/cn';
-import { useCMS } from '../cms/context/CMSContext';
+import { useCMS } from '../cms/context/use-cms';
 import { mergeNavLinks } from '@/core/pages/nav';
 
 import Link from 'next/link';
@@ -37,21 +37,27 @@ export const NavbarFrame: React.FC<{ pathname: string | null }> = ({ pathname })
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => {
+  // A navigation closes the menu. Adjusted while rendering (React's pattern for
+  // state that follows a prop) rather than in an effect, which would paint the
+  // new page with the menu still open for a frame.
+  const [menuPath, setMenuPath] = useState(pathname);
+  if (pathname !== menuPath) {
+    setMenuPath(pathname);
     setMobileMenuOpen(false);
-  }, [pathname]);
+  }
 
   // The overlay is a dialog: Escape closes it and focus returns to the
   // hamburger that opened it, so keyboard users never lose their place.
   useEffect(() => {
     if (!mobileMenuOpen) return;
+    const menuButton = menuButtonRef.current;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setMobileMenuOpen(false);
     };
     window.addEventListener('keydown', onKey);
     return () => {
       window.removeEventListener('keydown', onKey);
-      menuButtonRef.current?.focus();
+      menuButton?.focus();
     };
   }, [mobileMenuOpen]);
 

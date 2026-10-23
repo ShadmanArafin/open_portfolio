@@ -2,7 +2,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, useEffect, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { UnsavedNote, useSaveShortcut, useUnsavedChanges } from '../unsaved-changes';
+import { useSaveShortcut, useUnsavedChanges } from '../unsaved-changes';
+import { UnsavedNote } from '../unsaved-note';
 
 /**
  * The guard is a promise about what the browser does, so it is driven the way

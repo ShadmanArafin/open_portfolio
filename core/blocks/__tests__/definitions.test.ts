@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getBlockDefinition, listBlockDefinitions, parsePage, runBlockChecks } from '../registry';
+import { getBlockDefinition, listBlockDefinitions, parsePage, runBlockChecks } from '../lookup';
 
 const definitions = listBlockDefinitions();
 

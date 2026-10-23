@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 function urlBase64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
   const padding = '='.repeat((4 - (base64.length % 4)) % 4);
@@ -8,6 +8,35 @@ function urlBase64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
   const out = new Uint8Array(new ArrayBuffer(raw.length));
   for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
   return out;
+}
+
+type PushState = 'checking' | 'unsupported' | 'denied' | 'off' | 'on' | 'unconfigured';
+
+/** Where this browser stands: supported, allowed, already subscribed. */
+async function readPushState(supported: boolean): Promise<PushState> {
+  if (!supported) {
+    return 'unsupported';
+  }
+  if (Notification.permission === 'denied') {
+    return 'denied';
+  }
+  try {
+    const reg = await navigator.serviceWorker.register('/sw.js');
+    const existing = await reg.pushManager.getSubscription();
+    if (existing) {
+      return 'on';
+    }
+    const keyRes = await fetch('/api/admin/push/public-key');
+    if (keyRes.status === 503) {
+      return 'unconfigured';
+    }
+    if (!keyRes.ok) {
+      return 'off';
+    }
+    return 'off';
+  } catch {
+    return 'unsupported';
+  }
 }
 
 /** The buttons here and in `messages/message-actions.tsx` are the same button. */
@@ -23,23 +52,9 @@ const buttonClass =
  * Home-Screen-installed site (16.4+); Chrome exempts installed sites from its
  * low-engagement revocation. So the copy names the install step instead of
  * pretending the button alone is enough.
- *
- * Moved here from the legacy admin's `src/admin/components/PushNotifications.tsx`
- * when the old shell was deleted, and the last file in the product to still be
- * on the Astryx kit. Ported to this directory's plain Tailwind on 2026-10-18,
- * which is what let `app/layout.tsx` drop the kit's three stylesheets and
- * `package.json` drop the three `@astryxdesign` packages.
- *
- * The look is unchanged on purpose: it had rendered with the kit's built-in
- * defaults since the old shell went, because nothing sets `data-astryx-theme`
- * any more, and these are the same `rounded-full border border-border…`
- * buttons the neighbouring islands use. The one visible difference is the
- * Enable button saying "Enabling…" while it works, instead of a spinner.
  */
 export const PushNotifications: React.FC = () => {
-  const [state, setState] = useState<
-    'checking' | 'unsupported' | 'denied' | 'off' | 'on' | 'unconfigured'
-  >('checking');
+  const [state, setState] = useState<PushState>('checking');
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
 
@@ -49,40 +64,18 @@ export const PushNotifications: React.FC = () => {
     typeof window !== 'undefined' &&
     'PushManager' in window;
 
-  const refresh = useCallback(async () => {
-    if (!supported) {
-      setState('unsupported');
-      return;
-    }
-    if (Notification.permission === 'denied') {
-      setState('denied');
-      return;
-    }
-    try {
-      const reg = await navigator.serviceWorker.register('/sw.js');
-      const existing = await reg.pushManager.getSubscription();
-      if (existing) {
-        setState('on');
-        return;
-      }
-      const keyRes = await fetch('/api/admin/push/public-key');
-      if (keyRes.status === 503) {
-        setState('unconfigured');
-        return;
-      }
-      if (!keyRes.ok) {
-        setState('off');
-        return;
-      }
-      setState('off');
-    } catch {
-      setState('unsupported');
-    }
-  }, [supported]);
-
+  // Read once on mount. The check is a function that returns the answer, and
+  // the effect applies it after the await, so nothing sets state while the
+  // effect itself is running.
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    let live = true;
+    void readPushState(supported).then((next) => {
+      if (live) setState(next);
+    });
+    return () => {
+      live = false;
+    };
+  }, [supported]);
 
   const enable = async () => {
     setBusy(true);

@@ -6,7 +6,7 @@ import type { BlockField } from '@/core/blocks/fields';
 
 vi.mock('../../_actions/media', () => ({ uploadMediaAction: vi.fn() }));
 const { BlockFields } = await import('../block-fields');
-const { getBlockDefinition } = await import('@/core/blocks/registry');
+const { getBlockDefinition } = await import('@/core/blocks/lookup');
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;

@@ -17,8 +17,8 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { cn } from '../utils/cn';
-import { useToast } from '../context/ToastContext';
-import { useCMS } from '../cms/context/CMSContext';
+import { useToast } from '../context/use-toast';
+import { useCMS } from '../cms/context/use-cms';
 import { ContactMessage } from '../cms/types/cms';
 import { TurnstileWidget } from '@/core/blocks/forms';
 

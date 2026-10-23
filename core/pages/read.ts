@@ -4,7 +4,7 @@ import { draftMode } from 'next/headers';
 import type { Channel } from '@/core/storage/contract';
 import { getContentForChannel } from '@/core/content/read';
 import { siteNow } from '@/core/content/now';
-import { parsePage } from '@/core/blocks/registry';
+import { parsePage } from '@/core/blocks/lookup';
 import type { ParsedBlock } from '@/core/blocks/schema';
 import { HOME_SLUG, isHomePage, isPageLive, pageSchema, type PageRecord } from './schema';
 
