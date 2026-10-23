@@ -1120,7 +1120,9 @@ computed contrast, zero console errors throughout).
       links to instagram.com as ordinary links. Neither is a request, and the
       request is the thing the facade promises to withhold — so that is what
       was measured, rather than a grep for the hostname._
-- [ ] Import v1, the CSV half. **Open, and it needs a decision before code:**
+- [x] Import v1, the CSV half. **DONE 2026-10-23** as the per-screen fixed
+      templates proposed below, on seven screens (see §12.8 E5 and Phase F).
+      Originally: **Open, and it needs a decision before code:**
       what a spreadsheet is imported _into_. Markdown had one obvious target;
       a CSV has ten — every collection with a repeating shape (work, brands,
       experience, education, artifacts, recommendations, capabilities). A
@@ -2461,7 +2463,8 @@ explicit Save.
       grows a little because it now carries its own story as markup instead of
       every page carrying every story. The full move of the themed views to
       RSC stays open — the payload problem it was for is solved without it.
-- [ ] D3 Cache Components + `updateTag` — **deferred, with the premise
+- [x] D3 Cache Components + `updateTag` — **DONE 2026-10-23 in Phase F**
+      (below). Originally **deferred, with the premise
       corrected.** Publishing was never waiting 60 s: it calls
       `revalidatePath('/', 'layout')`, and the golden-path e2e proves a visitor
       sees a publish at once. The 60 s only bounds scheduled writing. Adopting
@@ -2652,6 +2655,100 @@ row against `next start`.
   description is suggested, shown, and applied with the "Unsaved changes"
   chip; the alt request carried the picture; a foreign image URL got 422 and
   a stranger 401.
+
+**Phase F — the remainder (2026-10-23)**
+
+After E1–E6, everything the review had named and no phase held:
+
+- [x] CSV import on Work, Brands, Capabilities and Artifacts too. Projects
+      get unique slugs from their titles. Picture cells must be https or
+      site-relative, so `javascript:` is refused (unit-tested).
+- [x] Site search (`/search`, `core/content/search.ts`). Server-rendered and
+      noindex; every word must match, ignoring case and accents; a title
+      match ranks highest. The form works without JavaScript and is on the
+      404 page and, past five pieces, on the writing index.
+- [x] Writing "Related" strip (shared tags, neighbours excluded).
+- [x] `fediverse:creator` from a Mastodon profile link only, since Medium,
+      TikTok, YouTube and Threads use `/@name` too.
+- [x] `schema-dts` (dev only; Apache-2.0, not MIT as §12.7 said) types the
+      JSON-LD.
+- [x] Passkeys:
+  - Autofill on the email field (conditional mediation), with its own
+    rate-limit bucket. With no passkeys enrolled it answers a quiet 200.
+  - Conditional create after a passphrase sign-in, only while none is
+    enrolled, capped at 4 s.
+- [x] Block fields: shape, columns, "how many" and display toggles fold under
+      "More options".
+- [x] Preview on plain-http installs. The proxy drops
+      `upgrade-insecure-requests` for requests that arrived over http
+      (`x-forwarded-proto` respected). Measured: one CSP header, without the
+      directive over http and with it under `x-forwarded-proto: https`. The
+      preview frame now loads.
+- [x] Themed views to RSC. The home sections, the footer, and the About,
+      Work and project pages are server components; the remaining
+      interactions are islands. The client content copy drops every list the
+      server renders.
+- [x] `motion` removed in favour of CSS scroll-driven animations and
+      keyframes, all off under reduced motion. Checked: at 1280 and 375 px
+      every revealed element is fully visible once scrolled into view.
+- [x] react-icons out of the client bundle; icons render on the server.
+- [x] `src/__tests__/client-bundle.test.ts` walks every public client
+      component's imports and fails on zod, nodemailer, sharp, server-only,
+      react-icons or an animation library. Proven by reverting the nav import:
+      the test failed and named the chain.
+- [x] View Transitions: page crossfade, plus a project card → hero morph.
+- [x] D11 coverage covers `src/` and `app/`. New action tests cover the owner
+      check and stale-save refusal against a real local store.
+- [x] D3 Cache Components:
+  - Published content is cached under a tag. `updateTag` from actions;
+    `revalidateTag(…, { expire: 0 })` from the publish and restore routes.
+  - The draft channel and owner screens read fresh.
+  - "Now" is a cached value refreshed each minute.
+  - Request-time pages are `instant = false`; the address-reading islands
+    sit in Suspense.
+- [x] A "Moving off Bento" page on the marketing site. Its one claim is
+      sourced as third-party and dated.
+- [x] Sustainability: a commented `FUNDING.yml` (empty until the owner has an
+      account, so no broken button) and current good-first-issue entries in
+      CONTRIBUTING. Labelling issues on GitHub is left to the owner.
+
+**Measured** (same browser script, per public page, gzipped JavaScript):
+295 KB → 168 KB, about −43%. Raw: 1,035 → 554 KB.
+
+**Found and fixed on the way:**
+
+- Hero headline:
+  - `text-[var(--text-4xl)]` compiled to a colour, so the headline was never
+    sized.
+  - It held a `div` inside an `h1`.
+- Analytics:
+  - `Button` dropped `onClick` on its link variants, so "Live site clicked"
+    was never recorded.
+- Hidden by `motion.div`, now real buttons:
+  - Lightbox backdrops were clickable divs.
+  - Project images had a click handler with no picture to open.
+- Content and caching:
+  - The navbar shipped zod and the page schemas to every visitor
+    (~280 KB raw).
+  - The seed's timestamps were "now", so a cached copy differed from a fresh
+    one. Together with cached reads on the write path, this refused a fresh
+    install's first save; caught by the golden path on its second run.
+
+**Verified:**
+
+- Typecheck, lint (0 errors, 76 warnings), format, 1,215 unit tests.
+- Production build; browser suite 22/22 four times in a row.
+- Live, on `next start`:
+  - CSV on Work, search, block options, the preview frame over http;
+  - every island (gallery filter and lightbox, Work filter, copy-email and
+    toast, mobile menu, view-transition navigation), with no console errors;
+  - nothing animated under reduced motion;
+  - publish and restore visible at once, including in the sitemap, llms.txt
+    and feed;
+  - a scheduled page live 81 s after scheduling for 50 s out, with no
+    publish;
+  - health and the claim check stay live;
+  - saving an analytics integration reflected on the next page.
 
 **How each item is verified:**
 

@@ -102,12 +102,20 @@ is no CLA.
 
 ## Good first contributions
 
-- Interface copy that assumes the user is a designer. The project supports every
-  profession, and the wording does not always reflect that yet.
-- Accessibility fixes: focus management in the lightboxes and the mobile nav,
-  a skip-to-content link, live regions for toasts.
-- Bugs found while actually using the admin. Those reports are the most valuable
-  thing anyone sends us.
+Issues that make a good start carry the **`good first issue`** label: small,
+self-contained, with the files involved named in the issue. Some open ones:
+
+- **CSV import for Process steps.** Every other list screen takes a
+  spreadsheet; this one does not yet. The pattern is one template in
+  `core/import/csv-templates.ts` plus one `csv={…}` prop on the screen.
+- **A Linktree export importer.** People moving off a link service arrive with
+  a list of links; today they paste them one by one into the links page.
+- **A tiles block** for link pages, for people used to Bento's grid. The links
+  page is a column of buttons today.
+- **Interface copy that assumes the user is a designer.** The project supports
+  every profession, and the wording does not always reflect that yet.
+- **Bugs found while actually using the admin.** Those reports are the most
+  valuable thing anyone sends us.
 
 ## Reporting bugs
 

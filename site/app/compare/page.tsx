@@ -54,6 +54,21 @@ export default function ComparePage() {
         </div>
       </Band>
 
+      <Band rail="Closed" sunken>
+        <div className="stack">
+          <h2 className="title">Lost a page to a shutdown?</h2>
+          <p className="lede">
+            Bento closed on 13 February 2026. There is a short guide to rebuilding a link page on a
+            site you own.
+          </p>
+          <div className="cta-row">
+            <Cta href="/moving-off/bento" variant="ghost">
+              Moving off Bento
+            </Cta>
+          </div>
+        </div>
+      </Band>
+
       <Band rail="Method">
         <div className="stack stack--loose">
           <h2 className="title">How these pages are written</h2>

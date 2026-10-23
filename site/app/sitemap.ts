@@ -23,6 +23,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/is-this-right-for-you',
     '/help',
     '/docs',
+    '/moving-off/bento',
   ];
 
   return [
