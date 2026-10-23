@@ -68,7 +68,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
           { name: project?.title || project?.name || slug, path: `/work/${slug}` },
         ])}
       />
-      <ProjectDetailPage story={story} />
+      <ProjectDetailPage slug={slug} story={story} />
     </>
   );
 }

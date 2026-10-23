@@ -1,7 +1,6 @@
 'use client';
 
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import { Download, Check } from 'lucide-react';
 
 interface ToastMessage {
@@ -31,15 +30,9 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      <AnimatePresence>
+      <>
         {toast && (
-          <motion.div
-            initial={{ opacity: 0, y: 16, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 12, scale: 0.96 }}
-            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed bottom-6 right-6 left-6 sm:left-auto z-50 flex items-center gap-3 px-4 sm:px-5 py-3 rounded-2xl bg-surface-primary text-text-primary border border-border shadow-md max-w-sm pointer-events-none select-none"
-          >
+          <div className="opb-pop fixed bottom-6 right-6 left-6 sm:left-auto z-50 flex items-center gap-3 px-4 sm:px-5 py-3 rounded-2xl bg-surface-primary text-text-primary border border-border shadow-md max-w-sm pointer-events-none select-none">
             {toast.type === 'download' ? (
               <Download className="w-4 h-4 text-accent flex-shrink-0" />
             ) : (
@@ -48,9 +41,9 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             <span className="font-body text-xs sm:text-sm font-medium tracking-wide">
               {toast.text}
             </span>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
+      </>
     </ToastContext.Provider>
   );
 };

@@ -92,7 +92,10 @@ export function publicView(state: CMSState): CMSState {
  * copy carries none of them. Pages keep their address, title and menu entry,
  * which is what the navbar builds the menu from. The media library is cut to
  * the photos that have smaller copies, which is all the client reads it for
- * (`srcset` in `CMSImage`).
+ * (`srcset` in `CMSImage`). And every list the server components now render
+ * (projects, brands, experience and the rest) is left out: what is still
+ * read in the browser is settings, wording, the menu, the sections' headers
+ * and the newsletter's wording.
  */
 export function clientView(state: CMSState): CMSState {
   const visible = publicView(state);
@@ -100,7 +103,19 @@ export function clientView(state: CMSState): CMSState {
     ...visible,
     pages: (visible.pages ?? []).map((page) => ({ ...page, blocks: [] })),
     writing: [],
-    projects: visible.projects.map(({ story: _story, ...project }) => project),
     media: (visible.media ?? []).filter((item) => item.variants?.length),
+    // Rendered by server components since the theme moved off the client
+    // (2026-10-23): the home sections, the footer, About and Work. A client
+    // island that needs a list (the Work filter, the About gallery) gets it
+    // as props from its server parent, cut to what it shows.
+    projects: [],
+    brands: [],
+    experience: [],
+    education: [],
+    processSteps: [],
+    capabilityGroups: [],
+    recommendations: [],
+    artifacts: [],
+    socialLinks: [],
   };
 }

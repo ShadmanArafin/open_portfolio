@@ -1,17 +1,14 @@
-'use client';
-
-import React from 'react';
 import { Section } from './common/Section';
 import { Container } from './common/Container';
 import { SectionLabel } from './common/SectionLabel';
 import { Reveal } from './common/Reveal';
 import { ArrowUpRight } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa6';
-import { useCMS } from '../cms/context/CMSContext';
+import { siteContent } from '../cms/server';
 
 import Link from 'next/link';
-export const ContactCTASection: React.FC = () => {
-  const { data } = useCMS();
+export async function ContactCTASection() {
+  const data = await siteContent();
   const section = data.sections.find((s) => s.id === 'contact');
 
   if (section && !section.visible) return null;
@@ -21,7 +18,7 @@ export const ContactCTASection: React.FC = () => {
   return (
     <Section
       id="contact"
-      className="border-t border-border bg-[var(--section-contact)] text-text-primary py-24 sm:py-32 lg:py-36 relative overflow-hidden transition-colors duration-300 scroll-mt-28"
+      className="border-t border-border bg-[var(--section-contact)] text-text-primary py-24 sm:py-32 lg:py-36 relative overflow-clip transition-colors duration-300 scroll-mt-28"
     >
       <Container className="relative z-10">
         {/* Editorial 12-Column Grid Composition */}
@@ -87,4 +84,4 @@ export const ContactCTASection: React.FC = () => {
       </Container>
     </Section>
   );
-};
+}

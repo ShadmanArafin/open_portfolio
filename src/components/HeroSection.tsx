@@ -1,34 +1,29 @@
-'use client';
-
 import React from 'react';
 import { ArrowUpRight } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa6';
-import { motion } from 'motion/react';
 import { Container } from './common/Container';
-import { useCMS } from '../cms/context/CMSContext';
+import { siteContent } from '../cms/server';
 import { CMSImage } from './common/CMSImage';
 
 import Link from 'next/link';
-export const HeroSection: React.FC = () => {
-  const { data } = useCMS();
+export async function HeroSection() {
+  const data = await siteContent();
 
   const heroConfig = data.sections.find((s) => s.id === 'hero');
 
   return (
     <section
       id="hero"
-      className="w-full min-h-[88vh] lg:min-h-[92vh] pt-32 sm:pt-40 pb-16 sm:pb-24 flex flex-col justify-center relative overflow-hidden bg-[var(--section-hero)] text-text-primary transition-colors duration-300 scroll-mt-28"
+      className="w-full min-h-[88vh] lg:min-h-[92vh] pt-32 sm:pt-40 pb-16 sm:pb-24 flex flex-col justify-center relative overflow-clip bg-[var(--section-hero)] text-text-primary transition-colors duration-300 scroll-mt-28"
     >
       {/* Global Responsive Container Grid */}
       <Container className="flex flex-col justify-center">
         {/* =================================================================== */}
         {/* 1. HERO IDENTITY BLOCK (Avatar + Name & Status Alignment)           */}
         {/* =================================================================== */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
-          className="flex items-center gap-3.5 sm:gap-4 mb-10 sm:mb-12"
+        <div
+          className="opb-enter flex items-center gap-3.5 sm:gap-4 mb-10 sm:mb-12"
+          style={{ '--opb-delay': '0.12s' } as React.CSSProperties}
         >
           {/* Circular Profile Avatar (48px - 52px) */}
           <div className="w-[48px] h-[48px] sm:w-[52px] sm:h-[52px] rounded-full overflow-hidden border border-border shadow-sm flex-shrink-0">
@@ -51,47 +46,42 @@ export const HeroSection: React.FC = () => {
               <span>{data.microcopy.availableForFreelance || 'Available for freelance work'}</span>
             </span>
           </div>
-        </motion.div>
+        </div>
 
         {/* =================================================================== */}
         {/* 2. MAIN HEADLINE                                                    */}
         {/* =================================================================== */}
         <div className="mb-7 sm:mb-8 max-w-[960px]">
-          <h1 className="font-display text-[var(--text-4xl)] md:text-[var(--text-5xl)] font-medium leading-[1.18] tracking-[-0.02em] text-text-primary">
-            <div className="overflow-hidden py-2 -my-1">
-              <motion.div
-                initial={{ y: '110%', opacity: 0 }}
-                animate={{ y: '0%', opacity: 1 }}
-                transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          <h1 className="font-display text-[length:var(--text-4xl)] md:text-[length:var(--text-5xl)] font-medium leading-[1.18] tracking-[-0.02em] text-text-primary">
+            <span className="block overflow-clip py-2 -my-1">
+              <span
+                className="block opb-enter-clip"
+                style={{ '--opb-delay': '0.2s' } as React.CSSProperties}
               >
                 {heroConfig?.heading ||
                   'Designing Digital Experiences That Feel Natural, Clear, and Useful.'}
-              </motion.div>
-            </div>
+              </span>
+            </span>
           </h1>
         </div>
 
         {/* =================================================================== */}
         {/* 3. SUPPORTING COPY                                                 */}
         {/* =================================================================== */}
-        <motion.p
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.45, ease: [0.22, 1, 0.36, 1] }}
-          className="text-base sm:text-lg md:text-xl font-body font-normal text-text-secondary leading-relaxed max-w-2xl mb-10 sm:mb-12"
+        <p
+          className="opb-enter text-base sm:text-lg md:text-xl font-body font-normal text-text-secondary leading-relaxed max-w-2xl mb-10 sm:mb-12"
+          style={{ '--opb-delay': '0.45s' } as React.CSSProperties}
         >
           {heroConfig?.description ||
             `I'm a ${data.settings.role} specializing in enterprise design systems, digital product architecture, and user experiences.`}
-        </motion.p>
+        </p>
 
         {/* =================================================================== */}
         {/* 4. ACTION BUTTONS                                                  */}
         {/* =================================================================== */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.55, ease: [0.22, 1, 0.36, 1] }}
-          className="flex flex-wrap items-center gap-3.5 sm:gap-4"
+        <div
+          className="opb-enter flex flex-wrap items-center gap-3.5 sm:gap-4"
+          style={{ '--opb-delay': '0.55s' } as React.CSSProperties}
         >
           {/* Primary Action Button */}
           <Link
@@ -114,8 +104,8 @@ export const HeroSection: React.FC = () => {
             <FaWhatsapp className="w-4 h-4 text-[var(--link-color)] flex-shrink-0" />
             <span>{data.microcopy.connectOnWhatsapp || 'WHATSAPP DIRECT'}</span>
           </a>
-        </motion.div>
+        </div>
       </Container>
     </section>
   );
-};
+}

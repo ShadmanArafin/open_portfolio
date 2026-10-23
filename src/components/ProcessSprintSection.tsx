@@ -1,14 +1,11 @@
-'use client';
-
-import React from 'react';
 import { Section } from './common/Section';
 import { Container } from './common/Container';
 import { SectionLabel } from './common/SectionLabel';
 import { Reveal } from './common/Reveal';
-import { useCMS } from '../cms/context/CMSContext';
+import { siteContent } from '../cms/server';
 
-export const ProcessSprintSection: React.FC = () => {
-  const { data } = useCMS();
+export async function ProcessSprintSection() {
+  const data = await siteContent();
   const processConfig = data.sections.find((s) => s.id === 'process');
   const processSteps = data.processSteps
     .filter((s) => s.visible !== false)
@@ -19,7 +16,7 @@ export const ProcessSprintSection: React.FC = () => {
   return (
     <Section
       id="process"
-      className="border-t border-border bg-[var(--section-capabilities)] text-text-primary py-20 lg:py-28 xl:py-32 transition-colors duration-300 relative overflow-hidden font-sans scroll-mt-28"
+      className="border-t border-border bg-[var(--section-capabilities)] text-text-primary py-20 lg:py-28 xl:py-32 transition-colors duration-300 relative overflow-clip font-sans scroll-mt-28"
     >
       <Container>
         {/* Section Label & Headline */}
@@ -87,4 +84,4 @@ export const ProcessSprintSection: React.FC = () => {
       </Container>
     </Section>
   );
-};
+}

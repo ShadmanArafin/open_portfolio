@@ -1,5 +1,6 @@
 import type { NavLinkItem } from '@/cms/types/cms';
-import { isPageLive, type PageRecord } from './schema';
+import type { PageRecord } from './schema';
+import { isPageLive } from './live';
 
 /**
  * Getting built pages into the site's navigation.

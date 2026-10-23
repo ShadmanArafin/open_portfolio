@@ -1,14 +1,11 @@
-'use client';
-
-import React from 'react';
 import { Section } from './common/Section';
 import { Container } from './common/Container';
 import { SectionLabel } from './common/SectionLabel';
 import { Reveal } from './common/Reveal';
-import { useCMS } from '../cms/context/CMSContext';
+import { siteContent } from '../cms/server';
 
-export const AboutSection: React.FC = () => {
-  const { data } = useCMS();
+export async function AboutSection() {
+  const data = await siteContent();
   const aboutConfig = data.sections.find((s) => s.id === 'about');
 
   if (aboutConfig && !aboutConfig.visible) return null;
@@ -69,4 +66,4 @@ export const AboutSection: React.FC = () => {
       </Container>
     </Section>
   );
-};
+}

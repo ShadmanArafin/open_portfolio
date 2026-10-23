@@ -1,5 +1,3 @@
-'use client';
-
 import React from 'react';
 import { HeroSection } from '../components/HeroSection';
 import { BrandTrustSection } from '../components/BrandTrustSection';
@@ -16,7 +14,7 @@ import { Container } from '../components/common/Container';
 import { SectionLabel } from '../components/common/SectionLabel';
 import { Reveal } from '../components/common/Reveal';
 import { ArrowUpRight } from 'lucide-react';
-import { useCMS } from '../cms/context/CMSContext';
+import { siteContent } from '../cms/server';
 
 import Link from 'next/link';
 /**
@@ -25,7 +23,7 @@ import Link from 'next/link';
  * this map are homepage sections — standalone page headers (`work-page` and
  * friends) live in the same list and are skipped here.
  */
-const SECTION_COMPONENTS: Record<string, React.ComponentType> = {
+const SECTION_COMPONENTS: Record<string, () => Promise<React.ReactNode>> = {
   hero: HeroSection,
   brands: BrandTrustSection,
   work: WorkSection,
@@ -38,8 +36,8 @@ const SECTION_COMPONENTS: Record<string, React.ComponentType> = {
   contact: ContactCTASection,
 };
 
-export const HomePage: React.FC = () => {
-  const { data } = useCMS();
+export async function HomePage() {
+  const data = await siteContent();
 
   const orderedSections = [...data.sections]
     .filter((s) => s.visible !== false && SECTION_COMPONENTS[s.id])
@@ -53,11 +51,11 @@ export const HomePage: React.FC = () => {
       })}
     </div>
   );
-};
+}
 
 /** The "Selected Work" band. Defined here because it exists only on the homepage. */
-function WorkSection() {
-  const { data } = useCMS();
+async function WorkSection() {
+  const data = await siteContent();
   const config = data.sections.find((s) => s.id === 'work');
 
   const featured = [...data.projects]

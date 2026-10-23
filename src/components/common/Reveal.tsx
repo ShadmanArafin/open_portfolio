@@ -1,102 +1,56 @@
-'use client';
-
 import React from 'react';
-import { motion, useInView, useReducedMotion } from 'motion/react';
 
 interface RevealProps {
   children: React.ReactNode;
   width?: 'fit-content' | '100%';
+  /** Kept for callers; scroll-driven entrances follow the scroll, not a clock. */
   delay?: number;
   duration?: number;
   type?: 'fade-up' | 'clip-headline' | 'scale-image' | 'label';
   className?: string;
 }
 
-export const Reveal: React.FC<RevealProps> = ({
+/**
+ * An entrance as the element scrolls into view — in CSS, with no script.
+ *
+ * This was a client component on the `motion` library: every instance
+ * hydrated, observed itself and animated from opacity 0, so the server HTML
+ * shipped invisible content that waited for JavaScript. Now it is a server
+ * component and the animation is `animation-timeline: view()` (see
+ * `src/styles/index.css`): no JavaScript, visible content in the HTML, and
+ * nothing at all for visitors who asked for reduced motion or whose browser
+ * lacks scroll-driven animations.
+ *
+ * The headline variant clips with `overflow: clip`, not `hidden`: `hidden`
+ * makes the wrapper a scroll container, and a view timeline would then track
+ * the wrapper instead of the page.
+ */
+export function Reveal({
   children,
   width = '100%',
-  delay = 0,
-  duration = 0.7,
   type = 'fade-up',
   className = '',
-}) => {
-  const ref = React.useRef(null);
-  const isInView = useInView(ref, { once: true, margin: '0px 0px' });
-  // Vestibular safety: when the OS asks for reduced motion, content appears
-  // immediately with no animation. This doubles as the stuck-invisible guard:
-  // if the observer never fires, reduced-motion users still get content.
-  const reduceMotion = useReducedMotion();
-  const show = isInView || reduceMotion === true;
-  const timing = (d: number) => (reduceMotion ? 0 : d);
-
+}: RevealProps) {
   if (type === 'clip-headline') {
     return (
-      <div ref={ref} className={`overflow-hidden py-1.5 -my-1.5 ${className}`} style={{ width }}>
-        <motion.div
-          initial={{ y: '110%', opacity: 0 }}
-          animate={show ? { y: '0%', opacity: 1 } : { y: '110%', opacity: 0 }}
-          transition={{
-            duration: timing(duration),
-            delay: delay,
-            ease: [0.22, 1, 0.36, 1],
-          }}
-        >
-          {children}
-        </motion.div>
+      <div className={`overflow-clip py-1.5 -my-1.5 ${className}`} style={{ width }}>
+        <div className="opb-reveal-clip">{children}</div>
       </div>
     );
   }
-
   if (type === 'scale-image') {
     return (
-      <div ref={ref} className={`overflow-hidden ${className}`} style={{ width }}>
-        <motion.div
-          initial={{ scale: 1.04, opacity: 0 }}
-          animate={show ? { scale: 1, opacity: 1 } : { scale: 1.04, opacity: 0 }}
-          transition={{
-            duration: timing(duration + 0.1),
-            delay: delay,
-            ease: [0.16, 1, 0.3, 1],
-          }}
-        >
-          {children}
-        </motion.div>
+      <div className={`overflow-clip ${className}`} style={{ width }}>
+        <div className="opb-reveal-scale">{children}</div>
       </div>
     );
   }
-
-  if (type === 'label') {
-    return (
-      <div ref={ref} className={className} style={{ width }}>
-        <motion.div
-          initial={{ y: 8, opacity: 0 }}
-          animate={show ? { y: 0, opacity: 1 } : { y: 8, opacity: 0 }}
-          transition={{
-            duration: timing(0.5),
-            delay: delay,
-            ease: [0.16, 1, 0.3, 1],
-          }}
-        >
-          {children}
-        </motion.div>
-      </div>
-    );
-  }
-
-  // Default: fade-up
   return (
-    <div ref={ref} className={className} style={{ width }}>
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={show ? { y: 0, opacity: 1 } : { y: 20, opacity: 0 }}
-        transition={{
-          duration: timing(duration),
-          delay: delay,
-          ease: [0.16, 1, 0.3, 1],
-        }}
-      >
-        {children}
-      </motion.div>
+    <div
+      className={`opb-reveal ${className}`}
+      style={{ width, ...(type === 'label' ? { '--opb-rise': '8px' } : {}) } as React.CSSProperties}
+    >
+      {children}
     </div>
   );
-};
+}

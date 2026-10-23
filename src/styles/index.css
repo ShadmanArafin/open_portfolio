@@ -125,6 +125,112 @@
   animation-play-state: paused;
 }
 
+/*
+ * Motion, in CSS. The theme used to animate through the `motion` library:
+ * about 100 KB of JavaScript in every visitor's download, and content that
+ * stayed invisible (opacity 0 in the server HTML) until that script had
+ * loaded and run. These do the same work with no script:
+ *
+ * - `.opb-enter*`: an entrance as the page loads, for the hero.
+ * - `.opb-reveal*`: a scroll-driven entrance (`animation-timeline: view()`),
+ *   tied to the element coming into view. A browser without scroll-driven
+ *   animations shows the content as it is, with no animation at all.
+ * - `.opb-pop`: a short entrance for menus, toasts and lightboxes.
+ *
+ * All of it sits inside `prefers-reduced-motion: no-preference`, so a visitor
+ * who asked their system for less motion gets none. `--opb-delay` staggers
+ * the load entrances; scroll-driven ones follow the scroll, not a clock.
+ */
+@keyframes opb-rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--opb-rise, 16px));
+  }
+}
+@keyframes opb-clip {
+  from {
+    opacity: 0;
+    transform: translateY(110%);
+  }
+}
+@keyframes opb-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+}
+@keyframes opb-pop {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+}
+@keyframes opb-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .opb-enter {
+    animation: opb-rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) var(--opb-delay, 0s) both;
+  }
+  .opb-enter-clip {
+    animation: opb-clip 0.8s cubic-bezier(0.22, 1, 0.36, 1) var(--opb-delay, 0s) both;
+  }
+  .opb-pop {
+    animation: opb-pop 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .opb-fade {
+    animation: opb-fade 0.2s ease-out both;
+  }
+
+  @supports (animation-timeline: view()) {
+    .opb-reveal,
+    .opb-reveal-clip,
+    .opb-reveal-scale {
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-duration: auto;
+      animation-timeline: view();
+    }
+    /*
+     * Ranges in pixels of scroll, not percentages: `entry 40%` is a share of
+     * the element's own height, so a tall card stayed half transparent while
+     * its top was already well up the screen. These finish a fixed distance
+     * after the element starts to come into view, whatever its size.
+     */
+    .opb-reveal {
+      animation-name: opb-rise;
+      animation-range: entry 0% entry 160px;
+    }
+    .opb-reveal-clip {
+      animation-name: opb-clip;
+      animation-range: entry 0% entry 120px;
+    }
+    .opb-reveal-scale {
+      animation-name: opb-scale-in;
+      animation-range: entry 0% entry 200px;
+    }
+  }
+}
+
+/* Route changes (React <ViewTransition>, see app/(site)/layout.tsx). */
+::view-transition-old(*),
+::view-transition-new(*) {
+  animation-duration: 0.2s;
+}
+::view-transition-group(.morph) {
+  animation-duration: 0.35s;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
 /* Reduced Motion Override */
 @media (prefers-reduced-motion: reduce) {
   html {

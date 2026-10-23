@@ -1,16 +1,12 @@
-'use client';
-
-import React from 'react';
 import { Section } from './common/Section';
 import { Container } from './common/Container';
 import { SectionLabel } from './common/SectionLabel';
 import { Reveal } from './common/Reveal';
 import { ArrowUpRight } from 'lucide-react';
-import { motion } from 'motion/react';
-import { useCMS } from '../cms/context/CMSContext';
+import { siteContent } from '../cms/server';
 
-export const CapabilitiesSection: React.FC = () => {
-  const { data } = useCMS();
+export async function CapabilitiesSection() {
+  const data = await siteContent();
 
   const capabilitiesConfig = data.sections.find((s) => s.id === 'capabilities');
   const capabilityGroups = (data.capabilityGroups || [])
@@ -55,18 +51,10 @@ export const CapabilitiesSection: React.FC = () => {
           {/* =================================================================== */}
           <div className="lg:col-span-7">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 sm:gap-12 xl:gap-14">
-              {capabilityGroups.map((group, groupIdx) => (
-                <motion.div
+              {capabilityGroups.map((group) => (
+                <div
                   key={group.id || group.number}
-                  initial={{ opacity: 0, y: 14 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: '-10% 0px' }}
-                  transition={{
-                    duration: 0.6,
-                    delay: groupIdx * 0.08,
-                    ease: [0.16, 1, 0.3, 1],
-                  }}
-                  className="pt-6 border-t border-border group hover:border-text-primary/30 transition-colors duration-300"
+                  className="opb-reveal pt-6 border-t border-border group hover:border-text-primary/30 transition-colors duration-300"
                 >
                   <div className="flex items-center justify-between mb-4">
                     <span className="font-mono text-xs font-medium text-text-muted group-hover:text-accent transition-colors duration-200">
@@ -91,7 +79,7 @@ export const CapabilitiesSection: React.FC = () => {
                       </li>
                     ))}
                   </ul>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
@@ -99,4 +87,4 @@ export const CapabilitiesSection: React.FC = () => {
       </Container>
     </Section>
   );
-};
+}
