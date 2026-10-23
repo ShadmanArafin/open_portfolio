@@ -445,7 +445,8 @@ async function ensureCollections(): Promise<void> {
   );
   const names = new Set(existing.collections.map((c) => c.$id));
   const trace = (m: string) => {
-    if (process.env.OPB_TRACE_PROVISION) console.log(`[provision] ${m}`);
+    // Opt-in progress lines, to stderr with the rest of the diagnostics.
+    if (process.env.OPB_TRACE_PROVISION) console.warn(`[provision] ${m}`);
   };
   for (const spec of COLLECTIONS) {
     trace(`collection ${spec.id}`);

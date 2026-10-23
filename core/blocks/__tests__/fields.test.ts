@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { getPath, setPath, type BlockField } from '../fields';
-import { listBlockDefinitions } from '../registry';
+import { listBlockDefinitions } from '../lookup';
 
 /**
  * Field descriptors, checked against the schemas they claim to edit.

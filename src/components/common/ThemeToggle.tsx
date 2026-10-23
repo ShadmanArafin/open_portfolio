@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '../../context/use-theme';
 import { Sun, Moon } from 'lucide-react';
 import { cn } from '../../utils/cn';
 

@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Check, Copy } from 'lucide-react';
 import { trackEvent } from '../utils/analytics';
-import { useToast } from '../context/ToastContext';
+import { useToast } from '../context/use-toast';
 import { cn } from '../utils/cn';
 
 /**

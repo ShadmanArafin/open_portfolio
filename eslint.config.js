@@ -27,7 +27,30 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       ...jsxA11y.configs.recommended.rules,
 
-      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+      // Next's route files must export these beside the component (metadata,
+      // route segment config, image routes); Next handles their refresh itself.
+      'react-refresh/only-export-components': [
+        'warn',
+        {
+          allowConstantExport: true,
+          allowExportNames: [
+            'metadata',
+            'generateMetadata',
+            'viewport',
+            'generateViewport',
+            'generateStaticParams',
+            'generateImageMetadata',
+            'instant',
+            'maxDuration',
+            'runtime',
+            'preferredRegion',
+            'dynamicParams',
+            'alt',
+            'size',
+            'contentType',
+          ],
+        },
+      ],
 
       // Unused variables are worth flagging, but an intentionally-ignored
       // argument prefixed with _ is a deliberate signal, not an oversight.

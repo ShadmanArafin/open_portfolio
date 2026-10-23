@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import React from 'react';
-import { getBlockDefinition, parsePage } from '../registry';
+import { getBlockDefinition, parsePage } from '../lookup';
 import { EMPTY_BLOCK_CONTENT, type BlockContent } from '../content';
 import { toEmbedUrl, toSchedulingUrl, toSocialEmbed } from '../standard';
 import type { BlockDefinition } from '../schema';

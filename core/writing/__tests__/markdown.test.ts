@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parseBlock } from '../../blocks/parse';
-import { parseContext } from '../../blocks/registry';
+import { parseContext } from '../../blocks/lookup';
 import { MAX_IMPORTED_BLOCKS, parseMarkdownNote, uniqueSlugs, type ParsedNote } from '../markdown';
 
 /**

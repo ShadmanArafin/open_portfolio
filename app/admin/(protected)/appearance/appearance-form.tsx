@@ -7,7 +7,8 @@ import { GOOGLE_FONTS_LIST } from '@/utils/googleFonts';
 import type { AppearanceSettings } from '@/cms/types/cms';
 import { updateAppearanceAction } from '../_actions/settings';
 import { ConflictNotice } from '../_components/conflict-notice';
-import { UnsavedNote, useSaveShortcut, useUnsavedChanges } from '../_components/unsaved-changes';
+import { useSaveShortcut, useUnsavedChanges } from '../_components/unsaved-changes';
+import { UnsavedNote } from '../_components/unsaved-note';
 
 const COLOR_FIELDS: { field: keyof AppearanceSettings; label: string; fallback: string }[] = [
   { field: 'accentDark', label: 'Accent — dark mode', fallback: '#35F2B3' },

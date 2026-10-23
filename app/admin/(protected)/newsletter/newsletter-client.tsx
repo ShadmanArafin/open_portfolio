@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { removeSubscriberAction, updateNewsletterSettingsAction } from '../_actions/newsletter';
 import { ConflictNotice } from '../_components/conflict-notice';
-import { UnsavedNote, useSaveShortcut, useUnsavedChanges } from '../_components/unsaved-changes';
+import { useSaveShortcut, useUnsavedChanges } from '../_components/unsaved-changes';
+import { UnsavedNote } from '../_components/unsaved-note';
 
 export interface NewsletterFormSettings {
   enabled: boolean;

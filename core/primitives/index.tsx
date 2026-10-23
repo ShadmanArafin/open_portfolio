@@ -20,9 +20,6 @@ import { sanitizeHref, sanitizeMediaSrc } from '@/core/security/urls';
  * still outstanding.
  */
 
-export * from './frame';
-export * from './heading-level';
-
 /* -------------------------------------------------------------------- Band */
 
 /**

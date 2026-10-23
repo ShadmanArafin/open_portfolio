@@ -3,7 +3,7 @@ import 'server-only';
 import { cache } from 'react';
 import type { Channel } from '@/core/storage/contract';
 import { getContentForChannel } from '@/core/content/read';
-import { parsePage } from '@/core/blocks/registry';
+import { parsePage } from '@/core/blocks/lookup';
 import type { ParsedBlock } from '@/core/blocks/schema';
 import {
   WRITING_DEFAULTS,

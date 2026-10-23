@@ -5,7 +5,8 @@ import type { SectionConfig } from '@/cms/types/cms';
 import { anchorProblem, moveBand, splitSections, withBandOrders } from '@/core/content/sections';
 import { updateHomepageAction } from '../_actions/homepage';
 import { ConflictNotice } from '../_components/conflict-notice';
-import { UnsavedNote, useSaveShortcut, useUnsavedChanges } from '../_components/unsaved-changes';
+import { useSaveShortcut, useUnsavedChanges } from '../_components/unsaved-changes';
+import { UnsavedNote } from '../_components/unsaved-note';
 
 const field = 'w-full rounded-xl border border-border bg-surface-primary px-3 text-text-primary';
 const secondary =

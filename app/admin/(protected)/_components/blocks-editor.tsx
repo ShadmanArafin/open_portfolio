@@ -7,7 +7,7 @@ import {
   listBlockDefinitions,
   parsePage,
   runBlockChecks,
-} from '@/core/blocks/registry';
+} from '@/core/blocks/lookup';
 import type { Block } from '@/core/blocks/schema';
 import { BlockFields } from './block-fields';
 import { newId } from './ids';

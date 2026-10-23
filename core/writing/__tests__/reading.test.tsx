@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { BlockList, parsePage } from '@/core/blocks/registry';
+import { BlockList } from '@/core/blocks/registry';
+import { parsePage } from '@/core/blocks/lookup';
 import { neighbours, readingMinutes, related, slugifyHeading, withContents } from '../reading';
 
 const text = (heading: string | undefined, words: number, id: string) => ({

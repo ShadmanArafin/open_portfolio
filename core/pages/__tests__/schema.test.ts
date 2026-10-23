@@ -18,7 +18,7 @@ import {
   segmentsToSlug,
   slugToSegments,
 } from '../schema';
-import { parsePage } from '../../blocks/registry';
+import { parsePage } from '../../blocks/lookup';
 
 const APP_ROOT = join(import.meta.dirname, '..', '..', '..', 'app');
 

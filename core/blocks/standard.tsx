@@ -14,8 +14,8 @@ import {
   Row,
   Stack,
   Text,
-  resolveFrame,
 } from '../primitives';
+import { resolveFrame } from '../primitives/frame';
 import { deeper } from '../primitives/heading-level';
 import { ContactForm, CommentsFacade, EmbedFacade, NewsletterForm, VideoFacade } from './forms';
 import type { BlockField } from './fields';

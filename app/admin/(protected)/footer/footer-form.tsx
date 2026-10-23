@@ -10,7 +10,8 @@ import {
 import type { SocialLinkItem, SocialPlatformId } from '@/cms/types/cms';
 import { updateFooterAction, updateSocialLinksAction } from '../_actions/settings';
 import { ConflictNotice } from '../_components/conflict-notice';
-import { UnsavedNote, useSaveShortcut, useUnsavedChanges } from '../_components/unsaved-changes';
+import { useSaveShortcut, useUnsavedChanges } from '../_components/unsaved-changes';
+import { UnsavedNote } from '../_components/unsaved-note';
 
 const secondary =
   'rounded-full border border-border px-4 text-sm text-text-secondary hover:text-text-primary disabled:opacity-50';

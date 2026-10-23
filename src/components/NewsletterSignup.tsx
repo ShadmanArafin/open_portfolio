@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Mail } from 'lucide-react';
-import { useCMS } from '../cms/context/CMSContext';
+import { useCMS } from '../cms/context/use-cms';
 import { NEWSLETTER_DEFAULTS } from '@/core/newsletter/defaults';
 import { TurnstileWidget } from '@/core/blocks/forms';
 

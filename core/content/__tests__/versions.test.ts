@@ -30,7 +30,7 @@ const version = (n: number): ContentVersion => ({
   editor: 'Owner',
   action: 'Published Site Changes',
   summary: `publish ${n}`,
-  snapshot: { settings: { fullName: `snapshot ${n}` } },
+  snapshot: { settings: { fullName: `snapshot ${n}` } } as unknown as CMSState,
 });
 
 describe('version history as records', () => {

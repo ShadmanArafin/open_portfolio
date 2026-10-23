@@ -2,7 +2,8 @@
 
 import { useState, type ReactNode } from 'react';
 import { ConflictNotice } from './conflict-notice';
-import { UnsavedNote, useSaveShortcut, useUnsavedChanges } from './unsaved-changes';
+import { useSaveShortcut, useUnsavedChanges } from './unsaved-changes';
+import { UnsavedNote } from './unsaved-note';
 import { useRequestedRecord } from './requested-record';
 import { UndoNotice } from './undo-remove';
 import { useUndoableRemove } from './use-undoable-remove';

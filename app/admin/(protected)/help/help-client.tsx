@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode, useSyncExternalStore } from 'react';
 import {
   formatDiagnostics,
   type ContentDiagnostics,
@@ -319,6 +319,24 @@ function SendControls({
 const pre =
   'm-0 whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-text-secondary';
 
+type ClientDiagnostics = {
+  userAgent: string;
+  screen: string;
+  language: string;
+};
+
+let clientDiagnostics: ClientDiagnostics | undefined;
+/** The same object every time: a store's snapshot must be stable. */
+function readClient(): ClientDiagnostics {
+  clientDiagnostics ??= {
+    userAgent: navigator.userAgent,
+    screen: `${window.screen.width}×${window.screen.height}`,
+    language: navigator.language,
+  };
+  return clientDiagnostics;
+}
+const noSubscription = () => () => {};
+
 export function HelpClient({
   server,
   content,
@@ -360,21 +378,11 @@ export function HelpClient({
   const [errors, setErrors] = useState<RecentError[]>([]);
 
   /*
-   * The browser half of the diagnostics, captured once after mount.
-   *
-   * `navigator` and `window.screen` are reads of the outside world, and doing
-   * them while rendering is impure — it would run again on every render to
-   * produce a value that never changes.
+   * The browser half of the diagnostics. Read as an external store: once, on
+   * the client, with nothing on the server, so the server HTML and the first
+   * client render agree and no effect has to copy it into state.
    */
-  const [client, setClient] = useState<Diagnostics['client']>();
-
-  useEffect(() => {
-    setClient({
-      userAgent: navigator.userAgent,
-      screen: `${window.screen.width}×${window.screen.height}`,
-      language: navigator.language,
-    });
-  }, []);
+  const client = useSyncExternalStore(noSubscription, readClient, () => undefined);
 
   useEffect(() => {
     void (async () => {

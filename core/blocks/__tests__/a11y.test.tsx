@@ -2,7 +2,8 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import axe from 'axe-core';
-import { BlockList, listBlockDefinitions, parsePage } from '../registry';
+import { BlockList } from '../registry';
+import { listBlockDefinitions, parsePage } from '../lookup';
 
 /**
  * The axe seed of the kitchen-sink matrix.
