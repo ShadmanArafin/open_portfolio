@@ -205,6 +205,10 @@ interface CollectionSpec {
 }
 
 const TEXT = { type: 'text', required: false };
+/**
+ * Never `required`: PocketBase calls `{}`, `[]` and `null` blank and refuses
+ * them, and an empty object is a value the contract stores like any other.
+ */
 const JSON_FIELD = { type: 'json', required: false, maxSize: 0 };
 const NUM = { type: 'number', required: false, onlyInt: false };
 /**
@@ -222,7 +226,7 @@ const COLLECTIONS: CollectionSpec[] = [
     name: 'opb_content',
     fields: [
       { name: 'channel', ...TEXT, required: true },
-      { name: 'data', ...JSON_FIELD, required: true },
+      { name: 'data', ...JSON_FIELD },
       { name: 'revision', ...NUM, required: true },
       ...AUTODATE,
     ],
@@ -258,7 +262,7 @@ const COLLECTIONS: CollectionSpec[] = [
       // enquiries can land in the same millisecond, and sorting those by
       // `created` is a coin toss; sorting by `receivedAt` is the inbox order.
       { name: 'receivedAt', ...TEXT, required: true },
-      { name: 'data', ...JSON_FIELD, required: true },
+      { name: 'data', ...JSON_FIELD },
       ...AUTODATE,
     ],
   },
@@ -267,7 +271,7 @@ const COLLECTIONS: CollectionSpec[] = [
     fields: [
       { name: 'subscriberId', ...TEXT, required: true },
       { name: 'requestedAt', ...TEXT, required: true },
-      { name: 'data', ...JSON_FIELD, required: true },
+      { name: 'data', ...JSON_FIELD },
       ...AUTODATE,
     ],
   },
@@ -275,7 +279,7 @@ const COLLECTIONS: CollectionSpec[] = [
     name: 'opb_passkeys',
     fields: [
       { name: 'credentialId', ...TEXT, required: true },
-      { name: 'data', ...JSON_FIELD, required: true },
+      { name: 'data', ...JSON_FIELD },
       ...AUTODATE,
     ],
   },
@@ -284,7 +288,7 @@ const COLLECTIONS: CollectionSpec[] = [
     fields: [
       { name: 'collection', ...TEXT, required: true },
       { name: 'itemId', ...TEXT, required: true },
-      { name: 'data', ...JSON_FIELD, required: true },
+      { name: 'data', ...JSON_FIELD },
       { name: 'revision', ...NUM, required: true },
       { name: 'updatedAt', ...TEXT, required: true },
       ...AUTODATE,
@@ -294,7 +298,7 @@ const COLLECTIONS: CollectionSpec[] = [
     name: 'opb_singletons',
     fields: [
       { name: 'collection', ...TEXT, required: true },
-      { name: 'data', ...JSON_FIELD, required: true },
+      { name: 'data', ...JSON_FIELD },
       ...AUTODATE,
     ],
   },
@@ -333,10 +337,25 @@ function escapeFilterValue(value: string): string {
 async function ensureCollections(): Promise<void> {
   // The collections index lives at /api/collections itself, not under
   // /records — it is metadata about the schema, not rows in a table.
-  const existing = await pb<{ items: { name: string }[] }>('GET', '/api/collections?perPage=500');
-  const names = new Set(existing.items.map((c) => c.name));
+  const existing = await pb<{
+    items: { id: string; name: string; fields?: { type: string; required?: boolean }[] }[];
+  }>('GET', '/api/collections?perPage=500');
+  const byName = new Map(existing.items.map((c) => [c.name, c]));
   for (const spec of COLLECTIONS) {
-    if (names.has(spec.name)) continue;
+    const current = byName.get(spec.name);
+    if (current) {
+      // Sites provisioned before JSON fields became optional still refuse an
+      // empty object; relax those fields in place and leave the rest alone.
+      const fields = current.fields ?? [];
+      if (fields.some((field) => field.type === 'json' && field.required)) {
+        await pb('PATCH', `/api/collections/${current.id}`, {
+          fields: fields.map((field) =>
+            field.type === 'json' ? { ...field, required: false } : field
+          ),
+        });
+      }
+      continue;
+    }
     // Omitted rules are superuser-only; media opens reads so `<img>` tags
     // resolve without a session. Listing stays locked: enumeration is a
     // server-side operation, and the admin lists with the superuser token.
