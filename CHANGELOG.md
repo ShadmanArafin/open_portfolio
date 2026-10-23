@@ -238,6 +238,12 @@ through a letterbox. It now takes the window.
   publishing, so a publish or a restore clears it at once. Scheduled pages
   still appear within about a minute of their time.
 
+- **Fonts come with the install.** The 35 fonts in the Appearance picker are
+  installed from npm (Fontsource, all OFL) instead of being fetched from Google
+  during the build, so a build works offline and can't fail because a font
+  server answered strangely. Visitors still download only the fonts your site
+  uses, from your own site, as before.
+
 - **The admin menu is grouped** into Build, Profile, Audience, Look & reach
   and System, and Case studies only appears on sites that still have them.
 
@@ -324,6 +330,12 @@ through a letterbox. It now takes the window.
 - Restoring a backup now shows on the public site straight away. Before, pages
   kept the old content for up to a minute.
 - Printing in a dark theme no longer gives you white headings on white paper.
+- On PocketBase, saving an empty record no longer fails with "Cannot be
+  blank". The fields were created as required; existing sites are relaxed
+  automatically the next time storage is set up.
+- The Settings, Appearance, SEO and home page saves now write only fields from
+  a fixed list. Every field was already checked before, but a malformed request
+  was refused by luck rather than design (flagged by CodeQL).
 
 - **Preview could open on the wrong address** behind a proxy or under
   `next start`: it redirected to the server's own idea of its host instead of

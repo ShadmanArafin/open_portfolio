@@ -2750,6 +2750,30 @@ After E1–E6, everything the review had named and no phase held:
   - health and the claim check stay live;
   - saving an analytics integration reflected on the next page.
 
+**Phase G — CI hardening (2026-10-23)**
+
+Getting PR #25 green turned up three gaps; all are closed.
+
+- [x] PocketBase conformance, red on `main` too. JSON fields were provisioned
+      `required`, and PocketBase calls `{}` blank, so `records.put(c, id, {})`
+      failed. They are optional now, and `provision()` relaxes them in place
+      on existing sites. v0.23+ refuses an anonymous list with 403, not 401;
+      the test accepts either and checks that the body leaks nothing.
+      Reproduced and fixed against a local PocketBase v0.40.5, on a fresh
+      install and on one with the old schema.
+- [x] CodeQL `js/remote-property-injection` × 4 in the settings and homepage
+      actions. The written key now always comes from a constant list
+      (`copyKnown`, `TEXT_FIELDS`).
+- [x] Lint: 0 problems. The 76 warnings recorded above are fixed, none
+      silenced (`00dc7ce`).
+- [x] Fonts bundled from Fontsource through `next/font/local`. The random
+      build failure in `docs/HANDOVER.md` ("A build that failed on somebody
+      else's dice") is gone with its cause: a clean build passes with the
+      network off.
+- [x] A `site` CI job. The marketing site's demo imports `core/`, and PR #25
+      moved four block helpers it used; only Vercel noticed. The job installs
+      both trees as Vercel does, then typechecks and builds `site/`.
+
 **How each item is verified:**
 
 - Every item: the AGENTS.md gate (`npm ci`, typecheck, lint, format check, test,
