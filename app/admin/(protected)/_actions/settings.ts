@@ -79,6 +79,15 @@ function isText(value: unknown, max = MAX_TEXT): value is string {
   return typeof value === 'string' && value.length <= max;
 }
 
+/**
+ * Copies only the named keys. The key written always comes from the list,
+ * never from the request, so no patch can reach `__proto__` or a prototype.
+ */
+function copyKnown(target: object, source: Record<string, unknown>, keys: readonly string[]) {
+  const into = target as Record<string, unknown>;
+  for (const key of keys) if (Object.hasOwn(source, key)) into[key] = source[key];
+}
+
 const SITE_SETTING_FIELDS = [
   'fullName',
   'role',
@@ -125,9 +134,7 @@ export async function updateSiteSettingsAction(
   }
 
   return writeDraft('/admin/settings', 'site', token, (draft) => {
-    for (const [key, value] of Object.entries(clean)) {
-      (draft.settings as unknown as Record<string, unknown>)[key] = value;
-    }
+    copyKnown(draft.settings, clean, [...SITE_SETTING_FIELDS, 'language', 'aboutStoryParagraphs']);
   });
 }
 
@@ -178,9 +185,12 @@ export async function updateAppearanceAction(
   }
 
   return writeDraft('/admin/appearance', 'appearance', token, (draft) => {
-    for (const [key, value] of Object.entries(patch)) {
-      (draft.appearance as unknown as Record<string, unknown>)[key] = value;
-    }
+    copyKnown(draft.appearance, patch, [
+      'themeId',
+      'giantFooterText',
+      ...APPEARANCE_TEXT_FIELDS,
+      ...APPEARANCE_FONT_FIELDS,
+    ]);
   });
 }
 
@@ -202,15 +212,13 @@ export async function updateSeoAction(
   if (!patch || typeof patch !== 'object') return { ok: false, error: 'Nothing to save.' };
 
   for (const [key, value] of Object.entries(patch)) {
-    const max = SEO_FIELDS[key];
+    const max = Object.hasOwn(SEO_FIELDS, key) ? SEO_FIELDS[key] : undefined;
     if (max === undefined) return { ok: false, error: 'Unknown setting.' };
     if (!isText(value, max)) return { ok: false, error: 'Those values are not usable.' };
   }
 
   return writeDraft('/admin/seo', 'seo', token, (draft) => {
-    for (const [key, value] of Object.entries(patch)) {
-      (draft.seo as unknown as Record<string, unknown>)[key] = value;
-    }
+    copyKnown(draft.seo, patch, Object.keys(SEO_FIELDS));
   });
 }
 
