@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server';
 import { clientKey, rateLimit } from '@/core/auth/ratelimit';
 import { unsubscribe } from '@/core/newsletter/store';
 
-export const dynamic = 'force-dynamic';
-
 /**
  * Leaving.
  *

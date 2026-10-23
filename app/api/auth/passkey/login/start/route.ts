@@ -3,8 +3,6 @@ import { assertSameOrigin } from '@/core/auth/guard';
 import { clientKey, rateLimit } from '@/core/auth/ratelimit';
 import { relyingParty, startPasskeyLogin } from '@/core/auth/passkey';
 
-export const dynamic = 'force-dynamic';
-
 /**
  * Begins a passkey sign-in. Public — signing in cannot require being signed in.
  *

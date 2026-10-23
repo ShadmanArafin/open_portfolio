@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server';
 import { requireOwner, UnauthorizedError } from '@/core/auth/guard';
 import { vapidConfig } from '@/core/notify/push';
 
-export const dynamic = 'force-dynamic';
-
 /**
  * The VAPID public key the browser needs to subscribe. Owner-only: it is
  * public in the cryptographic sense, but there is no reason to hand the push

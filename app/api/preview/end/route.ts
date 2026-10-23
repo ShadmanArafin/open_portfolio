@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server';
 import { draftMode } from 'next/headers';
 import { safeRedirectPath } from '@/core/security/redirect';
 
-export const dynamic = 'force-dynamic';
-
 /**
  * Turns preview off.
  *

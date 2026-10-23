@@ -3,8 +3,6 @@ import { assertSameOrigin } from '@/core/auth/guard';
 import { clientKey, rateLimit } from '@/core/auth/ratelimit';
 import { confirm } from '@/core/newsletter/store';
 
-export const dynamic = 'force-dynamic';
-
 /**
  * Completing a sign-up.
  *

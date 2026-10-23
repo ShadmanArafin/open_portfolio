@@ -6,8 +6,6 @@ import { createSession } from '@/core/auth/session';
 import { getStorageAdapter } from '@/core/storage/registry';
 import { finishPasskeyLogin, relyingParty } from '@/core/auth/passkey';
 
-export const dynamic = 'force-dynamic';
-
 /**
  * Completes a passkey sign-in and mints the session.
  *

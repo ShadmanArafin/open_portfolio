@@ -2,13 +2,14 @@ import type { Metadata } from 'next';
 import { getNewsletterSettings } from '@/core/newsletter/read';
 import { TokenAction } from '../token-action';
 
+// Request-time by nature (Cache Components may block here). A token in the address decides everything here.
+export const instant = false;
+
 /** Never indexed: a page that only means anything with a token in it. */
 export const metadata: Metadata = {
   title: 'Confirm your subscription',
   robots: { index: false, follow: false },
 };
-
-export const dynamic = 'force-dynamic';
 
 export default async function ConfirmPage({
   searchParams,

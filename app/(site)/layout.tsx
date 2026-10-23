@@ -1,22 +1,20 @@
 import { getContentForChannel } from '@/core/content/read';
 import { clientView } from '@/core/content/sanitise';
+import { siteNow } from '@/core/content/now';
 import { currentChannel } from '@/core/pages/read';
-import { Navbar } from '@/components/Navbar';
+import { Navbar, NavbarFrame } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { SideSectionIndicator } from '@/components/common/SideSectionIndicator';
 import { SiteProviders } from './providers';
 import { DemoBanner } from './demo-banner';
-import { ViewTransition } from 'react';
+import { Suspense, ViewTransition } from 'react';
 
-/**
- * Content lives in storage and can change without a rebuild, so pages cannot be
- * frozen at build time. Publishing is already immediate — the publish action
- * calls `revalidatePath('/', 'layout')`, and the e2e golden path checks a
- * visitor sees the change at once. What the sixty seconds still bounds is a
- * piece of writing scheduled for later, which appears on the first render after
- * its time; raising this would make those up to that much late.
+/*
+ * Caching lives with the data now, not here (Cache Components): published
+ * content is read through a tagged `use cache` scope in `core/content/read.ts`
+ * that a publish expires at once and that revalidates each minute for
+ * scheduled pages and writing. This layout used to carry `revalidate = 60`.
  */
-export const revalidate = 60;
 
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
   // Channel-aware so preview shows the draft's chrome too — a renamed site or
@@ -28,7 +26,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
     // Cut down to what is visible (no drafts) and then to what the client
     // components render (no page blocks, writing or stories, which the
     // server renders). See `clientView`.
-    <SiteProviders initialData={clientView(content)}>
+    <SiteProviders initialData={clientView(content, await siteNow())}>
       <div className="min-h-screen flex flex-col justify-between relative">
         {/* First focusable element on the page: keyboard users should not have
             to tab through the whole navigation to reach the content. */}
@@ -39,8 +37,14 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
           Skip to content
         </a>
         <DemoBanner />
-        <Navbar />
-        <SideSectionIndicator />
+        {/* Both read the address, which a route with unknown params does not
+            have while its shell is prerendered (Cache Components). */}
+        <Suspense fallback={<NavbarFrame pathname={null} />}>
+          <Navbar />
+        </Suspense>
+        <Suspense fallback={null}>
+          <SideSectionIndicator />
+        </Suspense>
         <main id="main" className="flex-grow">
           {/* Page changes crossfade (a navigation is a transition, so React
               runs it through the View Transitions API). Browsers without it

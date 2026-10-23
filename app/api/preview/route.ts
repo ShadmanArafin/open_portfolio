@@ -3,8 +3,6 @@ import { draftMode } from 'next/headers';
 import { requireOwner, UnauthorizedError } from '@/core/auth/guard';
 import { safeRedirectPath } from '@/core/security/redirect';
 
-export const dynamic = 'force-dynamic';
-
 /**
  * Turns preview on.
  *

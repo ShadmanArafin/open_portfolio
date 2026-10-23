@@ -4,8 +4,6 @@ import { requireOwner, UnauthorizedError } from '@/core/auth/guard';
 import { clientKey, rateLimit } from '@/core/auth/ratelimit';
 import { finishPasskeyRegistration, relyingParty } from '@/core/auth/passkey';
 
-export const dynamic = 'force-dynamic';
-
 /**
  * Completes enrollment: verifies the attestation and stores the credential.
  *

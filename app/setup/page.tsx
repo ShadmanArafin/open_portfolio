@@ -3,7 +3,8 @@ import { redirect } from 'next/navigation';
 import { getClaimEligibility } from '@/core/auth/claim';
 import { ClaimForm } from './claim-form';
 
-export const dynamic = 'force-dynamic';
+// Request-time by nature (Cache Components may block here). Whether this install is claimed is read per request.
+export const instant = false;
 
 export const metadata: Metadata = {
   title: 'Set up',

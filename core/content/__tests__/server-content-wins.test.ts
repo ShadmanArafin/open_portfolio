@@ -45,7 +45,7 @@ describe('the public site keeps what the server sent', () => {
     // Wrapped in `clientView` (which applies `publicView`), not passed raw. The
     // whole document used to be serialised into every public page, drafts
     // included, and then every page's blocks and every post in full.
-    expect(layout).toContain('initialData={clientView(content)}');
+    expect(layout).toContain('initialData={clientView(content, await siteNow())}');
   });
 
   it('has no browser-side store that could replace it', () => {

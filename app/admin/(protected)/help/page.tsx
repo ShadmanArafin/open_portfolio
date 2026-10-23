@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { getPublishedContent } from '@/core/content/read';
+import { getPublishedContentFresh } from '@/core/content/read';
 import { resolveTransportWithStored } from '@/core/email/transport';
 import { getStorageAdapter } from '@/core/storage/registry';
 import { detectHost, summariseContent, type ServerDiagnostics } from '@/core/support/diagnostics';
@@ -28,7 +28,7 @@ export const metadata: Metadata = { title: 'Help' };
 export default async function HelpPage() {
   const [adapter, content, transport] = await Promise.all([
     getStorageAdapter(),
-    getPublishedContent(),
+    getPublishedContentFresh(),
     resolveTransportWithStored(),
   ]);
 

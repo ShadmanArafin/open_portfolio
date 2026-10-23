@@ -1,3 +1,4 @@
+import { siteNow } from '@/core/content/now';
 import type { Metadata } from 'next';
 import { buildMetadata } from '@/core/content/metadata';
 import { getContentForChannel } from '@/core/content/read';
@@ -49,8 +50,8 @@ const body: React.CSSProperties = {
 };
 
 export default async function CvPage() {
-  const content = publicView(await getContentForChannel(await currentChannel()));
-  const { experience, education, capabilityGroups } = blockContentFrom(content);
+  const content = publicView(await getContentForChannel(await currentChannel()), await siteNow());
+  const { experience, education, capabilityGroups } = blockContentFrom(content, await siteNow());
   const { settings } = content;
 
   return (

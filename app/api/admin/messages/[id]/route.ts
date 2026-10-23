@@ -3,8 +3,6 @@ import { getStorageAdapter } from '@/core/storage/registry';
 import { assertSameOrigin, requireOwner, UnauthorizedError } from '@/core/auth/guard';
 import type { ContactMessage } from '@/cms/types/cms';
 
-export const dynamic = 'force-dynamic';
-
 const STATUSES: ContactMessage['status'][] = ['unread', 'read', 'archived', 'spam'];
 
 async function guard(): Promise<NextResponse | null> {

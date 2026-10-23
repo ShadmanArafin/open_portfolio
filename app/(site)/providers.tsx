@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import type { CMSState } from '@/cms/types/cms';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { ToastProvider } from '@/context/ToastContext';
@@ -26,7 +26,9 @@ export function SiteProviders({
     <ThemeProvider>
       <CMSProvider initialData={initialData}>
         <ToastProvider>
-          <PageviewReporter />
+          <Suspense fallback={null}>
+            <PageviewReporter />
+          </Suspense>
           {children}
         </ToastProvider>
       </CMSProvider>

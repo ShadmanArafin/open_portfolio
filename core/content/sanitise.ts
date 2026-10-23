@@ -52,12 +52,12 @@ export function withoutEnquiries(state: CMSState): CMSState {
  * client consumer sees the same records, and `caseStudies` is emptied so
  * nothing can read a stale second copy.
  */
-export function publicView(state: CMSState): CMSState {
+export function publicView(state: CMSState, now: Date = new Date()): CMSState {
   const isLiveWriting = (entry: { status?: string; scheduledFor?: string }): boolean => {
     if (entry.status === 'published') return true;
     if (entry.status !== 'scheduled' || !entry.scheduledFor) return false;
     const due = Date.parse(entry.scheduledFor);
-    return Number.isFinite(due) && due <= Date.now();
+    return Number.isFinite(due) && due <= now.getTime();
   };
 
   const projects = mergeWork(
@@ -67,7 +67,7 @@ export function publicView(state: CMSState): CMSState {
 
   return {
     ...state,
-    pages: (state.pages ?? []).filter((page) => isPageLive(page)),
+    pages: (state.pages ?? []).filter((page) => isPageLive(page, now)),
     writing: (state.writing ?? []).filter(isLiveWriting),
     projects,
     caseStudies: [],
@@ -97,8 +97,8 @@ export function publicView(state: CMSState): CMSState {
  * read in the browser is settings, wording, the menu, the sections' headers
  * and the newsletter's wording.
  */
-export function clientView(state: CMSState): CMSState {
-  const visible = publicView(state);
+export function clientView(state: CMSState, now: Date = new Date()): CMSState {
+  const visible = publicView(state, now);
   return {
     ...visible,
     pages: (visible.pages ?? []).map((page) => ({ ...page, blocks: [] })),

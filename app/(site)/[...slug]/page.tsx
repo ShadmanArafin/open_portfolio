@@ -1,3 +1,5 @@
+import { siteNow } from '@/core/content/now';
+import { atLeastOne, SHELL_SLUG } from '@/core/pages/static-params';
 import { isPageLive } from '@/core/pages/schema';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
@@ -27,11 +29,14 @@ export async function generateStaticParams() {
     // The home page is served by `app/(site)/page.tsx`. Its slug is empty, so
     // `''.split('/')` would produce `['']` and prerender a second route at `/`
     // that collides with the real one.
-    return pages.filter((page) => page.slug !== '').map((page) => ({ slug: page.slug.split('/') }));
+    return atLeastOne(
+      pages.filter((page) => page.slug !== '').map((page) => ({ slug: page.slug.split('/') })),
+      { slug: [SHELL_SLUG] }
+    );
   } catch {
     // A paused free-tier database must never be the reason a deploy goes red.
-    // Returning nothing yields a fully dynamic site, which still works.
-    return [];
+    // One placeholder yields a fully on-demand site, which still works.
+    return [{ slug: [SHELL_SLUG] }];
   }
 }
 
@@ -79,7 +84,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string[
           path={`/${resolved.page.slug}`}
         />
       )}
-      <BlockList blocks={resolved.blocks} content={blockContentFrom(content)} />
+      <BlockList blocks={resolved.blocks} content={blockContentFrom(content, await siteNow())} />
     </>
   );
 }

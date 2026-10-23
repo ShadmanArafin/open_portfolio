@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server';
 import { requireOwner, UnauthorizedError } from '@/core/auth/guard';
 import { createShareLink, revokeShareLink, shareLinkStatus } from '@/core/sharing/tokens';
 
-export const dynamic = 'force-dynamic';
-
 /**
  * Expiring share links, one per page.
  *

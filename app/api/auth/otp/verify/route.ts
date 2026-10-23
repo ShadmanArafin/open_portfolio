@@ -6,8 +6,6 @@ import { createSession } from '@/core/auth/session';
 import { getStorageAdapter } from '@/core/storage/registry';
 import { MAX_EMAIL_LENGTH } from '@/core/email/send';
 
-export const dynamic = 'force-dynamic';
-
 /**
  * Trades a one-time code for a session.
  *

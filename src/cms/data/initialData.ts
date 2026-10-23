@@ -249,7 +249,16 @@ const initialNavLinks: NavLinkItem[] = [
 ];
 
 /** Seeded assets have no real upload date — use the install date. */
-const seedDate = new Date().toISOString().slice(0, 10);
+/*
+ * Fixed, not "now". The seed is read in more than one process — prerendered
+ * at build, cached across requests, re-read by a save action — and a
+ * timestamp taken when the module loaded made each copy differ. The editors'
+ * stale-save check compares fingerprints of the content, so a fresh install's
+ * first save was refused as "changed somewhere else" whenever the screen and
+ * the action had loaded the seed at different moments.
+ */
+const SEED_TIMESTAMP = '2026-01-01T00:00:00.000Z';
+const seedDate = SEED_TIMESTAMP.slice(0, 10);
 
 /**
  * One page, built from blocks, shipped as a draft.
@@ -329,8 +338,8 @@ const initialPages: PageRecord[] = [
 
 export const INITIAL_CMS_STATE: CMSState = {
   status: 'published',
-  lastSavedAt: new Date().toISOString(),
-  lastPublishedAt: new Date().toISOString(),
+  lastSavedAt: SEED_TIMESTAMP,
+  lastPublishedAt: SEED_TIMESTAMP,
 
   settings: {
     fullName: 'Your Name',
@@ -688,7 +697,7 @@ export const INITIAL_CMS_STATE: CMSState = {
   activityLogs: [
     {
       id: 'act-101',
-      timestamp: new Date().toISOString(),
+      timestamp: SEED_TIMESTAMP,
       user: 'System',
       action: 'Initialised',
       details: 'CMS seeded from the built-in content files.',

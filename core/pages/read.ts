@@ -3,6 +3,7 @@ import { cache } from 'react';
 import { draftMode } from 'next/headers';
 import type { Channel } from '@/core/storage/contract';
 import { getContentForChannel } from '@/core/content/read';
+import { siteNow } from '@/core/content/now';
 import { parsePage } from '@/core/blocks/registry';
 import type { ParsedBlock } from '@/core/blocks/schema';
 import { HOME_SLUG, isHomePage, isPageLive, pageSchema, type PageRecord } from './schema';
@@ -61,7 +62,9 @@ export const getPages = cache(async (channel: Channel): Promise<PageRecord[]> =>
  */
 export async function getRoutablePages(channel: Channel): Promise<PageRecord[]> {
   const pages = await getPages(channel);
-  return channel === 'draft' ? pages : pages.filter((page) => isPageLive(page));
+  if (channel === 'draft') return pages;
+  const now = await siteNow();
+  return pages.filter((page) => isPageLive(page, now));
 }
 
 export async function getPageBySlug(slug: string, channel: Channel): Promise<PageRecord | null> {

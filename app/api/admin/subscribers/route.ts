@@ -5,8 +5,6 @@ import { toCsv } from '@/core/newsletter/schema';
 import { getStorageAdapter } from '@/core/storage/registry';
 import { resolveTransportWithStored } from '@/core/email/transport';
 
-export const dynamic = 'force-dynamic';
-
 /**
  * The list.
  *

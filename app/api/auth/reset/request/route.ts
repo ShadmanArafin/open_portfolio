@@ -6,8 +6,6 @@ import { getPublishedContent } from '@/core/content/read';
 import { MAX_EMAIL_LENGTH, sendMail } from '@/core/email/send';
 import { passphraseReset } from '@/core/email/templates';
 
-export const dynamic = 'force-dynamic';
-
 export async function POST(req: Request) {
   try {
     await assertSameOrigin();

@@ -10,8 +10,6 @@ import {
 } from '@/core/auth/passphrase';
 import { createSession } from '@/core/auth/session';
 
-export const dynamic = 'force-dynamic';
-
 export async function POST(req: Request) {
   try {
     await assertSameOrigin();

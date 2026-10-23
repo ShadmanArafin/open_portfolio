@@ -1,6 +1,9 @@
 import type { Metadata } from 'next';
 import { ResetForm } from './reset-form';
 
+// Request-time by nature (Cache Components may block here). A token in the address decides everything here.
+export const instant = false;
+
 export const metadata: Metadata = { title: 'Reset your passphrase' };
 
 /**

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
+import { PUBLISHED_TAG } from '@/core/content/read';
 import { getStorageAdapter } from '@/core/storage/registry';
 import { requireOwner, UnauthorizedError } from '@/core/auth/guard';
 import { clientKey, rateLimit } from '@/core/auth/ratelimit';
@@ -8,8 +9,6 @@ import { auditContrast, describeFailure } from '@/core/theme/audit';
 import { flattenAppearance } from '@/core/theme/resolve';
 import { looksLikeContent } from '@/core/content/validate';
 import { RevisionConflictError } from '@/core/storage/contract';
-
-export const dynamic = 'force-dynamic';
 
 /**
  * Publishing, at last.
@@ -106,6 +105,9 @@ export async function POST(req: Request) {
 
   // Drop the cached renders so the change is live immediately rather than
   // whenever the revalidation window happens to lapse.
+  // Route handlers cannot `updateTag`; an immediate expiry is the same
+  // promise — the next visitor waits for the new content.
+  revalidateTag(PUBLISHED_TAG, { expire: 0 });
   revalidatePath('/', 'layout');
 
   return NextResponse.json({ ok: true, revision, publishedAt: new Date().toISOString() });

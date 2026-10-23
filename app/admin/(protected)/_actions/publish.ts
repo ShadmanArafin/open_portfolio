@@ -1,6 +1,7 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
+import { PUBLISHED_TAG } from '@/core/content/read';
 import { getStorageAdapter } from '@/core/storage/registry';
 import { requireOwner } from '@/core/auth/guard';
 import { withoutEnquiries } from '@/core/content/sanitise';
@@ -120,6 +121,9 @@ export async function publishDraftAction(expectedRevision?: number): Promise<Pub
     console.error('[publish] Published, but the snapshot for History was not stored.', err);
   }
 
+  // Read-your-writes: the owner's next look at the site waits for the new
+  // content rather than being served the cached copy once more.
+  updateTag(PUBLISHED_TAG);
   revalidatePath('/', 'layout');
   return { ok: true };
 }

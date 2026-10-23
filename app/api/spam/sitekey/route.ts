@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { connection, NextResponse } from 'next/server';
 import { turnstileSiteKey } from '@/core/integrations/turnstile';
 
 /**
@@ -12,10 +12,13 @@ import { turnstileSiteKey } from '@/core/integrations/turnstile';
  * That answer used to be a 404, which every browser logs as a red console
  * error — on every page with a form, on every site that had not set Turnstile
  * up, which is most of them. "Off" is a normal answer, so it is a 200.
+ *
+ * Read per request (`connection()`): the key can be set in the admin at any
+ * time, and a handler that touches no request data would otherwise be
+ * prerendered at build with whatever the answer was then.
  */
-export const dynamic = 'force-dynamic';
-
 export async function GET() {
+  await connection();
   const siteKey = await turnstileSiteKey();
   return NextResponse.json({ ok: true, siteKey: siteKey || null });
 }

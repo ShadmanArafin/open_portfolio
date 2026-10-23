@@ -5,8 +5,6 @@ import { createSession } from '@/core/auth/session';
 import { assertSameOrigin } from '@/core/auth/guard';
 import { clientKey, rateLimit } from '@/core/auth/ratelimit';
 
-export const dynamic = 'force-dynamic';
-
 /** A well-formed hash of nothing, used to keep the timing of a miss honest. */
 const DUMMY_HASH = 'scrypt$65536$8$1$YWFhYWFhYWFhYWFhYWFhYQ==$YWFhYWFhYWFhYWFhYWFhYQ==';
 

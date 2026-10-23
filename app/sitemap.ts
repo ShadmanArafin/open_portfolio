@@ -1,3 +1,4 @@
+import { siteNow } from '@/core/content/now';
 import type { MetadataRoute } from 'next';
 import { getPublishedContent, getPublishedProjects } from '@/core/content/read';
 import { resolveSiteUrl } from '@/core/content/metadata';
@@ -15,7 +16,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = resolveSiteUrl(content);
   if (!siteUrl) return [];
 
-  const lastModified = content.lastPublishedAt ? new Date(content.lastPublishedAt) : new Date();
+  const lastModified = content.lastPublishedAt
+    ? new Date(content.lastPublishedAt)
+    : await siteNow();
 
   const staticRoutes = ['', '/work', '/about', '/contact'].map((path) => ({
     url: `${siteUrl}${path}`,

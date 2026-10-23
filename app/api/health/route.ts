@@ -1,7 +1,5 @@
-import { NextResponse } from 'next/server';
+import { connection, NextResponse } from 'next/server';
 import { APP_VERSION } from '@/core/version';
-
-export const dynamic = 'force-dynamic';
 
 /**
  * Public liveness + readiness for orchestrators and uptime monitors.
@@ -15,6 +13,8 @@ export const dynamic = 'force-dynamic';
  * load balancer can check the status code and a human can read the body.
  */
 export async function GET() {
+  // Every request is a fresh check; nothing here may be prerendered.
+  await connection();
   const started = Date.now();
   let adapterId: string | null = null;
   let ok = true;

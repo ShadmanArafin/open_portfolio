@@ -1,9 +1,7 @@
 import type { Metadata } from 'next';
-import { getPublishedContent } from '@/core/content/read';
+import { getPublishedContentFresh } from '@/core/content/read';
 import { resolveSiteUrl } from '@/core/content/metadata';
 import { CopyAddress } from './copy-address';
-
-export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Your site',
@@ -74,7 +72,7 @@ function Notice({
 }
 
 export default async function YourSitePage() {
-  const content = await getPublishedContent();
+  const content = await getPublishedContentFresh();
   const url = resolveSiteUrl(content) ?? null;
   const platform: Platform = process.env.VERCEL
     ? 'vercel'

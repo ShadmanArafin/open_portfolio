@@ -1,3 +1,4 @@
+import { siteNow } from '@/core/content/now';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { buildMetadata } from '@/core/content/metadata';
@@ -7,6 +8,9 @@ import { getContentForChannel } from '@/core/content/read';
 import { getPages, resolveHomePage } from '@/core/pages/read';
 import { isHomePage } from '@/core/pages/schema';
 import { resolveShareToken } from '@/core/sharing/tokens';
+
+// Request-time by nature (Cache Components may block here). A private link: the token is the page.
+export const instant = false;
 
 /**
  * A page through somebody else's keyhole.
@@ -18,8 +22,6 @@ import { resolveShareToken } from '@/core/sharing/tokens';
  * sitemap or the navigation, and the banner says plainly what this is, so a
  * forwarded link cannot be mistaken for the live site.
  */
-
-export const dynamic = 'force-dynamic';
 
 async function resolveSharedPage(token: string) {
   const match = await resolveShareToken(token);
@@ -69,7 +71,10 @@ export default async function SharedPage({ params }: { params: Promise<{ token: 
           anyone with this link, showing the current draft — not the live site.
         </span>
       </div>
-      <BlockList blocks={shared.blocks} content={blockContentFrom(shared.content)} />
+      <BlockList
+        blocks={shared.blocks}
+        content={blockContentFrom(shared.content, await siteNow())}
+      />
     </>
   );
 }

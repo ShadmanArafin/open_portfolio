@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server';
 import { timingSafeEqual } from 'node:crypto';
 import { runMonthlyDigest } from '@/core/notify/digest';
 
-export const dynamic = 'force-dynamic';
-
 /**
  * Called by a scheduler, never by a person: Vercel Cron (which sends
  * `Authorization: Bearer $CRON_SECRET` when that variable is set), a crontab

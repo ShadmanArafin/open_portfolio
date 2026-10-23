@@ -10,8 +10,6 @@ import type { CMSState } from '@/cms/types/cms';
 import { PublishButton } from './publish-button';
 import { launchSteps } from '@/core/content/launch';
 
-export const dynamic = 'force-dynamic';
-
 export const metadata: Metadata = {
   title: 'Dashboard',
   robots: { index: false, follow: false },

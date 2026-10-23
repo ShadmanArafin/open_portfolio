@@ -52,6 +52,7 @@ const nextConfig: NextConfig = {
    * the same commit runs on Vercel, on a VPS, and on a Raspberry Pi.
    */
   output: 'standalone',
+  cacheComponents: true,
 
   /*
    * Miniflare ships a platform-native workerd binary (plus READMEs and other

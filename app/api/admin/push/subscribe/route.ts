@@ -6,8 +6,6 @@ import {
   savePushSubscription,
 } from '@/core/notify/push';
 
-export const dynamic = 'force-dynamic';
-
 /**
  * The owner's devices, for push. Owner-only in every direction: the endpoint
  * URLs are capabilities, and listing them is listing where the owner can be

@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server';
 import { getStorageAdapter } from '@/core/storage/registry';
 import { requireOwner, UnauthorizedError } from '@/core/auth/guard';
 
-export const dynamic = 'force-dynamic';
-
 /**
  * Which backend is actually running, and whether it is answering.
  *

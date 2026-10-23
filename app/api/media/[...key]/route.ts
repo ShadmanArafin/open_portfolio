@@ -4,8 +4,6 @@ import path from 'node:path';
 import { getStorageAdapter } from '@/core/storage/registry';
 import { mediaRoot } from '@/core/storage/adapters/_shared/data-dir';
 
-export const dynamic = 'force-dynamic';
-
 /**
  * Serves uploaded media for backends that store bytes locally rather than
  * behind their own CDN.

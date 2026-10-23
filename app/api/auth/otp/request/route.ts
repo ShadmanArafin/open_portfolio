@@ -7,8 +7,6 @@ import { MAX_EMAIL_LENGTH, sendMail } from '@/core/email/send';
 import { resolveTransportWithStored } from '@/core/email/transport';
 import { signInCode } from '@/core/email/templates';
 
-export const dynamic = 'force-dynamic';
-
 /**
  * Sends the owner a one-time sign-in code.
  *

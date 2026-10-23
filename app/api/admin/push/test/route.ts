@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server';
 import { requireOwner, UnauthorizedError } from '@/core/auth/guard';
 import { sendTestPush } from '@/core/notify/push';
 
-export const dynamic = 'force-dynamic';
-
 /**
  * One buzz on demand, from the inbox. Bypasses the burst cap — an explicit
  * test is the owner asking, not a burst — but reports rather than throws: a

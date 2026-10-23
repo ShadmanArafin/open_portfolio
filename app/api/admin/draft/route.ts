@@ -20,8 +20,6 @@ import { RevisionConflictError } from '@/core/storage/contract';
  * where it stays.
  */
 
-export const dynamic = 'force-dynamic';
-
 /**
  * The draft, and the revision it is on.
  *

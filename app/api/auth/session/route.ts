@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getInstanceState, getOwnerSession } from '@/core/auth/guard';
 
-export const dynamic = 'force-dynamic';
-
 /**
  * Lets the client-rendered admin ask who it is talking to.
  *

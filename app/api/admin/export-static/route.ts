@@ -8,7 +8,6 @@ import { tagHref } from '@/core/writing/reading';
 import { writeZip } from '@/core/backup/zip';
 import { exportStaticSite } from '@/core/export/static-site';
 
-export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
 
 /**
