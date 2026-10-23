@@ -1,57 +1,24 @@
 /* Self-hosted catalogue fonts.
  *
- * One static next/font/google loader per family the Appearance picker offers.
- * Static is the whole point: next/font downloads and self-hosts the files at
- * build time, so no visitor request ever reaches Google (remote font CSS leaks
- * visitor IPs). Dynamic choice survives because selection stays data: the
- * layout attaches every variable class, and --font-display/body/mono point at
+ * One static next/font/local loader per family the Appearance picker offers,
+ * over the latin files of the family's Fontsource package (OFL, installed by
+ * `npm ci` like any other dependency). The build reads files from disk and
+ * makes no network request, so it works offline and cannot fail because a
+ * font host did not answer; no visitor request ever reaches a font host
+ * either. Dynamic choice survives because selection stays data: the layout
+ * attaches every variable class, and --font-display/body/mono point at
  * whichever variable the saved appearance names. Unused families cost parsed
  * CSS, not downloads — the browser only fetches a woff2 whose family is
  * actually referenced.
  *
- * preload:false: preloading every catalogue family would turn each page load
- * into a font firehose. adjustFontFallback stays on so the swap does not shift
- * layout. Adding a catalogue font means adding one block here and one entry
- * in GOOGLE_FONTS_LIST — the build fails naming an unknown family, which is
- * the test.
+ * Variable families ship one file for every weight. preload:false: preloading
+ * every catalogue family would turn each page load into a font firehose.
+ * adjustFontFallback keeps the swap from shifting layout. Adding a catalogue
+ * font means installing its @fontsource(-variable) package, adding one block
+ * here and one entry in GOOGLE_FONTS_LIST — the build fails naming a missing
+ * file, which is the test.
  */
-import {
-  Inter,
-  Geist,
-  Figtree,
-  Plus_Jakarta_Sans,
-  Manrope,
-  DM_Sans,
-  Onest,
-  Hanken_Grotesk,
-  IBM_Plex_Sans,
-  Raleway,
-  Instrument_Sans,
-  Schibsted_Grotesk,
-  Familjen_Grotesk,
-  Space_Grotesk,
-  Archivo,
-  Chivo,
-  Epilogue,
-  Sora,
-  Outfit,
-  Gabarito,
-  Bricolage_Grotesque,
-  Unbounded,
-  Anton,
-  Instrument_Serif,
-  Fraunces,
-  Newsreader,
-  Source_Serif_4,
-  Playfair_Display,
-  Lora,
-  DM_Serif_Display,
-  Libre_Baskerville,
-  Geist_Mono,
-  JetBrains_Mono,
-  Space_Mono,
-  IBM_Plex_Mono,
-} from 'next/font/google';
+import localFont from 'next/font/local';
 
 export interface SelfHostedFont {
   variable: string;
@@ -59,249 +26,347 @@ export interface SelfHostedFont {
   generic: string;
 }
 
-const Inter_font = Inter({
-  weight: ['300', '400', '500', '600', '700'],
-  subsets: ['latin'],
+const Inter_font = localFont({
+  src: '../../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2',
+  weight: '100 900',
+  style: 'normal',
   display: 'swap',
   preload: false,
+  adjustFontFallback: 'Arial',
   variable: '--font-inter',
 });
-const Geist_font = Geist({
-  weight: ['300', '400', '500', '600', '700'],
-  subsets: ['latin'],
+const Geist_font = localFont({
+  src: '../../node_modules/@fontsource-variable/geist/files/geist-latin-wght-normal.woff2',
+  weight: '100 900',
+  style: 'normal',
   display: 'swap',
   preload: false,
+  adjustFontFallback: 'Arial',
   variable: '--font-geist',
 });
-const Figtree_font = Figtree({
-  weight: ['300', '400', '500', '600', '700'],
-  subsets: ['latin'],
+const Figtree_font = localFont({
+  src: '../../node_modules/@fontsource-variable/figtree/files/figtree-latin-wght-normal.woff2',
+  weight: '100 900',
+  style: 'normal',
   display: 'swap',
   preload: false,
+  adjustFontFallback: 'Arial',
   variable: '--font-figtree',
 });
-const Plus_Jakarta_Sans_font = Plus_Jakarta_Sans({
-  weight: ['300', '400', '500', '600', '700'],
-  subsets: ['latin'],
+const Plus_Jakarta_Sans_font = localFont({
+  src: '../../node_modules/@fontsource-variable/plus-jakarta-sans/files/plus-jakarta-sans-latin-wght-normal.woff2',
+  weight: '100 900',
+  style: 'normal',
   display: 'swap',
   preload: false,
+  adjustFontFallback: 'Arial',
   variable: '--font-plus-jakarta-sans',
 });
-const Manrope_font = Manrope({
-  weight: ['300', '400', '500', '600', '700'],
-  subsets: ['latin'],
+const Manrope_font = localFont({
+  src: '../../node_modules/@fontsource-variable/manrope/files/manrope-latin-wght-normal.woff2',
+  weight: '100 900',
+  style: 'normal',
   display: 'swap',
   preload: false,
+  adjustFontFallback: 'Arial',
   variable: '--font-manrope',
 });
-const DM_Sans_font = DM_Sans({
-  weight: ['300', '400', '500', '600', '700'],
-  subsets: ['latin'],
+const DM_Sans_font = localFont({
+  src: '../../node_modules/@fontsource-variable/dm-sans/files/dm-sans-latin-wght-normal.woff2',
+  weight: '100 900',
+  style: 'normal',
   display: 'swap',
   preload: false,
+  adjustFontFallback: 'Arial',
   variable: '--font-dm-sans',
 });
-const Onest_font = Onest({
-  weight: ['300', '400', '500', '600', '700'],
-  subsets: ['latin'],
+const Onest_font = localFont({
+  src: '../../node_modules/@fontsource-variable/onest/files/onest-latin-wght-normal.woff2',
+  weight: '100 900',
+  style: 'normal',
   display: 'swap',
   preload: false,
+  adjustFontFallback: 'Arial',
   variable: '--font-onest',
 });
-const Hanken_Grotesk_font = Hanken_Grotesk({
-  weight: ['300', '400', '500', '600', '700'],
-  subsets: ['latin'],
+const Hanken_Grotesk_font = localFont({
+  src: '../../node_modules/@fontsource-variable/hanken-grotesk/files/hanken-grotesk-latin-wght-normal.woff2',
+  weight: '100 900',
+  style: 'normal',
   display: 'swap',
   preload: false,
+  adjustFontFallback: 'Arial',
   variable: '--font-hanken-grotesk',
 });
-const IBM_Plex_Sans_font = IBM_Plex_Sans({
-  weight: ['300', '400', '500', '600', '700'],
-  subsets: ['latin'],
+const IBM_Plex_Sans_font = localFont({
+  src: '../../node_modules/@fontsource-variable/ibm-plex-sans/files/ibm-plex-sans-latin-wght-normal.woff2',
+  weight: '100 900',
+  style: 'normal',
   display: 'swap',
   preload: false,
+  adjustFontFallback: 'Arial',
   variable: '--font-ibm-plex-sans',
 });
-const Raleway_font = Raleway({
-  weight: ['300', '400', '500', '600', '700'],
-  subsets: ['latin'],
+const Raleway_font = localFont({
+  src: '../../node_modules/@fontsource-variable/raleway/files/raleway-latin-wght-normal.woff2',
+  weight: '100 900',
+  style: 'normal',
   display: 'swap',
   preload: false,
+  adjustFontFallback: 'Arial',
   variable: '--font-raleway',
 });
-const Instrument_Sans_font = Instrument_Sans({
-  weight: ['400', '500', '600', '700'],
-  subsets: ['latin'],
+const Instrument_Sans_font = localFont({
+  src: '../../node_modules/@fontsource-variable/instrument-sans/files/instrument-sans-latin-wght-normal.woff2',
+  weight: '100 900',
+  style: 'normal',
   display: 'swap',
   preload: false,
+  adjustFontFallback: 'Arial',
   variable: '--font-instrument-sans',
 });
-const Schibsted_Grotesk_font = Schibsted_Grotesk({
-  weight: ['400', '500', '600', '700'],
-  subsets: ['latin'],
+const Schibsted_Grotesk_font = localFont({
+  src: '../../node_modules/@fontsource-variable/schibsted-grotesk/files/schibsted-grotesk-latin-wght-normal.woff2',
+  weight: '100 900',
+  style: 'normal',
   display: 'swap',
   preload: false,
+  adjustFontFallback: 'Arial',
   variable: '--font-schibsted-grotesk',
 });
-const Familjen_Grotesk_font = Familjen_Grotesk({
-  weight: ['400', '500', '600', '700'],
-  subsets: ['latin'],
+const Familjen_Grotesk_font = localFont({
+  src: '../../node_modules/@fontsource-variable/familjen-grotesk/files/familjen-grotesk-latin-wght-normal.woff2',
+  weight: '100 900',
+  style: 'normal',
   display: 'swap',
   preload: false,
+  adjustFontFallback: 'Arial',
   variable: '--font-familjen-grotesk',
 });
-const Space_Grotesk_font = Space_Grotesk({
-  weight: ['300', '400', '500', '600', '700'],
-  subsets: ['latin'],
+const Space_Grotesk_font = localFont({
+  src: '../../node_modules/@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2',
+  weight: '100 900',
+  style: 'normal',
   display: 'swap',
   preload: false,
+  adjustFontFallback: 'Arial',
   variable: '--font-space-grotesk',
 });
-const Archivo_font = Archivo({
-  weight: ['300', '400', '500', '600', '700'],
-  subsets: ['latin'],
+const Archivo_font = localFont({
+  src: '../../node_modules/@fontsource-variable/archivo/files/archivo-latin-wght-normal.woff2',
+  weight: '100 900',
+  style: 'normal',
   display: 'swap',
   preload: false,
+  adjustFontFallback: 'Arial',
   variable: '--font-archivo',
 });
-const Chivo_font = Chivo({
-  weight: ['300', '400', '500', '600', '700'],
-  subsets: ['latin'],
+const Chivo_font = localFont({
+  src: '../../node_modules/@fontsource-variable/chivo/files/chivo-latin-wght-normal.woff2',
+  weight: '100 900',
+  style: 'normal',
   display: 'swap',
   preload: false,
+  adjustFontFallback: 'Arial',
   variable: '--font-chivo',
 });
-const Epilogue_font = Epilogue({
-  weight: ['300', '400', '500', '600', '700'],
-  subsets: ['latin'],
+const Epilogue_font = localFont({
+  src: '../../node_modules/@fontsource-variable/epilogue/files/epilogue-latin-wght-normal.woff2',
+  weight: '100 900',
+  style: 'normal',
   display: 'swap',
   preload: false,
+  adjustFontFallback: 'Arial',
   variable: '--font-epilogue',
 });
-const Sora_font = Sora({
-  weight: ['300', '400', '500', '600', '700'],
-  subsets: ['latin'],
+const Sora_font = localFont({
+  src: '../../node_modules/@fontsource-variable/sora/files/sora-latin-wght-normal.woff2',
+  weight: '100 900',
+  style: 'normal',
   display: 'swap',
   preload: false,
+  adjustFontFallback: 'Arial',
   variable: '--font-sora',
 });
-const Outfit_font = Outfit({
-  weight: ['300', '400', '500', '600', '700'],
-  subsets: ['latin'],
+const Outfit_font = localFont({
+  src: '../../node_modules/@fontsource-variable/outfit/files/outfit-latin-wght-normal.woff2',
+  weight: '100 900',
+  style: 'normal',
   display: 'swap',
   preload: false,
+  adjustFontFallback: 'Arial',
   variable: '--font-outfit',
 });
-const Gabarito_font = Gabarito({
-  weight: ['400', '500', '600', '700'],
-  subsets: ['latin'],
+const Gabarito_font = localFont({
+  src: '../../node_modules/@fontsource-variable/gabarito/files/gabarito-latin-wght-normal.woff2',
+  weight: '100 900',
+  style: 'normal',
   display: 'swap',
   preload: false,
+  adjustFontFallback: 'Arial',
   variable: '--font-gabarito',
 });
-const Bricolage_Grotesque_font = Bricolage_Grotesque({
-  weight: ['300', '400', '500', '600', '700'],
-  subsets: ['latin'],
+const Bricolage_Grotesque_font = localFont({
+  src: '../../node_modules/@fontsource-variable/bricolage-grotesque/files/bricolage-grotesque-latin-wght-normal.woff2',
+  weight: '100 900',
+  style: 'normal',
   display: 'swap',
   preload: false,
+  adjustFontFallback: 'Arial',
   variable: '--font-bricolage-grotesque',
 });
-const Unbounded_font = Unbounded({
-  weight: ['300', '400', '500', '600', '700'],
-  subsets: ['latin'],
+const Unbounded_font = localFont({
+  src: '../../node_modules/@fontsource-variable/unbounded/files/unbounded-latin-wght-normal.woff2',
+  weight: '100 900',
+  style: 'normal',
   display: 'swap',
   preload: false,
+  adjustFontFallback: 'Arial',
   variable: '--font-unbounded',
 });
-const Anton_font = Anton({
-  weight: ['400'],
-  subsets: ['latin'],
+const Anton_font = localFont({
+  src: [
+    {
+      path: '../../node_modules/@fontsource/anton/files/anton-latin-400-normal.woff2',
+      weight: '400',
+    },
+  ],
+  style: 'normal',
   display: 'swap',
   preload: false,
+  adjustFontFallback: 'Arial',
   variable: '--font-anton',
 });
-const Instrument_Serif_font = Instrument_Serif({
-  weight: ['400'],
-  subsets: ['latin'],
+const Instrument_Serif_font = localFont({
+  src: [
+    {
+      path: '../../node_modules/@fontsource/instrument-serif/files/instrument-serif-latin-400-normal.woff2',
+      weight: '400',
+    },
+  ],
+  style: 'normal',
   display: 'swap',
   preload: false,
+  adjustFontFallback: 'Times New Roman',
   variable: '--font-instrument-serif',
 });
-const Fraunces_font = Fraunces({
-  weight: ['300', '400', '500', '600', '700'],
-  subsets: ['latin'],
+const Fraunces_font = localFont({
+  src: '../../node_modules/@fontsource-variable/fraunces/files/fraunces-latin-wght-normal.woff2',
+  weight: '100 900',
+  style: 'normal',
   display: 'swap',
   preload: false,
+  adjustFontFallback: 'Times New Roman',
   variable: '--font-fraunces',
 });
-const Newsreader_font = Newsreader({
-  weight: ['300', '400', '500', '600', '700'],
-  subsets: ['latin'],
+const Newsreader_font = localFont({
+  src: '../../node_modules/@fontsource-variable/newsreader/files/newsreader-latin-wght-normal.woff2',
+  weight: '100 900',
+  style: 'normal',
   display: 'swap',
   preload: false,
+  adjustFontFallback: 'Times New Roman',
   variable: '--font-newsreader',
 });
-const Source_Serif_4_font = Source_Serif_4({
-  weight: ['300', '400', '500', '600', '700'],
-  subsets: ['latin'],
+const Source_Serif_4_font = localFont({
+  src: '../../node_modules/@fontsource-variable/source-serif-4/files/source-serif-4-latin-wght-normal.woff2',
+  weight: '100 900',
+  style: 'normal',
   display: 'swap',
   preload: false,
+  adjustFontFallback: 'Times New Roman',
   variable: '--font-source-serif-4',
 });
-const Playfair_Display_font = Playfair_Display({
-  weight: ['400', '500', '600', '700'],
-  subsets: ['latin'],
+const Playfair_Display_font = localFont({
+  src: '../../node_modules/@fontsource-variable/playfair-display/files/playfair-display-latin-wght-normal.woff2',
+  weight: '100 900',
+  style: 'normal',
   display: 'swap',
   preload: false,
+  adjustFontFallback: 'Times New Roman',
   variable: '--font-playfair-display',
 });
-const Lora_font = Lora({
-  weight: ['400', '500', '600', '700'],
-  subsets: ['latin'],
+const Lora_font = localFont({
+  src: '../../node_modules/@fontsource-variable/lora/files/lora-latin-wght-normal.woff2',
+  weight: '100 900',
+  style: 'normal',
   display: 'swap',
   preload: false,
+  adjustFontFallback: 'Times New Roman',
   variable: '--font-lora',
 });
-const DM_Serif_Display_font = DM_Serif_Display({
-  weight: ['400'],
-  subsets: ['latin'],
+const DM_Serif_Display_font = localFont({
+  src: [
+    {
+      path: '../../node_modules/@fontsource/dm-serif-display/files/dm-serif-display-latin-400-normal.woff2',
+      weight: '400',
+    },
+  ],
+  style: 'normal',
   display: 'swap',
   preload: false,
+  adjustFontFallback: 'Times New Roman',
   variable: '--font-dm-serif-display',
 });
-const Libre_Baskerville_font = Libre_Baskerville({
-  weight: ['400', '700'],
-  subsets: ['latin'],
+const Libre_Baskerville_font = localFont({
+  src: '../../node_modules/@fontsource-variable/libre-baskerville/files/libre-baskerville-latin-wght-normal.woff2',
+  weight: '100 900',
+  style: 'normal',
   display: 'swap',
   preload: false,
+  adjustFontFallback: 'Times New Roman',
   variable: '--font-libre-baskerville',
 });
-const Geist_Mono_font = Geist_Mono({
-  weight: ['300', '400', '500', '600', '700'],
-  subsets: ['latin'],
+const Geist_Mono_font = localFont({
+  src: '../../node_modules/@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2',
+  weight: '100 900',
+  style: 'normal',
   display: 'swap',
   preload: false,
+  adjustFontFallback: false,
   variable: '--font-geist-mono',
 });
-const JetBrains_Mono_font = JetBrains_Mono({
-  weight: ['300', '400', '500', '600', '700'],
-  subsets: ['latin'],
+const JetBrains_Mono_font = localFont({
+  src: '../../node_modules/@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2',
+  weight: '100 900',
+  style: 'normal',
   display: 'swap',
   preload: false,
+  adjustFontFallback: false,
   variable: '--font-jetbrains-mono',
 });
-const Space_Mono_font = Space_Mono({
-  weight: ['400', '700'],
-  subsets: ['latin'],
+const Space_Mono_font = localFont({
+  src: [
+    {
+      path: '../../node_modules/@fontsource/space-mono/files/space-mono-latin-400-normal.woff2',
+      weight: '400',
+    },
+    {
+      path: '../../node_modules/@fontsource/space-mono/files/space-mono-latin-700-normal.woff2',
+      weight: '700',
+    },
+  ],
+  style: 'normal',
   display: 'swap',
   preload: false,
+  adjustFontFallback: false,
   variable: '--font-space-mono',
 });
-const IBM_Plex_Mono_font = IBM_Plex_Mono({
-  weight: ['400', '500'],
-  subsets: ['latin'],
+const IBM_Plex_Mono_font = localFont({
+  src: [
+    {
+      path: '../../node_modules/@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-400-normal.woff2',
+      weight: '400',
+    },
+    {
+      path: '../../node_modules/@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-500-normal.woff2',
+      weight: '500',
+    },
+  ],
+  style: 'normal',
   display: 'swap',
   preload: false,
+  adjustFontFallback: false,
   variable: '--font-ibm-plex-mono',
 });
 
