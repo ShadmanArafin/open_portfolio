@@ -553,8 +553,11 @@ width=720` needs `maxWidth=100vw`. Tablet 768px preview frame forces
   component on that kit was ported to plain Tailwind and `@astryxdesign/*`
   plus the orphaned `@stylexjs/stylex` left `package.json`. The Tailwind 4
   re-evaluation landed the same day: the port is complete and verified on the
-  `tailwind4-attempt` branch; the pin now waits only on the Safari 16.4+
-  product call (issue #9, §7, §11.5).
+  `tailwind4-attempt` branch, and the call was made on 2026-10-18 (recorded
+  2026-10-25): **stay on Tailwind 3**. v4's floor is Safari 16.4+, Chrome 111+
+  and Firefox 128+; a portfolio that stops opening on an older phone to gain
+  build-tool ergonomics is the wrong trade for this product. The branch stays
+  as the evidence, unmerged (#9, §7, §11.5).
 - **Perf:** zero `next/image`, zero `next/font`; Google Fonts `<link>` is
   render-blocking; images are raw `<img>` with no sizing/lazy/`remotePatterns`.
 - **Deps:** `framer-motion@13` (17 files) → `motion/react` during admin
@@ -571,15 +574,15 @@ width=720` needs `maxWidth=100vw`. Tablet 768px preview frame forces
 
 ## 7. Tech stack — keep, change, evaluate
 
-| Current                                                           | Verdict                                                                                                                                                                                                              |
-| ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Next.js 16 App Router + React 19 + TS strict                      | **Keep.** Idiomatic (`params:Promise`, `cache()`, `revalidate:60`, `force-dynamic` mutations).                                                                                                                       |
-| Tailwind 3 pinned                                                 | **Keep, one call pending.** Re-evaluated 2026-10-18 (issue #9): the CSS-build guard and a verified port live on the `tailwind4-attempt` branch; what remains is the Safari 16.4+ baseline decision, not code.        |
-| 8 storage adapters + env inference                                | **Keep.** Zero-config deploy works because of it. Add Convex only with a real account; do not fake it.                                                                                                               |
-| scrypt + opaque cookies + `@simplewebauthn/*` present             | **Keep.** Passkey ceremonies + OTP recovery are built per `PLAN.md`; `README.md` "no passkeys/OTP" is stale — update it.                                                                                             |
-| Nodemailer SMTP only                                              | **Keep core, extend via registry.** Vault + registry exist; only `smtp` registered (`core/integrations/definitions/smtp.ts`). Add Resend/Brevo + Turnstile + Plausible/Umami as definitions.                         |
-| Vitest + Playwright + axe + conformance                           | **Keep.** Raise coverage to `src/cms` once `themes/` lands.                                                                                                                                                          |
-| `react-router-dom`, `framer-motion@13`, `react-icons` server drag | **First two done 2026-10-18:** `react-router-dom` left with the legacy admin (kill criteria); `framer-motion` became `motion` earlier. `react-icons` stays — and stays client-side (`core/blocks/standard.tsx:856`). |
+| Current                                                           | Verdict                                                                                                                                                                                                                                                                                                                      |
+| ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Next.js 16 App Router + React 19 + TS strict                      | **Keep.** Idiomatic (`params:Promise`, `cache()`, `revalidate:60`, `force-dynamic` mutations).                                                                                                                                                                                                                               |
+| Tailwind 3 pinned                                                 | **Keep — decided 2026-10-18.** Re-evaluated 2026-10-18 (issue #9): the CSS-build guard and a verified port live on the `tailwind4-attempt` branch. The call went against adopting it — v4 requires Safari 16.4+/Chrome 111+/Firefox 128+, and this site has to open on older phones. The branch stays as evidence, unmerged. |
+| 8 storage adapters + env inference                                | **Keep.** Zero-config deploy works because of it. Add Convex only with a real account; do not fake it.                                                                                                                                                                                                                       |
+| scrypt + opaque cookies + `@simplewebauthn/*` present             | **Keep.** Passkey ceremonies + OTP recovery are built per `PLAN.md`; `README.md` "no passkeys/OTP" is stale — update it.                                                                                                                                                                                                     |
+| Nodemailer SMTP only                                              | **Keep core, extend via registry.** Vault + registry exist; only `smtp` registered (`core/integrations/definitions/smtp.ts`). Add Resend/Brevo + Turnstile + Plausible/Umami as definitions.                                                                                                                                 |
+| Vitest + Playwright + axe + conformance                           | **Keep.** Raise coverage to `src/cms` once `themes/` lands.                                                                                                                                                                                                                                                                  |
+| `react-router-dom`, `framer-motion@13`, `react-icons` server drag | **First two done 2026-10-18:** `react-router-dom` left with the legacy admin (kill criteria); `framer-motion` became `motion` earlier. `react-icons` stays — and stays client-side (`core/blocks/standard.tsx:856`).                                                                                                         |
 
 **Evaluate next (verify before adopting):** self-hosted `next/image` + `sharp`;
 `next/font` self-host + `display=swap`; Turnstile (proves the integrations
@@ -1131,7 +1134,7 @@ computed contrast, zero console errors throughout).
       a target-and-column-mapping screen is the v2 if the fixed templates turn
       out to be too rigid. Worth doing on whichever screen hurts first rather
       than all ten at once.
-- [ ] Import v1: image bulk upload. **Already shipped** — Media and Artifacts
+- [x] Import v1: image bulk upload. **Already shipped** — Media and Artifacts
       both take multiple files; kept here only so the item is not half-lost.
 - [x] Phase C entries in `CHANGELOG.md`. **DONE 2026-10-18:** the named changes
       are written up in the Unreleased section under **You can now** -
@@ -1186,8 +1189,8 @@ computed contrast, zero console errors throughout).
       per-slice evidence: `docs/ADMIN-REWRITE.md`. The last sequencing item —
       the Tailwind 4 re-evaluation — landed the same day: the CSS-build guard
       now compiles the real stylesheet, the port is verified on the
-      `tailwind4-attempt` branch, and the pin waits only on the Safari 16.4+
-      product call (§7, §11.5).
+      `tailwind4-attempt` branch, and the call itself was made on 2026-10-18
+      (recorded 2026-10-25): stay on Tailwind 3 (§7, §11.5).
 
 ---
 
@@ -1322,8 +1325,10 @@ var(--font-inter) }`; v3 config shown too). One call = one hosted instance:
   `var(--color-border)`, an Astryx-owned name v4 would have started emitting
   with our value (fixed — it now reads `var(--border-color)`), and 18
   custom-token alpha utilities (`bg-bg/90`, `selection:bg-accent/20`, …) that
-  v3 emitted as nothing now render. The pin waits only on the §7 product call:
-  v4's Safari 16.4+ floor decides who can see a site built on this.
+  v3 emitted as nothing now render. The §7 product call was made on 2026-10-18
+  (recorded 2026-10-25): **stay on Tailwind 3**. The port works, but v4's Safari
+  16.4+ floor decides who can see a site built on this, and the older phones
+  this product still has to open on are worth more than the migration.
 
 ### 11.6 Cloudflare Turnstile — integration shape confirmed
 
