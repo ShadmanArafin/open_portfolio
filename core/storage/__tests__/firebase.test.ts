@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { runConformanceSuite } from '../conformance';
 import type { StorageAdapter } from '../contract';
 
@@ -22,6 +22,15 @@ import type { StorageAdapter } from '../contract';
 const TEST_PROJECT = process.env.FIREBASE_TEST_PROJECT;
 
 if (TEST_PROJECT) {
+  // The emulator locks a document per transaction, and the Admin SDK retries
+  // a transaction that loses the lock after 1 s, then ×1.5 with full jitter,
+  // up to 5 attempts. Six writers racing one document (the concurrency case)
+  // take a steady ~3.5 s on an idle machine for that reason alone; on a busy
+  // CI runner it passed 5 s, and the timed-out test's writers went on to bump
+  // the revision under the next test. The assertions are unchanged — every
+  // write must still succeed — only the budget fits the backoff.
+  vi.setConfig({ testTimeout: 30_000, hookTimeout: 30_000 });
+
   const load = async (): Promise<StorageAdapter> => {
     process.env.FIREBASE_PROJECT_ID = TEST_PROJECT;
     const { __resetFirebaseApp, firebaseAdapter } = await import('../adapters/firebase');
