@@ -26,6 +26,10 @@ export default defineConfig({
   testDir: './e2e',
   timeout: 30_000,
   fullyParallel: false,
+  // One server, one store: specs claim, publish and restore the same site, so
+  // parallel files race each other (two claims, or a backup taken mid-publish).
+  // Serial costs nothing here - the run is startup-bound - and makes CI honest.
+  workers: 1,
   reporter: [['list']],
   // A failure in CI leaves a trace to open, not just a line of text.
   use: { baseURL, trace: 'retain-on-failure' },
