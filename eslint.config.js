@@ -9,7 +9,7 @@ export default tseslint.config(
   // `.next` holds generated output — linting it reports thousands of problems
   // in code nobody wrote and nobody can fix.
   // `site/` is a separate application with its own toolchain — see site/README.md.
-  { ignores: ['.next', 'next-env.d.ts', 'node_modules', 'coverage', 'dist', 'site'] },
+  { ignores: ['.next', 'next-env.d.ts', 'node_modules', 'coverage', 'dist', 'site', '.remember'] },
 
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
