@@ -190,21 +190,34 @@ jobs:
           # installer performs, scripted. A project must belong to a team, and
           # the key id is explicit so this is re-runnable.
           COOKIE_JAR=$(mktemp)
-          curl -sSf -c "$COOKIE_JAR" -H 'X-Appwrite-Project: console' -H 'Content-Type: application/json' \
-            -d '{"userId":"ciadmin","email":"ci@test.local","password":"testtest1234","name":"ci"}' \
-            http://localhost:8081/v1/account >/dev/null
-          curl -sSf -b "$COOKIE_JAR" -c "$COOKIE_JAR" -H 'X-Appwrite-Project: console' -H 'Content-Type: application/json' \
-            -d '{"email":"ci@test.local","password":"testtest1234"}' \
-            http://localhost:8081/v1/account/sessions/email >/dev/null
-          curl -sSf -b "$COOKIE_JAR" -H 'X-Appwrite-Project: console' -H 'Content-Type: application/json' \
-            -d '{"teamId":"opbteam","name":"opbtest"}' \
-            http://localhost:8081/v1/teams >/dev/null
-          curl -sSf -b "$COOKIE_JAR" -H 'X-Appwrite-Project: console' -H 'Content-Type: application/json' \
-            -d '{"projectId":"opbtest","name":"opbtest","teamId":"opbteam"}' \
-            http://localhost:8081/v1/projects >/dev/null
-          SECRET=$(curl -sSf -b "$COOKIE_JAR" -H 'X-Appwrite-Project: console' -H 'Content-Type: application/json' \
-            -d '{"keyId":"opbtestkey","name":"opb-test","scopes":["databases.read","databases.write","collections.read","collections.write","attributes.read","attributes.write","indexes.read","indexes.write","documents.read","documents.write","files.read","files.write","buckets.read","buckets.write"]}' \
-            http://localhost:8081/v1/projects/opbtest/keys | jq -r .secret)
+          # /health/version answers before Appwrite's database is ready, so the
+          # first writes can return 500 for a few seconds (seen on main). Retry
+          # 5xx and refused connections; 409 means the record already exists,
+          # which is the state we want. Anything else fails at once.
+          aw() {
+            for _ in $(seq 1 40); do
+              code=$(curl -sS -o /tmp/aw.out -w '%{http_code}' -b "$COOKIE_JAR" -c "$COOKIE_JAR" \
+                -H 'X-Appwrite-Project: console' -H 'Content-Type: application/json' \
+                -d "$2" "http://localhost:8081/v1$1") || code=000
+              case "$code" in
+                2??) cat /tmp/aw.out; return 0 ;;
+                409) return 0 ;;
+                5??|000) sleep 3 ;;
+                *) echo "Appwrite $1 answered $code:" >&2; cat /tmp/aw.out >&2; return 1 ;;
+              esac
+            done
+            echo "Appwrite $1 never became ready" >&2
+            return 1
+          }
+          aw /account '{"userId":"ciadmin","email":"ci@test.local","password":"testtest1234","name":"ci"}' >/dev/null
+          aw /account/sessions/email '{"email":"ci@test.local","password":"testtest1234"}' >/dev/null
+          aw /teams '{"teamId":"opbteam","name":"opbtest"}' >/dev/null
+          aw /projects '{"projectId":"opbtest","name":"opbtest","teamId":"opbteam"}' >/dev/null
+          SECRET=$(aw /projects/opbtest/keys '{"keyId":"opbtestkey","name":"opb-test","scopes":["databases.read","databases.write","collections.read","collections.write","attributes.read","attributes.write","indexes.read","indexes.write","documents.read","documents.write","files.read","files.write","buckets.read","buckets.write"]}' | jq -r .secret)
+          if [ -z "$SECRET" ] || [ "$SECRET" = null ]; then
+            echo "Appwrite did not return an API key secret" >&2
+            exit 1
+          fi
           echo "APPWRITE_TEST_API_KEY=$SECRET" >> "$GITHUB_ENV"
 
       - name: Run the conformance suite
