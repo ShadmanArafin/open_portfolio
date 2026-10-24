@@ -53,6 +53,14 @@ const nextConfig: NextConfig = {
    */
   output: 'standalone',
   cacheComponents: true,
+  /*
+   * Cache Components without an explicit `partialPrefetching` logs a warning
+   * from 16.4 and behaves as `false`; the old full-prefetch model is the one
+   * Next 17 removes. Nothing in this site uses `prefetch={true}`, so there is
+   * no legacy full prefetch to preserve - the default becomes one shared App
+   * Shell per route, with URL-specific content streaming in after the click.
+   */
+  partialPrefetching: true,
 
   /*
    * Miniflare ships a platform-native workerd binary (plus READMEs and other

@@ -9,7 +9,17 @@ whole point of the Help & feedback screen in the admin.
 
 ## Unreleased
 
-Nothing yet.
+### Security
+
+- **Next.js 16.4.3.** The previous 16.3.0 install was inside the affected
+  range for a stack of unauthenticated remote-code-execution advisories
+  (`GHSA-p293-qw3h-jr36`, `GHSA-2xp9-vwfh-vxw4`, `GHSA-vcvr-r3jv-pc5j`,
+  `GHSA-2464-fhr4-w9xw`, `GHSA-673q-mjm6-r5xr`) plus cache-poisoning, SSRF and
+  denial-of-service fixes. The bump stays inside 16.x and is verified on the
+  Cache Components model this site already uses. 16.4 also expects
+  `partialPrefetching` to be set explicitly, so it is now on: no page uses a
+  full `prefetch={true}`, and the default becomes one shared App Shell per
+  route.
 
 ## 0.6.0 — 2026-10-24
 
