@@ -14,7 +14,7 @@ import { Container } from '../components/common/Container';
 import { SectionLabel } from '../components/common/SectionLabel';
 import { Reveal } from '../components/common/Reveal';
 import { ArrowUpRight } from 'lucide-react';
-import { siteContent } from '../cms/server';
+import { siteContent, srcSetsFor } from '../cms/server';
 
 import Link from 'next/link';
 /**
@@ -64,6 +64,7 @@ async function WorkSection() {
     .slice(0, 2);
 
   if (featured.length === 0) return null;
+  const srcSets = await srcSetsFor(featured.flatMap((p) => p.images.map((i) => i.url)));
 
   return (
     <Section
@@ -89,7 +90,7 @@ async function WorkSection() {
 
         <div className="flex flex-col">
           {featured.map((project, idx) => (
-            <ProjectPreview key={project.id} project={project} index={idx} />
+            <ProjectPreview key={project.id} project={project} index={idx} srcSets={srcSets} />
           ))}
         </div>
 

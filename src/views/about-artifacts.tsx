@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { ArrowUpRight } from 'lucide-react';
 import { Container } from '../components/common/Container';
 import { SectionLabel } from '../components/common/SectionLabel';
-import { CMSImage } from '../components/common/CMSImage';
+import { CMSImageBase } from '../components/common/cms-image-base';
 import { MediaLightboxModal, type GalleryMediaItem } from '../components/common/MediaLightboxModal';
 import type { CMSState, VisualArtifactItem } from '../cms/types/cms';
 
@@ -15,9 +15,12 @@ import type { CMSState, VisualArtifactItem } from '../cms/types/cms';
 export function ArtifactsGallery({
   artifacts: artifactsList,
   microcopy,
+  srcSets,
 }: {
   artifacts: VisualArtifactItem[];
   microcopy: CMSState['microcopy'];
+  /** Image URL → `srcset`, worked out by the server parent (`srcSetsFor`). */
+  srcSets?: Record<string, string>;
 }) {
   const data = { microcopy };
   const [activeFilter, setActiveFilter] = useState<string>('all');
@@ -79,8 +82,9 @@ export function ArtifactsGallery({
                   aria-label={`Expand artwork: ${art.alt || art.id}`}
                   className="opb-pop aspect-[4/3] rounded-2xl overflow-hidden border border-border bg-surface-secondary relative group cursor-pointer text-left w-full"
                 >
-                  <CMSImage
+                  <CMSImageBase
                     src={art.src}
+                    srcSet={srcSets?.[art.src]}
                     alt={art.alt}
                     className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
                   />

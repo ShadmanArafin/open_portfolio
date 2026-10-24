@@ -3,7 +3,7 @@ import { Container } from '../components/common/Container';
 import { SectionLabel } from '../components/common/SectionLabel';
 import { Reveal } from '../components/common/Reveal';
 import { ArtifactsGallery } from './about-artifacts';
-import { siteContent } from '../cms/server';
+import { siteContent, srcSetsFor } from '../cms/server';
 import { CMSImage } from '../components/common/CMSImage';
 
 export async function AboutPage() {
@@ -152,7 +152,11 @@ export async function AboutPage() {
       {/* =================================================================== */}
       {/* 04. VISUAL DESIGN EXPLORATIONS                                      */}
       {/* =================================================================== */}
-      <ArtifactsGallery artifacts={artifactsList} microcopy={data.microcopy} />
+      <ArtifactsGallery
+        artifacts={artifactsList}
+        microcopy={data.microcopy}
+        srcSets={await srcSetsFor(artifactsList.map((a) => a.src))}
+      />
 
       {/* Lightbox Modal */}
     </div>

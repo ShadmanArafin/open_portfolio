@@ -10,7 +10,15 @@ import { cn } from '../utils/cn';
  * The Work page's filter pills and the list they filter — its one
  * interaction. The heading above it renders on the server.
  */
-export function WorkList({ projects, allLabel }: { projects: ProjectItem[]; allLabel: string }) {
+export function WorkList({
+  projects,
+  allLabel,
+  srcSets,
+}: {
+  projects: ProjectItem[];
+  allLabel: string;
+  srcSets?: Record<string, string>;
+}) {
   const [activeCategory, setActiveCategory] = useState<string>(allLabel);
 
   // Filters follow the content: adding a project with a new category adds a
@@ -59,7 +67,7 @@ export function WorkList({ projects, allLabel }: { projects: ProjectItem[]; allL
       <div className="flex flex-col">
         {filteredProjects.length > 0 ? (
           filteredProjects.map((project, idx) => (
-            <ProjectPreview key={project.id} project={project} index={idx} />
+            <ProjectPreview key={project.id} project={project} index={idx} srcSets={srcSets} />
           ))
         ) : (
           <div className="py-20 text-center text-text-muted font-body" role="status">

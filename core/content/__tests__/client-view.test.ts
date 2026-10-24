@@ -60,6 +60,25 @@ describe('clientView', () => {
     expect(view.media).toEqual([]);
   });
 
+  it('ships none of the media library, even photos with smaller copies', () => {
+    const state = writer(0);
+    state.media = Array.from({ length: 50 }, (_, i) => ({
+      id: `m${i}`,
+      name: `photo-${i}.jpg`,
+      url: `/api/media/photo-${i}.jpg`,
+      type: 'image' as const,
+      sizeBytes: 1000,
+      dimensions: '2400x1600',
+      variants: [640, 1280],
+      uploadedAt: '2026-01-01T00:00:00.000Z',
+      altText: `Photo ${i}`,
+      usageCount: 1,
+    }));
+    const view = clientView(state);
+    expect(view.media).toEqual([]);
+    expect(JSON.stringify(view)).not.toContain('photo-7.jpg');
+  });
+
   it('keeps what the navbar builds the menu from', () => {
     const [page] = clientView(writer(0)).pages ?? [];
     expect(page).toMatchObject({ slug: 'services', title: 'Services', nav: { show: true } });

@@ -4,7 +4,7 @@ import React, { useState, ViewTransition } from 'react';
 import { trackEvent } from '../utils/analytics';
 import { ProjectItem } from '../cms/types/cms';
 import { formatYearRange } from '../cms/utils/dates';
-import { CMSImage } from './common/CMSImage';
+import { CMSImageBase } from './common/cms-image-base';
 import { ArrowUpRight } from 'lucide-react';
 import { ImageLightboxModal } from './common/ImageLightboxModal';
 
@@ -12,9 +12,11 @@ import Link from 'next/link';
 interface ProjectPreviewProps {
   project: ProjectItem;
   index: number;
+  /** Image URL → `srcset`, worked out by the server parent (`srcSetsFor`). */
+  srcSets?: Record<string, string>;
 }
 
-export const ProjectPreview: React.FC<ProjectPreviewProps> = ({ project }) => {
+export const ProjectPreview: React.FC<ProjectPreviewProps> = ({ project, srcSets }) => {
   const [lightboxState, setLightboxState] = useState<{
     isOpen: boolean;
     imageSrc: string | null;
@@ -204,8 +206,9 @@ export const ProjectPreview: React.FC<ProjectPreviewProps> = ({ project }) => {
                       default="none"
                     >
                       <div className="w-full h-full relative overflow-hidden">
-                        <CMSImage
+                        <CMSImageBase
                           src={imgItem.url}
+                          srcSet={srcSets?.[imgItem.url]}
                           alt={imgItem.alt}
                           className="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-[1.025]"
                         />

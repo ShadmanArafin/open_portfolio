@@ -238,6 +238,12 @@ through a letterbox. It now takes the window.
   publishing, so a publish or a restore clears it at once. Scheduled pages
   still appear within about a minute of their time.
 
+- **Pages don't grow with your photo library.** Every page used to carry a
+  list of every uploaded photo with smaller copies, just so images could pick
+  their size in the browser. That choice is now made on the server. With 200
+  photos, each page sends about 65 KB less data (4-5 KB less once compressed),
+  and the saving grows with the library. Photos still load at the right size.
+
 - **Fonts come with the install.** The 35 fonts in the Appearance picker are
   installed from npm (Fontsource, all OFL) instead of being fetched from Google
   during the build, so a build works offline and can't fail because a font

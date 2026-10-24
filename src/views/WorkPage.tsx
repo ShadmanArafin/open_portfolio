@@ -2,7 +2,7 @@ import { Container } from '../components/common/Container';
 import { Section } from '../components/common/Section';
 import { SectionLabel } from '../components/common/SectionLabel';
 import { Reveal } from '../components/common/Reveal';
-import { siteContent } from '../cms/server';
+import { siteContent, srcSetsFor } from '../cms/server';
 import { WorkList } from './work-list';
 
 export async function WorkPage() {
@@ -37,7 +37,11 @@ export async function WorkPage() {
             </Reveal>
           )}
 
-          <WorkList projects={projects} allLabel={allLabel} />
+          <WorkList
+            projects={projects}
+            allLabel={allLabel}
+            srcSets={await srcSetsFor(projects.flatMap((p) => p.images.map((i) => i.url)))}
+          />
         </Container>
       </Section>
     </div>

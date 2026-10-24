@@ -90,9 +90,9 @@ export function publicView(state: CMSState, now: Date = new Date()): CMSState {
  * Those three are rendered on the server (the block pages, the writing routes,
  * and project stories via `app/(site)/work/[slug]/page.tsx`), so the client
  * copy carries none of them. Pages keep their address, title and menu entry,
- * which is what the navbar builds the menu from. The media library is cut to
- * the photos that have smaller copies, which is all the client reads it for
- * (`srcset` in `CMSImage`). And every list the server components now render
+ * which is what the navbar builds the menu from. The media library is not
+ * sent at all: image sizes are picked on the server (`CMSImage`), and a
+ * client island gets its images' `srcset` as props. And every list the server components now render
  * (projects, brands, experience and the rest) is left out: what is still
  * read in the browser is settings, wording, the menu, the sections' headers
  * and the newsletter's wording.
@@ -103,7 +103,9 @@ export function clientView(state: CMSState, now: Date = new Date()): CMSState {
     ...visible,
     pages: (visible.pages ?? []).map((page) => ({ ...page, blocks: [] })),
     writing: [],
-    media: (visible.media ?? []).filter((item) => item.variants?.length),
+    // Image sizes are chosen on the server (`CMSImage`, `srcSetsFor`), so the
+    // browser needs none of the library.
+    media: [],
     // Rendered by server components since the theme moved off the client
     // (2026-10-23): the home sections, the footer, About and Work. A client
     // island that needs a list (the Work filter, the About gallery) gets it
