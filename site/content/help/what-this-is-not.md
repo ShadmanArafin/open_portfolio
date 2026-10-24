@@ -31,6 +31,6 @@ It collects email addresses, confirms them properly, and hands you the list as a
 
 ## It is alpha
 
-Version 0.5. Your content is safe: it is in your database, you can export all of it at any moment, and an older version quarantines anything it does not understand rather than deleting it. What is not settled is the admin — screens move and get renamed between versions.
+Version 0.6. Your content is safe: it is in your database, you can export all of it at any moment, and an older version quarantines anything it does not understand rather than deleting it. What is not settled is the admin — screens move and get renamed between versions.
 
 If that makes you uneasy, [read this](/is-this-right-for-you) before you commit an afternoon.

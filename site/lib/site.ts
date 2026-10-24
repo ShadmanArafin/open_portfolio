@@ -40,7 +40,7 @@ export const SITE_URL = (process.env.SITE_URL ?? 'https://getopenportfolio.verce
 export const PRODUCT = 'Open Portfolio';
 
 /** Version of the product this site describes. Bump with a release. */
-export const VERSION = '0.5.0';
+export const VERSION = '0.6.0';
 
 /**
  * The one canonical description.

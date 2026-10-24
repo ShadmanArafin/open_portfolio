@@ -194,14 +194,34 @@ npm run dev`}</code>
                   <td>If you are already there. Note the free-tier pausing.</td>
                   <td>Supabase Storage</td>
                 </tr>
+                <tr>
+                  <th scope="row">PocketBase</th>
+                  <td>One binary for database and files on your own server.</td>
+                  <td>PocketBase</td>
+                </tr>
+                <tr>
+                  <th scope="row">Firebase</th>
+                  <td>If you already live in Google&rsquo;s console.</td>
+                  <td>Firebase Storage</td>
+                </tr>
+                <tr>
+                  <th scope="row">Appwrite</th>
+                  <td>Documents and files, with a full console when you want one.</td>
+                  <td>Appwrite Storage</td>
+                </tr>
+                <tr>
+                  <th scope="row">Cloudflare D1 + R2</th>
+                  <td>D1 SQLite and R2 objects on your own server, no account.</td>
+                  <td>R2</td>
+                </tr>
               </tbody>
             </table>
           </div>
 
           <p className="small">
-            Firebase, Convex, Cloudflare D1 + R2, PocketBase and Appwrite are planned and not built.
-            Each has to pass the same conformance suite against a real instance before it ships, so
-            none of them is offered until it has.
+            Convex is planned and not built: it needs an account rather than an emulator. Every
+            backend has to pass the same conformance suite against a real instance before it ships,
+            so none is offered until it has.
           </p>
         </div>
       </Band>

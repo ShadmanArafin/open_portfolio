@@ -437,8 +437,8 @@ export default function Home() {
               },
               {
                 label: 'The admin on a phone',
-                note: 'It installs to a home screen and works, but the editing screens were drawn for a desktop. No notifications.',
-                stamp: <span className="stamp stamp--unverified">Not built</span>,
+                note: 'It installs to a home screen, its menu is phone-sized, every target was measured at 375px, and new enquiries can arrive as push notifications. The long editing screens were still drawn for a desktop.',
+                stamp: <span className="stamp stamp--plain">Partly</span>,
               },
               {
                 label: 'One of nine backends',

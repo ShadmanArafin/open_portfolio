@@ -34,12 +34,13 @@ to keep one: students, designers, developers, photographers, writers.
 <p align="center"><em>The same page in the editor. No code, no redeploy, and the address bar never leaves your own site.</em></p>
 
 > [!WARNING]
-> **Status: alpha (0.5).** The site, the editor and publishing all work, the
-> admin has real server-side authentication, and uploads are now verified
-> end to end against both hosted object stores. The gaps are real and specific —
-> the admin is not laid out for a phone, and one of the nine planned backends
-> are not built. Read [What does not work yet](#what-does-not-work-yet) before
-> using this for anything you depend on.
+> **Status: alpha (0.6).** The site, the editor and publishing all work, the
+> admin has real server-side authentication, and uploads are verified end to
+> end against both hosted object stores. The gaps are real and specific —
+> themes change the look but not the arrangement, the newsletter collects but
+> does not send, and one of the nine planned backends is not built. Read
+> [What does not work yet](#what-does-not-work-yet) before using this for
+> anything you depend on.
 
 ## Deploy your own
 
@@ -306,18 +307,20 @@ discover them after typing in a portfolio:
   Supabase cost two real bugs that would have broken every Supabase deployment
   after its first boot; Vercel Blob passed 48/48 first time.
 - **Your home page starts as the theme's fixed layout.** Not a gap any more —
-  you can rebuild it from blocks under Pages, and it takes over the moment you
-  publish. Until you do, nothing about your site changes. The old layout is
-  still edited on its own screen, which is the part that has not been merged
-  away.
+  building it from blocks under Pages starts from what it shows today, section
+  by section, and takes over the moment you publish. Until you do, nothing
+  about your site changes. The old layout is still edited on its own screen,
+  which is the part that has not been merged away.
 - **Six themes, but they are colour, type and spacing only.** Each one changes
   the palette, the typeface, how tight the layout is and how round the corners
   are — not the arrangement of the page. Blocks that show your records adapt to
   what you have, so a page is less fixed than it was, but a theme still cannot
   rearrange it.
-- **The admin is not laid out for a phone yet.** It installs to a home screen
-  and works on a small screen, but the editing screens were designed for a
-  desktop. Notifications are not built.
+- **The admin works on a phone, but was designed on a desktop.** It installs
+  to a home screen, its navigation is a phone-sized menu, and every target was
+  measured at 375px — but long editing screens are still easier on a wide one.
+  New enquiries can buzz your devices: see
+  [push notifications](docs/PUSH-NOTIFICATIONS.md).
 - **Sign-in is an email and a passphrase — plus passkeys and emailed one-time codes.** Passkeys enroll in Settings; all three methods are offered on the sign-in page.
 - **The newsletter collects addresses; it does not send.** Sign-up, double
   opt-in and export all work. Actually mailing your list means deliverability,
@@ -335,7 +338,8 @@ discover them after typing in a portfolio:
 - **Tailwind CSS** for the public site, with colour and typography driven by CSS
   variables the editor writes at runtime
 - **Pluggable storage** behind a `StorageAdapter` interface — local filesystem,
-  Supabase, Neon + Vercel Blob, or any Postgres
+  Supabase, Neon + Vercel Blob, any Postgres, PocketBase, Firebase, Appwrite or
+  Cloudflare D1 + R2
 - **scrypt + httpOnly session cookies** for admin authentication
 - **Vitest**, including a storage conformance suite run against a real Postgres
   in CI
@@ -348,11 +352,9 @@ discover them after typing in a portfolio:
 | 0.2           | Next.js App Router, server rendering, SEO, Open Graph, sitemap, real 404         |
 | 0.3           | Server-side auth, publishing that reaches visitors, a contact form that delivers |
 | 0.4           | Pluggable storage with a conformance suite every backend must pass               |
-| **0.5 (now)** | Page builder, six themes, writing, presets, newsletter sign-ups, Docker          |
-| 0.6           | More block types, a live demo                                                    |
-| 0.7           | Mobile admin, notifications                                                      |
-| 0.8           | Remaining backends, passkeys and one-time codes                                  |
-| 0.9           | The marketing site and the demo actually deployed, with screenshots              |
+| 0.5           | Page builder, six themes, writing, presets, newsletter sign-ups, Docker          |
+| **0.6 (now)** | Server-rendered admin, eight backends, passkeys, CSV, backups, released images   |
+| Next          | The open backlog in [PROJECT-REVIEW.md](docs/PROJECT-REVIEW.md)                  |
 | 1.0           | Stable                                                                           |
 
 ### Documentation

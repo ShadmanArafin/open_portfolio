@@ -13,7 +13,7 @@
 > [§12 second pass (2026-10-20)](PROJECT-REVIEW.md#12-second-pass--2026-10-20)
 > holds Phase E, which is what remains after the admin rewrite.
 >
-> Last updated: 2026-08-11 · Version 0.5.0 · CI green on `main`.
+> Last updated: 2026-10-24 · Version 0.6.0 · CI green on `main`.
 > Read [Handoff notes](#handoff-notes-for-whoever-picks-this-up) first if you
 > are starting on a new machine — it carries the running instructions, the
 > invariants, and every known bug.
@@ -26,22 +26,23 @@
 | 1 — Next.js + SEO           | **Done, verified**   | Server-rendered, real metadata, sitemap, 404                                                 |
 | 2 — Tokens + primitives     | **Partially done**   | Tokens, gate, primitives done. Tailwind 4 ported + verified on a branch; Safari call pending |
 | 3 — Storage contract        | **Done, verified**   | Contract, local adapter, registry, server read                                               |
-| 4 — Auth                    | **Done, verified**   | Passphrase + sessions. **Passkeys/OTP not built**                                            |
+| 4 — Auth                    | **Done, verified**   | Passphrase + sessions, passkeys and emailed one-time codes                                   |
 | 5 — Write path              | **Done**             | Publish, contact, blocks, pages, preview, revisions                                          |
 | 6 — Hosted adapters         | **Done, verified**   | Supabase, Neon, Postgres. **Uploads verified on both hosted stores**                         |
-| 7 — Admin (Astryx)          | **In progress**      | Page builder and media picker work. **Settings merge, block home remain**                    |
+| 7 — Admin                   | **Done**             | All 29 screens server-rendered (`ADMIN-REWRITE.md`); Astryx removed                          |
 | 8 — Adapters + integrations | **Done**             | Vault, SMTP, OTP, 8 backends. **Convex blocked on signup, not code**                         |
 | 9 — Blog, themes, presets   | **Mostly done**      | 6 themes, 7 presets, writing+RSS, newsletter, site, demo                                     |
-| Community + updates         | **Done**             | Reports, dedupe, update workflow, `UPDATING.md`. **Blocked: repo private**                   |
+| Community + updates         | **Done**             | Reports, dedupe, update workflow, `UPDATING.md`. Repository public                           |
 | Self-hosting (Docker)       | **Done, verified**   | `docker compose up`, volume survives container replacement                                   |
 | 10 — Launch                 | **Site + demo live** | Marketing site deployed, demo + PWA shipped; checklist remains                               |
 
-**Where to start:** make the repository public and tag `v0.5.0`. It takes
-minutes, has no dependencies, and is the only thing in this document on a clock
-— several discovery channels count months from the day of publication, and five
-shipped features are broken until then. After that, the demo, because everything
-in the launch plan points at it and it is the one asset that cannot be borrowed
-or written.
+**Where to start:** the repository is public and `v0.6.0` is tagged, with a
+released image. What remains is the open backlog in
+[PROJECT-REVIEW.md](PROJECT-REVIEW.md) and the remaining-work ledger in
+[HANDOVER.md](HANDOVER.md#remaining-work-16-october-2026-pushed-as-c67c3bf).
+
+> The paragraphs below are kept as written in August, when the repository was
+> still private and the demo did not exist.
 
 The product itself is further along than the phase numbers suggest: a person can
 sign in, build a page from blocks, choose images from their library, connect a

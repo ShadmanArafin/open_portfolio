@@ -26,7 +26,7 @@ JavaScript bundle. None of that remains.
 ```bash
 npm ci                          # ci, not install — see "Traps" below
 npm run dev                     # http://localhost:3000
-npm test                        # 1022 passing, 11 skipped
+npm test                        # 1216 passing, 11 skipped (24 Oct 2026)
 npm run typecheck && npm run lint && npm run build
 ```
 
@@ -579,7 +579,8 @@ seed (`core/blocks/__tests__/a11y.test.tsx`) and the browser matrix
 green and caught seven real bugs. What remains needs theme-switching
 infrastructure that does not exist yet.
 
-**5. Admin rewrite (27 screens, SPA → App Router).** Deliberately not started:
+**5. Admin rewrite (27 screens, SPA → App Router).** _Done 18 October 2026 —
+see [ADMIN-REWRITE.md](ADMIN-REWRITE.md); kept below as written._ Deliberately not started:
 the screens share one SPA context with no per-screen seam, so any partial
 migration forks the admin into two systems — worse than one working one. It
 needs its own epic with a screen-by-screen harness. The route-guard AST test

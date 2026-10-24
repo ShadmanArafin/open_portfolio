@@ -74,8 +74,8 @@ export default function RightForYouPage() {
             items={[
               {
                 label: 'You need to edit from a phone regularly',
-                note: 'The admin installs to a home screen and works, but the screens were drawn for a desktop. It is the next substantial piece of work.',
-                stamp: <span className="stamp stamp--unverified">Not built</span>,
+                note: 'The admin installs to a home screen, its menu is phone-sized and every target was measured at 375px, but the long editing screens were drawn for a desktop.',
+                stamp: <span className="stamp stamp--plain">Partly</span>,
               },
               {
                 label: 'You want a specific visual design',

@@ -9,6 +9,15 @@ whole point of the Help & feedback screen in the admin.
 
 ## Unreleased
 
+Nothing yet.
+
+## 0.6.0 — 2026-10-24
+
+The admin is rebuilt on the server, every list comes and goes as a
+spreadsheet, a whole site comes and goes as one file, and public pages carry
+about 43% less JavaScript. Released images mean a self-hoster no longer builds
+anything.
+
 ### The demo is the admin now
 
 The browser demo was an admin sitting inside a marketing page: a site header
