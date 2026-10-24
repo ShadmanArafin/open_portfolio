@@ -5,6 +5,7 @@ import { Check, Copy } from 'lucide-react';
 import { trackEvent } from '../utils/analytics';
 import { useToast } from '../context/use-toast';
 import { cn } from '../utils/cn';
+import { copyText } from '../utils/clipboard';
 
 /**
  * The footer's two interactions, as the only client code in it. The rest of
@@ -29,19 +30,6 @@ export function TrackedLink({
       {children}
     </a>
   );
-}
-
-function copyText(text: string) {
-  const fallback = () => {
-    const el = document.createElement('textarea');
-    el.value = text;
-    document.body.appendChild(el);
-    el.select();
-    document.execCommand('copy');
-    document.body.removeChild(el);
-  };
-  if (navigator.clipboard?.writeText) navigator.clipboard.writeText(text).catch(fallback);
-  else fallback();
 }
 
 export function CopyEmailButton({ email }: { email: string }) {
