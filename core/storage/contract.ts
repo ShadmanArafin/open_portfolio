@@ -28,8 +28,10 @@ export type AdapterId =
   | 'neon'
   | 'firebase'
   | 'cloudflare'
+  | 'cloudflare-rest'
   | 'pocketbase'
-  | 'appwrite';
+  | 'appwrite'
+  | 'convex';
 
 export type Channel = 'published' | 'draft';
 

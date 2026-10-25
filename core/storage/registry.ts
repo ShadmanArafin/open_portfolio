@@ -10,6 +10,8 @@ import { neonAdapter } from './adapters/neon';
 import { pocketbaseAdapter } from './adapters/pocketbase';
 import { postgresAdapter } from './adapters/postgres';
 import { supabaseAdapter } from './adapters/supabase';
+import { convexAdapter } from './adapters/convex';
+import { cloudflareRestAdapter } from './adapters/cloudflare-rest';
 
 /**
  * Picks the storage backend for this deployment.
@@ -32,8 +34,8 @@ const REGISTERED: Partial<Record<AdapterId, () => StorageAdapter>> = {
   firebase: () => firebaseAdapter,
   appwrite: () => appwriteAdapter,
   cloudflare: () => cloudflareAdapter,
-  // convex registers here when it lands. One file plus one line — that is
-  // the point of the contract.
+  'cloudflare-rest': () => cloudflareRestAdapter,
+  convex: () => convexAdapter,
 };
 
 /** Hosts where the filesystem is read-only or discarded between requests. */
@@ -54,15 +56,19 @@ function inferAdapterId(): AdapterId {
   ) {
     candidates.push('neon');
   }
-  if (process.env.CONVEX_DEPLOYMENT)
-    throw new AdapterConfigError(
-      'CONVEX_DEPLOYMENT is set, but the Convex backend is not built yet — the ' +
-        'union only lists backends with a working adapter. Unset it or set OPB_ADAPTER ' +
-        'to a backend that exists.'
-    );
+  if (process.env.CONVEX_DEPLOYMENT || process.env.CONVEX_URL) {
+    candidates.push('convex');
+  }
   if (process.env.FIREBASE_PROJECT_ID) candidates.push('firebase');
-  if (process.env.CLOUDFLARE_ACCOUNT_ID && process.env.D1_DATABASE_ID)
+  if (
+    process.env.CLOUDFLARE_API_TOKEN &&
+    process.env.CLOUDFLARE_ACCOUNT_ID &&
+    process.env.D1_DATABASE_ID
+  ) {
+    candidates.push('cloudflare-rest');
+  } else if (process.env.CLOUDFLARE_ACCOUNT_ID && process.env.D1_DATABASE_ID) {
     candidates.push('cloudflare');
+  }
   if (process.env.POCKETBASE_URL) candidates.push('pocketbase');
   if (process.env.APPWRITE_ENDPOINT) candidates.push('appwrite');
 

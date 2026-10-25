@@ -64,6 +64,7 @@ const mediaSchema = z.object({
   src: z.string(),
   alt: z.string(),
   decorative: z.boolean().optional(),
+  focalPoint: z.string().optional(),
 });
 
 const mediaFields = (prefix: string): BlockField[] => [
@@ -75,6 +76,19 @@ const mediaFields = (prefix: string): BlockField[] => [
     help: 'What someone who cannot see it would need to know.',
   },
   { kind: 'toggle', path: `${prefix}.decorative`, label: 'Purely decorative' },
+  {
+    kind: 'choice',
+    path: `${prefix}.focalPoint`,
+    label: 'Crop focus',
+    advanced: true,
+    options: [
+      { value: 'center', label: 'Center' },
+      { value: 'top', label: 'Top' },
+      { value: 'bottom', label: 'Bottom' },
+      { value: 'left', label: 'Left' },
+      { value: 'right', label: 'Right' },
+    ],
+  },
 ];
 
 const headingField: BlockField = { kind: 'text', path: 'heading', label: 'Heading' };
@@ -1404,6 +1418,221 @@ const download: BlockDefinition<DownloadProps> = {
   },
 };
 
+/* ------------------------------------------------------------------ links */
+
+const linkItemSchema = z.object({
+  title: z.string().min(1),
+  url: z.string().min(1),
+  subtitle: z.string().optional(),
+  badge: z.string().optional(),
+  highlight: z.boolean().optional(),
+});
+
+const linksProps = z.object({
+  heading: z.string().optional(),
+  subhead: z.string().optional(),
+  items: z.array(linkItemSchema),
+});
+type LinksProps = z.infer<typeof linksProps>;
+
+/**
+ * A vertical stack of links.
+ *
+ * The classic link-in-bio pattern: a clean list of prominent tap targets for
+ * social bios, project directories, quick links, or a compact mobile navigation.
+ */
+const links: BlockDefinition<LinksProps> = {
+  type: 'links',
+  version: 1,
+  label: 'Stack of links',
+  description: 'A vertical list of links — for a bio page, socials, or quick shortcuts.',
+  group: 'conversion',
+  schema: linksProps,
+  defaults: () => ({
+    heading: 'Links',
+    items: [
+      { title: 'My Work', url: '/work', subtitle: 'Selected case studies and projects' },
+      { title: 'Writing & Notes', url: '/writing' },
+      { title: 'Get in Touch', url: '/contact', badge: 'Available' },
+    ],
+  }),
+  fields: [
+    headingField,
+    { kind: 'textarea', path: 'subhead', label: 'Introductory note', rows: 2 },
+    {
+      kind: 'list',
+      path: 'items',
+      label: 'Links',
+      itemNoun: 'link',
+      titlePath: 'title',
+      min: 1,
+      fields: [
+        { kind: 'text', path: 'title', label: 'Label', placeholder: 'My Work' },
+        { kind: 'text', path: 'url', label: 'Where it goes', placeholder: '/work or https://...' },
+        { kind: 'text', path: 'subtitle', label: 'Short description (optional)' },
+        { kind: 'text', path: 'badge', label: 'Badge / tag (optional)', placeholder: 'New' },
+        { kind: 'toggle', path: 'highlight', label: 'Highlight this link' },
+      ],
+      newItem: () => ({ title: 'New link', url: 'https://' }),
+    },
+  ],
+  frameDefaults: { width: 'narrow', align: 'center' },
+  checks: [
+    {
+      id: 'has-links',
+      run: (props) =>
+        props.items.length === 0 ? 'No links added yet. Add at least one link.' : null,
+    },
+    {
+      id: 'empty-url',
+      run: (props) =>
+        props.items.some((item) => !item.url.trim())
+          ? 'One or more links has no destination.'
+          : null,
+    },
+  ],
+  Render: ({ props, frame, headingLevel }) => {
+    if (!props.items || props.items.length === 0) return null;
+
+    return (
+      <Band frame={frame}>
+        <Stack gap={6}>
+          {props.heading && (
+            <Heading level={headingLevel} size="lg">
+              {props.heading}
+            </Heading>
+          )}
+          {props.subhead && (
+            <Text tone="muted" size="base">
+              {props.subhead}
+            </Text>
+          )}
+          <ul
+            style={{
+              listStyle: 'none',
+              padding: 0,
+              margin: 0,
+              width: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 'var(--space-3)',
+            }}
+          >
+            {props.items.map((item, index) => {
+              const safeUrl = sanitizeHref(item.url);
+              if (!safeUrl) return null;
+              const isExternal = /^https?:\/\//i.test(safeUrl);
+              const isHighlight = Boolean(item.highlight);
+
+              return (
+                <li key={`${item.title}-${index}`}>
+                  <a
+                    href={safeUrl}
+                    target={isExternal ? '_blank' : undefined}
+                    rel={isExternal ? 'noopener noreferrer' : undefined}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      width: '100%',
+                      minHeight: 'var(--control-height)',
+                      padding: 'var(--space-4) var(--space-5)',
+                      borderRadius: 'var(--radius-lg)',
+                      background: isHighlight
+                        ? 'var(--surface-accent, var(--btn-primary-bg))'
+                        : 'var(--surface-raised, var(--surface-secondary))',
+                      color: isHighlight
+                        ? 'var(--btn-primary-text, var(--text-primary))'
+                        : 'var(--text-primary)',
+                      border: isHighlight
+                        ? 'var(--hairline) solid transparent'
+                        : 'var(--hairline) solid var(--border-color)',
+                      textDecoration: 'none',
+                      transition: 'transform 0.15s ease, opacity 0.15s ease, background 0.15s ease',
+                      boxSizing: 'border-box',
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 'var(--space-1)',
+                        textAlign: 'left',
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: 'var(--font-body)',
+                          fontSize: 'var(--text-base)',
+                          fontWeight: 600,
+                          lineHeight: 'var(--leading-tight)',
+                        }}
+                      >
+                        {item.title}
+                      </span>
+                      {item.subtitle && (
+                        <span
+                          style={{
+                            fontFamily: 'var(--font-body)',
+                            fontSize: 'var(--text-xs)',
+                            color: isHighlight ? 'inherit' : 'var(--text-muted)',
+                            opacity: isHighlight ? 0.85 : 1,
+                            lineHeight: 'var(--leading-normal)',
+                          }}
+                        >
+                          {item.subtitle}
+                        </span>
+                      )}
+                    </div>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 'var(--space-2)',
+                        flexShrink: 0,
+                        marginLeft: 'var(--space-3)',
+                      }}
+                    >
+                      {item.badge && (
+                        <span
+                          style={{
+                            display: 'inline-block',
+                            padding: 'var(--space-1) var(--space-2)',
+                            borderRadius: 'var(--radius-full)',
+                            fontSize: 'var(--text-xs)',
+                            fontWeight: 500,
+                            background: isHighlight
+                              ? 'var(--surface-sunken)'
+                              : 'var(--surface-secondary)',
+                            color: isHighlight ? 'inherit' : 'var(--text-primary)',
+                            lineHeight: 1,
+                          }}
+                        >
+                          {item.badge}
+                        </span>
+                      )}
+                      <span
+                        aria-hidden="true"
+                        style={{
+                          fontFamily: 'var(--font-mono)',
+                          fontSize: 'var(--text-sm)',
+                          opacity: 0.6,
+                        }}
+                      >
+                        {isExternal ? '↗' : '→'}
+                      </span>
+                    </div>
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+        </Stack>
+      </Band>
+    );
+  },
+};
+
 export const STANDARD_DEFINITIONS = [
   contactForm,
   faq,
@@ -1418,4 +1647,5 @@ export const STANDARD_DEFINITIONS = [
   services,
   download,
   separator,
+  links,
 ] as unknown as BlockDefinition<never>[];

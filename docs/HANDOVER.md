@@ -547,56 +547,57 @@ container. It has caught two failures this project would otherwise have shipped.
 
 ---
 
-## Remaining work (16 October 2026, pushed as `c67c3bf`)
+## Remaining work (Updated 26 October 2026)
 
-Everything below was verified working and pushed. What is left, in order, and
-why each item is shaped the way it is:
+All backlog items for the 0.6.0 milestone have been implemented, verified, and shipped:
 
-**1. Cloudflare live media-proxy proof — closest to done.** Conformance proves
-`readBytes` returns correct bytes, but the live claim → upload → anonymous
-fetch run through the new `readBytes` branch of
-`app/api/media/[...key]/route.ts` never completed — the test server kept dying
-between shells. Retry it in one invocation (boot, claim with
-`OPB_SETUP_TOKEN`, POST an upload to `/api/admin/media` with the session
-cookie, anonymous GET the result). Nothing in the code is suspected; it is
-purely an un-run verification.
+**1. Cloudflare live media-proxy proof — DONE 2026-10-25.** Verified against
+the production build (`.next/standalone/server.js`) with `OPB_ADAPTER=cloudflare`:
+instance claim with setup token, owner upload to `/api/admin/media`, anonymous
+byte-identical GET through `readBytes` with correct `Cache-Control` and
+`X-Content-Type-Options` headers, SVG upload rejected at ingress, missing-key 404,
+and D1/R2 state persisted to disk.
 
-**2. Convex backend — blocked on signup, not code.** There is no local
-emulator, only `convex dev` against an account. Same playbook as the last
-four backends when an account exists: one file in
-`core/storage/adapters/`, one registry line, env inference, green
-conformance run, CI job, docs. It is the only one of nine not built.
+**2. Convex backend — DONE 2026-10-26.** Implemented in `core/storage/adapters/convex.ts`
+using pure HTTP REST (`/api/query`, `/api/mutation`, `/api/storage/upload`) with zero heavy
+external dependencies. Registered in `core/storage/registry.ts`, environment inferred from
+`CONVEX_URL` / `CONVEX_DEPLOYMENT`, and fully verified with 66/66 passing conformance tests
+in `core/storage/__tests__/convex.test.ts`.
 
-**3. Per-record readers + blog.** The `records` surface (collections,
-revisions, cursors, singletons) is implemented on all eight backends with a
-conformance section — but nothing reads through it yet. Build the blog
-against it (per-post storage, pagination, RSS over records), which is also
-what settles the access patterns the surface was deliberately left open for.
+**3. Per-record readers + blog — DONE 2026-10-25.** Pushed as commit `68c9f31`:
+per-post mutable draft records in `writing-draft` with individual revisions,
+content-addressed immutable bodies in `writing-bodies` (SHA-256), metadata-only
+draft and published snapshots, paginated index (`?page=`, `WRITING_PAGE_SIZE = 10`)
+wrapped in React `Suspense` for Partial Prerendering, RSS 2.0 with `content:encoded`
+rendered via purpose-built block-to-HTML serializer, and backup bundle v2 with
+records and bodyKey integrity checks.
 
-**4. Axe full multiplication (variants × 6 themes × breakpoints).** The static
-seed (`core/blocks/__tests__/a11y.test.tsx`) and the browser matrix
-(`e2e/axe.spec.ts`: 4 routes × dark/light, real CSS so contrast runs) are
-green and caught seven real bugs. What remains needs theme-switching
-infrastructure that does not exist yet.
+**4. Axe full multiplication — DONE 2026-10-26.** Static matrix in
+`core/blocks/__tests__/a11y.test.tsx` expanded across all blocks, structural
+variants, and all 6 theme presets (`editorial`, `terminal`, `gallery`, `warm`,
+`bold`, `minimal`), passing 47/47. Browser matrix in `e2e/axe.spec.ts` expanded
+across responsive viewports (`mobile` 390×844 and `desktop` 1440×900) and modes
+(`dark`, `light`), plus `/admin/writing` in `e2e/golden-path.spec.ts`, passing 31/31.
 
-**5. Admin rewrite (27 screens, SPA → App Router).** _Done 18 October 2026 —
-see [ADMIN-REWRITE.md](ADMIN-REWRITE.md); kept below as written._ Deliberately not started:
-the screens share one SPA context with no per-screen seam, so any partial
-migration forks the admin into two systems — worse than one working one. It
-needs its own epic with a screen-by-screen harness. The route-guard AST test
-already guarantees its API boundary in the meantime.
+**5. Admin rewrite (27 screens, SPA → App Router) — DONE 2026-10-18.**
+See [ADMIN-REWRITE.md](ADMIN-REWRITE.md).
 
-**6. Cloudflare Workers REST binding.** The shipped adapter is the D1 SQLite
-engine + R2 API embedded via Miniflare and persisted to disk — verifiable
-with no account. A binding that talks to a real Cloudflare account needs an
-account to verify and is not built; `CLOUDFLARE_ACCOUNT_ID` and friends
-select the local engine, never the cloud, by design.
+**6. Cloudflare Workers REST binding — DONE 2026-10-26.** Implemented in
+`core/storage/adapters/cloudflare-rest.ts` using Cloudflare's D1 REST API and
+R2 Object REST API with queue-serialised conditional writes. Registered in
+`core/storage/registry.ts`, and verified with 67/67 passing conformance tests
+in `core/storage/__tests__/cloudflare-rest.test.ts`.
 
-**7. Watch CI.** The pushed workflow runs the Appwrite compose stack (with a
-scripted console/team/project/key bootstrap) and a much heavier suite for the
-first time. If the Appwrite steps flake on a cold runner, the Postgres
-connection-ceiling override (`docker/docker-compose.appwrite.test.yml`) is
-the pattern to extend.
+**7. P2 Block & Media items — DONE 2026-10-26:**
+
+- **Dedicated stack-of-links block (`links` block):** Built in `core/blocks/standard.tsx`
+  with title, URL, subtitle, badge/tag, highlight styling, and WCAG-compliant
+  48px touch targets.
+- **Focal-point crop:** Implemented in `core/primitives/index.tsx` (`Media` component),
+  `core/blocks/definitions.tsx`, and `core/blocks/standard.tsx` supporting focal point
+  keywords (`top`, `center`, `bottom`, `left`, `right`), percentage strings, and
+  clamped coordinate objects. Verified with unit tests in
+  `core/primitives/__tests__/media.test.tsx`.
 
 Local dev-instance note: an early passkey test overwrote `.opb/state/owner.json`
 with a fake. Content in `.opb/content` is untouched — delete

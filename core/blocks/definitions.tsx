@@ -52,6 +52,7 @@ const mediaSchema = z.object({
   src: z.string(),
   alt: z.string(),
   decorative: z.boolean().optional(),
+  focalPoint: z.string().optional(),
 });
 
 /** A picture and the decision about its alt text, described once. */
@@ -73,6 +74,19 @@ const mediaFields = (prefix: string): BlockField[] => [
     path: prefix ? `${prefix}.decorative` : 'decorative',
     label: 'Purely decorative',
     help: 'Hides it from screen readers instead of announcing it.',
+  },
+  {
+    kind: 'choice',
+    path: prefix ? `${prefix}.focalPoint` : 'focalPoint',
+    label: 'Crop focus',
+    advanced: true,
+    options: [
+      { value: 'center', label: 'Center' },
+      { value: 'top', label: 'Top' },
+      { value: 'bottom', label: 'Bottom' },
+      { value: 'left', label: 'Left' },
+      { value: 'right', label: 'Right' },
+    ],
   },
 ];
 

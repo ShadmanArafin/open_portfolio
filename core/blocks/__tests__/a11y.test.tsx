@@ -4,6 +4,9 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import axe from 'axe-core';
 import { BlockList } from '../registry';
 import { listBlockDefinitions, parsePage } from '../lookup';
+import { THEME_PRESETS } from '@/core/theme/presets';
+import { buildThemeStylesheet } from '@/core/theme/tokens';
+import { buildLayoutStylesheet } from '@/core/theme/layout-tokens';
 
 /**
  * The axe seed of the kitchen-sink matrix.
@@ -24,12 +27,12 @@ function htmlOf(type: string, props: unknown): string {
   return renderToStaticMarkup(<BlockList blocks={parsePage([{ id: type, type, v: 1, props }])} />);
 }
 
-async function violationsOf(html: string) {
+async function violationsOf(html: string, stylesheet?: string) {
   // Blocks always render inside the site's `<main id="main">` (see
   // `app/(site)/layout.tsx`), so the harness reproduces that. Without it
   // axe's `region` rule fails every block for having no landmark — a fact
   // about the harness, not the product.
-  document.body.innerHTML = `<main>${html}</main>`;
+  document.body.innerHTML = `${stylesheet ? `<style>${stylesheet}</style>` : ''}<main>${html}</main>`;
   const results = await axe.run(document.body, {
     rules: { 'color-contrast': { enabled: false } },
   });
@@ -111,6 +114,17 @@ describe('blocks are accessible from defaults', () => {
           mapping: 'pathname',
         },
       ],
+      [
+        'links',
+        {
+          heading: 'Connect',
+          subhead: 'Where to find my work online',
+          items: [
+            { title: 'Portfolio', url: '/work', subtitle: 'Featured work' },
+            { title: 'Substack', url: 'https://example.substack.com', badge: 'Weekly' },
+          ],
+        },
+      ],
     ];
     for (const [type, props] of filled) {
       const violations = await violationsOf(htmlOf(type, props));
@@ -139,5 +153,169 @@ describe('blocks are accessible from defaults', () => {
     expect(violations.map((v) => v.id)).toEqual([]);
     const levels = [...html.matchAll(/<h([1-6])[\s>]/g)].map((m) => Number(m[1]));
     expect(levels.filter((l) => l === 1)).toHaveLength(1);
+  });
+});
+
+describe('theme presets matrix (all 6 themes)', () => {
+  const composedBlocks = [
+    {
+      id: 'b1',
+      type: 'hero',
+      v: 1,
+      props: {
+        headline: 'Main Title',
+        subhead: 'Intro',
+        cta: [{ label: 'Work', href: '/work' }],
+      },
+    },
+    {
+      id: 'b2',
+      type: 'richText',
+      v: 1,
+      props: { heading: 'About Me', paragraphs: ['I design systems.'] },
+    },
+    {
+      id: 'b3',
+      type: 'links',
+      v: 1,
+      props: {
+        heading: 'Quick Links',
+        items: [
+          { title: 'Projects', url: '/work' },
+          { title: 'Contact', url: '/contact' },
+        ],
+      },
+    },
+    {
+      id: 'b4',
+      type: 'cards',
+      v: 1,
+      props: {
+        columns: 2,
+        items: [
+          { title: 'Web', body: 'Modern web apps.' },
+          { title: 'Mobile', body: 'Native feel.' },
+        ],
+      },
+    },
+    {
+      id: 'b5',
+      type: 'quote',
+      v: 1,
+      props: {
+        quote: 'Simplicity is prerequisite for reliability.',
+        attribution: 'Edsger W. Dijkstra',
+      },
+    },
+  ];
+
+  it.each(THEME_PRESETS.map((p) => [p.id, p] as const))(
+    'theme "%s" has no axe violations on composed page',
+    async (_id, preset) => {
+      const html = renderToStaticMarkup(<BlockList blocks={parsePage(composedBlocks)} />);
+      const themeCss = `${buildThemeStylesheet(preset.colours)} ${buildLayoutStylesheet(preset.layout)}`;
+      const violations = await violationsOf(html, themeCss);
+      expect(
+        violations.map((v) => `${preset.id}/${v.id}: ${v.nodes.map((n) => n.html).join(' | ')}`)
+      ).toEqual([]);
+    }
+  );
+});
+
+describe('block variants matrix', () => {
+  const variants: [string, string, unknown][] = [
+    ['hero', 'no-cta', { headline: 'Just the Headline' }],
+    [
+      'hero',
+      'two-ctas',
+      {
+        headline: 'Big Statement',
+        eyebrow: 'Design',
+        cta: [
+          { label: 'Primary', href: '/work' },
+          { label: 'Secondary', href: '/contact' },
+        ],
+      },
+    ],
+    [
+      'cards',
+      'two-columns',
+      {
+        columns: 2,
+        items: [
+          { title: 'First', body: 'Desc 1', href: '/a' },
+          { title: 'Second', body: 'Desc 2', href: '/b' },
+        ],
+      },
+    ],
+    [
+      'cards',
+      'three-columns',
+      {
+        columns: 3,
+        items: [
+          { title: '1', body: 'A' },
+          { title: '2', body: 'B' },
+          { title: '3', body: 'C' },
+        ],
+      },
+    ],
+    [
+      'split',
+      'flipped',
+      {
+        heading: 'Split Flipped',
+        paragraphs: ['Reversed column order.'],
+        media: { src: '/img.png', alt: 'Test' },
+        flip: true,
+      },
+    ],
+    [
+      'split',
+      'square-ratio',
+      {
+        heading: 'Square Ratio',
+        paragraphs: ['1 / 1 ratio.'],
+        media: { src: '/img.png', alt: 'Test' },
+        ratio: '1 / 1',
+      },
+    ],
+    ['quote', 'minimal', { quote: 'Quote with no attribution.' }],
+    [
+      'download',
+      'with-meta',
+      { heading: 'Rate Sheet', label: 'Download PDF', file: '/doc.pdf', meta: 'PDF · 1.5MB' },
+    ],
+    ['download', 'minimal', { label: 'Get File', file: '/doc.pdf' }],
+    [
+      'links',
+      'highlighted',
+      {
+        heading: 'Highlights',
+        items: [
+          { title: 'Featured', url: '/featured', highlight: true, badge: 'New' },
+          { title: 'Standard', url: '/standard' },
+        ],
+      },
+    ],
+    [
+      'faq',
+      'multiple-items',
+      {
+        heading: 'Frequently Asked Questions',
+        items: [
+          { question: 'Q1', answer: 'A1' },
+          { question: 'Q2', answer: 'A2' },
+          { question: 'Q3', answer: 'A3' },
+        ],
+      },
+    ],
+  ];
+
+  it.each(variants)('variant %s (%s) has no axe violations', async (type, _variant, props) => {
+    const violations = await violationsOf(htmlOf(type, props));
+    expect(
+      violations.map((v) => `${type}/${v.id}: ${v.nodes.map((n) => n.html).join(' | ')}`)
+    ).toEqual([]);
   });
 });

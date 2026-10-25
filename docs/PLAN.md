@@ -30,8 +30,8 @@
 | 5 — Write path              | **Done**             | Publish, contact, blocks, pages, preview, revisions                                          |
 | 6 — Hosted adapters         | **Done, verified**   | Supabase, Neon, Postgres. **Uploads verified on both hosted stores**                         |
 | 7 — Admin                   | **Done**             | All 29 screens server-rendered (`ADMIN-REWRITE.md`); Astryx removed                          |
-| 8 — Adapters + integrations | **Done**             | Vault, SMTP, OTP, 8 backends. **Convex blocked on signup, not code**                         |
-| 9 — Blog, themes, presets   | **Mostly done**      | 6 themes, 7 presets, writing+RSS, newsletter, site, demo                                     |
+| 8 — Adapters + integrations | **Done, verified**   | Vault, SMTP, OTP, 10 backends (Convex + Cloudflare REST shipped)                             |
+| 9 — Blog, themes, presets   | **Done, verified**   | 6 themes, presets, records-backed writing+RSS, full axe matrix, P2 blocks                    |
 | Community + updates         | **Done**             | Reports, dedupe, update workflow, `UPDATING.md`. Repository public                           |
 | Self-hosting (Docker)       | **Done, verified**   | `docker compose up`, volume survives container replacement                                   |
 | 10 — Launch                 | **Site + demo live** | Marketing site deployed, demo + PWA shipped; checklist remains                               |

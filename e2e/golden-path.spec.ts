@@ -48,7 +48,13 @@ test('claim → edit → publish → a visitor sees it', async ({ page, browser,
   await visitor.close();
 });
 
-for (const route of ['/admin', '/admin/settings', '/admin/brands', '/admin/pages']) {
+for (const route of [
+  '/admin',
+  '/admin/settings',
+  '/admin/brands',
+  '/admin/pages',
+  '/admin/writing',
+]) {
   test(`${route} has no axe violations`, async ({ page, baseURL }) => {
     await signIn(page, baseURL!);
     await page.emulateMedia({ reducedMotion: 'reduce' });

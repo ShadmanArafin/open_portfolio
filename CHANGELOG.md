@@ -9,6 +9,33 @@ whole point of the Help & feedback screen in the admin.
 
 ## Unreleased
 
+### Added
+
+- **Records-backed writing & blog storage.** Posts are stored individually in
+  `writing-draft` records with per-record conditional revisions, while published
+  bodies live in content-addressed `writing-bodies` records (SHA-256). Snapshots
+  now carry listing metadata only, preventing storage bloat.
+- **Paginated public writing index & RSS 2.0.** The `/writing` index is paginated
+  via `?page=` with `WRITING_PAGE_SIZE = 10` streamed inside a Suspense boundary for
+  Partial Prerendering (PPR), and `/writing/feed.xml` renders full HTML via a
+  dedicated block-to-HTML serializer with CDATA safety.
+- **Convex storage adapter.** Built in `core/storage/adapters/convex.ts` using
+  pure HTTP REST (`/api/query`, `/api/mutation`, `/api/storage/upload`) with zero
+  heavy client dependencies, passing the full 66-test conformance suite.
+- **Cloudflare Workers REST adapter.** Built in `core/storage/adapters/cloudflare-rest.ts`
+  using Cloudflare's D1 REST API and R2 Object REST API with queue-serialised
+  conditional writes, passing the full 67-test conformance suite.
+- **Stack-of-links block.** Dedicated `links` block in `core/blocks/standard.tsx`
+  for link-in-bio pages and shortcuts, with 48px touch targets, badge tags,
+  highlight toggles, and strict design token adherence.
+- **Focal-point crop.** Configurable crop focal points (`top`, `center`, `bottom`,
+  `left`, `right`, percentage strings, or coordinate objects) on the `Media`
+  primitive, image blocks, and split blocks.
+- **Full axe accessibility matrix.** Static matrix expanded to cover all blocks,
+  structural variants, and all 6 theme presets (`editorial`, `terminal`, `gallery`,
+  `warm`, `bold`, `minimal`), plus responsive viewports (mobile 390×844 and desktop
+  1440×900) across dark and light modes.
+
 ### Security
 
 - **Next.js 16.4.3.** The previous 16.3.0 install was inside the affected

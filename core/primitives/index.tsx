@@ -327,6 +327,25 @@ export function Divider() {
 
 /* ------------------------------------------------------------------- Media */
 
+function parseFocalPoint(value?: string | { x: number; y: number }): string | undefined {
+  if (!value) return undefined;
+  if (typeof value === 'object' && value !== null) {
+    const x = Math.max(0, Math.min(100, Math.round(value.x)));
+    const y = Math.max(0, Math.min(100, Math.round(value.y)));
+    return `${x}% ${y}%`;
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (/^(center|top|bottom|left|right)(\s+(center|top|bottom|left|right))?$/.test(trimmed)) {
+      return trimmed;
+    }
+    if (/^\d{1,3}%(\s+\d{1,3}%)?$/.test(trimmed)) {
+      return trimmed;
+    }
+  }
+  return undefined;
+}
+
 /**
  * An image with a required alt decision.
  *
@@ -343,6 +362,7 @@ export function Media({
   priority,
   srcSet,
   sizes = '100vw',
+  focalPoint,
 }: {
   src: string;
   alt: string;
@@ -354,6 +374,8 @@ export function Media({
   srcSet?: string;
   /** How wide the image is drawn, so the browser picks the right copy. */
   sizes?: string;
+  /** Focal point positioning for cover crop, e.g. 'center', 'top', or { x: 50, y: 30 }. */
+  focalPoint?: string | { x: number; y: number };
 }) {
   // Nothing chosen yet. An <img src=""> makes the browser re-request the
   // current page as the image — a real network hit and a console warning — so
@@ -400,6 +422,7 @@ export function Media({
         width: '100%',
         aspectRatio: ratio,
         objectFit: fit,
+        objectPosition: parseFocalPoint(focalPoint),
         borderRadius: 'var(--radius-md)',
         background: 'var(--surface-secondary)',
       }}
