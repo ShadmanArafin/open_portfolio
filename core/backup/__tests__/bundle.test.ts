@@ -86,7 +86,7 @@ describe('server backup bundle', () => {
           featured: false,
           sortOrder: 0,
           seo: {},
-          bodyKey: 'abc123nonexistent',
+          bodyKey: 'abc123nonexistent', // gitleaks:allow
           updatedAt: new Date().toISOString(),
           revision: 1,
         },

@@ -277,7 +277,7 @@ describe('writing records storage interactions', () => {
       id: 'broken-1',
       status: 'published',
       blocks: [],
-      bodyKey: 'nonexistent-body-key-1234567890',
+      bodyKey: 'nonexistent-body-key-1234567890', // gitleaks:allow
     };
 
     await expect(

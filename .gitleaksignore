@@ -1,0 +1,4 @@
+# Gitleaks ignore list
+# Test fixtures with dummy 'bodyKey' content-hash strings that matched generic-api-key rule
+68c9f3188a73b4557c35eb17813b838492e66f53:core/backup/__tests__/bundle.test.ts:generic-api-key:89
+68c9f3188a73b4557c35eb17813b838492e66f53:core/writing/__tests__/records.test.ts:generic-api-key:280
