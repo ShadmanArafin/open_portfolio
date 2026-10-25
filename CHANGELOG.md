@@ -7,7 +7,7 @@ of stored content is stable, but screens and options are not settled yet.
 Anyone who reported or suggested something is credited by name. That is the
 whole point of the Help & feedback screen in the admin.
 
-## Unreleased
+## 0.7.0 — 2026-10-26
 
 ### Added
 
