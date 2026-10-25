@@ -10,6 +10,13 @@ import { isZip, readZip, writeZip, ZipError, type ZipEntry } from '@/core/backup
 import { isSafeMediaKey, readMediaBytes } from '@/core/media/read-bytes';
 import { UploadRejected, validateUpload } from '@/core/media/validate';
 import { listVersions, VERSIONS_COLLECTION } from '@/core/content/versions';
+import {
+  listAllRecords,
+  replaceDraftWriting,
+  WRITING_DRAFT_COLLECTION,
+  WRITING_RECORD_COLLECTIONS,
+} from '@/core/writing/records';
+import type { StoredRecord } from '@/core/storage/contract';
 import type { ContentVersion } from '@/cms/types/cms';
 
 /**
@@ -78,6 +85,16 @@ export async function GET(req: Request) {
     adapter.media.list().catch(() => []),
   ]);
 
+  // The writing composites live in records, not either snapshot: drafts that
+  // are still being written and the immutable bodies every published piece
+  // points at. Leaving them out would make a restored article blank.
+  const records: Record<string, StoredRecord[]> = {};
+  await Promise.all(
+    WRITING_RECORD_COLLECTIONS.map(async (collection) => {
+      records[collection] = await listAllRecords(adapter.records, collection);
+    })
+  );
+
   const bundle = buildBackup({
     adapterId: adapter.id,
     published,
@@ -88,6 +105,7 @@ export async function GET(req: Request) {
       mimeType: m.mimeType,
       sizeBytes: m.sizeBytes,
     })),
+    records,
   });
 
   if (new URL(req.url).searchParams.get('format') === 'zip') {
@@ -197,9 +215,40 @@ export async function POST(req: Request) {
   }
 
   const adapter = await getStorageAdapter();
+  // Records first. A snapshot is the switch that makes writing visible, so it
+  // must not point at a body the restore has not written yet; if a record fails,
+  // the throw happens before either channel changes.
+  //
   // Unconditional writes: a restore is a deliberate act on content the owner
   // just chose, like publishing. Autosave's revision check would refuse the
   // most common case — restoring over a site that moved on since the backup.
+  let recordsRestored = 0;
+  for (const [collection, records] of Object.entries(checked.backup.records ?? {})) {
+    for (const record of records) {
+      await adapter.records.put(collection, record.id, record.data);
+      recordsRestored += 1;
+    }
+  }
+
+  // A restore replaces the draft rather than merging with it. Any draft records
+  // already in storage that the backup does not carry must be cleaned up, or
+  // posts deleted before the backup was taken will resurrect.
+  if (checked.backup.draft) {
+    const backupDraftIds = new Set(
+      (checked.backup.records?.[WRITING_DRAFT_COLLECTION] ?? []).map((r) => r.id)
+    );
+    if (backupDraftIds.size === 0 && checked.backup.draft.writing?.length) {
+      await replaceDraftWriting(adapter.records, checked.backup.draft.writing);
+    } else {
+      const existingDraftRecords = await listAllRecords(adapter.records, WRITING_DRAFT_COLLECTION);
+      for (const record of existingDraftRecords) {
+        if (!backupDraftIds.has(record.id)) {
+          await adapter.records.remove(WRITING_DRAFT_COLLECTION, record.id);
+        }
+      }
+    }
+  }
+
   if (checked.backup.published) await adapter.writeSnapshot('published', checked.backup.published);
   if (checked.backup.draft) await adapter.writeSnapshot('draft', checked.backup.draft);
 
@@ -262,6 +311,7 @@ export async function POST(req: Request) {
       filesMissing: manifestKeys.length - filesPresent,
       filesRestored,
       filesRefused,
+      recordsRestored,
     },
     note: archive
       ? 'Content, history and media restored from the archive.'

@@ -6,6 +6,7 @@ import { RevisionConflictError } from '@/core/storage/contract';
 import { conflictMessage } from '@/core/content/changes';
 import type { CMSState } from '@/cms/types/cms';
 import { findVersion } from '@/core/content/versions';
+import { draftMetadata, replaceDraftWriting, WritingPublishError } from '@/core/writing/records';
 
 /**
  * Version restore, as a server action.
@@ -59,6 +60,22 @@ export async function restoreVersionAction(
   ].slice(0, 100);
   restored.status = 'draft';
   restored.lastSavedAt = new Date().toISOString();
+
+  // Writing belongs in records now: materialise the version's writing into draft
+  // records before the snapshot write, keeping the snapshot metadata-only.
+  try {
+    const draftEntries = await replaceDraftWriting(adapter.records, restored.writing ?? []);
+    restored.writing = draftEntries.map((entry) => draftMetadata(entry));
+  } catch (err) {
+    if (err instanceof WritingPublishError) {
+      return { ok: false, error: err.message };
+    }
+    console.error('[restoreVersion] Failed to replace draft writing records.', err);
+    return {
+      ok: false,
+      error: 'The writing in that version could not be restored. Try again.',
+    };
+  }
 
   try {
     await adapter.writeSnapshot('draft', restored, expectedRevision);

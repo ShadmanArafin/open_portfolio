@@ -24,14 +24,14 @@ import { isShippedTitleTemplate } from './identity';
  * their name in Settings kept the old one in every page title, on every search
  * result, indefinitely.
  */
-function applyTitleTemplate(seo: SEOSettings, pageTitle?: string): string {
-  const siteTitle = seo.siteTitle?.trim();
+function applyTitleTemplate(seo: SEOSettings | undefined, pageTitle?: string): string {
+  const siteTitle = seo?.siteTitle?.trim();
   if (!pageTitle) return siteTitle || 'Portfolio';
 
   // A template we shipped with a placeholder name in it counts as unset, so
   // existing installs pick up the derived title rather than keeping "Your Name"
   // in every tab. See `identity.ts`.
-  const template = isShippedTitleTemplate(seo.titleTemplate) ? '' : seo.titleTemplate;
+  const template = isShippedTitleTemplate(seo?.titleTemplate) ? '' : seo?.titleTemplate;
   if (template?.includes('%s')) return template.replace('%s', pageTitle);
   return siteTitle ? `${pageTitle} — ${siteTitle}` : pageTitle;
 }
@@ -42,7 +42,7 @@ function applyTitleTemplate(seo: SEOSettings, pageTitle?: string): string {
  * ignored by most crawlers.
  */
 export function resolveSiteUrl(content: CMSState): string | undefined {
-  const configured = content.seo.canonicalUrl || content.settings.siteUrl;
+  const configured = content.seo?.canonicalUrl || content.settings?.siteUrl;
   if (configured) return configured.replace(/\/$/, '');
   if (process.env.OPB_SITE_URL) return process.env.OPB_SITE_URL.replace(/\/$/, '');
   if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
@@ -65,7 +65,8 @@ export interface PageMetaInput {
 
 export async function buildMetadata(input: PageMetaInput = {}): Promise<Metadata> {
   const content = await getPublishedContent();
-  const { seo, settings } = content;
+  const seo = content.seo ?? ({} as SEOSettings);
+  const settings = content.settings ?? ({} as CMSState['settings']);
 
   const siteUrl = resolveSiteUrl(content);
   const title = applyTitleTemplate(seo, input.title);

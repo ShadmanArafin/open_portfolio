@@ -9,6 +9,7 @@ import { auditContrast, describeFailure } from '@/core/theme/audit';
 import { flattenAppearance } from '@/core/theme/resolve';
 import { looksLikeContent } from '@/core/content/validate';
 import { RevisionConflictError } from '@/core/storage/contract';
+import { preparePublishedWriting, WritingPublishError } from '@/core/writing/records';
 
 /**
  * Publishing, at last.
@@ -82,6 +83,30 @@ export async function POST(req: Request) {
   const merged = withoutEnquiries(body.content);
 
   const adapter = await getStorageAdapter();
+
+  // Bodies first, then the snapshot that names them. The draft records are the
+  // authority on what a piece says; the client's copy supplies only the pieces
+  // that have no record yet (a site publishing before its first Writing save,
+  // or an older client). A piece whose body cannot be found stops the publish
+  // rather than being replaced by an empty one.
+  try {
+    merged.writing = await preparePublishedWriting(adapter.records, merged);
+  } catch (err) {
+    if (err instanceof WritingPublishError) {
+      return NextResponse.json({ ok: false, error: err.message }, { status: 409 });
+    }
+    if (err instanceof RevisionConflictError) {
+      return NextResponse.json({ ok: false, error: err.message, conflict: true }, { status: 409 });
+    }
+    console.error('[publish] Writing bodies could not be stored, so nothing was published.', err);
+    return NextResponse.json(
+      {
+        ok: false,
+        error: 'The writing could not be stored, so nothing was published. Try again.',
+      },
+      { status: 500 }
+    );
+  }
 
   let revision: number;
   try {

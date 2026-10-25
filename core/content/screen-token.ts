@@ -118,16 +118,20 @@ export function screenToken(state: CMSState, slice: ScreenSlice): string {
  * A save that carries no token is let through as it always was — an older
  * tab open across an update keeps working rather than refusing every save.
  */
+export function staleTokenError(label: string, actual: string, expected: unknown): string | null {
+  if (typeof expected !== 'string' || expected === '') return null;
+  if (actual === expected) return null;
+  return (
+    `Someone changed ${label} somewhere else — another tab or another device — ` +
+    `after this screen was opened, so nothing was written. Reload to see the current version, ` +
+    `then make your change again.`
+  );
+}
+
 export function staleScreenError(
   state: CMSState,
   slice: ScreenSlice,
   expected: unknown
 ): string | null {
-  if (typeof expected !== 'string' || expected === '') return null;
-  if (screenToken(state, slice) === expected) return null;
-  return (
-    `Someone changed ${SLICES[slice].label} somewhere else — another tab or another device — ` +
-    `after this screen was opened, so nothing was written. Reload to see the current version, ` +
-    `then make your change again.`
-  );
+  return staleTokenError(SLICES[slice].label, screenToken(state, slice), expected);
 }

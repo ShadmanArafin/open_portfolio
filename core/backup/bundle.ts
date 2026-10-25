@@ -3,6 +3,8 @@ import type { CMSState } from '@/cms/types/cms';
 import { looksLikeContent } from '@/core/content/validate';
 import { withoutEnquiries } from '@/core/content/sanitise';
 import { APP_VERSION } from '@/core/version';
+import type { StoredRecord } from '@/core/storage/contract';
+import { WRITING_BODY_COLLECTION, WRITING_RECORD_COLLECTIONS } from '@/core/writing/records';
 
 /**
  * Server-side backup bundle.
@@ -30,7 +32,15 @@ import { APP_VERSION } from '@/core/version';
 
 export const BACKUP_FORMAT = 'open-portfolio-builder';
 const ACCEPTED_FORMATS = [BACKUP_FORMAT, 'arshan-portfolio-cms'] as const;
-export const BACKUP_VERSION = 1;
+/**
+ * 2 added `records`: the per-piece writing drafts and the published bodies.
+ *
+ * Without them a v2 backup would restore a published snapshot naming body
+ * records that were never written, which is every article blank. Version 1
+ * files still restore - they carry their bodies inline in the snapshot, the
+ * shape that predates the split.
+ */
+export const BACKUP_VERSION = 2;
 
 /** 25 MB of JSON — same ceiling as the largest single upload. */
 export const MAX_BACKUP_BYTES = 25 * 1024 * 1024;
@@ -42,15 +52,29 @@ export interface BackupMediaEntry {
   sizeBytes: number;
 }
 
+/** One stored record, in the shape every backend's `records` surface uses. */
+export interface BackupRecord {
+  id: string;
+  revision: number;
+  data: unknown;
+  updatedAt: string;
+}
+
 export interface ServerBackup {
   format: (typeof ACCEPTED_FORMATS)[number];
-  bundleVersion: 1;
+  bundleVersion: 2;
   appVersion: string;
   exportedAt: string;
   adapter: string;
   published: CMSState | null;
   draft: CMSState | null;
   media: BackupMediaEntry[];
+  /**
+   * Collection name -> records. Only the writing collections are carried:
+   * history is a convenience that can be rebuilt, and sessions, secrets and
+   * the inbox live outside the bundle by design.
+   */
+  records?: Record<string, BackupRecord[]>;
 }
 
 export function buildBackup(args: {
@@ -58,7 +82,19 @@ export function buildBackup(args: {
   published: CMSState | null;
   draft: CMSState | null;
   media: BackupMediaEntry[];
+  records?: Record<string, StoredRecord[]>;
 }): ServerBackup {
+  const records: Record<string, BackupRecord[]> = {};
+  for (const [collection, list] of Object.entries(args.records ?? {})) {
+    if (list.length === 0) continue;
+    records[collection] = list.map((record) => ({
+      id: record.id,
+      revision: record.revision,
+      data: record.data,
+      updatedAt: record.updatedAt,
+    }));
+  }
+
   return {
     format: BACKUP_FORMAT,
     bundleVersion: BACKUP_VERSION,
@@ -68,16 +104,23 @@ export function buildBackup(args: {
     published: args.published ? withoutEnquiries(args.published) : null,
     draft: args.draft ? withoutEnquiries(args.draft) : null,
     media: args.media,
+    ...(Object.keys(records).length > 0 ? { records } : {}),
   };
 }
 
 export type BackupCheck = { ok: true; backup: ServerBackup } | { ok: false; error: string };
 
+const RECORD_ADDRESS = /^[a-z0-9-_]{1,64}$/;
+const ALLOWED_RECORD_COLLECTIONS = new Set<string>(WRITING_RECORD_COLLECTIONS);
+/** 200 pieces, their drafts and every published version of their bodies. */
+const MAX_BACKUP_RECORDS = 10_000;
+
 /**
  * Structural validation before anything is written. Deliberately lenient about
  * unknown fields (a newer build's snapshot must still restore here) and strict
- * about the three things that lose content silently: wrong file, newer bundle,
- * and a channel that is not content at all.
+ * about the things that lose content silently: wrong file, newer bundle, a
+ * channel that is not content at all, and a published snapshot naming a body
+ * the bundle does not carry.
  */
 export function checkBackup(value: unknown): BackupCheck {
   if (!value || typeof value !== 'object') {
@@ -132,6 +175,76 @@ export function checkBackup(value: unknown): BackupCheck {
     }
   }
 
+  // Records are an allowlist, not a passthrough. A bundle may only put back the
+  // collections this build owns; a hand-edited file must not be able to write
+  // into `versions`, `messages` or anything else the storage surface knows.
+  const records: Record<string, BackupRecord[]> = {};
+  let recordCount = 0;
+  if (b.records != null) {
+    if (typeof b.records !== 'object' || Array.isArray(b.records)) {
+      return { ok: false, error: 'That backup has a damaged records section.' };
+    }
+    for (const [collection, rawList] of Object.entries(b.records as Record<string, unknown>)) {
+      if (!ALLOWED_RECORD_COLLECTIONS.has(collection)) continue;
+      if (!Array.isArray(rawList)) {
+        return { ok: false, error: `That backup's "${collection}" records are not a list.` };
+      }
+      const clean: BackupRecord[] = [];
+      for (const raw of rawList) {
+        if (!raw || typeof raw !== 'object') continue;
+        const record = raw as Partial<BackupRecord>;
+        if (typeof record.id !== 'string' || !RECORD_ADDRESS.test(record.id)) {
+          return {
+            ok: false,
+            error: `That backup has a record with an unusable id in "${collection}".`,
+          };
+        }
+        if (
+          typeof record.revision !== 'number' ||
+          !Number.isInteger(record.revision) ||
+          record.revision < 1
+        ) {
+          return {
+            ok: false,
+            error: `That backup has a record with an unusable revision in "${collection}".`,
+          };
+        }
+        if (!('data' in record)) {
+          return { ok: false, error: `That backup has an empty record in "${collection}".` };
+        }
+        recordCount += 1;
+        if (recordCount > MAX_BACKUP_RECORDS) {
+          return { ok: false, error: 'That backup holds more records than a site can have.' };
+        }
+        clean.push({
+          id: record.id,
+          revision: record.revision,
+          data: record.data,
+          updatedAt:
+            typeof record.updatedAt === 'string' ? record.updatedAt : new Date(0).toISOString(),
+        });
+      }
+      if (clean.length > 0) records[collection] = clean;
+    }
+  }
+
+  // A published entry with a `bodyKey` is a pointer into `writing-bodies`. A
+  // backup without that body restores a site whose articles are blank, which
+  // looks like a successful restore until somebody opens one.
+  const bodies = new Set((records[WRITING_BODY_COLLECTION] ?? []).map((record) => record.id));
+  const publishedState = b.published as CMSState | null;
+  for (const entry of publishedState?.writing ?? []) {
+    const bodyKey = (entry as { bodyKey?: unknown } | null)?.bodyKey;
+    if (typeof bodyKey === 'string' && bodyKey && !bodies.has(bodyKey)) {
+      return {
+        ok: false,
+        error:
+          'That backup names published writing whose bodies are not in it. Export a new backup ' +
+          'from the site that made it, rather than restoring a partial one.',
+      };
+    }
+  }
+
   return {
     ok: true,
     backup: {
@@ -146,6 +259,7 @@ export function checkBackup(value: unknown): BackupCheck {
       published: b.published ? withoutEnquiries(b.published as CMSState) : null,
       draft: b.draft ? withoutEnquiries(b.draft as CMSState) : null,
       media: cleanMedia,
+      ...(Object.keys(records).length > 0 ? { records } : {}),
     },
   };
 }

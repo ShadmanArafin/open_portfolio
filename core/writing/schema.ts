@@ -44,6 +44,18 @@ export const writingSchema = z.object({
    */
   blocks: z.array(z.unknown()).default([]),
 
+  /**
+   * Where the published body lives.
+   *
+   * The published snapshot carries the metadata every listing needs, but not
+   * the body: a 200-post blog would otherwise put every word in the one
+   * document each public render reads. `bodyKey` is a content hash naming an
+   * immutable record in the `writing-bodies` collection - see
+   * `core/writing/records.ts`. Absent on draft entries and on content written
+   * before the split, where the body is still inline in `blocks`.
+   */
+  bodyKey: z.string().optional(),
+
   status: writingStatus,
   /**
    * When it was written. Optional because a portfolio essay is usually
@@ -71,6 +83,22 @@ export const writingSchema = z.object({
 });
 
 export type WritingEntry = z.infer<typeof writingSchema>;
+
+/** The payload of one published body record. Content-addressed, so immutable. */
+export const writingBodySchema = z.object({
+  blocks: z.array(z.unknown()).default([]),
+});
+
+export type WritingBody = z.infer<typeof writingBodySchema>;
+
+/**
+ * How many pieces one page of the public index shows.
+ *
+ * The list is metadata from the snapshot, so slicing it is cheap; the number
+ * is a reading decision, not a storage one. Ten is long enough to browse and
+ * short enough that the page still loads without a spinner on a phone.
+ */
+export const WRITING_PAGE_SIZE = 10;
 
 /**
  * How the collection is arranged, and what it is called.

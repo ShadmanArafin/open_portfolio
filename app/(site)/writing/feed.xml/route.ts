@@ -1,6 +1,7 @@
 import { getPublishedContent } from '@/core/content/read';
 import { resolveSiteUrl } from '@/core/content/metadata';
-import { getPublicWriting, getWritingSettings } from '@/core/writing/read';
+import { getPublicWriting, getWritingSettings, resolveWritingBody } from '@/core/writing/read';
+import { cdata, writingFeedHtml } from '@/core/writing/feed';
 
 /**
  * RSS, unconditionally.
@@ -33,9 +34,25 @@ export async function GET() {
   // URLs is worse than no feed at all.
   if (!settings.enabled || !siteUrl) return new Response('Not found', { status: 404 });
 
-  const items = entries.map((entry) => {
-    const url = siteUrl + '/writing/' + entry.slug;
+  const root = siteUrl.replace(/\/$/, '');
+
+  // A feed is chronological even when the site is curated: readers sort by
+  // date, and the newest fifty is what a reader can reasonably hold. The
+  // bodies come from their records, one at a time, because the published
+  // snapshot deliberately carries none.
+  const newest = [...entries]
+    .sort(
+      (a, b) => Date.parse(b.publishedAt ?? b.updatedAt) - Date.parse(a.publishedAt ?? a.updatedAt)
+    )
+    .slice(0, 50);
+
+  const bodies = await Promise.all(newest.map((entry) => resolveWritingBody(entry, 'published')));
+
+  const items = newest.map((entry, index) => {
+    const url = root + '/writing/' + entry.slug;
     const date = new Date(entry.publishedAt ?? entry.updatedAt).toUTCString();
+    const body = bodies[index];
+    const encoded = body ? writingFeedHtml(body, root) : '';
     return [
       '    <item>',
       '      <title>' + escapeXml(entry.title) + '</title>',
@@ -43,6 +60,7 @@ export async function GET() {
       '      <guid isPermaLink="true">' + escapeXml(url) + '</guid>',
       '      <pubDate>' + date + '</pubDate>',
       '      <description>' + escapeXml(entry.summary) + '</description>',
+      ...(encoded ? ['      <content:encoded>' + cdata(encoded) + '</content:encoded>'] : []),
       '    </item>',
     ].join('\n');
   });
@@ -51,14 +69,15 @@ export async function GET() {
 
   const xml = [
     '<?xml version="1.0" encoding="UTF-8"?>',
-    '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">',
+    '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" ' +
+      'xmlns:content="http://purl.org/rss/1.0/modules/content/">',
     '  <channel>',
     '    <title>' + title + '</title>',
-    '    <link>' + escapeXml(siteUrl + '/writing') + '</link>',
+    '    <link>' + escapeXml(root + '/writing') + '</link>',
     '    <description>' + escapeXml(content.seo.metaDescription || '') + '</description>',
     '    <language>en</language>',
     '    <atom:link href="' +
-      escapeXml(siteUrl + '/writing/feed.xml') +
+      escapeXml(root + '/writing/feed.xml') +
       '" rel="self" type="application/rss+xml" />',
     ...items,
     '  </channel>',

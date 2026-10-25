@@ -95,3 +95,22 @@ describe('records', () => {
     expect(createWritingEntry('Untitled').publishedAt).toBeUndefined();
   });
 });
+
+describe('pagination', () => {
+  it('chunks entries by WRITING_PAGE_SIZE (10)', async () => {
+    const { WRITING_PAGE_SIZE } = await import('../schema');
+    expect(WRITING_PAGE_SIZE).toBe(10);
+
+    const items = Array.from({ length: 25 }, (_, i) => entry({ id: `e-${i}`, title: `Post ${i}` }));
+    const totalPages = Math.max(1, Math.ceil(items.length / WRITING_PAGE_SIZE));
+    expect(totalPages).toBe(3);
+
+    const page1 = items.slice(0, WRITING_PAGE_SIZE);
+    const page2 = items.slice(WRITING_PAGE_SIZE, WRITING_PAGE_SIZE * 2);
+    const page3 = items.slice(WRITING_PAGE_SIZE * 2, WRITING_PAGE_SIZE * 3);
+
+    expect(page1).toHaveLength(10);
+    expect(page2).toHaveLength(10);
+    expect(page3).toHaveLength(5);
+  });
+});

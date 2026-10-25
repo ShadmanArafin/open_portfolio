@@ -11,8 +11,15 @@ import { looksLikeContent } from '@/core/content/validate';
 import { RevisionConflictError } from '@/core/storage/contract';
 import { conflictMessage, describeChanges } from '@/core/content/changes';
 import type { CMSState, ContentVersion } from '@/cms/types/cms';
+import type { WritingEntry } from '@/core/writing/schema';
 import { readDraftForWrite } from '@/core/content/draft';
 import { recordVersion } from '@/core/content/versions';
+import {
+  draftMetadata,
+  ensureDraftWritingRecords,
+  preparePublishedWriting,
+  WritingPublishError,
+} from '@/core/writing/records';
 
 export interface PublishResult {
   ok: boolean;
@@ -54,6 +61,34 @@ export async function publishDraftAction(expectedRevision?: number): Promise<Pub
   const nextPublished = structuredClone(draft) as CMSState;
   nextPublished.status = 'published';
   nextPublished.lastPublishedAt = now;
+
+  // Writing bodies go to their own records before the snapshot names them. A
+  // snapshot written first would point at nothing for as long as the next write
+  // takes, and a failure after it would leave the site with blank articles.
+  // `ensureDraftWritingRecords` runs first so the draft follow below can be
+  // metadata-only without dropping a legacy draft's body.
+  let draftEntries: WritingEntry[];
+  try {
+    draftEntries = await ensureDraftWritingRecords(adapter.records, draft);
+    nextPublished.writing = await preparePublishedWriting(adapter.records, draft);
+  } catch (err) {
+    if (err instanceof WritingPublishError) return { ok: false, error: err.message };
+    if (err instanceof RevisionConflictError) {
+      return {
+        ok: false,
+        conflict: true,
+        error:
+          'A draft post was updated in another session while publishing. Reload and try again.',
+      };
+    }
+    console.error('[publish] Writing bodies could not be stored, so nothing was published.', err);
+    return {
+      ok: false,
+      error:
+        'The writing could not be stored, so nothing was published. Try again, and check the ' +
+        "site's storage if this keeps happening.",
+    };
+  }
 
   // A snapshot holds content only. History, activity and the inbox stay out:
   // each version nesting the last roughly doubled stored size, and a version
@@ -109,8 +144,14 @@ export async function publishDraftAction(expectedRevision?: number): Promise<Pub
   }
 
   // The draft follows the publish, so the next save is a change, not a copy.
+  // Its writing list stays the *draft* list - including pieces that are not
+  // published - because publishing must not quietly remove an unfinished piece
+  // from the screen. Bodies stay in their records; the snapshot carries
+  // metadata only.
   try {
-    await adapter.writeSnapshot('draft', merged);
+    const draftFollow = structuredClone(merged) as CMSState;
+    draftFollow.writing = draftEntries.map((entry) => draftMetadata(entry));
+    await adapter.writeSnapshot('draft', draftFollow);
   } catch {
     /* The publish landed; a stale draft is a reload, not a failure. */
   }

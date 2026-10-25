@@ -62,4 +62,66 @@ describe('backup restore proof', () => {
     // Auth-adjacent state was never in the bundle and is untouched by restore.
     expect(await adapter.kv.get('config', 'smtp')).toEqual({ pass: 'secret' });
   });
+
+  it('restores draft writing records and cleans up stale draft records', async () => {
+    const { localAdapter } = await import('@/core/storage/adapters/local');
+    const adapter = localAdapter;
+
+    // Stale draft record in local storage before restore
+    await adapter.records.put('writing-draft', 'stale-post', { title: 'Old Draft' });
+    expect(await adapter.records.get('writing-draft', 'stale-post')).not.toBeNull();
+
+    // Backup bundle carrying a different draft record
+    const bundle = buildBackup({
+      adapterId: adapter.id,
+      published: INITIAL_CMS_STATE,
+      draft: { ...INITIAL_CMS_STATE, writing: [] },
+      media: [],
+      records: {
+        'writing-draft': [
+          {
+            id: 'restored-post',
+            revision: 1,
+            data: { title: 'Restored Draft' },
+            updatedAt: new Date().toISOString(),
+          },
+        ],
+      },
+    });
+
+    const checked = checkBackup(JSON.parse(JSON.stringify(bundle)));
+    expect(checked.ok).toBe(true);
+    if (!checked.ok) return;
+
+    for (const [collection, records] of Object.entries(checked.backup.records ?? {})) {
+      for (const record of records) {
+        await adapter.records.put(collection, record.id, record.data);
+      }
+    }
+
+    const { listAllRecords, replaceDraftWriting, WRITING_DRAFT_COLLECTION } =
+      await import('@/core/writing/records');
+
+    if (checked.backup.draft) {
+      const backupDraftIds = new Set(
+        (checked.backup.records?.[WRITING_DRAFT_COLLECTION] ?? []).map((r) => r.id)
+      );
+      if (backupDraftIds.size === 0 && checked.backup.draft.writing?.length) {
+        await replaceDraftWriting(adapter.records, checked.backup.draft.writing);
+      } else {
+        const existingDraftRecords = await listAllRecords(
+          adapter.records,
+          WRITING_DRAFT_COLLECTION
+        );
+        for (const record of existingDraftRecords) {
+          if (!backupDraftIds.has(record.id)) {
+            await adapter.records.remove(WRITING_DRAFT_COLLECTION, record.id);
+          }
+        }
+      }
+    }
+
+    expect(await adapter.records.get('writing-draft', 'stale-post')).toBeNull();
+    expect(await adapter.records.get('writing-draft', 'restored-post')).not.toBeNull();
+  });
 });

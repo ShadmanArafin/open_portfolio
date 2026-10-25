@@ -1,8 +1,6 @@
 import type { Metadata } from 'next';
 import { getContentForChannel } from '@/core/content/read';
-import { screenToken } from '@/core/content/screen-token';
-import { WRITING_DEFAULTS, writingSettingsSchema } from '@/core/writing/schema';
-import type { WritingSettings } from '@/core/writing/schema';
+import { getWritingAdminState } from '@/core/writing/read';
 import { WritingBuilder } from './writing-builder';
 
 export const metadata: Metadata = { title: 'Writing' };
@@ -14,11 +12,14 @@ export const metadata: Metadata = { title: 'Writing' };
  * called, whether dates show at all, and whether the newest or the best comes
  * first. Each piece is built from the same blocks as the pages, deliberately —
  * see `core/writing/schema.ts` for why the collection exists at all.
+ *
+ * The pieces come from their records, not the draft snapshot. The snapshot
+ * still supplies the media library and the settings, and the loader falls back
+ * to it until a piece's record exists, so a site that predates the split opens
+ * with everything it had.
  */
 export default async function WritingPage() {
-  const draft = await getContentForChannel('draft');
-  const parsed = writingSettingsSchema.safeParse(draft.writingSettings);
-  const settings: WritingSettings = parsed.success ? parsed.data : WRITING_DEFAULTS;
+  const [draft, state] = await Promise.all([getContentForChannel('draft'), getWritingAdminState()]);
 
   return (
     <div className="grid gap-6" style={{ maxWidth: 'var(--measure)' }}>
@@ -32,9 +33,9 @@ export default async function WritingPage() {
       </div>
 
       <WritingBuilder
-        token={screenToken(draft, 'writing')}
-        initialSettings={settings}
-        initialEntries={draft.writing ?? []}
+        token={state.token}
+        initialSettings={state.settings}
+        initialEntries={state.entries}
         media={draft.media ?? []}
       />
     </div>

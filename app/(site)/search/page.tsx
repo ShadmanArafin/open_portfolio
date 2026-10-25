@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { buildMetadata } from '@/core/content/metadata';
 import { getPublishedProjects } from '@/core/content/read';
 import { getIndexablePages } from '@/core/pages/read';
-import { getPublicWriting, getWritingSettings } from '@/core/writing/read';
+import { getWritingSettings, getWritingWithBodies } from '@/core/writing/read';
 import { buildSearchIndex, MAX_QUERY, searchIndex } from '@/core/content/search';
 import { SearchForm } from './search-form';
 
@@ -34,18 +34,20 @@ export default async function SearchPage({
   const raw = (await searchParams).q;
   const query = (Array.isArray(raw) ? raw[0] : (raw ?? '')).trim().slice(0, MAX_QUERY);
 
-  const [projects, pages, writingSettings, writing] = await Promise.all([
+  const [projects, pages, writingSettings] = await Promise.all([
     getPublishedProjects(),
     getIndexablePages(),
     getWritingSettings('published'),
-    getPublicWriting('published'),
   ]);
+  // Bodies are records now, so reading them is only worth it when there is a
+  // query to match against. An empty search page stays a metadata read.
+  const writing = query && writingSettings.enabled ? await getWritingWithBodies('published') : [];
   const results = query
     ? searchIndex(
         buildSearchIndex({
           projects,
           pages,
-          writing: writingSettings.enabled ? writing.filter((entry) => !entry.seo.noindex) : [],
+          writing: writing.filter((entry) => !entry.seo.noindex),
         }),
         query
       )
