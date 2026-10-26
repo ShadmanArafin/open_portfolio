@@ -14,6 +14,14 @@ import { JsonLd } from '@/core/content/json-ld-script';
 import { breadcrumbsFor } from '@/core/content/structured-data';
 
 /**
+ * This route reads the preview cookie and the content store, so there is no
+ * URL-independent shell to show before the data arrives. Blocking is the
+ * honest model here; without this, Next logs a `NEXT_STATIC_GEN_BAILOUT` on
+ * every project page as it discovers the same thing at request time.
+ */
+export const instant = false;
+
+/**
  * Pre-render the projects that exist at build time; anything added later is
  * rendered on demand and then cached. Wrapped so a storage failure produces a
  * fully dynamic site rather than a failed build — a paused free-tier database

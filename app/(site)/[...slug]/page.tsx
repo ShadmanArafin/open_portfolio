@@ -12,6 +12,13 @@ import { segmentsToSlug } from '@/core/pages/schema';
 import { PreviewBanner } from '../preview-banner';
 
 /**
+ * The page's entire body comes from the store and the preview cookie. There is
+ * nothing stable to prerender before that read, so this route blocks on the
+ * server rather than paying for a bailout log on every request.
+ */
+export const instant = false;
+
+/**
  * Every page the owner builds, at whatever address they chose.
  *
  * A required catch-all rather than an optional one, deliberately: `[[...slug]]`

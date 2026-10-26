@@ -7,6 +7,19 @@ of stored content is stable, but screens and options are not settled yet.
 Anyone who reported or suggested something is credited by name. That is the
 whole point of the Help & feedback screen in the admin.
 
+## 0.7.2 — 2026-10-27
+
+### Security
+
+- **Production dependency audit is clean.** `npm audit --omit=dev` reports zero
+  vulnerabilities. Exact-pinned transitive copies of `sharp`, `undici` and `zod`
+  were forced to their patched releases with npm `overrides`, and the direct
+  `sharp` dependency moved to 0.35.5. The marketing site's `zod` moved to 4.6.7
+  and `source-map-js` to 1.2.2, bringing `site/` to zero advisories as well.
+- **Development-only advisories remain isolated.** The only remaining audit
+  findings are five moderate advisories inside `firebase-tools`, a dev-only
+  emulator tool that is not traced into the standalone production image.
+
 ## 0.7.1 — 2026-10-27
 
 ### Added

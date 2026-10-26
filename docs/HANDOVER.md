@@ -26,7 +26,7 @@ JavaScript bundle. None of that remains.
 ```bash
 npm ci                          # ci, not install — see "Traps" below
 npm run dev                     # http://localhost:3000
-npm test                        # 1216 passing, 11 skipped (24 Oct 2026)
+npm test                        # 1420 passing, 11 skipped (27 Oct 2026)
 npm run typecheck && npm run lint && npm run build
 ```
 
@@ -158,6 +158,7 @@ Everything below was run, not reasoned about.
 | The browser demo               | Driven in a browser: sign in, the wizard, all thirteen screens rendering, editing a headline with the preview following, switching persona (content, theme, vocabulary and sidebar labels change together), light and dark, three device widths |
 | Marketing site, 31 pages       | Static export served and walked in a browser: light and dark, 390px and 1280px, one h1, no skipped heading levels, no horizontal scroll                                                                                                         |
 | Its own contrast rule          | `npm run check:contrast` in `site/`, wired into its build. Caught a muted grey at 4.04:1 that had already shipped into every eyebrow and table header                                                                                           |
+| Production dependency audit    | `npm audit --omit=dev` → 0 vulnerabilities in the root and in `site/` (27 Oct 2026). The five remaining root advisories are dev-only inside `firebase-tools`                                                                                    |
 
 ### Supabase Storage: verified, and it was broken
 

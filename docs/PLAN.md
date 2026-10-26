@@ -13,7 +13,7 @@
 > [§12 second pass (2026-10-20)](PROJECT-REVIEW.md#12-second-pass--2026-10-20)
 > holds Phase E, which is what remains after the admin rewrite.
 >
-> Last updated: 2026-10-26 · Version 0.7.0 · CI green on `main`.
+> Last updated: 2026-10-27 · Version 0.7.2 · CI green on `main`.
 > Read [Handoff notes](#handoff-notes-for-whoever-picks-this-up) first if you
 > are starting on a new machine — it carries the running instructions, the
 > invariants, and every known bug.
@@ -34,9 +34,9 @@
 | 9 — Blog, themes, presets   | **Done, verified** | 6 themes, presets, records-backed writing+RSS, full axe matrix, P2 blocks                    |
 | Community + updates         | **Done**           | Reports, dedupe, update workflow, `UPDATING.md`. Repository public                           |
 | Self-hosting (Docker)       | **Done, verified** | `docker compose up`, volume survives container replacement                                   |
-| 10 — Launch                 | **Done, verified** | Marketing site deployed, demo + PWA + push shipped, release 0.7.0 live                       |
+| 10 — Launch                 | **Done, verified** | Marketing site deployed, demo + PWA + push shipped, release 0.7.2 live                       |
 
-**Where to start:** the repository is public and `v0.7.0` is tagged, with a
+**Where to start:** the repository is public and `v0.7.2` is tagged, with a
 released image. What remains is the open backlog in
 [PROJECT-REVIEW.md](PROJECT-REVIEW.md) and the remaining-work ledger in
 [HANDOVER.md](HANDOVER.md#remaining-work-updated-26-october-2026).
@@ -1050,8 +1050,8 @@ _Honest scoping:_ Vercel Marketplace can only auto-provision Marketplace-native 
 >   offline indicator.
 > - **PWA and push notifications.** Web app manifest, dependency-free `public/sw.js`
 >   service worker with zero admin cache risk, and native Node `crypto` VAPID push.
-> - **Release 0.7.0 tagged and published.** Multi-arch Docker images on GHCR with Sigstore
->   attestations.
+> - **Releases 0.7.0 through 0.7.2 tagged and published.** Multi-arch Docker images on GHCR
+>   with Sigstore attestations; 0.7.2 is the current one and clears the production dependency audit.
 
 > ### RESEARCHED, NOTHING BUILT
 >

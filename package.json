@@ -1,7 +1,7 @@
 {
   "name": "open-portfolio",
   "private": true,
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "A self-hosted portfolio site with a built-in visual editor.",
   "license": "MIT",
   "type": "module",
@@ -70,7 +70,7 @@
     "react-dom": "^19.3.1",
     "react-icons": "^5.7.0",
     "server-only": "^0.0.1",
-    "sharp": "^0.35.3",
+    "sharp": "^0.35.5",
     "tailwind-merge": "^3.7.0",
     "zod": "^4.6.7"
   },
@@ -100,6 +100,18 @@
     "typescript": "^5.5.4",
     "typescript-eslint": "^8.66.0",
     "vitest": "^4.1.11"
+  },
+  "overrides": {
+    "@vercel/blob": {
+      "undici": "^6.29.1"
+    },
+    "@vercel/cli-config": {
+      "zod": "^4.6.7"
+    },
+    "miniflare": {
+      "undici": "^7.30.1"
+    },
+    "sharp": "^0.35.5"
   },
   "engines": {
     "node": ">=22"
