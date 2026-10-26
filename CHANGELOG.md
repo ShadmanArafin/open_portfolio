@@ -7,6 +7,41 @@ of stored content is stable, but screens and options are not settled yet.
 Anyone who reported or suggested something is credited by name. That is the
 whole point of the Help & feedback screen in the admin.
 
+## 0.7.1 — 2026-10-27
+
+### Added
+
+- **Cal.com & booking embeds.** Added `app.cal.com` and `cal.com` support to the
+  Booking calendar (`embed`) block, updated Content-Security-Policy `frame-src`,
+  and added step-by-step guides in `docs/BOOKINGS-AND-CAL.md` and
+  `site/content/help/pages-and-blocks.md`.
+- **Sample CC0 photography assets.** Shipped five atmospheric vector photography
+  scenes (`saltmarsh.svg`, `kitchen.svg`, `foundry.svg`, `portrait-ida.svg`,
+  `mira-profile.svg`) in `public/demo/photos/` and `site/public/demo/photos/`,
+  populating the photographer persona's projects and split About block.
+- **Standalone live verification tooling.** Created `scripts/verify-cloudflare-rest.mjs`
+  and `scripts/verify-convex.mjs` for one-command live validation against real
+  Cloudflare D1+R2 and Convex instances.
+- **Launch kit & directory submissions.** Created `docs/LAUNCH-KIT.md` containing
+  verified submission copy for `awesome-selfhosted`, Hacker News Show HN, and
+  Reddit `r/selfhosted`.
+
+### Security & Hardening
+
+- **CodeQL security resolutions.** Resolved all open CodeQL alerts across the
+  codebase (safe DOM script URL validation in `src/utils/analytics.ts`,
+  loop-until-stable HTML tag stripping in `core/writing/markdown.ts`, and
+  removal of identity string replacement in `site/app/deploy/page.tsx`).
+- **Scorecard supply-chain hardening.** Pinned base image `node:24-alpine` by
+  multi-arch digest in `Dockerfile`, scoped permissions in `.github/workflows/update.yml`,
+  and linked GitHub security advisories in `SECURITY.md`.
+- **Inbox rate limiting & error handling.** Added `rateLimit('messages:...', 120, 60)`
+  and wrapped database access in try/catch in `app/api/admin/messages/route.ts`.
+- **Content health pluralisation.** Fixed template string bug in `contentHealth.ts`
+  to correctly render `1 enquiry unread` vs `2 enquiries unread`.
+- **Test suite runner stability.** Added `pool: 'forks'` and `maxWorkers: 4` to
+  `vitest.config.ts`, preventing Windows worker-fork issues.
+
 ## 0.7.0 — 2026-10-26
 
 ### Added
