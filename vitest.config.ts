@@ -23,6 +23,8 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
+    pool: 'forks',
+    maxWorkers: 4,
     setupFiles: ['./vitest.setup.ts'],
     // `.tsx` too: block rendering is checked by rendering it, which needs JSX.
     include: ['**/__tests__/**/*.test.ts', '**/__tests__/**/*.test.tsx'],

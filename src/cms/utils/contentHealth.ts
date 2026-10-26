@@ -262,7 +262,7 @@ export function analyseContent(
   check(unreadMessages === 0, () => ({
     id: 'unread-messages',
     severity: 'blocking',
-    title: `${unreadMessages} enquiry${unreadMessages === 1 ? '' : ' enquiries'} unread`,
+    title: `${unreadMessages} ${unreadMessages === 1 ? 'enquiry' : 'enquiries'} unread`,
     detail: 'Someone contacted you and has not had a reply.',
     to: '/admin/messages',
     action: 'Open inbox',

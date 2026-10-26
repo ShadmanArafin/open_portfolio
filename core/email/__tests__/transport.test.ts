@@ -26,6 +26,15 @@ describe('transport resolution', () => {
     } as unknown as NodeJS.ProcessEnv);
     if (on.kind !== 'smtp') throw new Error('expected smtp');
     expect(on.config.secure).toBe(true);
+
+    for (const other of ['0', 'true', 'yes', 'on', '', 'false']) {
+      const off = resolveTransport({
+        OPB_SMTP_HOST: 'h',
+        OPB_SMTP_SECURE: other,
+      } as unknown as NodeJS.ProcessEnv);
+      if (off.kind !== 'smtp') throw new Error('expected smtp');
+      expect(off.config.secure).toBe(false);
+    }
   });
 
   it('derives a From address when none is given', () => {

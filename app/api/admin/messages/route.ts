@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getStorageAdapter } from '@/core/storage/registry';
 import { requireOwner, UnauthorizedError } from '@/core/auth/guard';
+import { clientKey, rateLimit } from '@/core/auth/ratelimit';
 import { resolveTransportWithStored } from '@/core/email/transport';
 
 /**
@@ -22,10 +23,24 @@ export async function GET() {
     return NextResponse.json({ ok: false, error: 'Not signed in.' }, { status });
   }
 
-  const messages = await (await getStorageAdapter()).messages.list();
-  return NextResponse.json({
-    ok: true,
-    messages,
-    emailConfigured: (await resolveTransportWithStored()).kind !== 'none',
-  });
+  const limit = await rateLimit(`messages:${await clientKey()}`, 120, 60);
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { ok: false, error: 'Too many requests.' },
+      { status: 429, headers: { 'Retry-After': String(limit.retryAfterSeconds) } }
+    );
+  }
+
+  try {
+    const adapter = await getStorageAdapter();
+    const messages = await adapter.messages.list();
+    const transport = await resolveTransportWithStored();
+    return NextResponse.json({
+      ok: true,
+      messages,
+      emailConfigured: transport.kind !== 'none',
+    });
+  } catch {
+    return NextResponse.json({ ok: false, error: 'Could not load messages.' }, { status: 500 });
+  }
 }

@@ -233,22 +233,18 @@ Ordered by how much a user would notice.
 
 ### Smaller known defects
 
-Real, none blocking, none fixed.
+Real, none blocking.
 
-- **The `unread-messages` health check pluralises wrongly** — "2 enquiry
-  enquiries unread".
-- **`/api/admin/messages` has no rate limiting**, unlike every sibling admin
-  route. Owner-only and same-origin, so the risk is low.
+- **~~The `unread-messages` health check pluralises wrongly~~** — Fixed 2026-10-26.
+  `contentHealth.ts` now prints `1 enquiry unread` vs `2 enquiries unread`.
+- **~~`/api/admin/messages` has no rate limiting and crashes on database hiccup~~** — Fixed 2026-10-26.
+  Added `rateLimit('messages:...', 120, 60)` and wrapped storage access in try/catch returning status 500.
+- **~~`transport.test.ts`'s "implicit TLS only for the documented value" asserts only positive case~~** — Fixed 2026-10-26.
+  Now asserts `'0'`, `'true'`, `'yes'`, `'on'`, `''`, and `'false'` all leave TLS disabled.
 - **An inert leftover after a crash.** If a process dies between the message
   migration's append and its snapshot-clear, a copy stays in that channel's
   snapshot and is never revisited, because the guard is destination-based.
   Self-heals on the next publish for `published`, not for `draft`.
-- **A database hiccup renders as an empty inbox, not an error.**
-  `app/api/admin/messages/route.ts` calls `messages.list()` outside its `try`,
-  and `CMSContext` swallows a non-ok response.
-- **`transport.test.ts`'s "implicit TLS only for the documented value" asserts
-  only the positive case.** It never checks that `'true'` or `'0'` leave TLS
-  off, so its title overstates what it proves.
 
 ---
 
