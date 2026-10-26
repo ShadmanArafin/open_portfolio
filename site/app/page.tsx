@@ -195,13 +195,13 @@ export default function Home() {
               </p>
             </div>
             <div className="card">
-              <h3 className="head">Pages built from twenty-seven blocks</h3>
+              <h3 className="head">Pages built from twenty-eight blocks</h3>
               <p>
                 A hero, text, images, a gallery, figures, cards, a call to action, a contact form,
                 questions and answers, a video, a picture beside text, a quote, a newsletter box,
-                your social links, what you offer, a file to download, and space. Seven more place
-                your own records — including your writing — so updating a project updates every page
-                showing it. Your home page is built the same way.
+                your social links, a stack of links, what you offer, a file to download, and space.
+                Seven more place your own records — including your writing — so updating a project
+                updates every page showing it. Your home page is built the same way.
               </p>
             </div>
             <div className="card">
@@ -441,9 +441,9 @@ export default function Home() {
                 stamp: <span className="stamp stamp--plain">Partly</span>,
               },
               {
-                label: 'One of nine backends',
-                note: 'Local filesystem, Postgres, Supabase, Neon + Vercel Blob, Firebase, Cloudflare D1+R2, PocketBase and Appwrite are built. Convex needs an account rather than an emulator, so it is blocked on signup, not code.',
-                stamp: <span className="stamp stamp--unverified">Not built</span>,
+                label: 'Two hosted backends, untested live',
+                note: 'Convex and the Cloudflare D1+R2 REST adapter are built and pass the conformance suite against a mock transport, but neither has been run against a live account yet. Everything else — including the embedded Cloudflare engine — is verified against a real instance or an official emulator.',
+                stamp: <span className="stamp stamp--unverified">Untested live</span>,
               },
               {
                 label: 'Themes change tokens, not layout',

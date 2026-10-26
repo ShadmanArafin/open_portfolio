@@ -214,14 +214,25 @@ npm run dev`}</code>
                   <td>D1 SQLite and R2 objects on your own server, no account.</td>
                   <td>R2</td>
                 </tr>
+                <tr>
+                  <th scope="row">Cloudflare D1 + R2 (REST)</th>
+                  <td>Experimental: an existing Cloudflare account, from any host.</td>
+                  <td>R2</td>
+                </tr>
+                <tr>
+                  <th scope="row">Convex</th>
+                  <td>Experimental: a document database and files in one service.</td>
+                  <td>Convex storage</td>
+                </tr>
               </tbody>
             </table>
           </div>
 
           <p className="small">
-            Convex is planned and not built: it needs an account rather than an emulator. Every
-            backend has to pass the same conformance suite against a real instance before it ships,
-            so none is offered until it has.
+            Convex and the Cloudflare REST adapter are built and pass the same conformance suite,
+            but through a mock transport. The rule is a real instance or an official emulator before
+            a backend is recommended, so those two are experimental until somebody runs them against
+            their own account. Every other backend has been exercised that way.
           </p>
         </div>
       </Band>

@@ -1,6 +1,6 @@
 ---
 title: Blocks
-summary: The envelope, the twenty-seven definitions, and how to add one.
+summary: The envelope, the twenty-eight definitions, and how to add one.
 group: Extending it
 order: 60
 ---

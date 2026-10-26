@@ -9,7 +9,7 @@ order: 50
 
 ## The contract
 
-One interface, in `core/storage/contract.ts`. Eight backends implement it today: local filesystem, any Postgres, Supabase, Neon + Vercel Blob, Firebase, Cloudflare D1+R2, PocketBase and Appwrite. Convex is planned — it needs an account rather than an emulator, so it is blocked on signup, not code.
+One interface, in `core/storage/contract.ts`. Nine backends implement it today: local filesystem, any Postgres, Supabase, Neon + Vercel Blob, Firebase, Cloudflare D1 + R2 (an embedded engine and a REST adapter), PocketBase, Appwrite and Convex.
 
 Surfaces:
 
@@ -45,7 +45,7 @@ The file adapter passed every revision test while real Postgres failed four. **O
 
 1. Implement `StorageAdapter` in `core/storage/adapters/<name>.ts`. If it is SQL, look at `_shared/postgres.ts` first — three adapters share that engine.
 2. Register it, with its capabilities and the environment variables that select it.
-3. Run the conformance suite against it, against a real instance or an official emulator. Not a mock.
+3. Run the conformance suite against it, against a real instance or an official emulator. Not a mock. (Convex and the Cloudflare REST adapter are the known exception: both were merged on a mock-transport run and are marked experimental until somebody verifies them against a live account.)
 4. Add its variables to `.env.example` and a row to [configuration](/docs/configuration).
 
-Five are planned and unbuilt: Firebase, Convex, Cloudflare D1 + R2, PocketBase and Appwrite. Each has an official local emulator, and none should ship without a green run against it.
+Nothing is planned and unbuilt. Two are experimental rather than supported: Convex and the Cloudflare REST adapter both pass the suite against a mock transport, but have not been run against a live deployment yet. The embedded Cloudflare engine needs no account and is exercised end to end.

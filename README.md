@@ -34,11 +34,12 @@ to keep one: students, designers, developers, photographers, writers.
 <p align="center"><em>The same page in the editor. No code, no redeploy, and the address bar never leaves your own site.</em></p>
 
 > [!WARNING]
-> **Status: alpha (0.6).** The site, the editor and publishing all work, the
+> **Status: alpha (0.7).** The site, the editor and publishing all work, the
 > admin has real server-side authentication, and uploads are verified end to
 > end against both hosted object stores. The gaps are real and specific —
 > themes change the look but not the arrangement, the newsletter collects but
-> does not send, and one of the nine planned backends is not built. Read
+> does not send, and Convex and the Cloudflare REST adapter have only been run
+> against a mock transport, not a live account. Read
 > [What does not work yet](#what-does-not-work-yet) before using this for
 > anything you depend on.
 
@@ -210,12 +211,12 @@ Every step is skippable. None of it is permanent.
   checked against the same contrast rules that block publishing. Pick one and
   change anything you like on top; your changes always win.
 - **A visual page builder.** Add blocks, drag them into order, hide them, edit
-  every field. Twenty-seven block types. Twenty you fill in yourself - hero,
+  every field. Twenty-eight block types. Twenty-one you fill in yourself - hero,
   text, image, gallery, numbers, cards, a call to action, a contact form,
   questions and answers, a video, a booking embed, a post from Instagram,
   Behance or Substack, a picture beside text, a quote, a newsletter box,
-  comments, your social links, what you offer, a file to download, and space -
-  and seven that show what you have already entered:
+  comments, your social links, a stack of links, what you offer, a file to
+  download, and space - and seven that show what you have already entered:
   your work, your writing, experience, clients, recommendations, what you do
   and how you work. Those follow the records, so updating a project
   updates every page showing it. Reordering is buttons in an outline rather
@@ -271,23 +272,30 @@ Every step is skippable. None of it is permanent.
 
 ## Choose a backend
 
-| Backend                 | Free tier                 | Works on Vercel/Netlify | Best for                                                           |
-| ----------------------- | ------------------------- | ----------------------- | ------------------------------------------------------------------ |
-| **Local filesystem**    | free forever, no account  | no                      | trying it out, a VPS, Docker, a Raspberry Pi                       |
-| **Supabase**            | 500MB database, 1GB files | yes                     | one account for everything; free projects pause after ~1 week idle |
-| **Neon + Vercel Blob**  | 0.5GB database, 1GB blob  | yes                     | deploying on Vercel; resumes instantly after idling                |
-| **Postgres (any host)** | depends on your host      | no                      | Railway, Render, Fly, Coolify, or a database you already run       |
-| **PocketBase**          | free forever, self-hosted | no                      | one binary for database + files on your own server                 |
-| **Firebase**            | Spark plan free           | no                      | Firestore + Storage when you already live in Google's console      |
-| **Appwrite**            | free, self-hosted/Cloud   | no                      | documents + files with a full console when you want one            |
-| **Cloudflare D1+R2**    | free, local engine        | no                      | D1 SQLite + R2 objects on your own server, no account              |
+| Backend                     | Free tier                 | Works on Vercel/Netlify | Best for                                                           |
+| --------------------------- | ------------------------- | ----------------------- | ------------------------------------------------------------------ |
+| **Local filesystem**        | free forever, no account  | no                      | trying it out, a VPS, Docker, a Raspberry Pi                       |
+| **Supabase**                | 500MB database, 1GB files | yes                     | one account for everything; free projects pause after ~1 week idle |
+| **Neon + Vercel Blob**      | 0.5GB database, 1GB blob  | yes                     | deploying on Vercel; resumes instantly after idling                |
+| **Postgres (any host)**     | depends on your host      | no                      | Railway, Render, Fly, Coolify, or a database you already run       |
+| **PocketBase**              | free forever, self-hosted | no                      | one binary for database + files on your own server                 |
+| **Firebase**                | Spark plan free           | no                      | Firestore + Storage when you already live in Google's console      |
+| **Appwrite**                | free, self-hosted/Cloud   | no                      | documents + files with a full console when you want one            |
+| **Cloudflare D1+R2**        | free, local engine        | no                      | D1 SQLite + R2 objects on your own server, no account              |
+| **Cloudflare D1+R2 (REST)** | free tier                 | yes                     | an existing Cloudflare account; D1 + R2 over the REST API          |
+| **Convex**                  | free tier                 | yes                     | document database + file storage; not yet tried against a live one |
+
+Convex and the Cloudflare REST adapter pass the same conformance suite as every
+other backend, but through a mock transport — neither has been run against a
+live account yet. The embedded Cloudflare engine needs no account and has been
+exercised end to end.
 
 You do not choose in advance. Whichever service's environment variables are
 present is the one that gets used, so provisioning a database is the only step.
 See [.env.example](.env.example).
 
 Adding another backend is one file implementing `StorageAdapter`, one line in the
-registry, and a green run of the conformance suite — ~50 assertions covering
+registry, and a green run of the conformance suite — dozens of assertions covering
 round-tripping, concurrent writes, expiry, namespace isolation, passkey
 storage, and the rule that auth state never travels inside a content export.
 
@@ -328,9 +336,12 @@ discover them after typing in a portfolio:
   obligations — so the export is deliberately the exit: a CSV in the shape
   Buttondown, Mailchimp and the rest import. Sign-ups also need SMTP
   configured, because confirming means sending somebody a link.
-- **One of the nine planned backends is not built.** Convex, which needs an
-  account rather than an emulator and is therefore blocked on signup, not code.
-  The eight that exist are the eight the README offers.
+- **Two backends have not been tried against a live account.** Convex and the
+  Cloudflare D1 + R2 REST adapter are built, registered and pass the same
+  conformance suite as everything else — against a mock transport, not a real
+  deployment. The embedded Cloudflare engine runs locally through Miniflare,
+  needs no account, and is the one exercised end to end. Until somebody runs
+  the two hosted adapters against their own account, treat them as untested.
 
 ## Tech stack
 
@@ -338,24 +349,25 @@ discover them after typing in a portfolio:
 - **Tailwind CSS** for the public site, with colour and typography driven by CSS
   variables the editor writes at runtime
 - **Pluggable storage** behind a `StorageAdapter` interface — local filesystem,
-  Supabase, Neon + Vercel Blob, any Postgres, PocketBase, Firebase, Appwrite or
-  Cloudflare D1 + R2
+  Supabase, Neon + Vercel Blob, any Postgres, PocketBase, Firebase, Appwrite,
+  Cloudflare D1 + R2 (embedded or REST) or Convex
 - **scrypt + httpOnly session cookies** for admin authentication
 - **Vitest**, including a storage conformance suite run against a real Postgres
   in CI
 
 ## Roadmap
 
-| Version       | What lands                                                                       |
-| ------------- | -------------------------------------------------------------------------------- |
-| 0.1           | Open-source groundwork: MIT licence, no personal data, lint and CI               |
-| 0.2           | Next.js App Router, server rendering, SEO, Open Graph, sitemap, real 404         |
-| 0.3           | Server-side auth, publishing that reaches visitors, a contact form that delivers |
-| 0.4           | Pluggable storage with a conformance suite every backend must pass               |
-| 0.5           | Page builder, six themes, writing, presets, newsletter sign-ups, Docker          |
-| **0.6 (now)** | Server-rendered admin, eight backends, passkeys, CSV, backups, released images   |
-| Next          | The open backlog in [PROJECT-REVIEW.md](docs/PROJECT-REVIEW.md)                  |
-| 1.0           | Stable                                                                           |
+| Version       | What lands                                                                           |
+| ------------- | ------------------------------------------------------------------------------------ |
+| 0.1           | Open-source groundwork: MIT licence, no personal data, lint and CI                   |
+| 0.2           | Next.js App Router, server rendering, SEO, Open Graph, sitemap, real 404             |
+| 0.3           | Server-side auth, publishing that reaches visitors, a contact form that delivers     |
+| 0.4           | Pluggable storage with a conformance suite every backend must pass                   |
+| 0.5           | Page builder, six themes, writing, presets, newsletter sign-ups, Docker              |
+| 0.6           | Server-rendered admin, eight backends, passkeys, CSV, backups, released images       |
+| **0.7 (now)** | Records-backed writing, Convex and Cloudflare REST adapters, links block, axe matrix |
+| Next          | The open backlog in [PROJECT-REVIEW.md](docs/PROJECT-REVIEW.md)                      |
+| 1.0           | Stable                                                                               |
 
 ### Documentation
 
