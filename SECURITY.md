@@ -5,7 +5,8 @@
 **Do not open a public issue for a security problem.**
 
 Use GitHub's private vulnerability reporting on this repository:
-**Security → Report a vulnerability**. It goes only to the maintainers.
+[Security → Report a vulnerability](https://github.com/ShadmanArafin/open_portfolio/security/advisories/new).
+It goes only to the maintainers.
 
 Please include what you found, how to reproduce it, and what an attacker could
 do with it. A proof of concept helps enormously.

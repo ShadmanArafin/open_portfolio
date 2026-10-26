@@ -89,7 +89,7 @@ export default function DeployPage() {
 
           <pre className="md">
             <code>
-              {`git clone ${REPO.replace('https://github.com', 'https://github.com')}.git
+              {`git clone ${REPO}.git
 cd open_portfolio
 docker compose up`}
             </code>

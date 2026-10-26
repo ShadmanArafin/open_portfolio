@@ -2,8 +2,13 @@ import { describe, expect, it, vi } from 'vitest';
 import { createHash } from 'node:crypto';
 import { isBreachedPassphrase } from '@/core/auth/passphrase';
 
-function hibpResponseFor(passphrase: string): string {
-  const full = createHash('sha1').update(passphrase).digest('hex').toUpperCase();
+// The HaveIBeenPwned k-Anonymity API protocol uses SHA-1 prefix search.
+function computeSha1(text: string): string {
+  return createHash('sha1').update(text).digest('hex');
+}
+
+function hibpResponseFor(candidate: string): string {
+  const full = computeSha1(candidate).toUpperCase();
   return `${full.slice(5)}:42\nABCDEF1234567890ABCDEF1234567890ABC:1\n`;
 }
 
@@ -18,7 +23,7 @@ describe('breach check', () => {
     expect(result).toEqual({ breached: true, breachUnknown: false });
     // Only the 5-char prefix travels.
     expect(seen[0]).toMatch(/\/range\/[0-9A-F]{5}$/);
-    expect(seen[0]).not.toContain(createHash('sha1').update('password123456').digest('hex'));
+    expect(seen[0]).not.toContain(computeSha1('password123456'));
   });
 
   it('passes a clean passphrase', async () => {

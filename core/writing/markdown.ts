@@ -187,10 +187,14 @@ function inline(source: string, tally: Tally): string {
     tally.emphasis += 1;
     return inner;
   });
-  text = text.replace(/<[^>]+>/g, () => {
-    tally.html += 1;
-    return '';
-  });
+  let previousHtml: string;
+  do {
+    previousHtml = text;
+    text = text.replace(/<[^>]+>/g, () => {
+      tally.html += 1;
+      return '';
+    });
+  } while (text !== previousHtml);
 
   return text.trim();
 }

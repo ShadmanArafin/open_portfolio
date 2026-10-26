@@ -148,6 +148,26 @@ function isMeasurablePage(): boolean {
 
 let injected = false;
 
+function safeScriptSrc(url: string): string | null {
+  if (!url) return null;
+  try {
+    const parsed = new URL(
+      url,
+      typeof window !== 'undefined' ? window.location.origin : 'https://localhost'
+    );
+    if (
+      parsed.protocol === 'https:' ||
+      (parsed.protocol === 'http:' &&
+        (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1'))
+    ) {
+      return encodeURI(parsed.href);
+    }
+  } catch {
+    // Malformed URL
+  }
+  return null;
+}
+
 /** Adds the provider script once, on the public site only. */
 export function initAnalytics(): void {
   if (injected || !isMeasurablePage()) return;
@@ -155,9 +175,12 @@ export function initAnalytics(): void {
   const config = getAnalyticsConfig();
   if (config.provider === 'none' || !isAnalyticsConfigured()) return;
 
+  const src = safeScriptSrc(config.scriptSrc);
+  if (!src) return;
+
   const script = document.createElement('script');
   script.defer = true;
-  script.src = config.scriptSrc;
+  script.src = src;
 
   if (config.provider === 'plausible') {
     script.setAttribute('data-domain', config.domain);
