@@ -13,33 +13,33 @@
 > [§12 second pass (2026-10-20)](PROJECT-REVIEW.md#12-second-pass--2026-10-20)
 > holds Phase E, which is what remains after the admin rewrite.
 >
-> Last updated: 2026-10-24 · Version 0.6.0 · CI green on `main`.
+> Last updated: 2026-10-26 · Version 0.7.0 · CI green on `main`.
 > Read [Handoff notes](#handoff-notes-for-whoever-picks-this-up) first if you
 > are starting on a new machine — it carries the running instructions, the
 > invariants, and every known bug.
 
 ## Status at a glance
 
-| Phase                       | State                | What it means                                                                                |
-| --------------------------- | -------------------- | -------------------------------------------------------------------------------------------- |
-| 0 — Repo publishable        | **Done, verified**   | MIT, no personal data, CI, guards                                                            |
-| 1 — Next.js + SEO           | **Done, verified**   | Server-rendered, real metadata, sitemap, 404                                                 |
-| 2 — Tokens + primitives     | **Partially done**   | Tokens, gate, primitives done. Tailwind 4 ported + verified on a branch; Safari call pending |
-| 3 — Storage contract        | **Done, verified**   | Contract, local adapter, registry, server read                                               |
-| 4 — Auth                    | **Done, verified**   | Passphrase + sessions, passkeys and emailed one-time codes                                   |
-| 5 — Write path              | **Done**             | Publish, contact, blocks, pages, preview, revisions                                          |
-| 6 — Hosted adapters         | **Done, verified**   | Supabase, Neon, Postgres. **Uploads verified on both hosted stores**                         |
-| 7 — Admin                   | **Done**             | All 29 screens server-rendered (`ADMIN-REWRITE.md`); Astryx removed                          |
-| 8 — Adapters + integrations | **Done, verified**   | Vault, SMTP, OTP, 10 backends (Convex + Cloudflare REST shipped)                             |
-| 9 — Blog, themes, presets   | **Done, verified**   | 6 themes, presets, records-backed writing+RSS, full axe matrix, P2 blocks                    |
-| Community + updates         | **Done**             | Reports, dedupe, update workflow, `UPDATING.md`. Repository public                           |
-| Self-hosting (Docker)       | **Done, verified**   | `docker compose up`, volume survives container replacement                                   |
-| 10 — Launch                 | **Site + demo live** | Marketing site deployed, demo + PWA shipped; checklist remains                               |
+| Phase                       | State              | What it means                                                                                |
+| --------------------------- | ------------------ | -------------------------------------------------------------------------------------------- |
+| 0 — Repo publishable        | **Done, verified** | MIT, no personal data, CI, guards                                                            |
+| 1 — Next.js + SEO           | **Done, verified** | Server-rendered, real metadata, sitemap, 404                                                 |
+| 2 — Tokens + primitives     | **Partially done** | Tokens, gate, primitives done. Tailwind 4 ported + verified on a branch; Safari call pending |
+| 3 — Storage contract        | **Done, verified** | Contract, local adapter, registry, server read                                               |
+| 4 — Auth                    | **Done, verified** | Passphrase + sessions, passkeys and emailed one-time codes                                   |
+| 5 — Write path              | **Done**           | Publish, contact, blocks, pages, preview, revisions                                          |
+| 6 — Hosted adapters         | **Done, verified** | Supabase, Neon, Postgres. **Uploads verified on both hosted stores**                         |
+| 7 — Admin                   | **Done**           | All 29 screens server-rendered (`ADMIN-REWRITE.md`); Astryx removed                          |
+| 8 — Adapters + integrations | **Done, verified** | Vault, SMTP, OTP, 10 backends (Convex + Cloudflare REST shipped)                             |
+| 9 — Blog, themes, presets   | **Done, verified** | 6 themes, presets, records-backed writing+RSS, full axe matrix, P2 blocks                    |
+| Community + updates         | **Done**           | Reports, dedupe, update workflow, `UPDATING.md`. Repository public                           |
+| Self-hosting (Docker)       | **Done, verified** | `docker compose up`, volume survives container replacement                                   |
+| 10 — Launch                 | **Done, verified** | Marketing site deployed, demo + PWA + push shipped, release 0.7.0 live                       |
 
-**Where to start:** the repository is public and `v0.6.0` is tagged, with a
+**Where to start:** the repository is public and `v0.7.0` is tagged, with a
 released image. What remains is the open backlog in
 [PROJECT-REVIEW.md](PROJECT-REVIEW.md) and the remaining-work ledger in
-[HANDOVER.md](HANDOVER.md#remaining-work-16-october-2026-pushed-as-c67c3bf).
+[HANDOVER.md](HANDOVER.md#remaining-work-updated-26-october-2026).
 
 > The paragraphs below are kept as written in August, when the repository was
 > still private and the demo did not exist.
@@ -1040,8 +1040,18 @@ _Honest scoping:_ Vercel Marketplace can only auto-provision Marketplace-native 
 > logging out does not clear, and it is `NetworkOnly` in dev so it cannot be
 > reproduced locally. The carve-out gets written before the feature.
 >
-> **Still missing from this phase:** the marketing site, the docs site, the
-> mobile admin layout, and push.
+> **Shipped in this phase:**
+>
+> - **A live demo.** `/demo/try` and `/demo/site` run client-side without a server;
+>   `docker compose -f docker-compose.demo.yml up` gives full saving and uploads.
+> - **The marketing site and developer docs.** Built in `site/` and live at
+>   `https://getopenportfolio.vercel.app`, fully static export with automated contrast guards.
+> - **The mobile admin layout.** Responsive 375px targets, 44px navigation menu, and
+>   offline indicator.
+> - **PWA and push notifications.** Web app manifest, dependency-free `public/sw.js`
+>   service worker with zero admin cache risk, and native Node `crypto` VAPID push.
+> - **Release 0.7.0 tagged and published.** Multi-arch Docker images on GHCR with Sigstore
+>   attestations.
 
 > ### RESEARCHED, NOTHING BUILT
 >
