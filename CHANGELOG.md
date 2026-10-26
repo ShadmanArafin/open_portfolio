@@ -7,6 +7,22 @@ of stored content is stable, but screens and options are not settled yet.
 Anyone who reported or suggested something is credited by name. That is the
 whole point of the Help & feedback screen in the admin.
 
+## 0.7.3 — 2026-10-27
+
+### Fixed
+
+- **The live adapter verifiers actually run now.** `scripts/verify-convex.mjs` and
+  `scripts/verify-cloudflare-rest.mjs` imported the TypeScript adapters with plain
+  `node`, which refuses parameter properties, and then asserted the wrong snapshot
+  shape. Both now run their checks through the existing Vitest pipeline, so the
+  adapters are loaded with the same transform and `server-only` stub as the test
+  suite. Every check uses a unique key, removes it in a `finally`, restores an
+  existing draft snapshot, and prints each step.
+- **A broken verifier failed silently.** With dummy credentials, both scripts used
+  to die on a TypeScript syntax error before making a request; they now reach the
+  network and report the provider's own error. They remain opt-in behind
+  `OPB_LIVE_VERIFY=1`, so `npm test` skips them and stays offline.
+
 ## 0.7.2 — 2026-10-27
 
 ### Security

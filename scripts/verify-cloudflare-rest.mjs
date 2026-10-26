@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { existsSync, readFileSync } from 'node:fs';
-import path from 'node:path';
+import { runLiveVerification } from './lib/run-live-verification.mjs';
 
 // Load .env.local if present
 if (existsSync('.env.local')) {
@@ -46,71 +46,16 @@ How to get them:
 
 Then re-run:
    node scripts/verify-cloudflare-rest.mjs
+
+Use a scratch database and bucket, not the one a live portfolio uses: the
+check writes a draft snapshot, a media object, a message and a record, then
+removes them. The snapshot is restored if a draft already existed.
 `);
   process.exit(1);
 }
 
-console.log('Environment loaded. Initialising cloudflare-rest adapter...');
-
-const { cloudflareRestAdapter } = await import('../core/storage/adapters/cloudflare-rest.js').catch(
-  async () => {
-    return await import('../core/storage/adapters/cloudflare-rest.ts');
-  }
+console.log('Environment loaded. Starting the live D1 + R2 verification…\n');
+runLiveVerification(
+  'core/storage/__tests__/live-verification.test.ts',
+  'live storage: cloudflare-rest'
 );
-
-try {
-  console.log('1. Provisioning database tables...');
-  await cloudflareRestAdapter.provision();
-  console.log('   ✓ Schema provisioned');
-
-  console.log('2. Running health check...');
-  const health = await cloudflareRestAdapter.health();
-  console.log(`   ✓ Health status: ${health.status}`);
-
-  console.log('3. Verifying snapshot round-trip...');
-  const testState = {
-    siteTitle: 'Live Test Site',
-    projects: [],
-  };
-  await cloudflareRestAdapter.writeSnapshot('draft', testState);
-  const read = await cloudflareRestAdapter.readSnapshot('draft');
-  if (read?.state.siteTitle !== testState.siteTitle) {
-    throw new Error(
-      `Snapshot title mismatch: expected ${testState.siteTitle}, got ${read?.state.siteTitle}`
-    );
-  }
-  console.log('   ✓ Snapshot write/read confirmed');
-
-  console.log('4. Verifying media upload and retrieval...');
-  const key = `test-${Date.now()}.txt`;
-  const file = new File(['Hello Cloudflare R2!'], key, { type: 'text/plain' });
-  const uploaded = await cloudflareRestAdapter.media.put(key, file);
-  const resolvedUrl = await cloudflareRestAdapter.media.resolveUrl(key);
-  console.log(`   ✓ Uploaded: ${uploaded.url}`);
-  console.log(`   ✓ Resolved URL: ${resolvedUrl}`);
-  await cloudflareRestAdapter.media.remove(key);
-  console.log('   ✓ Media removed cleanly');
-
-  console.log('5. Verifying message inbox...');
-  const messageId = `msg-${Date.now()}`;
-  await cloudflareRestAdapter.messages.append({
-    id: messageId,
-    name: 'Live Verifier',
-    email: 'verify@example.com',
-    projectType: 'Verification',
-    message: 'Testing D1 REST live inbox.',
-    status: 'unread',
-    receivedAt: new Date().toISOString(),
-  });
-  const messages = await cloudflareRestAdapter.messages.list();
-  const found = messages.find((m) => m.id === messageId);
-  if (!found) throw new Error('Appended message was not found in list.');
-  console.log('   ✓ Message stored and queried');
-  await cloudflareRestAdapter.messages.remove(messageId);
-  console.log('   ✓ Message cleaned up');
-
-  console.log('\n✅ All live Cloudflare D1 + R2 REST operations passed successfully!');
-} catch (err) {
-  console.error('\n❌ Cloudflare REST verification failed:', err);
-  process.exit(1);
-}

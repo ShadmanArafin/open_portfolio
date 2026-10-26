@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { existsSync, readFileSync } from 'node:fs';
+import { runLiveVerification } from './lib/run-live-verification.mjs';
 
 // Load .env.local if present
 if (existsSync('.env.local')) {
@@ -42,69 +43,13 @@ How to get them:
 
 Then re-run:
    node scripts/verify-convex.mjs
+
+Use a scratch deployment, not the one a live portfolio uses: the check writes
+a draft snapshot, a media object, a message and a record, then removes them.
+The snapshot is restored if a draft already existed.
 `);
   process.exit(1);
 }
 
-console.log('Environment loaded. Initialising convex adapter...');
-
-const { convexAdapter } = await import('../core/storage/adapters/convex.js').catch(async () => {
-  return await import('../core/storage/adapters/convex.ts');
-});
-
-try {
-  console.log('1. Provisioning schema and indices...');
-  await convexAdapter.provision();
-  console.log('   ✓ Schema provisioned');
-
-  console.log('2. Running health check...');
-  const health = await convexAdapter.health();
-  console.log(`   ✓ Health status: ${health.status}`);
-
-  console.log('3. Verifying snapshot round-trip...');
-  const testState = {
-    siteTitle: 'Live Convex Test',
-    projects: [],
-  };
-  await convexAdapter.writeSnapshot('draft', testState);
-  const read = await convexAdapter.readSnapshot('draft');
-  if (read?.state.siteTitle !== testState.siteTitle) {
-    throw new Error(
-      `Snapshot title mismatch: expected ${testState.siteTitle}, got ${read?.state.siteTitle}`
-    );
-  }
-  console.log('   ✓ Snapshot write/read confirmed');
-
-  console.log('4. Verifying media upload and retrieval...');
-  const key = `test-${Date.now()}.txt`;
-  const file = new File(['Hello Convex Storage!'], key, { type: 'text/plain' });
-  const uploaded = await convexAdapter.media.put(key, file);
-  const resolvedUrl = await convexAdapter.media.resolveUrl(key);
-  console.log(`   ✓ Uploaded: ${uploaded.url}`);
-  console.log(`   ✓ Resolved URL: ${resolvedUrl}`);
-  await convexAdapter.media.remove(key);
-  console.log('   ✓ Media removed cleanly');
-
-  console.log('5. Verifying message inbox...');
-  const messageId = `msg-${Date.now()}`;
-  await convexAdapter.messages.append({
-    id: messageId,
-    name: 'Convex Verifier',
-    email: 'verify@example.com',
-    projectType: 'Verification',
-    message: 'Testing Convex live inbox.',
-    status: 'unread',
-    receivedAt: new Date().toISOString(),
-  });
-  const messages = await convexAdapter.messages.list();
-  const found = messages.find((m) => m.id === messageId);
-  if (!found) throw new Error('Appended message was not found in list.');
-  console.log('   ✓ Message stored and queried');
-  await convexAdapter.messages.remove(messageId);
-  console.log('   ✓ Message cleaned up');
-
-  console.log('\n✅ All live Convex operations passed successfully!');
-} catch (err) {
-  console.error('\n❌ Convex verification failed:', err);
-  process.exit(1);
-}
+console.log('Environment loaded. Starting the live Convex verification…\n');
+runLiveVerification('core/storage/__tests__/live-verification.test.ts', 'live storage: convex');

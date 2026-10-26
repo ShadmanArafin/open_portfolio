@@ -34,7 +34,7 @@ to keep one: students, designers, developers, photographers, writers.
 <p align="center"><em>The same page in the editor. No code, no redeploy, and the address bar never leaves your own site.</em></p>
 
 > [!WARNING]
-> **Status: alpha (0.7.2).** The site, the editor and publishing all work, the
+> **Status: alpha (0.7.3).** The site, the editor and publishing all work, the
 > admin has real server-side authentication, and uploads are verified end to
 > end against both hosted object stores. The gaps are real and specific —
 > themes change the look but not the arrangement, the newsletter collects but
@@ -342,6 +342,9 @@ discover them after typing in a portfolio:
   deployment. The embedded Cloudflare engine runs locally through Miniflare,
   needs no account, and is the one exercised end to end. Until somebody runs
   the two hosted adapters against their own account, treat them as untested.
+  The scripts are real now — `node scripts/verify-convex.mjs` and
+  `node scripts/verify-cloudflare-rest.mjs` — but they need your credentials and
+  a scratch deployment to produce a result.
 
 ## Tech stack
 

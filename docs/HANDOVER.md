@@ -26,7 +26,7 @@ JavaScript bundle. None of that remains.
 ```bash
 npm ci                          # ci, not install — see "Traps" below
 npm run dev                     # http://localhost:3000
-npm test                        # 1420 passing, 11 skipped (27 Oct 2026)
+npm test                        # 1420 passing, 13 skipped (27 Oct 2026)
 npm run typecheck && npm run lint && npm run build
 ```
 
@@ -521,7 +521,9 @@ photographer persona renders photography across all project cards and the About 
 **6. ~~Then push notifications and the remaining adapters~~ Done.** Push notifications
 are built via VAPID and `public/sw.js`; Convex and Cloudflare REST adapters are built,
 and standalone live verification scripts `scripts/verify-cloudflare-rest.mjs` and
-`scripts/verify-convex.mjs` are provided for one-command live validation. Cal.com and
+`scripts/verify-convex.mjs` are provided for one-command live validation. They run
+through the Vitest pipeline (plain `node` cannot load the adapters' TypeScript), need
+`OPB_LIVE_VERIFY=1` and real credentials, and are skipped by `npm test`. Cal.com and
 Calendly scheduling embeds are supported in `core/blocks/standard.tsx` and documented in
 `docs/BOOKINGS-AND-CAL.md`. Launch assets and directory listings are assembled in
 `docs/LAUNCH-KIT.md`.
