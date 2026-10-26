@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1200" width="1600" height="1200" role="img" aria-label="Saltmarsh in winter — atmospheric landscape photography">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4A5568"/>
+      <stop offset="45%" stop-color="#718096"/>
+      <stop offset="65%" stop-color="#CBD5E0"/>
+      <stop offset="85%" stop-color="#E2E8F0"/>
+      <stop offset="100%" stop-color="#EDF2F7"/>
+    </linearGradient>
+    <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#CBD5E0"/>
+      <stop offset="25%" stop-color="#A0AEC0"/>
+      <stop offset="60%" stop-color="#4A5568"/>
+      <stop offset="100%" stop-color="#2D3748"/>
+    </linearGradient>
+    <linearGradient id="marsh1" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#27272A"/>
+      <stop offset="50%" stop-color="#3F3F46"/>
+      <stop offset="100%" stop-color="#18181B"/>
+    </linearGradient>
+    <linearGradient id="marsh2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#52525B"/>
+      <stop offset="100%" stop-color="#18181B"/>
+    </linearGradient>
+    <linearGradient id="mist" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#CBD5E0" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <!-- Sky -->
+  <rect width="1600" height="720" fill="url(#sky)"/>
+  <!-- Distant Headland -->
+  <path d="M0 640 Q400 600 800 625 T1600 610 L1600 720 L0 720 Z" fill="#4B5563" opacity="0.6"/>
+  <!-- Water Body -->
+  <rect y="640" width="1600" height="560" fill="url(#water)"/>
+  <!-- Morning Estuary Mist -->
+  <rect y="580" width="1600" height="180" fill="url(#mist)"/>
+  <!-- Tideline Silhouettes -->
+  <path d="M0 720 Q280 690 600 735 T1200 710 Q1440 730 1600 695 L1600 1200 L0 1200 Z" fill="url(#marsh2)"/>
+  <!-- Tidal Creek Curve -->
+  <path d="M480 720 C540 820 420 900 620 980 C740 1030 680 1120 780 1200 L940 1200 C820 1100 860 1020 760 960 C620 880 710 810 660 720 Z" fill="#94A3B8" opacity="0.85"/>
+  <!-- Foreland Marsh Grasses -->
+  <path d="M0 860 Q340 820 720 890 T1480 840 Q1560 860 1600 880 L1600 1200 L0 1200 Z" fill="url(#marsh1)"/>
+  <g stroke="#71717A" stroke-width="2" opacity="0.65">
+    <line x1="120" y1="920" x2="115" y2="850"/>
+    <line x1="128" y1="925" x2="135" y2="845"/>
+    <line x1="134" y1="915" x2="140" y2="860"/>
+    <line x1="310" y1="980" x2="305" y2="900"/>
+    <line x1="318" y1="975" x2="326" y2="895"/>
+    <line x1="324" y1="985" x2="330" y2="910"/>
+    <line x1="880" y1="940" x2="875" y2="870"/>
+    <line x1="890" y1="935" x2="900" y2="865"/>
+    <line x1="1210" y1="960" x2="1205" y2="890"/>
+    <line x1="1220" y1="955" x2="1232" y2="880"/>
+  </g>
+</svg>

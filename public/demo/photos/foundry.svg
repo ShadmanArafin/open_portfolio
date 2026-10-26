@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1200" width="1600" height="1200" role="img" aria-label="Northgate Foundry — industrial photography">
+  <defs>
+    <linearGradient id="foundryHall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#09090B"/>
+      <stop offset="50%" stop-color="#18181B"/>
+      <stop offset="100%" stop-color="#09090B"/>
+    </linearGradient>
+    <linearGradient id="skylight" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#94A3B8" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#09090B" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="moltenGlow" cx="45%" cy="75%" r="45%">
+      <stop offset="0%" stop-color="#FFAA00" stop-opacity="0.9"/>
+      <stop offset="25%" stop-color="#FF4500" stop-opacity="0.65"/>
+      <stop offset="55%" stop-color="#7C2D12" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <!-- Background Foundry Floor and Overhead Crane -->
+  <rect width="1600" height="1200" fill="url(#foundryHall)"/>
+  <!-- Cathedral Windows / Dust Beams -->
+  <polygon points="120,0 380,0 720,1200 240,1200" fill="url(#skylight)"/>
+  <polygon points="460,0 720,0 1140,1200 680,1200" fill="url(#skylight)" opacity="0.6"/>
+  <!-- Heavy Industrial Girders & Pillars -->
+  <g fill="#27272A" opacity="0.9">
+    <rect x="0" y="160" width="1600" height="40"/>
+    <rect x="0" y="240" width="1600" height="24"/>
+    <rect x="180" y="0" width="60" height="1200"/>
+    <rect x="1360" y="0" width="60" height="1200"/>
+    <line x1="240" y1="200" x2="380" y2="280" stroke="#3F3F46" stroke-width="8"/>
+    <line x1="420" y1="280" x2="560" y2="200" stroke="#3F3F46" stroke-width="8"/>
+  </g>
+  <!-- Molten Casting Crucible & Basin -->
+  <rect width="1600" height="1200" fill="url(#moltenGlow)"/>
+  <path d="M520 740 L980 740 L900 1020 L600 1020 Z" fill="#18181B" stroke="#3F3F46" stroke-width="10"/>
+  <!-- Molten Liquid Pool -->
+  <ellipse cx="750" cy="760" rx="190" ry="40" fill="#FF8C00"/>
+  <ellipse cx="750" cy="762" rx="140" ry="25" fill="#FFD700"/>
+  <ellipse cx="750" cy="765" rx="80" ry="12" fill="#FFFFFF"/>
+  <!-- Sparks & Slag Details -->
+  <g fill="#FFA500" opacity="0.85">
+    <circle cx="680" cy="680" r="4"/>
+    <circle cx="720" cy="620" r="5"/>
+    <circle cx="760" cy="640" r="3"/>
+    <circle cx="810" cy="690" r="6"/>
+    <circle cx="840" cy="610" r="4"/>
+    <circle cx="790" cy="560" r="3"/>
+    <circle cx="710" cy="540" r="5"/>
+    <circle cx="870" cy="660" r="4"/>
+  </g>
+  <!-- Foreground Silhouette Tools -->
+  <rect x="1100" y="820" width="16" height="380" fill="#09090B"/>
+  <polygon points="1070,820 1146,820 1120,740 1096,740" fill="#09090B"/>
+</svg>

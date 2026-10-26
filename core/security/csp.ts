@@ -11,7 +11,7 @@ const directives = [
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
   "connect-src 'self' https:",
-  "frame-src 'self' https://www.youtube-nocookie.com https://player.vimeo.com https://challenges.cloudflare.com https://cal.com https://calendly.com https://instagram.com https://www.instagram.com https://behance.net https://www.behance.net https://*.substack.com",
+  "frame-src 'self' https://www.youtube-nocookie.com https://player.vimeo.com https://challenges.cloudflare.com https://cal.com https://app.cal.com https://calendly.com https://instagram.com https://www.instagram.com https://behance.net https://www.behance.net https://*.substack.com",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

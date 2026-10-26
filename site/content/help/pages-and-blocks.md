@@ -52,6 +52,8 @@ If what you want is the one-page kind of site — a photograph, a line about you
 **To get a reply**
 
 - **Contact form** — a real one. Messages arrive in your inbox in the admin.
+- **Booking calendar** — Cal.com (`cal.com` or `app.cal.com`) or Calendly. An interactive scheduling embed so clients can book appointments without leaving your site.
+- **Stack of links** — a vertical stack of links with badges and touch-friendly targets, perfect for link-in-bio pages.
 - **What you offer** — what you take on and what it costs.
 - **Something to download** — a CV, a rate card, a press kit. Any file in your library.
 - **Newsletter sign-up**, **Where else to find you**, **Call to action**.

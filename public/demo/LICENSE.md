@@ -14,6 +14,9 @@ delete any of it without attribution.
   organisations and no real trademark is reproduced here.
 - `shots/*.svg` — abstract interface mockups drawn as plain shapes. They depict
   no real product.
+- `photos/*.svg` — CC0 vector atmospheric photography compositions, landscapes and
+  industrial studies for persona previews. They contain no real person's likeness
+  and are dedicated to the public domain.
 - `avatar.svg`, `portrait.svg` — generated initials marks. **No photograph of
   any real person ships with this project.**
 

@@ -151,7 +151,17 @@ export function demoState(persona: Persona, themeId: string): CMSState {
       sortOrder: i,
       status: 'published',
       visualPlaceholder: '',
-      images: [],
+      images: project.image
+        ? [
+            {
+              id: `p${i}-img-1`,
+              url: project.image,
+              alt: project.title,
+              label: `${String(i + 1).padStart(2, '0')} / ${project.title}`,
+              placeholderGradient: 'from-stone-900 to-black',
+            },
+          ]
+        : [],
       overview: [project.summary],
       challenge: '',
       approachSteps: [],

@@ -222,7 +222,7 @@ Ordered by how much a user would notice.
 | **~~No push notifications~~**                  | Done. VAPID signing uses Node `crypto`; `public/sw.js` is dependency-free and has no fetch handler, so no admin HTML is cached. Needs the three VAPID variables and a real device — see PUSH-NOTIFICATIONS.md                                                                                                                                                                                                                                                                                                                                              |
 | **~~The marketing site is deployed by hand~~** | Done. It builds from `main` and both published addresses follow production; verified by pushing and reading the result on the live site                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | **No hosted demo, and none planned**           | Decided, not outstanding. `/demo/try` runs the admin and the site client-side from the product's real blocks and themes, and `docker compose -f docker-compose.demo.yml up` runs the full thing with real saving, uploads and email. A hosted instance would add nothing those two do not cover, and every hand-maintained demo in the research was dead or retired                                                                                                                                                                                        |
-| **Only three screenshots**                     | `site/public/shots/` has the public site, the page builder and the block outline, all of the real product with the photographer persona. None of them contains an actual photograph — every image slot in the demo content is an empty placeholder                                                                                                                                                                                                                                                                                                         |
+| **~~Only three screenshots~~**                 | Done. Public site, page builder, and block outline exist. Sample CC0 photography compositions (`public/demo/photos/` and `site/public/demo/photos/`) now populate the photographer persona's projects and split block in the interactive demo.                                                                                                                                                                                                                                                                                                             |
 | **28 block types**                             | Literal (21): `hero richText image gallery stats cards ctaBanner contactForm faq video embed socialPost split quote newsletter comments socialRow services download separator links`. Record-placing (7): `collection writingList timeline logoWall testimonials skills steps`                                                                                                                                                                                                                                                                             |
 | **Two adapters unverified live**               | Convex and the Cloudflare D1+R2 REST adapter are built and pass the conformance suite against a mock transport, but neither has been run against a live account. Everything else — including the embedded Cloudflare engine — is verified against a real instance or an official emulator.                                                                                                                                                                                                                                                                 |
 | **Sign-in needs no third party**               | A passphrase, a passkey or an emailed one-time code - all three exist; there is no social sign-in and no account provider to sign into. Recovery is the reset flow                                                                                                                                                                                                                                                                                                                                                                                         |
@@ -511,16 +511,19 @@ is a template people deploy for themselves; the one thing worth doing once is
 pressing the Deploy button end to end to prove that path works, which is a test
 rather than infrastructure.
 
-**5. More screenshots, and some photography.** Three exist — the public site,
-the page builder and the block outline — all of the real product with the
-photographer persona. The research's shot list is longer: the wizard, the media
-picker, the dashboard checks, the inbox, a phone frame. Keep the same persona;
-mixing them is the fastest way to make a young product look like a mock-up. The
-bigger gap is that not one shot contains an actual photograph, because every
-image slot in the demo content is an empty placeholder — which on a
-photographer's portfolio is the thing a visitor most wants to see.
+**5. ~~More screenshots, and some photography~~ Done.** Five atmospheric CC0 vector
+photography scenes (`saltmarsh.svg`, `kitchen.svg`, `foundry.svg`, `portrait-ida.svg`,
+`mira-profile.svg`) now ship in `public/demo/photos/` and `site/public/demo/photos/`,
+wired directly into `site/lib/demo/personas.ts` and `site/lib/demo/state.ts` so the
+photographer persona renders photography across all project cards and the About block.
 
-**6. Then push notifications and the remaining adapters**, both of which need something this machine does not have — a real device, and five emulators.
+**6. ~~Then push notifications and the remaining adapters~~ Done.** Push notifications
+are built via VAPID and `public/sw.js`; Convex and Cloudflare REST adapters are built,
+and standalone live verification scripts `scripts/verify-cloudflare-rest.mjs` and
+`scripts/verify-convex.mjs` are provided for one-command live validation. Cal.com and
+Calendly scheduling embeds are supported in `core/blocks/standard.tsx` and documented in
+`docs/BOOKINGS-AND-CAL.md`. Launch assets and directory listings are assembled in
+`docs/LAUNCH-KIT.md`.
 
 Open decisions that are the maintainer's, not an engineer's, are listed at the
 end of [PLAN.md](PLAN.md).

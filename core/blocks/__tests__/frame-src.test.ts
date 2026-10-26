@@ -48,6 +48,7 @@ describe('the frame policy covers every facade', () => {
 
   it('names the scheduling hosts', () => {
     expect(allows(toSchedulingUrl('https://cal.com/you/intro')?.url)).toBe(true);
+    expect(allows(toSchedulingUrl('https://app.cal.com/you/intro')?.url)).toBe(true);
     expect(allows(toSchedulingUrl('https://calendly.com/you/30min')?.url)).toBe(true);
   });
 

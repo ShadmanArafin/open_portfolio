@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1200" width="1600" height="1200" role="img" aria-label="Mira Halloran — photographer portrait in studio">
+  <defs>
+    <linearGradient id="studioWall" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#262626"/>
+      <stop offset="50%" stop-color="#171717"/>
+      <stop offset="100%" stop-color="#0A0A0A"/>
+    </linearGradient>
+    <radialGradient id="keyLight" cx="40%" cy="35%" r="55%">
+      <stop offset="0%" stop-color="#FEF3C7" stop-opacity="0.6"/>
+      <stop offset="40%" stop-color="#D97706" stop-opacity="0.25"/>
+      <stop offset="80%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="lensReflect" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0284C7"/>
+      <stop offset="50%" stop-color="#0369A1"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+  </defs>
+  <!-- Background Studio Atmosphere -->
+  <rect width="1600" height="1200" fill="url(#studioWall)"/>
+  <rect width="1600" height="1200" fill="url(#keyLight)"/>
+  <!-- Dark Studio Background Elements (Contact Sheets on Wall) -->
+  <g fill="#262626" opacity="0.65">
+    <rect x="180" y="140" width="180" height="240" rx="4"/>
+    <rect x="400" y="140" width="180" height="240" rx="4"/>
+    <rect x="620" y="140" width="180" height="240" rx="4"/>
+  </g>
+  <!-- Photographer Figure Silhouette -->
+  <path d="M480 1200 C480 940 540 820 660 760 C600 700 560 620 560 510 C560 360 680 260 820 260 C960 260 1060 360 1060 510 C1060 620 1020 700 960 760 C1080 820 1140 940 1140 1200 Z" fill="#0A0A0A"/>
+  <!-- Warm Key Lighting on Face & Shoulder Contour -->
+  <path d="M660 760 C600 700 560 620 560 510 C560 360 680 260 820 260 C740 280 680 350 660 450 C650 510 670 580 720 640 C650 680 630 730 660 760 Z" fill="#D97706" opacity="0.75"/>
+  <!-- Rangefinder Camera Held at Chest Level -->
+  <g transform="translate(680, 680)">
+    <!-- Camera Body -->
+    <rect x="0" y="20" width="280" height="160" rx="16" fill="#27272A" stroke="#52525B" stroke-width="4"/>
+    <rect x="0" y="60" width="280" height="90" fill="#18181B"/>
+    <!-- Viewfinder Window -->
+    <rect x="30" y="32" width="36" height="20" rx="4" fill="#93C5FD"/>
+    <circle cx="210" cy="42" r="12" fill="#71717A"/>
+    <!-- Shutter Dial -->
+    <rect x="180" y="10" width="28" height="12" rx="3" fill="#D4D4D8"/>
+    <!-- Lens Barrel -->
+    <circle cx="140" cy="100" r="64" fill="#18181B" stroke="#3F3F46" stroke-width="6"/>
+    <circle cx="140" cy="100" r="46" fill="url(#lensReflect)"/>
+    <circle cx="125" cy="85" r="10" fill="#BAE6FD" opacity="0.8"/>
+    <!-- Hands Holding Grip -->
+    <ellipse cx="-15" cy="100" rx="30" ry="45" fill="#44403C" opacity="0.9"/>
+    <ellipse cx="295" cy="100" rx="30" ry="45" fill="#44403C" opacity="0.9"/>
+  </g>
+</svg>

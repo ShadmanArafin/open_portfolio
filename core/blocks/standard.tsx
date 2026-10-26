@@ -412,6 +412,7 @@ const video: BlockDefinition<VideoProps> = {
 const SCHEDULING_HOSTS: Record<string, string> = {
   'cal.com': 'Cal.com',
   'www.cal.com': 'Cal.com',
+  'app.cal.com': 'Cal.com',
   'calendly.com': 'Calendly',
   'www.calendly.com': 'Calendly',
 };

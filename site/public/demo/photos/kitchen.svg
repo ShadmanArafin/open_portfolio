@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1200" width="1600" height="1200" role="img" aria-label="The Ferrier Kitchen — food and interior photography">
+  <defs>
+    <radialGradient id="hearthGlow" cx="65%" cy="55%" r="50%">
+      <stop offset="0%" stop-color="#FF8A00" stop-opacity="0.85"/>
+      <stop offset="35%" stop-color="#DD4B00" stop-opacity="0.5"/>
+      <stop offset="70%" stop-color="#581C0C" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1C1917"/>
+      <stop offset="40%" stop-color="#292524"/>
+      <stop offset="100%" stop-color="#0C0A09"/>
+    </linearGradient>
+    <linearGradient id="counter" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#44403C"/>
+      <stop offset="50%" stop-color="#292524"/>
+      <stop offset="100%" stop-color="#1C1917"/>
+    </linearGradient>
+    <linearGradient id="copper" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#D97706"/>
+      <stop offset="50%" stop-color="#B45309"/>
+      <stop offset="100%" stop-color="#78350F"/>
+    </linearGradient>
+  </defs>
+  <!-- Background Wall & Atmosphere -->
+  <rect width="1600" height="1200" fill="url(#wall)"/>
+  <rect width="1600" height="1200" fill="url(#hearthGlow)"/>
+  <!-- Exposed Brick and Tile Grid Hints -->
+  <g stroke="#302B27" stroke-width="2" opacity="0.4">
+    <line x1="0" y1="200" x2="1600" y2="200"/>
+    <line x1="0" y1="320" x2="1600" y2="320"/>
+    <line x1="0" y1="440" x2="1600" y2="440"/>
+  </g>
+  <!-- Copper Pans Hanging on Rail -->
+  <line x1="160" y1="180" x2="1440" y2="180" stroke="#78350F" stroke-width="8"/>
+  <g fill="url(#copper)">
+    <circle cx="280" cy="300" r="85"/>
+    <rect x="274" y="180" width="12" height="40" rx="3" fill="#92400E"/>
+    <circle cx="480" cy="320" r="105"/>
+    <rect x="474" y="180" width="12" height="40" rx="3" fill="#92400E"/>
+    <circle cx="700" cy="290" r="75"/>
+    <rect x="694" y="180" width="12" height="40" rx="3" fill="#92400E"/>
+  </g>
+  <!-- Cast Iron Hearth & Stove -->
+  <rect x="850" y="420" width="620" height="480" rx="16" fill="#171717" stroke="#262626" stroke-width="6"/>
+  <!-- Fire Glow Opening -->
+  <ellipse cx="1160" cy="660" rx="200" ry="140" fill="#EA580C" opacity="0.9"/>
+  <ellipse cx="1160" cy="670" rx="140" ry="90" fill="#FBBF24" opacity="0.95"/>
+  <ellipse cx="1160" cy="680" rx="70" ry="40" fill="#FEF08A"/>
+  <!-- Prep Counter & Cutting Board -->
+  <path d="M0 860 L1600 780 L1600 1200 L0 1200 Z" fill="url(#counter)"/>
+  <rect x="240" y="860" width="480" height="260" rx="12" fill="#78350F" opacity="0.8" transform="rotate(-3 480 990)"/>
+  <!-- Plated Service Details -->
+  <ellipse cx="500" cy="980" rx="110" ry="60" fill="#FAFAF9" opacity="0.9"/>
+  <ellipse cx="500" cy="980" rx="90" ry="48" fill="#1C1917" opacity="0.9"/>
+  <circle cx="490" cy="975" r="16" fill="#15803D"/>
+  <circle cx="515" cy="980" r="12" fill="#DC2626"/>
+  <!-- Soft Depth Vignette -->
+  <rect width="1600" height="1200" fill="none" stroke="#000000" stroke-width="120" opacity="0.45"/>
+</svg>

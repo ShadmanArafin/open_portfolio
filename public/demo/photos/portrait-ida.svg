@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1200" width="1600" height="1200" role="img" aria-label="Ida at ninety — natural light portrait photography">
+  <defs>
+    <linearGradient id="windowLight" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#E2E8F0" stop-opacity="0.95"/>
+      <stop offset="25%" stop-color="#CBD5E1" stop-opacity="0.6"/>
+      <stop offset="60%" stop-color="#475569" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#0F172A" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="faceRim" cx="35%" cy="40%" r="35%">
+      <stop offset="0%" stop-color="#F1F5F9" stop-opacity="0.9"/>
+      <stop offset="40%" stop-color="#94A3B8" stop-opacity="0.5"/>
+      <stop offset="80%" stop-color="#334155" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#020617" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <!-- Room in deep shadow -->
+  <rect width="1600" height="1200" fill="#090D16"/>
+  <!-- Tall Georgian Window on Left -->
+  <rect x="80" y="80" width="360" height="1040" fill="#E2E8F0" opacity="0.9"/>
+  <!-- Window Panes -->
+  <line x1="80" y1="420" x2="440" y2="420" stroke="#1E293B" stroke-width="12"/>
+  <line x1="80" y1="760" x2="440" y2="760" stroke="#1E293B" stroke-width="12"/>
+  <line x1="260" y1="80" x2="260" y2="1120" stroke="#1E293B" stroke-width="12"/>
+  <!-- Window Light Falloff Across the Room -->
+  <rect x="80" y="80" width="1440" height="1040" fill="url(#windowLight)"/>
+  <!-- Seated Figure Silhouette with Rim Lighting -->
+  <path d="M720 1200 C720 980 760 840 840 780 C790 730 760 660 760 560 C760 410 880 320 1010 320 C1140 320 1230 420 1230 560 C1230 660 1190 730 1140 780 C1220 840 1280 980 1280 1200 Z" fill="#030712"/>
+  <!-- Silver Hair & Profile Rim Light -->
+  <path d="M840 780 C790 730 760 660 760 560 C760 410 880 320 1010 320 C940 340 890 400 870 480 C860 530 870 580 890 620 C840 660 820 720 840 780 Z" fill="url(#faceRim)"/>
+  <ellipse cx="880" cy="530" rx="35" ry="50" fill="#CBD5E1" opacity="0.6"/>
+  <!-- Shawl Fold Highlights -->
+  <path d="M840 780 C880 840 940 890 980 940" stroke="#64748B" stroke-width="4" fill="none" opacity="0.5"/>
+  <path d="M860 840 C910 900 970 960 1020 1020" stroke="#475569" stroke-width="3" fill="none" opacity="0.4"/>
+  <!-- Grain & Shadow Vignette -->
+  <rect width="1600" height="1200" fill="none" stroke="#000000" stroke-width="140" opacity="0.6"/>
+</svg>

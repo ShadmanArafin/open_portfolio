@@ -36,7 +36,7 @@ export interface Persona {
   themeId: string;
   /** The home page, as blocks. Exactly the shape the product stores. */
   blocks: PageBlock[];
-  projects: { title: string; category: string; summary: string; year: string }[];
+  projects: { title: string; category: string; summary: string; year: string; image?: string }[];
   timeline: { role: string; org: string; period: string; note: string }[];
   clients: string[];
   skills: { group: string; items: string[] }[];
@@ -52,6 +52,7 @@ const home = (over: {
   cta: { label: string; href: string }[];
   aboutHeading: string;
   about: string[];
+  aboutMedia?: { src: string; alt: string };
   stats: { value: string; label: string }[];
   faq: { question: string; answer: string }[];
   services: { title: string; price: string; description: string }[];
@@ -82,7 +83,7 @@ const home = (over: {
     props: {
       heading: over.aboutHeading,
       paragraphs: over.about,
-      media: { src: '', alt: '' },
+      media: over.aboutMedia ?? { src: '', alt: '' },
       ratio: '4 / 3',
     },
   },
@@ -156,24 +157,28 @@ export const PERSONAS: Persona[] = [
         category: 'Landscape',
         summary: 'Eleven mornings on the same estuary, waiting for the tide to do something.',
         year: '2026',
+        image: '/demo/photos/saltmarsh.svg',
       },
       {
         title: 'The Ferrier Kitchen',
         category: 'Food & interiors',
         summary: 'A restaurant that opens at five and cooks over fire. Shot entirely in service.',
         year: '2025',
+        image: '/demo/photos/kitchen.svg',
       },
       {
         title: 'Northgate Foundry',
         category: 'Industrial',
         summary: 'Four generations of casting, photographed on the last week before it closed.',
         year: '2025',
+        image: '/demo/photos/foundry.svg',
       },
       {
         title: 'Ida, at ninety',
         category: 'Portrait',
         summary: 'One afternoon, one window, one roll of film.',
         year: '2024',
+        image: '/demo/photos/portrait-ida.svg',
       },
     ],
     timeline: [
@@ -232,6 +237,10 @@ export const PERSONAS: Persona[] = [
         'I photograph rooms and the people in them, usually just before something about them changes — a restaurant before it is reviewed, a foundry in its last week.',
         'Most of it is film, because it makes me slower and slower is the whole point. I print everything myself.',
       ],
+      aboutMedia: {
+        src: '/demo/photos/mira-profile.svg',
+        alt: 'Mira Halloran in her studio with rangefinder camera',
+      },
       stats: [
         { value: '7 yrs', label: 'Working independently' },
         { value: '40+', label: 'Commissions' },
