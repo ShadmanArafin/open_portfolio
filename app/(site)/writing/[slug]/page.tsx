@@ -35,8 +35,13 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const resolved = await resolveWriting(slug, await currentChannel());
-  if (!resolved) return buildMetadata({ title: 'Not found' });
+  const channel = await currentChannel();
+  const [settings, resolved] = await Promise.all([
+    getWritingSettings(channel),
+    resolveWriting(slug, channel),
+  ]);
+  // Refuse dead addresses before rendering, returning a genuine 404.
+  if (!settings.enabled || !resolved) notFound();
 
   const { entry } = resolved;
   return {

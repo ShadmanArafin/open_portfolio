@@ -9,9 +9,11 @@
  * `200`. Crawlers and analytics treated dead addresses as live pages.
  *
  * So the skeleton now sits *below* each segment's existence gate (the
- * `layout.tsx` beside it), which resolves and throws before any fallback can
- * flush. See `core/pages/__tests__/not-found-boundaries.test.ts`, which fails
- * if it is ever hoisted back up.
+ * `layout.tsx` beside it), and the gate's route also refuses a missing record
+ * in `generateMetadata`. With `partialPrefetching: false` in next.config.ts,
+ * dynamic routes do not flush a 200 shell before the gate runs. See
+ * `core/pages/__tests__/not-found-boundaries.test.ts`, which fails if the
+ * skeleton is ever hoisted back above a gate.
  *
  * It mirrors the page rhythm (label, headline, bands) in token greys so the
  * swap-in does not reflow the eye, and it is hidden from assistive tech

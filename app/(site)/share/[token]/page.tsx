@@ -48,7 +48,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { token } = await params;
   const shared = await resolveSharedPage(token);
-  if (!shared) return buildMetadata({ title: 'Not found' });
+  // A revoked token must answer 404 before rendering.
+  if (!shared) notFound();
   return {
     ...(await buildMetadata({ title: shared.page.title || 'Shared preview' })),
     robots: 'noindex, nofollow',

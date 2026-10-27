@@ -55,7 +55,7 @@ export async function generateMetadata({
   const slug = segmentsToSlug((await params).slug);
   const channel = await currentChannel();
   const resolved = await resolvePage(slug, channel);
-  if (!resolved) return buildMetadata({ title: 'Not found' });
+  if (!resolved) notFound();
 
   const { page } = resolved;
   return {

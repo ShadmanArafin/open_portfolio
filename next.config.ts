@@ -54,13 +54,15 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   cacheComponents: true,
   /*
-   * Cache Components without an explicit `partialPrefetching` logs a warning
-   * from 16.4 and behaves as `false`; the old full-prefetch model is the one
-   * Next 17 removes. Nothing in this site uses `prefetch={true}`, so there is
-   * no legacy full prefetch to preserve - the default becomes one shared App
-   * Shell per route, with URL-specific content streaming in after the click.
+   * Partial Prefetching (`partialPrefetching: true`) generates an App Shell for
+   * every dynamic route segment, streaming a 200 shell header before dynamic
+   * route checks like `notFound()` can run — turning every dead address into a
+   * soft 404 (status 200). Setting `partialPrefetching: false` lets dynamic
+   * route gates refuse missing slugs before headers are flushed, returning a
+   * genuine HTTP 404 on the very first request, while keeping Cache Components
+   * active for full data caching and instant revalidation.
    */
-  partialPrefetching: true,
+  partialPrefetching: false,
 
   /*
    * Miniflare ships a platform-native workerd binary (plus READMEs and other

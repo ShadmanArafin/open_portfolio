@@ -1,7 +1,7 @@
 {
   "name": "open-portfolio",
   "private": true,
-  "version": "0.7.3",
+  "version": "0.7.4",
   "description": "A self-hosted portfolio site with a built-in visual editor.",
   "license": "MIT",
   "type": "module",

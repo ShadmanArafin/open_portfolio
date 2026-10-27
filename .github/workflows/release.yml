@@ -37,7 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     # arm64 is built under emulation, which is slow; it is also the image the
     # Raspberry Pi people need, so it is not optional.
-    timeout-minutes: 90
+    timeout-minutes: 180
 
     permissions:
       contents: read

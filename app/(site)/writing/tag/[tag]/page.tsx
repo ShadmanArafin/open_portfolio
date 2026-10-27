@@ -34,7 +34,10 @@ export async function generateMetadata({
 }: {
   params: Promise<{ tag: string }>;
 }): Promise<Metadata> {
-  const { tag, settings } = await load((await params).tag);
+  const { tag, settings, tagged } = await load((await params).tag);
+  // A tag nobody used is a dead address, refusing it before rendering returns 404.
+  if (!settings.enabled || tagged.length === 0) notFound();
+
   return buildMetadata({
     title: `#${tag} — ${settings.label}`,
     description: `Everything under ${settings.label} tagged ${tag}.`,

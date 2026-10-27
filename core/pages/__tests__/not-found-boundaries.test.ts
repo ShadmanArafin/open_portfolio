@@ -16,10 +16,13 @@ import { join } from 'node:path';
  * A `loading.tsx` boundary can only fail this way *above* the check that
  * decides whether the address exists. So the invariant is structural:
  * skeletons live below each segment's existence gate (`layout.tsx` beside
- * them), never at the group root. A behavioural test would need to boot the
- * built server; this fails loudly the moment the boundary is hoisted back
- * above a gate, which is the regression to worry about (see
- * `scripts/smoke.mjs` for the HTTP-level check).
+ * them), never at the group root. Dynamic routes keep `partialPrefetching: false`
+ * in `next.config.ts` so Next.js does not stream a 200 shell before the gate
+ * runs, and each dynamic route refuses a missing record from `generateMetadata`
+ * and its existence gate. A behavioural test would need to boot the built
+ * server; this fails loudly the moment any half of the guard is removed,
+ * which is the regression to worry about (see `scripts/smoke.mjs` and
+ * `e2e/smoke.spec.ts` for the HTTP check).
  *
  * Do not "fix" this test by deleting it. If a group-wide skeleton is ever
  * reintroduced, its status semantics need rethinking first.
@@ -28,7 +31,42 @@ import { join } from 'node:path';
 const ROOT = join(import.meta.dirname, '..', '..', '..');
 const has = (...parts: string[]) => existsSync(join(ROOT, ...parts));
 
+/**
+ * The metadata export, up to the next top-level export. Metadata is the only
+ * render-phase hook that runs before the body streams on a full page load.
+ */
+function metadataOf(...parts: string[]) {
+  const source = readFileSync(join(ROOT, ...parts), 'utf8');
+  const start = source.indexOf('export async function generateMetadata');
+  expect(start, `${parts.join('/')} has no generateMetadata`).toBeGreaterThan(-1);
+  const block = source.slice(start + 1);
+  const end = block.indexOf('\nexport ');
+  return end === -1 ? block : block.slice(0, end);
+}
+
 describe('not-found status on the public site', () => {
+  it('disables partialPrefetching so dynamic routes do not stream a 200 shell', () => {
+    const config = readFileSync(join(ROOT, 'next.config.ts'), 'utf8');
+    expect(
+      config,
+      'partialPrefetching: true flushes a 200 App Shell before notFound() can run on dynamic routes - ' +
+        'keep partialPrefetching: false in next.config.ts.'
+    ).toMatch(/partialPrefetching:\s*false/);
+  });
+
+  it.each([
+    ['a built page', ['app', '(site)', '[...slug]', 'page.tsx']],
+    ['a project', ['app', '(site)', 'work', '[slug]', 'page.tsx']],
+    ['a writing entry', ['app', '(site)', 'writing', '[slug]', 'page.tsx']],
+    ['a writing tag', ['app', '(site)', 'writing', 'tag', '[tag]', 'page.tsx']],
+    ['a share link', ['app', '(site)', 'share', '[token]', 'page.tsx']],
+    ['a writing page', ['app', '(site)', 'writing', 'page.tsx']],
+  ])('refuses a missing record in %s metadata', (_label, parts) => {
+    expect(metadataOf(...parts), 'metadata must call notFound() for a dead address').toContain(
+      'notFound()'
+    );
+  });
+
   it('has no loading boundary above the existence gates', () => {
     expect(
       has('app', '(site)', 'loading.tsx'),

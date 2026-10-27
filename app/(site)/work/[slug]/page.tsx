@@ -46,7 +46,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const project = await getProjectBySlug(slug);
-  if (!project) return buildMetadata({ title: 'Not found' });
+  // Refuse dead addresses before rendering, returning a genuine 404.
+  if (!project) notFound();
 
   return buildMetadata({
     title: project.seoTitle || project.title || project.name,

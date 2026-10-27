@@ -25,6 +25,15 @@ test('owner-only APIs refuse strangers', async ({ request }) => {
   }
 });
 
+test('a dead address is a real 404 on its first request', async ({ request }) => {
+  // Unique, so no earlier spec or cache revalidation can warm it. The first
+  // request is the one that used to stream a 200 shell and only cache a 404
+  // for the second visitor.
+  const res = await request.get(`/e2e-no-such-page-${Date.now().toString(36)}`);
+  expect(res.status()).toBe(404);
+  expect(await res.text()).toContain('noindex');
+});
+
 test('security headers ride the public site', async ({ request }) => {
   const res = await request.get('/');
   const csp = res.headers()['content-security-policy'] || '';

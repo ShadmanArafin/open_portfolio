@@ -8,8 +8,8 @@ import { segmentsToSlug } from '@/core/pages/schema';
  * A real `404` status needs the decision before anything streams. A
  * `loading.tsx` boundary flushes a `200` shell the moment its segment is
  * entered, so the check cannot live inside the page below the skeleton — it
- * sits here, above `[...slug]/loading.tsx`, and throws before any fallback is
- * flushed.
+ * sits here, above `[...slug]/loading.tsx`. With `partialPrefetching: false`,
+ * dynamic routes do not stream a 200 shell before this gate runs.
  *
  * The page below resolves again for its own guard; that is deliberate
  * belt-and-braces, and free, because every storage read is request-cached.

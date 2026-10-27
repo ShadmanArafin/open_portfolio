@@ -7,6 +7,28 @@ of stored content is stable, but screens and options are not settled yet.
 Anyone who reported or suggested something is credited by name. That is the
 whole point of the Help & feedback screen in the admin.
 
+## 0.7.4 — 2026-10-27
+
+### Fixed
+
+- **Dead addresses answer real HTTP 404, not a soft 200.** Under Next.js 16 with
+  Cache Components enabled, `partialPrefetching: true` automatically prerendered
+  and streamed an App Shell for every dynamic route segment. When any request
+  matched the catch-all dynamic route `[...slug]`, Next.js flushed the App
+  Shell's HTTP headers with status 200 before dynamic existence checks like
+  `notFound()` could execute. Once headers are sent, the status cannot be
+  rewritten, leaving standard clients, curl, and uptime monitors with a 200 status
+  body wearing a 404 face. Setting `partialPrefetching: false` disables the
+  premature shell flush on dynamic routes so layout existence gates and
+  `generateMetadata` refuse missing records before headers are committed,
+  returning a genuine HTTP 404 on the very first request while preserving full
+  Cache Components data caching and instant revalidation.
+- **Cold 404 assertion added to E2E smoke suite.** Added `test('a dead address is a real 404 on its first request')`
+  to verify that an unvisited random path returns status 404 immediately.
+- **Docker release build timeout extended.** Raised `timeout-minutes` to 180 in
+  `.github/workflows/release.yml` to give QEMU ARM64 software emulation sufficient
+  headroom on GitHub Actions runners without being killed at 90 minutes.
+
 ## 0.7.3 — 2026-10-27
 
 ### Fixed

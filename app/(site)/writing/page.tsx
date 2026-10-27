@@ -48,6 +48,9 @@ export async function generateMetadata({
   const total = (await getPublicWriting(channel)).length;
   const pages = Math.max(1, Math.ceil(total / WRITING_PAGE_SIZE));
   const page = pageNumber((await searchParams).page, pages);
+  // The index and its pagination are addresses too: a switched-off section or
+  // `?page=999` must answer 404 before rendering.
+  if (!settings.enabled || page > pages) notFound();
   return buildMetadata({
     title: page > 1 ? `${settings.label} — page ${page}` : settings.label,
     description: `Essays and notes filed under ${settings.label}.`,
