@@ -9,7 +9,7 @@ import { currentChannel, resolveHomePage } from '@/core/pages/read';
 import { HomePage } from '@/views/HomePage';
 import { PreviewBanner } from './preview-banner';
 import { JsonLd } from '@/core/content/json-ld-script';
-import { websiteFor } from '@/core/content/structured-data';
+import { reviewsFor, websiteFor } from '@/core/content/structured-data';
 
 /**
  * The front door — either built from blocks, or the theme's own sections.
@@ -44,11 +44,13 @@ export default async function Page() {
 
   // Who the site is, for search engines — on whichever home is showing.
   const website = <JsonLd data={websiteFor(content)} />;
+  const reviews = <JsonLd data={reviewsFor(content)} />;
 
   if (!resolved) {
     return (
       <>
         {website}
+        {reviews}
         <HomePage />
       </>
     );
@@ -57,6 +59,7 @@ export default async function Page() {
   return (
     <>
       {website}
+      {reviews}
       {channel === 'draft' && (
         <PreviewBanner status={isPageLive(resolved.page) ? 'published' : 'draft'} path="/" />
       )}

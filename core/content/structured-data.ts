@@ -1,4 +1,4 @@
-import type { BreadcrumbList, Person, ProfilePage, WebSite, WithContext } from 'schema-dts';
+import type { BreadcrumbList, Person, ProfilePage, Review, WebSite, WithContext } from 'schema-dts';
 import type { CMSState } from '@/cms/types/cms';
 import { profileLinks } from './profiles';
 import { resolveSiteUrl } from './metadata';
@@ -89,4 +89,38 @@ export function breadcrumbsFor(
       item: `${siteUrl}${crumb.path}`,
     })),
   };
+}
+
+export function reviewsFor(content: CMSState): WithContext<Review>[] | null {
+  const siteUrl = resolveSiteUrl(content);
+  const person = personFor(content);
+  if (!siteUrl || !person) return null;
+
+  const visible = (content.recommendations || []).filter((rec) => rec.visible && rec.quote?.trim());
+  if (visible.length === 0) return null;
+
+  return visible.map((rec) => ({
+    '@context': 'https://schema.org',
+    '@type': 'Review',
+    reviewBody: rec.quote.trim(),
+    author: {
+      '@type': 'Person',
+      name: rec.name.trim(),
+      ...(rec.role?.trim() ? { jobTitle: rec.role.trim() } : {}),
+      ...(rec.company?.trim()
+        ? {
+            worksFor: {
+              '@type': 'Organization',
+              name: rec.company.trim(),
+              ...(rec.companyUrl ? { url: rec.companyUrl } : {}),
+            },
+          }
+        : {}),
+    },
+    itemReviewed: {
+      '@type': 'Person',
+      '@id': person['@id'],
+      name: person.name,
+    },
+  }));
 }

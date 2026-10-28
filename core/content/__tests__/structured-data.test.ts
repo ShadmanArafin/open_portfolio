@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { INITIAL_CMS_STATE } from '@/cms/data/initialData';
 import type { CMSState } from '@/cms/types/cms';
-import { breadcrumbsFor, personFor, profilePageFor, websiteFor } from '../structured-data';
+import {
+  breadcrumbsFor,
+  personFor,
+  profilePageFor,
+  reviewsFor,
+  websiteFor,
+} from '../structured-data';
 
 function site(over: (state: CMSState) => void = () => {}): CMSState {
   const state = structuredClone(INITIAL_CMS_STATE);
@@ -81,5 +87,58 @@ describe('structured data', () => {
         item: 'https://ada.example.org/work/harbour',
       },
     ]);
+  });
+
+  it('generates Review schema for visible recommendations', () => {
+    const s = site((state) => {
+      state.recommendations = [
+        {
+          id: 'rec-1',
+          name: 'Charles Babbage',
+          role: 'Mathematician',
+          company: 'Analytical Engine Corp',
+          companyUrl: 'https://engines.example.org',
+          quote: 'Ada understood the machine better than anyone.',
+          featured: true,
+          sortOrder: 1,
+          visible: true,
+        },
+        {
+          id: 'rec-2',
+          name: 'Draft Hidden',
+          role: 'Editor',
+          company: 'Secret',
+          quote: 'Hidden quote.',
+          featured: false,
+          sortOrder: 2,
+          visible: false,
+        },
+      ];
+    });
+
+    const reviews = reviewsFor(s);
+    expect(reviews).toHaveLength(1);
+    expect(reviews![0]).toMatchObject({
+      '@context': 'https://schema.org',
+      '@type': 'Review',
+      reviewBody: 'Ada understood the machine better than anyone.',
+      author: {
+        '@type': 'Person',
+        name: 'Charles Babbage',
+        jobTitle: 'Mathematician',
+        worksFor: {
+          '@type': 'Organization',
+          name: 'Analytical Engine Corp',
+          url: 'https://engines.example.org',
+        },
+      },
+      itemReviewed: {
+        '@type': 'Person',
+        '@id': 'https://ada.example.org/#person',
+        name: 'Ada Lovelace',
+      },
+    });
+
+    expect(reviewsFor(site((state) => (state.recommendations = [])))).toBeNull();
   });
 });

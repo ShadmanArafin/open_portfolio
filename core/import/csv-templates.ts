@@ -35,18 +35,50 @@ export const experienceCsv: CsvImporter<ExperienceItem> = {
   template: {
     name: 'experience',
     columns: [
-      { key: 'role', required: true, hint: 'Job title.', example: 'Product designer' },
-      { key: 'company', required: true, hint: 'Who you worked for.', example: 'Harbour Studio' },
+      {
+        key: 'role',
+        required: true,
+        hint: 'Job title.',
+        example: 'Product designer',
+        aliases: ['title', 'job_title', 'position', 'designation'],
+      },
+      {
+        key: 'company',
+        required: true,
+        hint: 'Who you worked for.',
+        example: 'Harbour Studio',
+        aliases: ['company_name', 'organization', 'organisation', 'employer', 'workplace'],
+      },
       { key: 'type', hint: 'Full-time, Part-time, Contract…', example: 'Full-time' },
-      { key: 'start', hint: 'YYYY-MM or YYYY-MM-DD.', example: '2022-03' },
-      { key: 'end', hint: 'Empty while the role is current.', example: '' },
-      { key: 'summary', hint: 'One or two sentences.', example: 'Led design for the app.' },
+      {
+        key: 'start',
+        hint: 'YYYY-MM or YYYY-MM-DD.',
+        example: '2022-03',
+        aliases: ['started_on', 'start_date', 'from'],
+      },
+      {
+        key: 'end',
+        hint: 'Empty while the role is current.',
+        example: '',
+        aliases: ['finished_on', 'end_date', 'to'],
+      },
+      {
+        key: 'summary',
+        hint: 'One or two sentences.',
+        example: 'Led design for the app.',
+        aliases: ['description', 'notes', 'details', 'responsibilities'],
+      },
       {
         key: 'highlights',
         hint: 'Separate several with a | character.',
         example: 'Shipped v2|Grew the team to five',
       },
-      { key: 'company_url', hint: 'Optional link.', example: 'https://example.com' },
+      {
+        key: 'company_url',
+        hint: 'Optional link.',
+        example: 'https://example.com',
+        aliases: ['website', 'link', 'url'],
+      },
     ],
   },
   apply: (row, base) => {
@@ -75,20 +107,38 @@ export const educationCsv: CsvImporter<EducationItem> = {
   template: {
     name: 'education',
     columns: [
-      { key: 'degree', required: true, hint: 'What you studied.', example: 'B.A. Design' },
+      {
+        key: 'degree',
+        required: true,
+        hint: 'What you studied.',
+        example: 'B.A. Design',
+        aliases: ['degree_name', 'qualification', 'course', 'major', 'study'],
+      },
       {
         key: 'institution',
         required: true,
         hint: 'Where you studied.',
         example: 'City University',
+        aliases: ['school_name', 'school', 'university', 'college', 'academy'],
       },
-      { key: 'years', hint: 'Shown as written.', example: '2016 — 2020' },
+      {
+        key: 'years',
+        hint: 'Shown as written.',
+        example: '2016 — 2020',
+        aliases: ['year', 'dates', 'period', 'duration'],
+      },
       {
         key: 'status',
         hint: EDUCATION_STATUSES.join(', ') + '.',
         example: 'Graduated',
+        aliases: ['degree_status', 'state'],
       },
-      { key: 'institution_url', hint: 'Optional link.', example: '' },
+      {
+        key: 'institution_url',
+        hint: 'Optional link.',
+        example: '',
+        aliases: ['website', 'link', 'url'],
+      },
     ],
   },
   apply: (row, base) => {
@@ -111,26 +161,60 @@ export const recommendationsCsv: CsvImporter<RecommendationItem> = {
   template: {
     name: 'recommendations',
     columns: [
-      { key: 'name', required: true, hint: 'Who said it.', example: 'Sam Rivera' },
+      {
+        key: 'name',
+        required: true,
+        hint: 'Who said it (or First Name).',
+        example: 'Sam Rivera',
+        aliases: ['first_name', 'author', 'reviewer', 'reviewer_name', 'full_name', 'person'],
+      },
+      {
+        key: 'last_name',
+        hint: 'Optional last name (combined with name if provided).',
+        example: 'Rivera',
+        aliases: ['surname', 'family_name'],
+      },
       {
         key: 'quote',
         required: true,
         hint: 'Their words.',
         example: 'A rare mix of craft and calm.',
+        aliases: [
+          'text',
+          'recommendation',
+          'review',
+          'testimonial',
+          'content',
+          'feedback',
+          'comment',
+        ],
       },
-      { key: 'role', hint: 'Their job title.', example: 'Head of Product' },
-      { key: 'company', hint: 'Where they work.', example: 'Harbour Studio' },
+      {
+        key: 'role',
+        hint: 'Their job title.',
+        example: 'Head of Product',
+        aliases: ['job_title', 'title', 'position', 'headline'],
+      },
+      {
+        key: 'company',
+        hint: 'Where they work.',
+        example: 'Harbour Studio',
+        aliases: ['organization', 'organisation', 'employer', 'workplace'],
+      },
       { key: 'featured', hint: 'yes or no.', example: 'yes' },
     ],
   },
-  apply: (row, base) => ({
-    ...base,
-    name: row.name,
-    quote: row.quote,
-    role: row.role ?? '',
-    company: row.company ?? '',
-    featured: csvBoolean(row.featured, base.featured),
-  }),
+  apply: (row, base) => {
+    const fullName = [row.name, row.last_name].filter(Boolean).join(' ').trim();
+    return {
+      ...base,
+      name: fullName || row.name,
+      quote: row.quote,
+      role: row.role ?? '',
+      company: row.company ?? '',
+      featured: csvBoolean(row.featured, base.featured),
+    };
+  },
 };
 
 /** Pipe-separated cells: `Research|Design|Handoff`. */
@@ -151,13 +235,24 @@ export const projectsCsv: CsvImporter<ProjectItem> = {
   template: {
     name: 'work',
     columns: [
-      { key: 'title', required: true, hint: 'The project’s name.', example: 'Harbour booking app' },
+      {
+        key: 'title',
+        required: true,
+        hint: 'The project’s name.',
+        example: 'Harbour booking app',
+        aliases: ['project_name', 'name', 'work', 'project'],
+      },
       {
         key: 'slug',
         hint: 'Its address, /work/…; made from the title when empty.',
         example: 'harbour-booking',
       },
-      { key: 'company', hint: 'Who it was for.', example: 'Harbour Studio' },
+      {
+        key: 'company',
+        hint: 'Who it was for.',
+        example: 'Harbour Studio',
+        aliases: ['client', 'organization', 'organisation'],
+      },
       { key: 'category', hint: 'Product, Branding, Web…', example: 'Product design' },
       { key: 'start_year', hint: 'YYYY.', example: '2023' },
       { key: 'end_year', hint: 'YYYY; empty while ongoing.', example: '2024' },
@@ -165,14 +260,21 @@ export const projectsCsv: CsvImporter<ProjectItem> = {
         key: 'summary',
         hint: 'One line, shown on the card.',
         example: 'Booking in three taps instead of twelve.',
+        aliases: ['description', 'short_description', 'overview'],
       },
       { key: 'role', hint: 'What you did.', example: 'Lead designer' },
       {
         key: 'deliverables',
         hint: 'Separate several with |.',
         example: 'Research|Interface|Design system',
+        aliases: ['skills', 'tags', 'technologies'],
       },
-      { key: 'live_url', hint: 'Optional https link.', example: 'https://example.com' },
+      {
+        key: 'live_url',
+        hint: 'Optional https link.',
+        example: 'https://example.com',
+        aliases: ['url', 'link', 'website', 'demo_url'],
+      },
       { key: 'published', hint: 'yes to publish with the site; no keeps a draft.', example: 'no' },
     ],
   },
@@ -207,13 +309,25 @@ export const brandsCsv: CsvImporter<BrandItem> = {
   template: {
     name: 'brands',
     columns: [
-      { key: 'name', required: true, hint: 'The client or company.', example: 'Northwind' },
+      {
+        key: 'name',
+        required: true,
+        hint: 'The client or company.',
+        example: 'Northwind',
+        aliases: ['client', 'company', 'brand', 'brand_name'],
+      },
       {
         key: 'logo',
         hint: 'An https address, or one from your media library (/api/media/…).',
         example: 'https://example.com/logo.svg',
+        aliases: ['image', 'icon'],
       },
-      { key: 'url', hint: 'Optional link to their site.', example: 'https://example.com' },
+      {
+        key: 'url',
+        hint: 'Optional link to their site.',
+        example: 'https://example.com',
+        aliases: ['website', 'link', 'site'],
+      },
       { key: 'size', hint: 'small, default or wide.', example: 'default' },
     ],
   },

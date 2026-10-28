@@ -11,6 +11,7 @@ import {
 } from '../csv-templates';
 import type {
   BrandItem,
+  EducationItem,
   ExperienceItem,
   ProjectItem,
   RecommendationItem,
@@ -112,6 +113,92 @@ describe('templates', () => {
   it('accepts partial dates and rejects anything else', () => {
     expect(csvDate('2024')).toBe('2024-01-01');
     expect(csvDate('March 2024')).toBeUndefined();
+  });
+
+  it('imports raw LinkedIn recommendations export with first and last name aliases', () => {
+    const base = {
+      id: 'rec-1',
+      name: '',
+      role: '',
+      company: '',
+      quote: '',
+      featured: true,
+      sortOrder: 1,
+      visible: true,
+    } as RecommendationItem;
+
+    const linkedInCsv =
+      'First Name,Last Name,Company,Job Title,Text,Creation Date\n' +
+      'Maya,Lin,Acme Labs,Design Director,"Maya is an extraordinary designer and collaborator.",2024-05-12';
+
+    const { rows, problems } = readCsv(linkedInCsv, recommendationsCsv.template);
+    expect(rows).toHaveLength(1);
+    expect(problems).toContain('Ignored column not in the template: Creation Date.');
+
+    const imported = recommendationsCsv.apply(rows[0], base, []);
+    expect(imported).toMatchObject({
+      name: 'Maya Lin',
+      company: 'Acme Labs',
+      role: 'Design Director',
+      quote: 'Maya is an extraordinary designer and collaborator.',
+      featured: true,
+      visible: true,
+    });
+  });
+
+  it('imports raw LinkedIn positions and education exports via column aliases', () => {
+    const baseExp: ExperienceItem = {
+      id: 'exp-1',
+      period: '',
+      type: 'Full-time',
+      role: '',
+      company: '',
+      current: true,
+      summary: '',
+      highlights: [],
+      sortOrder: 1,
+      visible: true,
+    };
+
+    const linkedInPositions =
+      'Company Name,Title,Started On,Finished On,Description\n' +
+      'Vercel,Staff Engineer,2022-01,2024-06,Leading core framework development.';
+
+    const { rows: expRows } = readCsv(linkedInPositions, experienceCsv.template);
+    expect(expRows).toHaveLength(1);
+    const expItem = experienceCsv.apply(expRows[0], baseExp, []);
+    expect(expItem).toMatchObject({
+      company: 'Vercel',
+      role: 'Staff Engineer',
+      startDate: '2022-01-01',
+      endDate: '2024-06-01',
+      summary: 'Leading core framework development.',
+      current: false,
+    });
+
+    const baseEdu: EducationItem = {
+      id: 'edu-1',
+      number: '01',
+      degree: '',
+      institution: '',
+      yearLabel: '',
+      status: 'Graduated',
+      isCurrent: false,
+      sortOrder: 1,
+      visible: true,
+    };
+
+    const linkedInEdu =
+      'School Name,Degree Name,Start Date,End Date\n' +
+      'Stanford University,B.S. Computer Science,,';
+
+    const { rows: eduRows } = readCsv(linkedInEdu, educationCsv.template);
+    expect(eduRows).toHaveLength(1);
+    const eduItem = educationCsv.apply(eduRows[0], baseEdu, []);
+    expect(eduItem).toMatchObject({
+      institution: 'Stanford University',
+      degree: 'B.S. Computer Science',
+    });
   });
 });
 

@@ -22,6 +22,8 @@ export interface CsvColumn {
   hint: string;
   /** A sample value for the template's example row. */
   example: string;
+  /** Alternative column headers accepted during import (e.g. LinkedIn/Google export names). */
+  aliases?: string[];
 }
 
 export interface CsvTemplate {
@@ -102,7 +104,18 @@ export function readCsv(text: string, template: CsvTemplate): CsvReadResult {
   const [header, ...body] = parseCsv(text);
   if (!header) return { rows: [], problems: ['The file is empty.'] };
 
-  const byName = new Map(template.columns.map((column) => [normalise(column.key), column.key]));
+  const byName = new Map<string, string>();
+  for (const column of template.columns) {
+    byName.set(normalise(column.key), column.key);
+    if (column.aliases) {
+      for (const alias of column.aliases) {
+        const norm = normalise(alias);
+        if (!byName.has(norm)) {
+          byName.set(norm, column.key);
+        }
+      }
+    }
+  }
   const keys = header.map((name) => byName.get(normalise(name)) ?? null);
   const unknown = header.filter((_, index) => keys[index] === null && header[index].trim());
   if (unknown.length > 0) {

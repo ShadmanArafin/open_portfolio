@@ -3,7 +3,7 @@ import { buildMetadata } from '@/core/content/metadata';
 import { getPublishedContent } from '@/core/content/read';
 import { AboutPage } from '@/views/AboutPage';
 import { JsonLd } from '@/core/content/json-ld-script';
-import { profilePageFor } from '@/core/content/structured-data';
+import { profilePageFor, reviewsFor } from '@/core/content/structured-data';
 
 export async function generateMetadata(): Promise<Metadata> {
   const content = await getPublishedContent();
@@ -20,6 +20,7 @@ export default async function Page() {
   return (
     <>
       <JsonLd data={profilePageFor(content)} />
+      <JsonLd data={reviewsFor(content)} />
       <AboutPage />
     </>
   );
