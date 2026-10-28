@@ -98,6 +98,19 @@ export default async function ProtectedAdminLayout({ children }: { children: Rea
           </Link>
           <AdminNav sections={sections} />
           <CommandPalette sections={sections} records={records} />
+          <Link
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ml-auto flex items-center gap-1.5 text-sm text-text-secondary hover:text-text-primary no-underline transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-md px-2 py-1"
+            title="Open your live site in a new tab"
+          >
+            <span>View site</span>
+            <span className="sr-only"> (opens in a new tab)</span>
+            <span aria-hidden className="text-xs">
+              ↗
+            </span>
+          </Link>
           <OfflineNotice />
         </div>
       </header>
