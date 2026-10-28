@@ -38,7 +38,7 @@ Place under **Content Management Systems (CMS)** or **Software Development - Sta
 > 3. **Real career tools & ownership:** One button static HTML export, complete `.zip` backup and restore with byte-verified media, standard JSON Resume import/export, public `/cv` with printable layout, SVG QR code, and RFC 6350 vCard, plus phone-first `/bio` link-in-bio hub and privacy-first recruiter traffic analytics.
 >
 > Released container images are published to GHCR for amd64 and arm64 (Raspberry Pi supported) with Sigstore build-provenance attestations and SBOMs:
-> `docker pull ghcr.io/shadmanarafin/open_portfolio:0.8.0`
+> `docker pull ghcr.io/shadmanarafin/open_portfolio:0.8.1`
 >
 > - GitHub: https://github.com/ShadmanArafin/open_portfolio
 > - Live interactive demo (runs client-side, zero signup): https://getopenportfolio.vercel.app/demo/try
@@ -73,7 +73,7 @@ Place under **Content Management Systems (CMS)** or **Software Development - Sta
 > - **Booking, Contact & Webhooks:** Built-in contact form inbox with push notifications (Web Push / VAPID), non-blocking Discord/Slack webhooks, and Cal.com/Calendly embed blocks.
 > - **Privacy Analytics:** First-party visitor metrics and automatic referrer classification for job boards and recruiter traffic (LinkedIn, Greenhouse, Lever, Indeed, Handshake).
 > - **Security:** Native Passkeys (WebAuthn), emailed single-use OTPs, Argon2/scrypt, strict CSP.
-> - **Docker Ready:** Multi-arch images on GitHub Packages (`ghcr.io/shadmanarafin/open_portfolio:0.8.0`) with Sigstore attestations.
+> - **Docker Ready:** Multi-arch images on GitHub Packages (`ghcr.io/shadmanarafin/open_portfolio:0.8.1`) with Sigstore attestations.
 >
 > Source code: https://github.com/ShadmanArafin/open_portfolio
 > Try the in-browser sandbox: https://getopenportfolio.vercel.app/demo/try

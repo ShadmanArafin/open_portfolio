@@ -34,7 +34,7 @@ to keep one: students, designers, developers, photographers, writers.
 <p align="center"><em>The same page in the editor. No code, no redeploy, and the address bar never leaves your own site.</em></p>
 
 > [!TIP]
-> **Status: beta (0.8.0).** The site, the editor and publishing all work. The
+> **Status: beta (0.8.1).** The site, the editor and publishing all work. The
 > 0.8 line adds a career toolkit (standard JSON Resume import/export, a public
 > vCard download and a recruiter QR card on `/cv`), a mobile Link-in-Bio page at
 > `/bio`, Discord/Slack contact webhooks, responsive masonry gallery layouts,
@@ -386,18 +386,18 @@ discover them after typing in a portfolio:
 
 ## Roadmap
 
-| Version       | What lands                                                                           |
-| ------------- | ------------------------------------------------------------------------------------ |
-| 0.1           | Open-source groundwork: MIT licence, no personal data, lint and CI                   |
-| 0.2           | Next.js App Router, server rendering, SEO, Open Graph, sitemap, real 404             |
-| 0.3           | Server-side auth, publishing that reaches visitors, a contact form that delivers     |
-| 0.4           | Pluggable storage with a conformance suite every backend must pass                   |
-| 0.5           | Page builder, six themes, writing, presets, newsletter sign-ups, Docker              |
-| 0.6           | Server-rendered admin, eight backends, passkeys, CSV, backups, released images       |
-| 0.7           | Records-backed writing, Convex and Cloudflare REST adapters, links block, axe matrix |
-| **0.8 (now)** | Career toolkit, `/bio`, contact webhooks, import aliases, Review structured data     |
-| Next          | The open backlog in [PROJECT-REVIEW.md](docs/PROJECT-REVIEW.md)                      |
-| 1.0           | Stable                                                                               |
+| Version         | What lands                                                                             |
+| --------------- | -------------------------------------------------------------------------------------- |
+| 0.1             | Open-source groundwork: MIT licence, no personal data, lint and CI                     |
+| 0.2             | Next.js App Router, server rendering, SEO, Open Graph, sitemap, real 404               |
+| 0.3             | Server-side auth, publishing that reaches visitors, a contact form that delivers       |
+| 0.4             | Pluggable storage with a conformance suite every backend must pass                     |
+| 0.5             | Page builder, six themes, writing, presets, newsletter sign-ups, Docker                |
+| 0.6             | Server-rendered admin, eight backends, passkeys, CSV, backups, released images         |
+| 0.7             | Records-backed writing, Convex and Cloudflare REST adapters, links block, axe matrix   |
+| **0.8.1 (now)** | Career toolkit, `/bio`, webhooks, masonry/EXIF, import aliases, Review structured data |
+| Next            | The open backlog in [PROJECT-REVIEW.md](docs/PROJECT-REVIEW.md)                        |
+| 1.0             | Stable                                                                                 |
 
 ### Documentation
 

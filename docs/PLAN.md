@@ -13,7 +13,7 @@
 > [§12 second pass (2026-10-20)](PROJECT-REVIEW.md#12-second-pass--2026-10-20)
 > holds Phase E, which is what remains after the admin rewrite.
 >
-> Last updated: 2026-10-29 · Version 0.8.0 (Beta 1) · CI green on `main`.
+> Last updated: 2026-10-29 · Version 0.8.1 (Beta 2) · CI green on `main`.
 > Read [Handoff notes](#handoff-notes-for-whoever-picks-this-up) first if you
 > are starting on a new machine — it carries the running instructions, the
 > invariants, and every known bug.
@@ -34,7 +34,7 @@
 | 9 — Blog, themes, presets   | **Done, verified** | 6 themes, presets, records-backed writing+RSS, full axe matrix, P2 blocks                    |
 | Community + updates         | **Done**           | Reports, dedupe, update workflow, `UPDATING.md`. Repository public                           |
 | Self-hosting (Docker)       | **Done, verified** | `docker compose up`, volume survives container replacement                                   |
-| 10 — Launch                 | **Done, verified** | Marketing site deployed, demo + PWA + push shipped, release 0.8.0 live                       |
+| 10 — Launch                 | **Done, verified** | Marketing site deployed, demo + PWA + push shipped, release 0.8.1 live                       |
 | 11 — Career & Recruiter     | **Done, verified** | JSON Resume import/export, RFC 6350 vCard, pure SVG QR generator, /cv card                   |
 | 12 — Visual Canvas          | **Done, verified** | Layer outline drawer (`BlockOutline`), instant slash-filter search                           |
 | 13 — Photography Craft      | **Done, verified** | JPEG EXIF reader, opt-in camera badge, masonry gallery layout, dominant-colour placeholders  |
@@ -42,7 +42,7 @@
 | 15 — Publishing & Importers | **Done, verified** | Markdown `.md` note & article importer wired with preview warnings; CSV imports with aliases |
 | 16 — Privacy Analytics      | **Done, verified** | Privacy-first referrer & recruiter traffic classifier wired into Umami/Plausible + dashboard |
 
-### 0.8.0 feature audit — 29 October 2026
+### 0.8.1 feature audit — 29 October 2026
 
 This is the list every other document should agree with. It was checked against
 the routes, screens and block registry, not against the release announcement.
@@ -78,10 +78,10 @@ the routes, screens and block registry, not against the release announcement.
 - Any hosted demo instance; `/demo/try` and `docker-compose.demo.yml` are the
   two demo paths.
 
-**Where to start:** the repository is public and `v0.8.0` is tagged, with a
+**Where to start:** the repository is public and `v0.8.1` is tagged, with a
 released image. What remains is the open backlog in
 [PROJECT-REVIEW.md](PROJECT-REVIEW.md) and the remaining-work ledger in
-[HANDOVER.md](HANDOVER.md#remaining-work-updated-29-october-2026).
+[HANDOVER.md](HANDOVER.md#remaining-work-updated-29-october-2026--v081-release).
 
 > The paragraphs below are kept as written in August, when the repository was
 > still private and the demo did not exist.
@@ -1092,9 +1092,9 @@ _Honest scoping:_ Vercel Marketplace can only auto-provision Marketplace-native 
 >   offline indicator.
 > - **PWA and push notifications.** Web app manifest, dependency-free `public/sw.js`
 >   service worker with zero admin cache risk, and native Node `crypto` VAPID push.
-> - **Releases 0.7.0 through 0.8.0 tagged and published.** Multi-arch Docker images on GHCR
->   with Sigstore attestations; 0.8.0 is the current release. The 0.8.0 image was built before
->   the CSV-alias and Review-schema follow-up (`f59eaf1`); build from `main` for those two.
+> - **Releases 0.7.0 through 0.8.1 tagged and published.** Multi-arch Docker images on GHCR
+>   with Sigstore attestations; 0.8.1 is the current release, containing all career tools,
+>   masonry galleries, camera EXIF badges, dominant-colour placeholders, and recruiter analytics.
 
 > ### RESEARCHED, NOTHING BUILT
 >

@@ -554,9 +554,9 @@ container. It has caught two failures this project would otherwise have shipped.
 
 ---
 
-## Remaining work (Updated 29 October 2026 — v0.8.0 Release)
+## Remaining work (Updated 29 October 2026 — v0.8.1 Release)
 
-All roadmap items and backlog features through v0.8.0 have been implemented, verified, and shipped:
+All roadmap items and backlog features through v0.8.1 have been implemented, verified, and shipped:
 
 **1. Career & Recruiter Tools (Phase 11) — DONE:**
 
