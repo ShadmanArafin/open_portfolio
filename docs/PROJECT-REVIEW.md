@@ -2823,4 +2823,4 @@ The v0.8.0 milestone completes and verifies the remaining user-facing capabiliti
 - **Content Importers:** Markdown `.md` article import with transparent frontmatter warnings and slug collision resolution, and collection CSV import with LinkedIn and Google column aliases.
 - **Privacy Analytics:** Referrer & recruiter traffic classifier (`core/analytics/referrer.ts`) integrated into Umami and Plausible summaries and rendered in `/admin/analytics`.
 - **Structured Data:** schema.org `Review` JSON-LD for visible recommendations alongside `Person`, `WebSite`, and `ProfilePage`.
-- **Suite Verification:** 1,460 unit and integration tests passing, 0 ESLint errors, clean Prettier formatting, clean personal data check, and green production builds for both the Next.js application and the marketing documentation site.
+- **Suite Verification:** 1,461 unit and integration tests passing, 0 ESLint errors, clean Prettier formatting, clean personal data check, and green production builds for both the Next.js application and the marketing documentation site.

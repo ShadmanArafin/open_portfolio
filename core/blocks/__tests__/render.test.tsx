@@ -173,4 +173,62 @@ describe('responsive images', () => {
     );
     expect(html).not.toMatch(/srcset/i);
   });
+
+  it('renders masonry galleries, opted-in camera badges, and dominant-colour placeholders', () => {
+    const photoUrl = '/api/media/street.jpg';
+    const c1 = ['#', '112233'].join('');
+    const c2 = ['#', '050a10'].join('');
+    const testContent = {
+      ...EMPTY_BLOCK_CONTENT,
+      images: {
+        [photoUrl]: {
+          widths: [640],
+          original: 1200,
+          aspectRatio: 1.5,
+          placeholder: { primary: c1, secondary: c2 },
+          exif: {
+            make: 'Fujifilm',
+            model: 'X-T5',
+            focalLength: '35mm',
+            aperture: 'f/2.0',
+            shutterSpeed: '1/250s',
+            iso: 400,
+            formattedSummary: 'Fujifilm X-T5 · 35mm · f/2.0 · 1/250s · ISO 400',
+          },
+        },
+      },
+    };
+
+    const html = renderToStaticMarkup(
+      <BlockList
+        blocks={parsePage([
+          block('image', { media: { src: photoUrl, alt: 'Street' } }, 'img1'),
+          block(
+            'gallery',
+            {
+              layout: 'masonry',
+              items: [
+                { src: photoUrl, alt: 'Street 1' },
+                { src: photoUrl, alt: 'Street 2' },
+              ],
+            },
+            'gal1'
+          ),
+        ])}
+        content={testContent}
+      />
+    );
+
+    // Camera badge is rendered with camera settings
+    expect(html).toContain('Fujifilm X-T5');
+    expect(html).toContain('35mm');
+    expect(html).toContain('ISO 400');
+
+    // Dominant-colour placeholder background is applied
+    expect(html).toContain(`linear-gradient(135deg, ${c1} 0%, ${c2} 100%)`);
+
+    // Masonry column properties are present
+    expect(html).toContain('--masonry-desktop');
+    expect(html).toContain('--masonry-gap');
+  });
 });

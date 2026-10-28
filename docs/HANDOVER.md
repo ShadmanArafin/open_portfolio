@@ -26,7 +26,7 @@ JavaScript bundle. None of that remains.
 ```bash
 npm ci                          # ci, not install — see "Traps" below
 npm run dev                     # http://localhost:3000
-npm test                        # 1460 passing, 13 skipped (29 Oct 2026)
+npm test                        # 1461 passing, 13 skipped (29 Oct 2026)
 npm run typecheck && npm run lint && npm run build
 ```
 
