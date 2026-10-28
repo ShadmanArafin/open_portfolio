@@ -15,6 +15,8 @@ import {
   Stack,
   Text,
 } from '../primitives';
+import { ExifBadge } from '../primitives/ExifBadge';
+import { MasonryGrid } from '../primitives/MasonryGrid';
 import { deeper } from '../primitives/heading-level';
 import type { BlockField } from './fields';
 import { srcSetFor } from '@/core/media/srcset';
@@ -296,22 +298,27 @@ const image: BlockDefinition<ImageProps> = {
           : null,
     },
   ],
-  Render: ({ props, frame, content }) => (
-    <Band frame={frame}>
-      <Stack gap={3}>
-        <Media
-          {...props.media}
-          ratio={props.ratio ?? '16 / 9'}
-          srcSet={srcSetFor(props.media.src, content.images)}
-        />
-        {props.caption && (
-          <Text size="sm" tone="muted">
-            {props.caption}
-          </Text>
-        )}
-      </Stack>
-    </Band>
-  ),
+  Render: ({ props, frame, content }) => {
+    const imageInfo = content.images[props.media.src];
+    return (
+      <Band frame={frame}>
+        <Stack gap={3}>
+          <Media
+            {...props.media}
+            ratio={props.ratio ?? '16 / 9'}
+            srcSet={srcSetFor(props.media.src, content.images)}
+            placeholder={imageInfo?.placeholder}
+          />
+          {imageInfo?.exif ? <ExifBadge exif={imageInfo.exif} /> : null}
+          {props.caption && (
+            <Text size="sm" tone="muted">
+              {props.caption}
+            </Text>
+          )}
+        </Stack>
+      </Band>
+    );
+  },
 };
 
 /* ------------------------------------------------------------------ gallery */
@@ -319,6 +326,7 @@ const image: BlockDefinition<ImageProps> = {
 const galleryProps = z.object({
   heading: z.string().optional(),
   columns: z.union([z.literal(2), z.literal(3), z.literal(4)]).optional(),
+  layout: z.enum(['grid', 'masonry']).optional(),
   items: z.array(mediaSchema.extend({ caption: z.string().optional() })).min(1),
 });
 type GalleryProps = z.infer<typeof galleryProps>;
@@ -343,6 +351,16 @@ const gallery: BlockDefinition<GalleryProps> = {
         { value: 2, label: 'Two' },
         { value: 3, label: 'Three' },
         { value: 4, label: 'Four' },
+      ],
+    },
+    {
+      kind: 'choice',
+      path: 'layout',
+      label: 'Layout',
+      help: 'Grid crops to a consistent shape. Masonry preserves the uploaded image proportions.',
+      options: [
+        { value: 'grid', label: 'Even grid' },
+        { value: 'masonry', label: 'Masonry' },
       ],
     },
     {
@@ -382,31 +400,45 @@ const gallery: BlockDefinition<GalleryProps> = {
       },
     },
   ],
-  Render: ({ props, frame, headingLevel, content }) => (
-    <Band frame={frame}>
-      <Stack gap={6}>
-        {props.heading && <Heading level={headingLevel}>{props.heading}</Heading>}
-        <Grid columns={props.columns ?? 3}>
-          {props.items.map((item, i) => (
-            <Stack key={`${item.src}-${i}`} gap={2}>
-              <Media
-                {...item}
-                ratio="4 / 3"
-                srcSet={srcSetFor(item.src, content.images)}
-                // A grid cell is a fraction of the page, not all of it.
-                sizes={`(min-width: 768px) ${Math.round(100 / (props.columns ?? 3))}vw, 100vw`}
-              />
-              {item.caption && (
-                <Text size="sm" tone="muted">
-                  {item.caption}
-                </Text>
-              )}
-            </Stack>
-          ))}
-        </Grid>
-      </Stack>
-    </Band>
-  ),
+  Render: ({ props, frame, headingLevel, content }) => {
+    const columns = props.columns ?? 3;
+    const renderItem = (item: GalleryProps['items'][number], i: number) => {
+      const imageInfo = content.images[item.src];
+      return (
+        <Stack key={`${item.src}-${i}`} gap={2}>
+          <Media
+            {...item}
+            ratio={props.layout === 'masonry' ? String(imageInfo?.aspectRatio ?? 4 / 3) : '4 / 3'}
+            srcSet={srcSetFor(item.src, content.images)}
+            // A grid cell is a fraction of the page, not all of it.
+            sizes={`(min-width: 768px) ${Math.round(100 / columns)}vw, 100vw`}
+            placeholder={imageInfo?.placeholder}
+          />
+          {imageInfo?.exif ? <ExifBadge exif={imageInfo.exif} minimal /> : null}
+          {item.caption && (
+            <Text size="sm" tone="muted">
+              {item.caption}
+            </Text>
+          )}
+        </Stack>
+      );
+    };
+
+    return (
+      <Band frame={frame}>
+        <Stack gap={6}>
+          {props.heading && <Heading level={headingLevel}>{props.heading}</Heading>}
+          {props.layout === 'masonry' ? (
+            <MasonryGrid columns={{ mobile: 1, tablet: Math.min(columns, 2), desktop: columns }}>
+              {props.items.map(renderItem)}
+            </MasonryGrid>
+          ) : (
+            <Grid columns={columns}>{props.items.map(renderItem)}</Grid>
+          )}
+        </Stack>
+      </Band>
+    );
+  },
 };
 
 /* -------------------------------------------------------------------- stats */

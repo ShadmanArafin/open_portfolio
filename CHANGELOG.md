@@ -7,28 +7,84 @@ of stored content is stable, but screens and options are not settled yet.
 Anyone who reported or suggested something is credited by name. That is the
 whole point of the Help & feedback screen in the admin.
 
+## Unreleased
+
+### Added
+
+- **Photography craft and media:**
+  - Responsive, CSS-only masonry layout option (`layout: 'masonry'`) in the
+    Gallery block, preserving natural portrait and landscape aspect ratios without
+    forced grid crops.
+  - JPEG EXIF metadata extraction (`core/media/exif.ts`) capturing camera body,
+    lens, focal length, aperture, shutter speed, and ISO rating.
+  - Private-by-default camera badges (`ExifBadge`): owners can optionally enable
+    camera detail badges per asset in the media library; metadata remains hidden
+    from public pages unless explicitly switched on.
+  - Zero-CLS image placeholders: average-colour gradient placeholders generated
+    at upload (`core/media/thumbhash.ts`, `extractPlaceholderPalette`) and rendered
+    inline while high-resolution media streams in.
+- **Privacy analytics:**
+  - Automatic referrer classification (`core/analytics/referrer.ts`) identifying
+    traffic from recruiters and job boards (LinkedIn, Greenhouse ATS, Lever ATS,
+    Indeed, Handshake, Glassdoor), developer hubs, search engines, and socials.
+    Rendered directly in the `/admin/analytics` dashboard for connected Umami and
+    Plausible analytics instances.
+- **Importers and structured data:**
+  - Markdown article importer (`core/writing/importer.ts`) wired to the Writing
+    screen's import flow with frontmatter parsing, warnings report, and slug-clash
+    settlement.
+  - LinkedIn and Google CSV column names: importers for projects, experience,
+    education, recommendations and brands accept common export aliases.
+  - schema.org `Review` data for visible recommendations, connecting endorsements
+    to the owner's `Person` schema for search engines.
+
+### Changed
+
+- **Documentation and release copy re-audited against the code:** Every feature
+  list, help centre guide, and release note matches the verified UI.
+- **JSON Resume import clarity:** States clearly that career collections in the
+  draft are replaced rather than merged, prompting review before publishing.
+
 ## 0.8.0 — 2026-10-28 (Beta 1)
 
 ### Added
 
-- **Career & Recruiter Engine:**
-  - Standard JSON Resume (`jsonresume.org`) import and export in `/admin/settings` and `/api/admin/resume`, enabling instant career data migration from LinkedIn and Reactive Resume.
-  - RFC 6350 vCard 4.0 generation (`core/resume/vcard.ts`) and public download endpoint at `/api/contact/vcard`.
-  - Interactive Recruiter QR Card component on `/cv` with pure TypeScript SVG QR matrix generation for direct mobile contact saving.
-- **Visual Canvas & Editor Polish:**
-  - Page Layer Outline drawer (`BlockOutline`) in the block editor displaying section hierarchy, visibility toggles, and fast reordering.
-  - Instant slash-style block search filter in "Add a block" for quick block insertion.
-- **Photography & Visual Craft:**
-  - Client-side EXIF camera metadata extraction (`core/media/exif.ts`) reading camera body, lens, focal length, aperture, shutter speed, and ISO with zero server CPU load.
-  - Camera settings badge component (`ExifBadge`) for displaying photography craft.
-  - Dynamic multi-column Masonry grid (`MasonryGrid`) preserving natural aspect ratios without cropping.
-  - ThumbHash and CSS gradient micro-placeholders (`core/media/thumbhash.ts`) for zero-layout-shift image loading.
-- **Mobile Link-in-Bio & Outbound Webhooks:**
-  - Dedicated mobile Link-in-Bio hub at `/bio` optimized for Instagram, TikTok, LinkedIn, and Twitter bio links.
-  - Outbound notification webhooks (`core/integrations/webhook.ts`) with rich Discord and Slack embed formatting on contact form submissions.
-- **Publishing & Analytics:**
-  - Markdown, Medium, and Substack article importer (`core/writing/importer.ts`) with YAML frontmatter parsing and block conversion.
-  - Privacy-first recruiter and job board traffic classifier (`core/analytics/referrer.ts`).
+- **Career and recruiter tools:**
+  - Standard JSON Resume (`jsonresume.org`) import and export under
+    **General & backup**, plus owner-only `GET`/`POST` at `/api/admin/resume`.
+    An import replaces the career collections in the draft; review it before
+    publishing.
+  - RFC 6350 vCard 4.0 generation (`core/resume/vcard.ts`) and a public
+    download at `/api/contact/vcard`.
+  - A recruiter QR card on `/cv`, generated in pure TypeScript with no external
+    service, alongside the browser's print-to-PDF.
+- **Visual editor:**
+  - A **Page Outline** drawer (`BlockOutline`) in the block editor, with
+    visibility toggles and reordering in page order.
+  - A slash-style filter in **Add a block** (`/gallery`, `/quote`, `/code`) for
+    finding one of the 28 block types quickly.
+- **Mobile Link-in-Bio:**
+  - `/bio`, a phone-first hub built from the owner's portrait, role, About
+    paragraph, featured projects, CV, contact link and visible social profiles.
+- **Contact notifications:**
+  - `OPB_CONTACT_WEBHOOK` posts each stored enquiry to Discord or Slack (or any
+    JSON endpoint) with platform-specific formatting. Best-effort and
+    non-blocking: the inbox copy is written first.
+- **Markdown writing import:**
+  - The Writing screen's **Import Markdown** reads `.md` files, front matter and
+    body, and adds them to the draft list. Nothing is saved until Save.
+
+### Foundation, not yet in the interface
+
+These modules ship with tests but no block or admin screen uses them yet. They
+are groundwork for later releases, not features to look for in 0.8.0:
+
+- Client-side EXIF extraction (`core/media/exif.ts`), the `ExifBadge` component
+  and the `MasonryGrid` component.
+- Gradient placeholder generation (`core/media/thumbhash.ts`).
+- The referrer and job-board classifier (`core/analytics/referrer.ts`).
+- The standalone article importer (`core/writing/importer.ts`); the Writing
+  screen's own Markdown import is the path that exists today.
 
 ## 0.7.4 — 2026-10-27
 

@@ -29,8 +29,8 @@ No shop, no bookings, no memberships, no paid-subscriber area, no events calenda
 
 It collects email addresses, confirms them properly, and hands you the list as a file that Buttondown or Mailchimp will import directly. It does not send anything. Sending mail well is a whole other job — deliverability, bounces, list hygiene — and half of it would leave you holding a list you cannot practically use.
 
-## It is alpha
+## It is beta
 
-Version 0.6. Your content is safe: it is in your database, you can export all of it at any moment, and an older version quarantines anything it does not understand rather than deleting it. What is not settled is the admin — screens move and get renamed between versions.
+Version 0.8. Your content is safe: it is in your database, you can export all of it at any moment, and an older version quarantines anything it does not understand rather than deleting it. What is not settled is the admin - screens move and get renamed between versions.
 
 If that makes you uneasy, [read this](/is-this-right-for-you) before you commit an afternoon.

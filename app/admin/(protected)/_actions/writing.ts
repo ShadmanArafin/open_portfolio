@@ -344,25 +344,3 @@ export async function updateWritingAction(
     token: writingScreenToken(stored, cleanStoredSettings),
   };
 }
-
-/**
- * Imports an article or post from a Markdown / Substack / Medium file into the owner's draft.
- */
-export async function importMarkdownArticleAction(rawMarkdown: string): Promise<WritingResult> {
-  await requireOwner();
-  try {
-    const { createEntryFromMarkdown } = await import('@/core/writing/importer');
-    const { getStorageAdapter } = await import('@/core/storage/registry');
-    const adapter = await getStorageAdapter();
-    const storedDraft = await readDraftForWrite(adapter);
-    const existing = await loadDraftWriting(adapter.records, storedDraft.state.writing ?? []);
-
-    const newEntry = createEntryFromMarkdown(rawMarkdown, existing.length);
-    const updatedWriting = [newEntry, ...existing];
-
-    return await updateWritingAction(storedDraft.state.writingSettings, updatedWriting);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Could not import article.';
-    return { ok: false, error: message };
-  }
-}

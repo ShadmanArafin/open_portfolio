@@ -2,8 +2,14 @@
 
 import { useState } from 'react';
 import type { MediaItem } from '@/cms/types/cms';
-import { deleteMediaAction, uploadMediaAction, updateResumeAction } from '../_actions/media';
+import {
+  deleteMediaAction,
+  setExifVisibilityAction,
+  uploadMediaAction,
+  updateResumeAction,
+} from '../_actions/media';
 import { probeDimensions } from '../_components/probe-dimensions';
+import { ExifBadge } from '@/core/primitives/ExifBadge';
 
 /**
  * The library grid, from the legacy screen with the same behaviours: one
@@ -113,6 +119,33 @@ export function MediaLibrary({
       }
     } catch {
       setError('The change did not go through. Reload and try again.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const toggleExif = async (item: MediaItem) => {
+    if (busy || !item.exif?.formattedSummary) return;
+    const showExif = item.showExif !== true;
+    setBusy(true);
+    setStatus(null);
+    setError(null);
+    try {
+      const result = await setExifVisibilityAction(item.id, showExif);
+      if (result.ok && result.item) {
+        setItems((list) =>
+          list.map((current) => (current.id === item.id ? result.item! : current))
+        );
+        setStatus(
+          showExif
+            ? 'Camera details will appear on published pages after you publish.'
+            : 'Camera details are hidden from published pages after your next publish.'
+        );
+      } else {
+        setError(result.error ?? 'The camera-details setting did not save.');
+      }
+    } catch {
+      setError('The camera-details setting did not save. Reload and try again.');
     } finally {
       setBusy(false);
     }
@@ -288,6 +321,25 @@ export function MediaLibrary({
                     {item.dimensions ? ` • ${item.dimensions}` : ''} • used {uses}×
                   </span>
                 </div>
+
+                {item.exif?.formattedSummary ? (
+                  <div className="grid gap-2 rounded-xl border border-border p-3">
+                    <ExifBadge exif={item.exif} minimal />
+                    <label className="flex items-start gap-2 text-sm text-text-secondary">
+                      <input
+                        type="checkbox"
+                        checked={item.showExif === true}
+                        disabled={busy}
+                        onChange={() => void toggleExif(item)}
+                      />
+                      <span>Show camera details publicly after publishing</span>
+                    </label>
+                    <p className="m-0 text-xs text-text-muted">
+                      No location data is read or displayed. This stays private unless you turn it
+                      on.
+                    </p>
+                  </div>
+                ) : null}
 
                 <span className="flex flex-wrap items-center gap-2">
                   <button

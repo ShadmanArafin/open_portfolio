@@ -1,5 +1,6 @@
 import 'server-only';
 import { readConfig } from './vault';
+import { classifyReferrer, type ReferrerCategory } from '@/core/analytics/referrer';
 import type { UmamiSettings } from './definitions/umami';
 import type { PlausibleSettings } from './definitions/plausible';
 
@@ -8,11 +9,20 @@ export interface TopPage {
   views: number;
 }
 
+export interface ReferrerTraffic {
+  source: string;
+  category: ReferrerCategory;
+  categoryLabel: string;
+  isRecruiterSource: boolean;
+  views: number;
+}
+
 export interface AudienceSummary {
   provider: 'umami' | 'plausible';
   visitors30d: number | null;
   pageviews30d: number | null;
   topPages: TopPage[];
+  topReferrers: ReferrerTraffic[];
 }
 
 /**
@@ -109,11 +119,37 @@ async function umamiSummary(): Promise<AudienceSummary | null> {
     }
   }
 
+  let topReferrers: ReferrerTraffic[] = [];
+  const referrersRes = await fetch(
+    `${base(config.host)}/api/websites/${config.websiteId}/metrics?startAt=${startAt}&endAt=${endAt}&type=referrer&limit=5`,
+    { headers }
+  ).catch(() => null);
+  if (referrersRes && referrersRes.ok) {
+    const metrics = (await referrersRes.json().catch(() => null)) as
+      { x?: string; y?: number }[] | null;
+    if (Array.isArray(metrics)) {
+      topReferrers = metrics
+        .filter((m) => typeof m?.x === 'string' && typeof m?.y === 'number')
+        .slice(0, 5)
+        .map((m) => {
+          const classified = classifyReferrer(m.x);
+          return {
+            source: classified.source,
+            category: classified.category,
+            categoryLabel: classified.categoryLabel,
+            isRecruiterSource: classified.isRecruiterSource,
+            views: m.y as number,
+          };
+        });
+    }
+  }
+
   return {
     provider: 'umami',
     visitors30d: stats.visitors?.value ?? null,
     pageviews30d: stats.pageviews?.value ?? null,
     topPages,
+    topReferrers,
   };
 }
 
@@ -169,8 +205,57 @@ async function plausibleSummary(): Promise<AudienceSummary | null> {
     }
   }
 
-  if (visitors === null && pageviews === null && topPages.length === 0) return null;
-  return { provider: 'plausible', visitors30d: visitors, pageviews30d: pageviews, topPages };
+  let topReferrers: ReferrerTraffic[] = [];
+  const sourcesRes = await fetch(`${base(config.host)}/api/v2/query`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      site_id: config.domain,
+      metrics: ['pageviews'],
+      dimensions: ['visit:source'],
+      date_range: '30d',
+      order_by: [['pageviews', 'desc']],
+      pagination: { limit: 5, offset: 0 },
+    }),
+  }).catch(() => null);
+  if (sourcesRes && sourcesRes.ok) {
+    const sources = (await sourcesRes.json().catch(() => null)) as {
+      results?: { dimensions?: string[]; metrics?: number[] }[];
+    } | null;
+    if (Array.isArray(sources?.results)) {
+      topReferrers = sources
+        .results!.filter(
+          (r) => typeof r?.dimensions?.[0] === 'string' && typeof r?.metrics?.[0] === 'number'
+        )
+        .slice(0, 5)
+        .map((r) => {
+          const classified = classifyReferrer(r.dimensions![0]);
+          return {
+            source: classified.source,
+            category: classified.category,
+            categoryLabel: classified.categoryLabel,
+            isRecruiterSource: classified.isRecruiterSource,
+            views: r.metrics![0],
+          };
+        });
+    }
+  }
+
+  if (
+    visitors === null &&
+    pageviews === null &&
+    topPages.length === 0 &&
+    topReferrers.length === 0
+  ) {
+    return null;
+  }
+  return {
+    provider: 'plausible',
+    visitors30d: visitors,
+    pageviews30d: pageviews,
+    topPages,
+    topReferrers,
+  };
 }
 
 export async function audienceSummary(): Promise<AudienceSummary | null> {

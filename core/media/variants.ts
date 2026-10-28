@@ -1,4 +1,5 @@
 import 'server-only';
+import { paletteFromHex } from './thumbhash';
 
 /**
  * Smaller copies of an uploaded photo, for phones.
@@ -23,6 +24,11 @@ const RESIZABLE = new Set(['image/jpeg', 'image/png', 'image/webp']);
 export interface GeneratedVariant {
   width: number;
   data: Uint8Array;
+}
+
+export interface PlaceholderPalette {
+  primary: string;
+  secondary: string;
 }
 
 /** The storage key of one copy, beside the original: `photo-x1.jpg.w640.webp`. */
@@ -63,6 +69,31 @@ export async function generateVariants(
   } catch (err) {
     console.error('[media] Could not make smaller copies; keeping the original only.', err);
     return [];
+  }
+}
+
+/**
+ * Extracts a small average-colour palette for the image's loading placeholder.
+ * This stores only two hex colours — never pixels, location, or image data.
+ * Unsupported formats and sharp failures simply omit the enhancement.
+ */
+export async function extractPlaceholderPalette(
+  bytes: Uint8Array,
+  mimeType: string
+): Promise<PlaceholderPalette | undefined> {
+  if (!RESIZABLE.has(mimeType)) return undefined;
+
+  try {
+    const sharp = (await import('sharp')).default;
+    const { channels } = await sharp(bytes).rotate().stats();
+    const values = [0, 1, 2].map((index) => {
+      const channel = channels[index] ?? channels[0];
+      return Math.max(0, Math.min(255, Math.round(channel?.mean ?? 42)));
+    });
+    const hex = `#${values.map((value) => value.toString(16).padStart(2, '0')).join('')}`;
+    return paletteFromHex(hex);
+  } catch {
+    return undefined;
   }
 }
 

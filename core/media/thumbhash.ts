@@ -22,20 +22,24 @@ export function createGradientPlaceholder(
   width: number = 4,
   height: number = 3
 ): ImagePlaceholder {
+  const primary = safeHex(color1, '#2a2a2e');
+  const secondary = safeHex(color2, '#1a1a1d');
+  const safeWidth = Number.isFinite(width) && width > 0 ? width : 4;
+  const safeHeight = Number.isFinite(height) && height > 0 ? height : 3;
   const svg =
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}">` +
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${safeWidth} ${safeHeight}">` +
     `<defs>` +
     `<linearGradient id="g" x1="0" y1="0" x2="1" y2="1">` +
-    `<stop offset="0%" stop-color="${color1}"/>` +
-    `<stop offset="100%" stop-color="${color2}"/>` +
+    `<stop offset="0%" stop-color="${primary}"/>` +
+    `<stop offset="100%" stop-color="${secondary}"/>` +
     `</linearGradient>` +
     `</defs>` +
-    `<rect width="${width}" height="${height}" fill="url(#g)"/>` +
+    `<rect width="${safeWidth}" height="${safeHeight}" fill="url(#g)"/>` +
     `</svg>`;
 
   const svgDataUri = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-  const cssBackground = `linear-gradient(135deg, ${color1} 0%, ${color2} 100%)`;
-  const aspectRatio = width / (height || 1);
+  const cssBackground = `linear-gradient(135deg, ${primary} 0%, ${secondary} 100%)`;
+  const aspectRatio = safeWidth / safeHeight;
 
   return {
     cssBackground,
@@ -48,8 +52,10 @@ export function createGradientPlaceholder(
  * Derives a balanced placeholder palette from any primary hex color.
  */
 export function paletteFromHex(hex: string): { primary: string; secondary: string } {
-  const clean = hex.replace('#', '');
-  if (clean.length !== 6) return { primary: '#2a2a2e', secondary: '#1a1a1d' };
+  const clean = hex.trim().replace(/^#/, '');
+  if (!/^[0-9a-f]{6}$/i.test(clean)) {
+    return { primary: '#2a2a2e', secondary: '#1a1a1d' };
+  }
 
   const r = parseInt(clean.slice(0, 2), 16);
   const g = parseInt(clean.slice(2, 4), 16);
@@ -62,4 +68,8 @@ export function paletteFromHex(hex: string): { primary: string; secondary: strin
   const secondary = `#${toHex(darken(r))}${toHex(darken(g))}${toHex(darken(b))}`;
 
   return { primary, secondary };
+}
+
+function safeHex(value: string, fallback: string): string {
+  return /^#[0-9a-f]{6}$/i.test(value) ? value.toLowerCase() : fallback;
 }

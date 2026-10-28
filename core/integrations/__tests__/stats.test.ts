@@ -84,13 +84,19 @@ describe('audienceSummary', () => {
       'fetch',
       vi.fn(async (url: string) => ({
         ok: true,
-        json: async () =>
-          String(url).includes('/metrics')
-            ? [
-                { x: '/work', y: 12 },
-                { x: '/about', y: 4 },
-              ]
-            : { pageviews: { value: 40 }, visitors: { value: 25 } },
+        json: async () => {
+          const u = String(url);
+          if (u.includes('type=referrer')) {
+            return [{ x: 'https://www.linkedin.com/in/recruiter', y: 8 }];
+          }
+          if (u.includes('/metrics')) {
+            return [
+              { x: '/work', y: 12 },
+              { x: '/about', y: 4 },
+            ];
+          }
+          return { pageviews: { value: 40 }, visitors: { value: 25 } };
+        },
       }))
     );
     expect(await summary()).toEqual({
@@ -100,6 +106,15 @@ describe('audienceSummary', () => {
       topPages: [
         { path: '/work', views: 12 },
         { path: '/about', views: 4 },
+      ],
+      topReferrers: [
+        {
+          source: 'LinkedIn',
+          category: 'job-board',
+          categoryLabel: 'Job Board & Recruiter',
+          isRecruiterSource: true,
+          views: 8,
+        },
       ],
     });
   });
@@ -116,10 +131,15 @@ describe('audienceSummary', () => {
         const body = JSON.parse(String(init?.body ?? '{}'));
         return {
           ok: true,
-          json: async () =>
-            Array.isArray(body.dimensions)
-              ? { results: [{ dimensions: ['/work'], metrics: [9] }] }
-              : { results: [{ metrics: [7, 11] }] },
+          json: async () => {
+            if (body.dimensions?.[0] === 'visit:source') {
+              return { results: [{ dimensions: ['github.com'], metrics: [5] }] };
+            }
+            if (body.dimensions?.[0] === 'event:page') {
+              return { results: [{ dimensions: ['/work'], metrics: [9] }] };
+            }
+            return { results: [{ metrics: [7, 11] }] };
+          },
         };
       })
     );
@@ -128,6 +148,15 @@ describe('audienceSummary', () => {
       visitors30d: 7,
       pageviews30d: 11,
       topPages: [{ path: '/work', views: 9 }],
+      topReferrers: [
+        {
+          source: 'GitHub',
+          category: 'developer-design',
+          categoryLabel: 'Developer & Design Hub',
+          isRecruiterSource: false,
+          views: 5,
+        },
+      ],
     });
   });
 
@@ -159,8 +188,8 @@ describe('audienceSummary', () => {
     resetAudienceSummary();
     await audienceSummary();
     await audienceSummary();
-    // One totals call plus one metrics call, then silence: the second read
-    // came from the cache.
-    expect(spy).toHaveBeenCalledTimes(2);
+    // One totals call plus two metrics calls (pages and referrers), then
+    // silence: the second read came from the cache.
+    expect(spy).toHaveBeenCalledTimes(3);
   });
 });

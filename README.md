@@ -34,11 +34,16 @@ to keep one: students, designers, developers, photographers, writers.
 <p align="center"><em>The same page in the editor. No code, no redeploy, and the address bar never leaves your own site.</em></p>
 
 > [!TIP]
-> **Status: beta (0.8.0).** The site, the editor and publishing all work, with
-> a full career toolkit (JSON Resume, recruiter vCard QR), mobile Link-in-Bio hub,
-> EXIF photography craft badges, outbound Discord/Slack webhooks, and 10 storage
-> adapters verified. Uploads are verified against hosted object stores. Convex and
-> Cloudflare REST adapters remain mock-verified pending live credentials. Read
+> **Status: beta (0.8.0).** The site, the editor and publishing all work. The
+> 0.8 line adds a career toolkit (standard JSON Resume import/export, a public
+> vCard download and a recruiter QR card on `/cv`), a mobile Link-in-Bio page at
+> `/bio`, Discord/Slack contact webhooks, responsive masonry gallery layouts,
+> opt-in camera EXIF badges, dominant-colour image placeholders, CSV imports with
+> LinkedIn/Google column aliases, Markdown `.md` article import, privacy-first
+> recruiter traffic analytics, and schema.org Review data for visible
+> recommendations. Ten storage adapters ship; eight are verified against a real
+> instance or official emulator, while Convex and Cloudflare REST remain
+> mock-verified pending live credentials. Read
 > [What does not work yet](#what-does-not-work-yet) before using this for
 > anything you depend on.
 
@@ -200,6 +205,11 @@ Every step is skippable. None of it is permanent.
   and the list downloads as a CSV that Buttondown, Mailchimp and the rest
   import directly. Nothing sends from here — the export is the exit, not a
   lock-in.
+- **Your existing files come with you.** Projects, experience, education,
+  recommendations and brands import from CSV, with templates you can download
+  and aliases for the column names LinkedIn and Google exports use. Writing
+  imports from Markdown `.md` files, and career data imports and exports as
+  standard JSON Resume.
 - **Seven starting points.** Design, Software, Photography, Writing, Research,
   Student or something else — each one sets the wording, the theme and what your
   writing section is called, and every part of it can be changed afterwards.
@@ -227,6 +237,11 @@ Every step is skippable. None of it is permanent.
 - **Any number of pages**, each at its own address, each with its own title and
   description for search results. If you pick an address the site already uses,
   it says so and suggests one that works instead of quietly 404ing later.
+- **A link-in-bio page, already built.** `/bio` is a phone-first hub for the one
+  link Instagram, TikTok, LinkedIn or X allows: your portrait, name and role,
+  buttons to the portfolio and CV, up to three featured projects, contact, and
+  your visible social profiles. It is generated from the records you already
+  have, not a second list to maintain.
 - **Your home page too**, built the same way. Until you publish one, the theme's
   own layout keeps rendering, so nothing changes until you decide it should.
 - **A media library.** Pick a picture you have already uploaded rather than
@@ -254,9 +269,21 @@ Every step is skippable. None of it is permanent.
 
 - **Real SEO.** Every page is server-rendered with its own title, description,
   Open Graph and Twitter tags. `sitemap.xml` and `robots.txt` come from your
-  content.
+  content. Visible recommendations also emit schema.org `Review` data tied to
+  the site owner's `Person`, so search engines can read testimonials as
+  testimonials rather than as loose text.
 - **A contact form that works.** Messages land in an inbox inside the admin, and
   email you when they arrive.
+- **A CV and a contact card for recruiters.** `/cv` turns the experience,
+  education and skills already on the site into a printable page with a QR
+  card. The card's **Save .VCF** button downloads an RFC 6350 vCard, and the
+  same file is always at `/api/contact/vcard`. Career data imports and exports
+  as standard JSON Resume from **General & backup**.
+- **Notifications where you already are.** Email is optional; push
+  notifications can buzz a phone or desktop. Set `OPB_CONTACT_WEBHOOK` to a
+  Discord or Slack incoming webhook (or any JSON endpoint) and each new
+  enquiry is posted there after it is stored. A failing webhook can never lose
+  the message.
 - **Connect services from the admin.** A mail server, without an environment
   variable or a redeploy — press Test and it tells you what is wrong in words
   you can act on. Passwords are encrypted and never sent back to the browser.
@@ -367,7 +394,8 @@ discover them after typing in a portfolio:
 | 0.4           | Pluggable storage with a conformance suite every backend must pass                   |
 | 0.5           | Page builder, six themes, writing, presets, newsletter sign-ups, Docker              |
 | 0.6           | Server-rendered admin, eight backends, passkeys, CSV, backups, released images       |
-| **0.7 (now)** | Records-backed writing, Convex and Cloudflare REST adapters, links block, axe matrix |
+| 0.7           | Records-backed writing, Convex and Cloudflare REST adapters, links block, axe matrix |
+| **0.8 (now)** | Career toolkit, `/bio`, contact webhooks, import aliases, Review structured data     |
 | Next          | The open backlog in [PROJECT-REVIEW.md](docs/PROJECT-REVIEW.md)                      |
 | 1.0           | Stable                                                                               |
 
@@ -389,7 +417,7 @@ not part of what you deploy.
   and why it is built the way it is.
 
 Both are plain Markdown with four lines of frontmatter, and the navigation,
-search and sitemap are generated from the files. `cd site && npm install &&
+search and sitemap are generated from the files. `cd site && npm ci &&
 npm run dev` to read them locally.
 
 What changed in each release, and who asked for it, is in

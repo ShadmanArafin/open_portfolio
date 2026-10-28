@@ -34,4 +34,35 @@ describe('srcSetFor', () => {
     expect(srcSetFor('/demo/a.svg', index)).toBeUndefined();
     expect(srcSetFor('/api/media/photo.jpg', undefined)).toBeUndefined();
   });
+
+  it('indexes natural dimensions, safe placeholders and opted-in EXIF only', () => {
+    const exif = {
+      make: 'Camera Co',
+      model: 'Model 1',
+      formattedSummary: 'Camera Co Model 1 · 50mm',
+    };
+    const media = item({
+      dimensions: '1200x800',
+      placeholder: { primary: '#aabbcc', secondary: '#667788' },
+      exif,
+    });
+
+    const privateIndex = buildImageIndex([media]);
+    expect(privateIndex[media.url]).toMatchObject({
+      aspectRatio: 1.5,
+      placeholder: { primary: '#aabbcc', secondary: '#667788' },
+    });
+    expect(privateIndex[media.url]?.exif).toBeUndefined();
+
+    const publicIndex = buildImageIndex([{ ...media, showExif: true }]);
+    expect(publicIndex[media.url]?.exif?.formattedSummary).toContain('50mm');
+  });
+
+  it('ignores invalid dimensions and placeholder colours', () => {
+    const media = item({
+      dimensions: '999999x0',
+      placeholder: { primary: 'url(javascript:alert(1))', secondary: '#badbad' },
+    });
+    expect(buildImageIndex([media])).toEqual({});
+  });
 });

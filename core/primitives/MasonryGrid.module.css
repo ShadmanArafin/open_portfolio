@@ -1,0 +1,25 @@
+.grid {
+  width: 100%;
+  column-count: var(--masonry-mobile, 1);
+  column-gap: var(--masonry-gap, var(--space-4));
+}
+
+.grid > * {
+  display: inline-block;
+  width: 100%;
+  margin: 0 0 var(--masonry-gap, var(--space-4));
+  break-inside: avoid;
+  vertical-align: top;
+}
+
+@media (min-width: 640px) {
+  .grid {
+    column-count: var(--masonry-tablet, 2);
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid {
+    column-count: var(--masonry-desktop, 3);
+  }
+}

@@ -40,3 +40,9 @@ Two notes worth having:
 
 - **Use a provider built for sending, not your personal mailbox.** Sending from a personal Gmail account through its SMTP tends to get throttled, and it puts your own account at risk if the form is abused.
 - **The address it sends from should match a domain you control**, or the notifications will go to spam.
+
+## Other ways to be told
+
+Email is not the only notification. **Messages** has a push-notification button, so a new enquiry can buzz the phone or desktop where you already are. It needs the three VAPID variables described in the developer docs; nothing about it is required for the contact form to work.
+
+If you live in Discord or Slack, the person running your server can set `OPB_CONTACT_WEBHOOK` to a channel webhook. New enquiries then arrive as a formatted message in that channel as well as in your inbox. It is best-effort: the enquiry is always stored first, so a webhook having a bad day cannot lose it. The [configuration reference](/docs/configuration) has the variable.

@@ -65,7 +65,7 @@ Two of those carry the design.
 
 ## Two kinds of block
 
-**Literal** blocks hold what somebody typed: `hero`, `richText`, `image`, `gallery`, `stats`, `cards`, `ctaBanner`, plus `contactForm`, `faq`, `video`, `socialPost`, `split`, `quote`, `newsletter`, `socialRow`, `services`, `download`, `separator`.
+**Literal** blocks hold what somebody typed: `hero`, `richText`, `image`, `gallery` (with even-grid and responsive CSS-only masonry layouts), `stats`, `cards`, `ctaBanner`, plus `contactForm`, `faq`, `video`, `embed`, `socialPost`, `split`, `quote`, `newsletter`, `comments`, `socialRow`, `services`, `download`, `separator`, `links`.
 
 **Record-placing** blocks hold a _rule_ rather than content: `collection`, `writingList`, `timeline`, `logoWall`, `testimonials`, `skills`, `steps`. Their props say which records to show and never what the records say, so updating a project updates every page showing it.
 

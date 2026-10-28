@@ -10,16 +10,20 @@ should not be silently reversed.
 
 ## Getting set up
 
-You need Node 20 or newer. There are **no credentials, accounts or API keys
-required** to run the project locally — that is deliberate, and if you hit a
+You need Node 22 or newer. There are **no credentials, accounts or API keys
+required** to run the project locally - that is deliberate, and if you hit a
 step that seems to need one, that is a bug worth reporting.
 
 ```bash
 git clone https://github.com/ShadmanArafin/open_portfolio.git
 cd open_portfolio
-npm install
+npm ci
 npm run dev
 ```
+
+Use `npm ci`, not `npm install`: a populated `node_modules` can hide a
+peer-dependency conflict that a clean install exposes. That exact mistake once
+merged a broken bump into `main`.
 
 - Public site: <http://localhost:3000/>
 - Admin: <http://localhost:3000/admin>

@@ -123,8 +123,8 @@ docker compose up`}
             <p className="micro">Option three · to work on it</p>
             <h2 className="title">From source</h2>
             <p className="lede">
-              Node 20.9 or newer. No database needed and no account anywhere — the filesystem
-              backend is the default.
+              Node 22 or newer. No database needed and no account anywhere - the filesystem backend
+              is the default.
             </p>
           </div>
 

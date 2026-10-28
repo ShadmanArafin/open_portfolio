@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseMarkdownArticle, createEntryFromMarkdown, markdownToBlocks } from '../importer';
+import { createEntryFromMarkdown, parseMarkdownArticle } from '../importer';
 
 const sampleMarkdown = `---
 title: Designing with Grid Systems
@@ -21,60 +21,53 @@ The grid serves as an architectural blueprint for the page.
 > A grid system is an aid, not a guarantee.
 
 \`\`\`css
-.container {
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-}
+.container { display: grid; }
 \`\`\`
 
-![Swiss Poster](https://example.com/poster.jpg)
+![A grid study](https://example.com/grid.jpg)
 
 Consistency across viewports builds reader trust.
 `;
 
-describe('Markdown & Article Importer', () => {
-  it('parses frontmatter metadata and tags', () => {
-    const parsed = parseMarkdownArticle(sampleMarkdown);
+describe('Writing-screen Markdown importer', () => {
+  it('parses supported front matter and reports content it cannot carry', () => {
+    const result = parseMarkdownArticle('designing-with-grid-systems.md', sampleMarkdown);
 
-    expect(parsed.title).toBe('Designing with Grid Systems');
-    expect(parsed.slug).toBe('designing-with-grid-systems');
-    expect(parsed.summary).toContain('Swiss rationalist');
-    expect(parsed.tags).toEqual(['design', 'typography', 'swiss']);
-    expect(parsed.coverImage).toBe('/images/swiss-grid.jpg');
-    expect(parsed.blocks.length).toBeGreaterThan(4);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.note.title).toBe('Designing with Grid Systems');
+    expect(result.note.slug).toBe('designing-with-grid-systems');
+    expect(result.note.summary).toContain('Swiss rationalist');
+    expect(result.note.tags).toEqual(['design', 'typography', 'swiss']);
+    expect(result.note.publishedAt).toBe('2026-05-01T00:00:00.000Z');
+    expect(result.note.blocks.some((block) => block.type === 'richText')).toBe(true);
+    expect(result.note.blocks.some((block) => block.type === 'quote')).toBe(true);
+    expect(result.warnings).toContain('Code became plain text.');
+    expect(result.warnings).toContain(
+      'One image was left out. Add it from your media library when you review the piece.'
+    );
   });
 
-  it('converts markdown syntax into structured blocks', () => {
-    const blocks = markdownToBlocks(sampleMarkdown);
+  it('creates a local draft entry with the reviewed slug and order', () => {
+    const result = parseMarkdownArticle('designing-with-grid-systems.md', sampleMarkdown);
+    if (!result.ok) throw new Error(result.error);
 
-    const hasHeading = blocks.some((b) => b.type === 'heading');
-    const hasQuote = blocks.some((b) => b.type === 'quote');
-    const hasCode = blocks.some((b) => b.type === 'code');
-    const hasImage = blocks.some((b) => b.type === 'image');
-    const hasText = blocks.some((b) => b.type === 'text');
-
-    expect(hasHeading).toBe(true);
-    expect(hasQuote).toBe(true);
-    expect(hasCode).toBe(true);
-    expect(hasImage).toBe(true);
-    expect(hasText).toBe(true);
-  });
-
-  it('creates complete WritingEntry ready for storage', () => {
-    const entry = createEntryFromMarkdown(sampleMarkdown, 2);
-
-    expect(entry.id).toMatch(/^wri_/);
+    const entry = createEntryFromMarkdown(result.note, 'writing_imported', 3);
+    expect(entry.id).toBe('writing_imported');
     expect(entry.title).toBe('Designing with Grid Systems');
     expect(entry.slug).toBe('designing-with-grid-systems');
-    expect(entry.status).toBe('published');
+    expect(entry.status).toBe('draft');
     expect(entry.sortOrder).toBe(3);
     expect(entry.tags).toEqual(['design', 'typography', 'swiss']);
-    expect(entry.seo.image).toBe('/images/swiss-grid.jpg');
+    expect(entry.seo.image).toBeUndefined();
   });
 
-  it('infers title from first markdown # heading if frontmatter has no title', () => {
-    const raw = `# My Architecture Thesis\n\nExploring sustainable timber structures.`;
-    const parsed = parseMarkdownArticle(raw);
-    expect(parsed.title).toBe('My Architecture Thesis');
+  it('uses the file name when front matter and a leading heading are absent', () => {
+    const result = parseMarkdownArticle('architecture-notes.md', 'Exploring timber structures.');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.note.title).toBe('architecture notes');
+      expect(result.note.slug).toBe('architecture-notes');
+    }
   });
 });

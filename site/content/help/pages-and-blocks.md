@@ -25,7 +25,7 @@ If what you want is the one-page kind of site — a photograph, a line about you
 
 ## The blocks
 
-**Add block** opens a palette grouped by what each one is for.
+**Add block** opens a palette grouped by what each one is for. The filter box above it takes a name or a slash command — `/gallery`, `/quote`, `/video` — and narrows the palette as you type.
 
 **To introduce yourself**
 
@@ -65,6 +65,8 @@ If what you want is the one-page kind of site — a photograph, a line about you
 ## Arranging them
 
 Each block has **Move up**, **Move down**, **Hide** and **Delete**. Hiding keeps a block and everything in it but takes it off the live page, which is the safe way to try something.
+
+**Page Outline** above the list shows the same blocks in a compact drawer, numbered in page order. It has its own visibility and move controls, which is faster than scrolling a long page.
 
 Every block also has settings for how wide it is, how much space is around it, whether it sits on a tinted band and whether a rule runs above or below. They are choices from a list rather than numbers you type, so nothing you pick can break the layout on a phone.
 

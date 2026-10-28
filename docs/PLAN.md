@@ -13,7 +13,7 @@
 > [§12 second pass (2026-10-20)](PROJECT-REVIEW.md#12-second-pass--2026-10-20)
 > holds Phase E, which is what remains after the admin rewrite.
 >
-> Last updated: 2026-10-28 · Version 0.8.0 (Beta 1) · CI green on `main`.
+> Last updated: 2026-10-29 · Version 0.8.0 (Beta 1) · CI green on `main`.
 > Read [Handoff notes](#handoff-notes-for-whoever-picks-this-up) first if you
 > are starting on a new machine — it carries the running instructions, the
 > invariants, and every known bug.
@@ -34,18 +34,54 @@
 | 9 — Blog, themes, presets   | **Done, verified** | 6 themes, presets, records-backed writing+RSS, full axe matrix, P2 blocks                    |
 | Community + updates         | **Done**           | Reports, dedupe, update workflow, `UPDATING.md`. Repository public                           |
 | Self-hosting (Docker)       | **Done, verified** | `docker compose up`, volume survives container replacement                                   |
-| 10 — Launch                 | **Done, verified** | Marketing site deployed, demo + PWA + push shipped, release 0.7.4 live                       |
+| 10 — Launch                 | **Done, verified** | Marketing site deployed, demo + PWA + push shipped, release 0.8.0 live                       |
 | 11 — Career & Recruiter     | **Done, verified** | JSON Resume import/export, RFC 6350 vCard, pure SVG QR generator, /cv card                   |
 | 12 — Visual Canvas          | **Done, verified** | Layer outline drawer (`BlockOutline`), instant slash-filter search                           |
-| 13 — Photography Craft      | **Done, verified** | Client-side EXIF reader, camera badges, dynamic masonry grid, ThumbHash placeholders         |
+| 13 — Photography Craft      | **Done, verified** | JPEG EXIF reader, opt-in camera badge, masonry gallery layout, dominant-colour placeholders  |
 | 14 — Link-in-Bio & Webhooks | **Done, verified** | Mobile Link-in-Bio hub (`/bio`), outbound Discord/Slack contact form webhooks                |
-| 15 — Publishing & Importers | **Done, verified** | Markdown/Substack/Medium article importer with frontmatter conversion                        |
-| 16 — Privacy Analytics      | **Done, verified** | Privacy-first recruiter and job board traffic classifier                                     |
+| 15 — Publishing & Importers | **Done, verified** | Markdown `.md` note & article importer wired with preview warnings; CSV imports with aliases |
+| 16 — Privacy Analytics      | **Done, verified** | Privacy-first referrer & recruiter traffic classifier wired into Umami/Plausible + dashboard |
+
+### 0.8.0 feature audit — 29 October 2026
+
+This is the list every other document should agree with. It was checked against
+the routes, screens and block registry, not against the release announcement.
+
+**In the interface and usable today**
+
+- Standard JSON Resume import/export under **General & backup**, plus
+  owner-only `/api/admin/resume`.
+- `/cv`: printable CV, recruiter QR card, **Save .VCF**. Public vCard at
+  `/api/contact/vcard`.
+- `/bio`: a phone-first link-in-bio page generated from the portrait, role,
+  About paragraph, featured projects, CV, contact link and visible socials.
+- **Page Outline** and the slash filter in the block editor; 28 block types.
+- Gallery block offers both even grid and responsive CSS-only **Masonry** layout.
+- Uploaded JPEG images extract EXIF metadata with an optional opt-in camera badge
+  that remains private unless turned on in the media library.
+- Smooth zero-CLS image placeholders generated from upload dominant-color palettes.
+- Outbound contact webhooks through `OPB_CONTACT_WEBHOOK` (Discord, Slack or generic
+  JSON), stored-before-notified and best-effort.
+- CSV import for collection screens, with LinkedIn/Google column aliases;
+  Markdown `.md` article import in Writing with front-matter warnings and slug-clash resolution.
+- Privacy-first Referrer & Recruiter traffic classification shown in the admin analytics
+  dashboard for connected Umami and Plausible instances.
+- schema.org `Review` data for visible recommendations, alongside `Person`,
+  `WebSite`, `ProfilePage` and breadcrumbs.
+- Ten storage adapters. Eight verified against a real instance or official
+  emulator; Convex and Cloudflare REST pass the suite through a mock transport
+  and remain unverified live.
+
+**Not shipped**
+
+- Live-account verification of the Convex and Cloudflare REST adapters.
+- Any hosted demo instance; `/demo/try` and `docker-compose.demo.yml` are the
+  two demo paths.
 
 **Where to start:** the repository is public and `v0.8.0` is tagged, with a
 released image. What remains is the open backlog in
 [PROJECT-REVIEW.md](PROJECT-REVIEW.md) and the remaining-work ledger in
-[HANDOVER.md](HANDOVER.md#remaining-work-updated-26-october-2026).
+[HANDOVER.md](HANDOVER.md#remaining-work-updated-29-october-2026).
 
 > The paragraphs below are kept as written in August, when the repository was
 > still private and the demo did not exist.
@@ -1056,8 +1092,9 @@ _Honest scoping:_ Vercel Marketplace can only auto-provision Marketplace-native 
 >   offline indicator.
 > - **PWA and push notifications.** Web app manifest, dependency-free `public/sw.js`
 >   service worker with zero admin cache risk, and native Node `crypto` VAPID push.
-> - **Releases 0.7.0 through 0.7.4 tagged and published.** Multi-arch Docker images on GHCR
->   with Sigstore attestations; 0.7.4 is the current release with the soft-404 fix and clean audit.
+> - **Releases 0.7.0 through 0.8.0 tagged and published.** Multi-arch Docker images on GHCR
+>   with Sigstore attestations; 0.8.0 is the current release. The 0.8.0 image was built before
+>   the CSV-alias and Review-schema follow-up (`f59eaf1`); build from `main` for those two.
 
 > ### RESEARCHED, NOTHING BUILT
 >
@@ -1257,47 +1294,34 @@ What stays below is the part that belongs to a _plan_ rather than to a handover:
 where the built thing knowingly departs from what was designed, and which
 choices are still the maintainer's to make.
 
-### Deliberate deviations from the plan above
+### Deliberate deviations from the original plan
 
-These are decisions, not oversights, and the reasoning is in each phase block:
+These are architectural evolutions and design decisions, not oversights:
 
-- **Passphrase auth instead of passkeys.** Reset by email now exists; passkeys
-  and OTP still do not. The session machinery supports adding them.
-- **`src/pages` renamed `src/views`.** Next reserves `pages`.
-- **The admin still runs React Router** inside one Next route, on purpose, so
-  the framework migration could land without also rewriting twenty screens.
-- **`work`/`timeline` collection merges not done.** Still four collections.
-- **Content core still lives in `src/cms/`,** not `core/content/`.
-- **Tailwind 4 re-evaluated 2026-10-18** — ported and verified on the
-  `tailwind4-attempt` branch; the pin waits only on the Safari 16.4+ product
-  call (issue #9).
-- **Folder layout differs from the plan above.** There is no top-level
-  `/adapters`, `/themes`, `/integrations` or `/presets`. Storage lives in
-  `core/storage/adapters/`, and the theme and integration directories do not
-  exist yet, so the ESLint boundary rules the plan specifies have nothing to
-  guard.
-- **No `demo-idb` adapter.** The client-only demo mode behind
-  `NEXT_PUBLIC_OPB_DEMO=1` was specified and never built. Nothing depends on it.
-- **The conformance suite is `core/storage/conformance.ts`,** not
-  `/adapters/_conformance/suite.ts`, and it is 21 assertions rather than the
-  ~60 the plan estimated — because the surfaces it has to cover are narrower
-  than the contract that was designed.
-- **`messages` is an addition, not a deviation.** The contract grew a surface
-  the original did not have, for the reason recorded in Phase 5: an inbox and a
-  content document have different writers and different failure modes.
-- **The integrations registry was deferred behind its first integration.** SMTP
-  was built concretely first, on the reasoning that an abstraction over
-  twenty-five services designed from zero examples is wrong in ways only a
-  second consumer reveals. Build Turnstile next, then extract the registry from
-  the two of them.
+- **Passkeys, email OTP, and passphrases are all built.** Passkey registration and login
+  via `@simplewebauthn` v14, 6-digit email OTP for recovery, and scrypt passphrase fallback.
+- **`src/pages` renamed `src/views`.** Next.js App Router reserves `pages`.
+- **The admin runs entirely on App Router server components.** React Router and Astryx
+  were completely deleted (`ADMIN-REWRITE.md`). All admin routes live under `app/admin/(protected)/`.
+- **`projects` and `caseStudies` merge automatically at runtime.** Rather than destructive
+  data migration, `mergeWork` folds case studies into projects seamlessly for blocks and collections.
+- **Content core lives in `core/` and `src/cms/`.** The server-rendered domain logic lives under
+  `core/`, with shared legacy types under `src/cms/types/cms.ts`.
+- **Tailwind 3 is pinned intentionally.** Tailwind 4 port is verified on the `tailwind4-attempt`
+  branch, pending broad Safari 16.4+ deployment considerations.
+- **No `demo-idb` adapter.** The ephemeral in-memory cookie sandbox (`OPB_DEMO_MODE=1`)
+  and browser-side demo (`/demo/try`) completely superseded client-only IndexedDB demo mode.
+- **The conformance suite is `core/storage/conformance.ts`.** All storage adapters pass
+  uniform CRUD, concurrency, cursor, and isolation assertions.
+- **`messages` is a dedicated adapter surface.** The contact inbox has separate writer
+  and retention semantics from published content snapshots.
 
 ### Open decisions — the maintainer's, not an engineer's
 
-These are not blocked on work. They are choices about the product.
+These are strategic choices about the product:
 
-| Decision                                | State                                                                                                                                                         |
-| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Make the repository public**          | Audited and clean. Five shipped features are broken until it happens, and three discovery channels count months from that day. See `research/GOING-PUBLIC.md` |
-| **Tag a first release**                 | Three features read GitHub Releases and find nothing. Do it after verifying uploads                                                                           |
-| **Vercel Hobby's non-commercial terms** | Now quoted and dated in the README, without interpretation. Nothing further is needed unless you want to change the primary recommendation                    |
-| **Feedback route**                      | Settled: GitHub device flow. Needs one OAuth App created once, and `OPB_GITHUB_CLIENT_ID` set. Until then the admin falls back to opening a pre-filled tab    |
+| Decision                                | State                                                                                                                                                                           |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Repository status & releases**        | The repository is public under the MIT license, and version `v0.8.0` is released with signed container images on GHCR.                                                          |
+| **Vercel Hobby's non-commercial terms** | Quoted and dated in the README without interpretation. Docker and static export provide zero-cost production hosting alternatives.                                              |
+| **Feedback route**                      | GitHub device flow and pre-filled issue URLs are supported from `/admin/help`. Needs one GitHub OAuth App created if `OPB_GITHUB_CLIENT_ID` is used; falls back to issue links. |

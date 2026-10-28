@@ -60,7 +60,7 @@ export function BackupPanel() {
       const data = await res.json();
       if (res.ok && data.ok) {
         setNote(
-          `Imported JSON Resume successfully: ${data.counts.experience} roles, ${data.counts.education} schools, ${data.counts.skills} skill groups merged into your draft. Reloading…`
+          `Imported JSON Resume successfully: ${data.counts.experience} roles, ${data.counts.education} schools, ${data.counts.skills} skill groups replaced in your draft. Review it before publishing. Reloading…`
         );
         window.setTimeout(() => window.location.reload(), 1200);
       } else {

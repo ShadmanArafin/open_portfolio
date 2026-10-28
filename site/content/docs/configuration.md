@@ -15,14 +15,20 @@ Mail is the one exception, and only additively: it can also be set from the admi
 
 There is no `BACKEND=` variable. Whichever backend's variables are present is the one selected, in this order:
 
-| Variables present                                    | Backend            |
-| ---------------------------------------------------- | ------------------ |
-| `OPB_POSTGRES_URL`, `DATABASE_URL` or `POSTGRES_URL` | Postgres           |
-| Supabase URL and service key                         | Supabase           |
-| Neon connection string plus `BLOB_READ_WRITE_TOKEN`  | Neon + Vercel Blob |
-| none of the above                                    | Local filesystem   |
+| Variables present                                            | Backend                 |
+| ------------------------------------------------------------ | ----------------------- |
+| `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`               | Supabase                |
+| A database URL plus `BLOB_READ_WRITE_TOKEN`                  | Neon + Vercel Blob      |
+| `CONVEX_URL` or `CONVEX_DEPLOYMENT`                          | Convex                  |
+| `FIREBASE_PROJECT_ID`                                        | Firebase                |
+| `CLOUDFLARE_ACCOUNT_ID` + `D1_DATABASE_ID` + API token       | Cloudflare D1 + R2 REST |
+| `CLOUDFLARE_ACCOUNT_ID` + `D1_DATABASE_ID`, no API token     | Cloudflare embedded     |
+| `POCKETBASE_URL`                                             | PocketBase              |
+| `APPWRITE_ENDPOINT`                                          | Appwrite                |
+| `OPB_POSTGRES_URL`, `DATABASE_URL` or `POSTGRES_URL` (alone) | Postgres                |
+| none of the above                                            | Local filesystem        |
 
-The filesystem backend is refused in production on hosts that discard the disk.
+If two sets of credentials are present the app refuses to guess and asks for `OPB_ADAPTER`; silently picking one is how content ends up split across two databases. The filesystem backend is refused in production on hosts that discard the disk.
 
 ## Required in production
 
@@ -53,6 +59,27 @@ All optional. Presence of `OPB_SMTP_HOST` alone selects SMTP.
 | `OPB_MAIL_FROM`                       | `no-reply@<your SMTP host>`                        |
 
 Credentials are never sent over a cleartext connection: when a username is set, STARTTLS is required rather than optional, so a server that does not offer encryption produces a visible failure instead of a password on the wire.
+
+## Contact notifications and push
+
+Both are optional. The enquiry is stored in the admin inbox either way.
+
+| Variable                                         | Meaning                                                                                                                    |
+| ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| `OPB_CONTACT_WEBHOOK`                            | Discord, Slack or any JSON endpoint. New enquiries are posted there after they are stored. Best-effort with an 8s timeout. |
+| `OPB_VAPID_PUBLIC_KEY` / `OPB_VAPID_PRIVATE_KEY` | The P-256 VAPID pair for browser push. See `docs/PUSH-NOTIFICATIONS.md` in the repository.                                 |
+| `OPB_VAPID_SUBJECT`                              | `mailto:you@example.com` or your `https://` site address. Required with the key pair.                                      |
+
+## Career tools
+
+These are routes rather than settings:
+
+| Route                | Who can use it | What it returns                                                       |
+| -------------------- | -------------- | --------------------------------------------------------------------- |
+| `/cv`                | Anyone         | The printable CV built from experience, education and skills          |
+| `/api/contact/vcard` | Anyone         | RFC 6350 vCard 4.0 download for the owner's contact details           |
+| `/api/admin/resume`  | Owner only     | `GET` exports standard JSON Resume; `POST` imports one into the draft |
+| `/bio`               | Anyone         | Mobile link-in-bio page built from featured projects and social links |
 
 ## Development and demo
 

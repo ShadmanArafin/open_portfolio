@@ -22,4 +22,10 @@ describe('Image Placeholder & ThumbHash Generator', () => {
     expect(primary).toBe('#2a2a2e');
     expect(secondary).toBe('#1a1a1d');
   });
+
+  it('rejects non-hex values in CSS and SVG placeholders', () => {
+    const placeholder = createGradientPlaceholder('url(javascript:alert(1))', '#ffffff');
+    expect(placeholder.cssBackground).toBe('linear-gradient(135deg, #2a2a2e 0%, #ffffff 100%)');
+    expect(decodeURIComponent(placeholder.svgDataUri)).not.toContain('javascript:');
+  });
 });

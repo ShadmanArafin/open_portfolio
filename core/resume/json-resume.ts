@@ -190,7 +190,8 @@ function inferPlatformId(network?: string): SocialPlatformId {
 
 /**
  * Imports a JSON Resume object into existing CMSState.
- * Merges career information without overwriting theme or system settings.
+ * Replaces the career collections (experience, education, skills, social links)
+ * while leaving theme, pages, writing and other settings untouched.
  */
 export function importFromJsonResume(raw: unknown, existing: CMSState): CMSState {
   const parsed = jsonResumeSchema.parse(raw);

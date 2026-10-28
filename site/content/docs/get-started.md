@@ -9,7 +9,7 @@ order: 10
 
 Ordered easiest-first, deliberately. Leading with a source build is how a project turns "try it" into an afternoon.
 
-> **This is alpha software, version 0.6.** The shape of stored content is stable and an older build quarantines content it does not understand rather than dropping it. Screens and options are not settled. Read [what this is not](/docs/what-this-is-not) before deploying it for somebody else.
+> **This is beta software, version 0.8.** The shape of stored content is stable and an older build quarantines content it does not understand rather than dropping it. Screens and options are not settled. Read [what this is not](/docs/what-this-is-not) before deploying it for somebody else.
 
 ## 1. One click
 
@@ -46,7 +46,7 @@ docker run -p 3000:3000 -v opb-data:/data \
 
 ## 3. From source
 
-Node 20.9 or newer. No database needed; the filesystem backend is the default.
+Node 22 or newer. No database needed; the filesystem backend is the default.
 
 ```bash
 git clone https://github.com/ShadmanArafin/open_portfolio.git

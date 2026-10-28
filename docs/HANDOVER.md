@@ -1,7 +1,7 @@
 # Handover
 
 For whoever picks this up next — another machine, another session, another
-person. Everything here was checked against the code on **12 August 2026**, not
+person. Everything here was checked against the code on **29 October 2026**, not
 recalled. Where something is unverified it says so.
 
 Read this, then [PLAN.md](PLAN.md) for the reasoning behind each phase.
@@ -26,7 +26,7 @@ JavaScript bundle. None of that remains.
 ```bash
 npm ci                          # ci, not install — see "Traps" below
 npm run dev                     # http://localhost:3000
-npm test                        # 1453 passing, 13 skipped (28 Oct 2026)
+npm test                        # 1460 passing, 13 skipped (29 Oct 2026)
 npm run typecheck && npm run lint && npm run build
 ```
 
@@ -554,9 +554,47 @@ container. It has caught two failures this project would otherwise have shipped.
 
 ---
 
-## Remaining work (Updated 26 October 2026)
+## Remaining work (Updated 29 October 2026 — v0.8.0 Release)
 
-All backlog items for the 0.6.0 milestone have been implemented, verified, and shipped:
+All roadmap items and backlog features through v0.8.0 have been implemented, verified, and shipped:
+
+**1. Career & Recruiter Tools (Phase 11) — DONE:**
+
+- Standard JSON Resume import and export under `/admin/settings` (General & backup) with replace-not-merge semantics, plus owner-only `/api/admin/resume` GET/POST.
+- Public `/cv` page: printable curriculum vitae, recruiter SVG QR code card, and **Save .VCF** vCard download (`/api/contact/vcard` RFC 6350).
+
+**2. Visual Canvas & Block Outline (Phase 12) — DONE:**
+
+- Interactive layer outline drawer (`BlockOutline`) in the page editor.
+- Instant slash-filter (`/`) search to insert any of the 28 block types quickly.
+
+**3. Photography Craft & Media Enhancements (Phase 13) — DONE:**
+
+- Pure TypeScript JPEG EXIF parser (`core/media/exif.ts`) extracting camera body, lens model, focal length, aperture, shutter speed, and ISO rating.
+- Optional opt-in camera badge (`ExifBadge` / `setExifVisibilityAction`) managed per asset in the media library; camera details remain strictly private unless the owner toggles them on.
+- Responsive, CSS-only masonry gallery layout option (`MasonryGrid`, `layout: 'masonry'` in Gallery block) preserving natural portrait and landscape aspect ratios without cropping.
+- Dominant-colour gradient placeholders (`core/media/thumbhash.ts`, `extractPlaceholderPalette`) rendered inline for zero layout shift during image loading.
+
+**4. Link-in-Bio & Outbound Webhooks (Phase 14) — DONE:**
+
+- Phone-first Link-in-Bio hub (`/bio`) auto-generated from profile portrait, role, first bio paragraph, featured projects, CV button, and visible social cards.
+- Outbound contact form webhooks (`core/integrations/webhook.ts`, `OPB_CONTACT_WEBHOOK` for Discord, Slack, or generic JSON endpoints) dispatched in a non-blocking, stored-first manner.
+
+**5. Publishing & Content Importers (Phase 15) — DONE:**
+
+- Markdown article importer (`core/writing/importer.ts`, `markdown-import.tsx`) supporting YAML front matter, heading extraction, and transparent warnings for formatting that cannot carry over.
+- Collection CSV importer with intelligent LinkedIn and Google column aliases.
+- schema.org `Review` JSON-LD structured data for visible recommendations alongside `Person`, `WebSite`, and `ProfilePage`.
+
+**6. Privacy-First Analytics & Recruiter Traffic (Phase 16) — DONE:**
+
+- Referrer classifier (`core/analytics/referrer.ts`) categorising incoming traffic into Job Boards & Recruiters (LinkedIn, Greenhouse, Lever, Indeed, Handshake), Developer & Design Hubs, Search, and Socials.
+- Integrated into Umami and Plausible stats summaries (`core/integrations/stats.ts`) and rendered directly on `/admin/analytics`.
+
+**7. Storage & Infrastructure Verification:**
+
+- Ten storage adapters supported; eight verified against real instances or official emulators.
+- Standalone live verification scripts (`scripts/verify-convex.mjs` and `scripts/verify-cloudflare-rest.mjs`) for credentials-based verification of Convex and Cloudflare REST.
 
 **1. Cloudflare live media-proxy proof — DONE 2026-10-25.** Verified against
 the production build (`.next/standalone/server.js`) with `OPB_ADAPTER=cloudflare`:

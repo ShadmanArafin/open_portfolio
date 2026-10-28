@@ -4,6 +4,8 @@ import { getStorageAdapter } from '@/core/storage/registry';
 import { assertSameOrigin, requireOwner, UnauthorizedError } from '@/core/auth/guard';
 import { clientKey, rateLimit } from '@/core/auth/ratelimit';
 import { makeMediaKey, UploadRejected, validateUpload } from '@/core/media/validate';
+import { extractPlaceholderPalette } from '@/core/media/variants';
+import { parseExif } from '@/core/media/exif';
 
 /**
  * Uploads, at last on the server.
@@ -82,6 +84,12 @@ export async function POST(req: Request) {
   }
 
   const key = makeMediaKey(file.name, validated.extension);
+  const [placeholder, exif] = await Promise.all([
+    extractPlaceholderPalette(validated.bytes, validated.mimeType),
+    Promise.resolve(
+      validated.mimeType === 'image/jpeg' ? parseExif(validated.bytes.slice().buffer) : null
+    ),
+  ]);
 
   try {
     const record = await adapter.media.put(key, validated.bytes, validated.mimeType);
@@ -98,6 +106,8 @@ export async function POST(req: Request) {
         mimeType: record.mimeType,
         sizeBytes: record.sizeBytes,
         uploadedAt: record.uploadedAt,
+        ...(placeholder ? { placeholder } : {}),
+        ...(exif?.formattedSummary ? { exif } : {}),
       },
     });
   } catch (err) {

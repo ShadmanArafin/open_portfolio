@@ -104,8 +104,8 @@ export default function Home() {
                 ),
               },
               {
-                label: `Version ${VERSION}, alpha`,
-                note: 'The version is on this page because it is alpha, and you should know that before you type in a portfolio.',
+                label: `Version ${VERSION}, beta`,
+                note: 'The version is on this page because it is beta, and you should know that before you type in a portfolio. Content is stable; admin screens can still move.',
                 stamp: (
                   <a className="stamp stamp--verified" href={`${REPO}/blob/main/CHANGELOG.md`}>
                     Changelog
@@ -238,6 +238,41 @@ export default function Home() {
                 list, leaving takes one press from the mail client itself, and the list downloads as
                 a CSV that Buttondown and Mailchimp import directly. Nothing sends from here — the
                 export is the exit.
+              </p>
+            </div>
+            <div className="card">
+              <h3 className="head">Photography craft &amp; galleries</h3>
+              <p>
+                Gallery blocks offer both uniform grids and responsive CSS-only masonry layouts that
+                preserve natural aspect ratios. Uploaded JPEGs can extract safe camera details
+                (EXIF) with opt-in public badges, and average-colour gradient placeholders prevent
+                layout shifts.
+              </p>
+            </div>
+            <div className="card">
+              <h3 className="head">A CV, and a contact card</h3>
+              <p>
+                <code>/cv</code> gathers the experience, education and skills already on your site
+                into one clean, printable page. Recruiters can scan a QR code or download a vCard,
+                and your career data imports and exports as standard JSON Resume — the format
+                LinkedIn and Reactive Resume exports speak.
+              </p>
+            </div>
+            <div className="card">
+              <h3 className="head">One link for every bio</h3>
+              <p>
+                <code>/bio</code> is a mobile-first hub for the link in your Instagram, TikTok or
+                LinkedIn bio: your main site, your CV, up to three featured projects, contact and
+                your social profiles. No separate Linktree account and nothing to keep in sync.
+              </p>
+            </div>
+            <div className="card">
+              <h3 className="head">Bring your records with you</h3>
+              <p>
+                Import CSV files into projects, experience, education and recommendations — the
+                column names LinkedIn and Google exports use are accepted. Writing imports from
+                Markdown files, and visible recommendations emit schema.org Review data that search
+                engines can read.
               </p>
             </div>
           </div>
@@ -603,10 +638,12 @@ const FAQ: { q: string; a: React.ReactNode }[] = [
     q: 'Can I move my existing Squarespace or Wix site over?',
     a: (
       <p>
-        Not automatically, and be careful of anyone who says otherwise — Wix has no export at all
-        and Squarespace&rsquo;s omits exactly the portfolio and gallery pages you would want. In
-        practice you copy your text and re-upload your images. For a portfolio that is an evening,
-        not a project.
+        There is no Wix or Squarespace importer, and be careful of anyone who says otherwise — Wix
+        has no export at all and Squarespace&rsquo;s omits exactly the portfolio and gallery pages
+        you would want. What does import are the files those tools and LinkedIn give you: CSV for
+        projects, experience, education and recommendations, Markdown for writing, and JSON Resume
+        for career data. The rest is copy, paste and re-upload your images. For a portfolio that is
+        an evening, not a project.
       </p>
     ),
   },
@@ -614,7 +651,7 @@ const FAQ: { q: string; a: React.ReactNode }[] = [
     q: 'Is it ready to put my actual work on?',
     a: (
       <p>
-        It is alpha, and <a href="/is-this-right-for-you">this page</a> says precisely what that
+        It is beta, and <a href="/is-this-right-for-you">this page</a> says precisely what that
         means and who should wait. The short version: your content is safe — it is in your database,
         exportable at any moment, and an older build quarantines content it does not understand
         rather than dropping it. What is not settled is the admin.

@@ -200,6 +200,35 @@ export default async function AnalyticsPage() {
               </ul>
             </>
           ) : null}
+
+          {audience && audience.topReferrers && audience.topReferrers.length > 0 ? (
+            <>
+              <h3 className="mt-4 text-lg">Top Referrers &amp; Recruiters · last 30 days</h3>
+              <ul className="m-0 mt-2 grid list-none gap-2 p-0">
+                {audience.topReferrers.map((ref) => (
+                  <li
+                    key={ref.source}
+                    className="flex items-center justify-between gap-2 rounded-2xl border border-border p-3"
+                  >
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <strong className="text-sm">{ref.source}</strong>
+                      <span className="rounded-full border border-border px-2 py-0.5 text-xs text-text-muted">
+                        {ref.categoryLabel}
+                      </span>
+                      {ref.isRecruiterSource ? (
+                        <span className="rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">
+                          Recruiter
+                        </span>
+                      ) : null}
+                    </div>
+                    <span className="rounded-full border border-border px-2 py-0.5 text-xs text-text-secondary">
+                      {ref.views}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : null}
         </section>
 
         <section aria-label="Audience">

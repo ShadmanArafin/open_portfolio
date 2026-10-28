@@ -8,6 +8,12 @@ describe('Client-side EXIF Metadata Parser', () => {
     expect(parseExif(new Uint8Array([0x89, 0x50, 0x4e, 0x47]).buffer)).toBe(null); // PNG
   });
 
+  it('rejects truncated JPEG segments without throwing', () => {
+    const truncated = new Uint8Array([0xff, 0xd8, 0xff, 0xe1, 0x00, 0x20, 0x45, 0x78]).buffer;
+    expect(() => parseExif(truncated)).not.toThrow();
+    expect(parseExif(truncated)).toBe(null);
+  });
+
   it('parses structured EXIF tags from a constructed JPEG APP1 buffer', () => {
     // Construct a minimal valid JPEG with an APP1 Exif marker
     const tiffHeader = [

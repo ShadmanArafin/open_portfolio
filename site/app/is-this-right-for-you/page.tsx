@@ -19,7 +19,7 @@ export const metadata: Metadata = {
  * to say the disqualifying thing before they find it.
  *
  * The rule for this page: **no sentence may end with a clause that takes back
- * the sentence.** "It is alpha, but…" is worth nothing.
+ * the sentence.** "It is beta, but…" is worth nothing.
  */
 export default function RightForYouPage() {
   return (
@@ -29,7 +29,7 @@ export default function RightForYouPage() {
           <div className="stack">
             <h1 className="display">Is this right for you?</h1>
             <p className="lede">
-              {PRODUCT} is version {VERSION} and it is alpha. Rather than define that word, here is
+              {PRODUCT} is version {VERSION} and it is beta. Rather than define that word, here is
               precisely what it means for you, and three groups of people who should do three
               different things.
             </p>
@@ -44,7 +44,7 @@ export default function RightForYouPage() {
             items={[
               {
                 label: 'You are a student or early in your career',
-                note: 'A portfolio you own, for the price of a domain, that will not be held hostage when money is tight. The risk of an alpha is lowest exactly here.',
+                note: 'A portfolio you own, for the price of a domain, that will not be held hostage when money is tight. The risk of a beta is lowest exactly here.',
               },
               {
                 label: 'You are already comfortable with GitHub',
@@ -52,7 +52,7 @@ export default function RightForYouPage() {
               },
               {
                 label: 'Your site is words, pictures and a contact form',
-                note: 'That is what this does well. Twenty-seven blocks, six themes, real search metadata, an inbox that works.',
+                note: 'That is what this does well. Twenty-eight blocks, six themes, real search metadata, an inbox that works.',
               },
               {
                 label: 'You have been burned by a subscription',
@@ -121,7 +121,7 @@ export default function RightForYouPage() {
       <Band rail="Risk">
         <div className="stack stack--loose">
           <div className="stack">
-            <h2 className="title">What &ldquo;alpha&rdquo; actually risks</h2>
+            <h2 className="title">What &ldquo;beta&rdquo; actually risks</h2>
             <p className="lede">Separating the part that would hurt from the part that annoys.</p>
           </div>
 

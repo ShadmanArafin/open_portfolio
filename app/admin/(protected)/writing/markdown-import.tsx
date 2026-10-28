@@ -1,8 +1,9 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { parseMarkdownNote, uniqueSlugs, type ParsedNote } from '@/core/writing/markdown';
-import { MAX_WRITING_ENTRIES, createWritingEntry, type WritingEntry } from '@/core/writing/schema';
+import { uniqueSlugs, type ParsedNote } from '@/core/writing/markdown';
+import { createEntryFromMarkdown, parseMarkdownArticle } from '@/core/writing/importer';
+import { MAX_WRITING_ENTRIES, type WritingEntry } from '@/core/writing/schema';
 import { newId } from '../_components/ids';
 
 /**
@@ -81,7 +82,7 @@ export function MarkdownImport({
         continue;
       }
       try {
-        const result = parseMarkdownNote(file.name, await file.text());
+        const result = parseMarkdownArticle(file.name, await file.text());
         if (result.ok) {
           accepted.push({ fileName: file.name, note: result.note, warnings: result.warnings });
         } else {
@@ -113,17 +114,13 @@ export function MarkdownImport({
       existingSlugs
     );
 
-    const entries: WritingEntry[] = taken.notes.map((note, index) => ({
-      ...createWritingEntry(note.title),
-      id: newId('writing'),
-      slug: note.slug,
-      summary: note.summary,
-      tags: note.tags,
-      featured: note.featured,
-      ...(note.publishedAt ? { publishedAt: note.publishedAt } : {}),
-      blocks: note.blocks.map((block) => ({ ...block, id: newId('block') })),
-      sortOrder: startOrder + index,
-    }));
+    const entries: WritingEntry[] = taken.notes.map((note, index) => {
+      const entry = createEntryFromMarkdown(note, newId('writing'), startOrder + index);
+      return {
+        ...entry,
+        blocks: entry.blocks.map((block) => ({ ...(block as object), id: newId('block') })),
+      };
+    });
 
     const parts = [
       entries.length === 1

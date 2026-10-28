@@ -14,7 +14,7 @@ as you left it, with more things you can do.
 1. Open **Help & feedback** in your admin. It tells you if there is a newer version.
 2. Go to the **Actions** tab of your copy on GitHub.
 3. Choose **Check for updates** on the left, then press **Run workflow**.
-4. Wait about a minute. A pull request appears called "Update to v0.6.0".
+4. Wait about a minute. A pull request appears called "Update to v0.8.0".
 5. Press **Merge pull request**.
 
 Your host redeploys on its own. That's it.

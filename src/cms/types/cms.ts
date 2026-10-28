@@ -1,6 +1,7 @@
 import type { PageRecord } from '@/core/pages/schema';
 import type { WritingEntry, WritingSettings } from '@/core/writing/schema';
 import type { NewsletterSettings } from '@/core/newsletter/schema';
+import type { ExifData } from '@/core/media/exif';
 
 export type PublishStatus = 'draft' | 'published' | 'archived';
 
@@ -355,6 +356,12 @@ export interface MediaItem {
    * each at `<url>.w<width>.webp`. Absent for files that have none.
    */
   variants?: number[];
+  /** Safe, non-location EXIF fields extracted from JPEG uploads. */
+  exif?: ExifData;
+  /** Public camera badge is opt-in; original metadata stays hidden otherwise. */
+  showExif?: boolean;
+  /** Two average-colour stops for a lightweight loading gradient. */
+  placeholder?: { primary: string; secondary: string };
   uploadedAt: string;
   altText: string;
   usageCount: number;

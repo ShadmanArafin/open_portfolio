@@ -5,7 +5,8 @@ import { demoRestrictionMessage, isDemoMode } from '@/core/demo/config';
 import { requireOwner } from '@/core/auth/guard';
 import { clientKey, rateLimit } from '@/core/auth/ratelimit';
 import { makeMediaKey, UploadRejected, validateUpload } from '@/core/media/validate';
-import { storeVariants, variantKey } from '@/core/media/variants';
+import { extractPlaceholderPalette, storeVariants, variantKey } from '@/core/media/variants';
+import { parseExif } from '@/core/media/exif';
 import { getStorageAdapter } from '@/core/storage/registry';
 import { RevisionConflictError } from '@/core/storage/contract';
 import { conflictMessage } from '@/core/content/changes';
@@ -103,7 +104,12 @@ export async function uploadMediaAction(form: FormData): Promise<MediaResult> {
   }
 
   // Smaller copies for phones, beside the original. Best-effort: none is fine.
-  const variants = await storeVariants(adapter.media, key, validated.bytes, validated.mimeType);
+  const [variants, placeholder] = await Promise.all([
+    storeVariants(adapter.media, key, validated.bytes, validated.mimeType),
+    extractPlaceholderPalette(validated.bytes, validated.mimeType),
+  ]);
+  const exif =
+    validated.mimeType === 'image/jpeg' ? parseExif(validated.bytes.slice().buffer) : null;
 
   const name = file.name.slice(0, 300);
   const typedAlt = form.get('altText');
@@ -121,6 +127,8 @@ export async function uploadMediaAction(form: FormData): Promise<MediaResult> {
       ? { dimensions }
       : {}),
     ...(variants.length > 0 ? { variants } : {}),
+    ...(exif?.formattedSummary ? { exif } : {}),
+    ...(placeholder ? { placeholder } : {}),
     uploadedAt: (stored.uploadedAt || new Date().toISOString()).slice(0, 10),
     altText:
       typeof typedAlt === 'string' && typedAlt.length > 0
@@ -146,6 +154,37 @@ export async function uploadMediaAction(form: FormData): Promise<MediaResult> {
 
   revalidatePath('/admin/media');
   return { ok: true, item };
+}
+
+/** The owner chooses explicitly before camera details appear on published pages. */
+export async function setExifVisibilityAction(
+  id: unknown,
+  showExif: unknown
+): Promise<MediaResult> {
+  await requireOwner();
+  if (
+    typeof id !== 'string' ||
+    id.length === 0 ||
+    id.length > 300 ||
+    typeof showExif !== 'boolean'
+  ) {
+    return { ok: false, error: 'That camera-details setting is invalid.' };
+  }
+
+  let updated: MediaItem | undefined;
+  const outcome = await writeDraft((draft) => {
+    const item = (draft.media ?? []).find((media) => media.id === id);
+    if (!item?.exif?.formattedSummary) return;
+    item.showExif = showExif;
+    updated = item;
+  });
+  if (outcome !== 'ok') {
+    return { ok: false, conflict: true, error: outcome.conflict };
+  }
+  if (!updated) return { ok: false, error: 'No camera details were found for that image.' };
+
+  revalidatePath('/admin/media');
+  return { ok: true, item: updated };
 }
 
 export async function deleteMediaAction(id: unknown): Promise<MediaResult> {

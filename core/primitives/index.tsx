@@ -2,6 +2,7 @@ import React from 'react';
 import { resolveFrame, SPACING_STYLE, SURFACE_STYLE, WIDTH_STYLE, type BlockFrame } from './frame';
 import { clampLevel, type HeadingLevel as Level } from './heading-level';
 import { sanitizeHref, sanitizeMediaSrc } from '@/core/security/urls';
+import { createGradientPlaceholder } from '@/core/media/thumbhash';
 
 /**
  * The closed set of primitives every block composes from.
@@ -363,6 +364,7 @@ export function Media({
   srcSet,
   sizes = '100vw',
   focalPoint,
+  placeholder,
 }: {
   src: string;
   alt: string;
@@ -376,6 +378,8 @@ export function Media({
   sizes?: string;
   /** Focal point positioning for cover crop, e.g. 'center', 'top', or { x: 50, y: 30 }. */
   focalPoint?: string | { x: number; y: number };
+  /** Average-colour image placeholder created at upload. */
+  placeholder?: { primary: string; secondary: string };
 }) {
   // Nothing chosen yet. An <img src=""> makes the browser re-request the
   // current page as the image — a real network hit and a console warning — so
@@ -406,6 +410,9 @@ export function Media({
   // optimisation is its own task.
   const safeSrc = sanitizeMediaSrc(src);
   if (!safeSrc) return null;
+  const background = placeholder
+    ? createGradientPlaceholder(placeholder.primary, placeholder.secondary).cssBackground
+    : 'var(--surface-secondary)';
   return (
     <img
       src={safeSrc}
@@ -424,7 +431,7 @@ export function Media({
         objectFit: fit,
         objectPosition: parseFocalPoint(focalPoint),
         borderRadius: 'var(--radius-md)',
-        background: 'var(--surface-secondary)',
+        background,
       }}
     />
   );

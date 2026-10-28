@@ -2811,3 +2811,16 @@ Getting PR #25 green turned up three gaps; all are closed.
   <https://website-builders.cybernews.com/best-portfolio-website-builders/>
 - Container signing and provenance:
   <https://oneuptime.com/blog/post/2026-01-25-cosign-container-image-signing/markdown>
+
+### 12.10 v0.8.0 Release Audit (2026-10-29)
+
+The v0.8.0 milestone completes and verifies the remaining user-facing capabilities:
+
+- **Career & Recruiter Tools:** Standard JSON Resume import/export (`/admin/settings` and `/api/admin/resume`), printable `/cv` layout with pure SVG QR code and RFC 6350 vCard (`/api/contact/vcard`).
+- **Visual Canvas:** Interactive layer outline drawer (`BlockOutline`) and instant slash-filter search across all 28 block types.
+- **Photography Craft:** Zero-dependency JPEG EXIF parser (`core/media/exif.ts`), opt-in private-by-default camera badge (`ExifBadge`), responsive CSS-only masonry gallery layout (`MasonryGrid`, `layout: 'masonry'`), and dominant-colour gradient placeholders (`core/media/thumbhash.ts`).
+- **Link-in-Bio & Outbound Webhooks:** Mobile-first `/bio` hub generated from profile data, and non-blocking Discord/Slack/generic webhooks on contact form submission (`OPB_CONTACT_WEBHOOK`).
+- **Content Importers:** Markdown `.md` article import with transparent frontmatter warnings and slug collision resolution, and collection CSV import with LinkedIn and Google column aliases.
+- **Privacy Analytics:** Referrer & recruiter traffic classifier (`core/analytics/referrer.ts`) integrated into Umami and Plausible summaries and rendered in `/admin/analytics`.
+- **Structured Data:** schema.org `Review` JSON-LD for visible recommendations alongside `Person`, `WebSite`, and `ProfilePage`.
+- **Suite Verification:** 1,460 unit and integration tests passing, 0 ESLint errors, clean Prettier formatting, clean personal data check, and green production builds for both the Next.js application and the marketing documentation site.
