@@ -10,6 +10,7 @@ import {
 } from '@/core/blocks/lookup';
 import type { Block } from '@/core/blocks/schema';
 import { BlockFields } from './block-fields';
+import { BlockOutline } from './block-outline';
 import { newId } from './ids';
 
 /**
@@ -61,6 +62,7 @@ export function BlocksEditor({
   media: MediaItem[];
 }) {
   const [removeBlockArmed, setRemoveBlockArmed] = useState<string | null>(null);
+  const [filter, setFilter] = useState('');
   const parsed = parsePage(blocks);
 
   const setBlocks = (mutate: (blocks: unknown[]) => unknown[]) => onChange(mutate([...blocks]));
@@ -96,6 +98,8 @@ export function BlocksEditor({
 
   return (
     <div className="grid gap-3">
+      <BlockOutline parsed={parsed} onMove={moveBlock} onToggleHidden={toggleBlockHidden} />
+
       {parsed.length === 0 ? (
         <p className="m-0 text-sm text-text-secondary">Nothing here yet. Add a block below.</p>
       ) : (
@@ -229,30 +233,64 @@ export function BlocksEditor({
       )}
 
       <div className="grid gap-3 rounded-xl border border-border p-3">
-        <span className="text-sm font-semibold">Add a block</span>
-        {PALETTE_GROUPS.map((group) => {
-          const inGroup = DEFINITIONS.filter((definition) => definition.group === group.id);
-          if (inGroup.length === 0) return null;
-          return (
-            <div key={group.id} className="grid gap-2">
-              <span className="text-sm text-text-secondary">{group.label}</span>
-              <span className="flex flex-wrap gap-2">
-                {inGroup.map((definition) => (
-                  <button
-                    key={definition.type}
-                    type="button"
-                    title={definition.description}
-                    onClick={() => addBlock(definition.type)}
-                    className={secondary}
-                    style={{ minHeight: 44 }}
-                  >
-                    {definition.label}
-                  </button>
-                ))}
-              </span>
-            </div>
-          );
-        })}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="text-sm font-semibold">Add a block</span>
+          <input
+            type="text"
+            placeholder="Filter blocks (/gallery, /quote, /code)..."
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="w-full sm:w-64 rounded-full border border-border bg-surface-primary px-3 py-1.5 text-xs text-text-primary outline-none focus:border-accent"
+          />
+        </div>
+        {filter.trim() ? (
+          <div className="flex flex-wrap gap-2 pt-1">
+            {DEFINITIONS.filter(
+              (d) =>
+                d.label.toLowerCase().includes(filter.toLowerCase().replace(/^\//, '')) ||
+                d.type.toLowerCase().includes(filter.toLowerCase().replace(/^\//, '')) ||
+                d.description.toLowerCase().includes(filter.toLowerCase().replace(/^\//, ''))
+            ).map((definition) => (
+              <button
+                key={definition.type}
+                type="button"
+                title={definition.description}
+                onClick={() => {
+                  addBlock(definition.type);
+                  setFilter('');
+                }}
+                className={secondary}
+                style={{ minHeight: 44 }}
+              >
+                {definition.label}
+              </button>
+            ))}
+          </div>
+        ) : (
+          PALETTE_GROUPS.map((group) => {
+            const inGroup = DEFINITIONS.filter((definition) => definition.group === group.id);
+            if (inGroup.length === 0) return null;
+            return (
+              <div key={group.id} className="grid gap-2">
+                <span className="text-sm text-text-secondary">{group.label}</span>
+                <span className="flex flex-wrap gap-2">
+                  {inGroup.map((definition) => (
+                    <button
+                      key={definition.type}
+                      type="button"
+                      title={definition.description}
+                      onClick={() => addBlock(definition.type)}
+                      className={secondary}
+                      style={{ minHeight: 44 }}
+                    >
+                      {definition.label}
+                    </button>
+                  ))}
+                </span>
+              </div>
+            );
+          })
+        )}
       </div>
     </div>
   );

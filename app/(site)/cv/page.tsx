@@ -7,6 +7,7 @@ import { blockContentFrom } from '@/core/blocks/content';
 import { currentChannel } from '@/core/pages/read';
 import { formatPeriod } from '@/cms/utils/dates';
 import { PrintButton } from './print-button';
+import { RecruiterQrCard } from '@/components/common/RecruiterQrCard';
 
 /**
  * `/cv` — the experience, education and skills already on the site, as one
@@ -83,8 +84,21 @@ export default async function CvPage() {
         <p style={body}>
           {[settings.location, settings.email, settings.siteUrl].filter(Boolean).join(' · ')}
         </p>
-        <div style={{ marginTop: 'var(--space-4)' }}>
+        <div
+          style={{
+            marginTop: 'var(--space-4)',
+            display: 'flex',
+            gap: 'var(--space-3)',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+          }}
+        >
           <PrintButton />
+          <RecruiterQrCard
+            fullName={settings.fullName}
+            role={settings.role}
+            siteUrl={settings.siteUrl}
+          />
         </div>
       </header>
 

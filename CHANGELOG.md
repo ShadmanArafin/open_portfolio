@@ -7,6 +7,29 @@ of stored content is stable, but screens and options are not settled yet.
 Anyone who reported or suggested something is credited by name. That is the
 whole point of the Help & feedback screen in the admin.
 
+## 0.8.0 — 2026-10-28 (Beta 1)
+
+### Added
+
+- **Career & Recruiter Engine:**
+  - Standard JSON Resume (`jsonresume.org`) import and export in `/admin/settings` and `/api/admin/resume`, enabling instant career data migration from LinkedIn and Reactive Resume.
+  - RFC 6350 vCard 4.0 generation (`core/resume/vcard.ts`) and public download endpoint at `/api/contact/vcard`.
+  - Interactive Recruiter QR Card component on `/cv` with pure TypeScript SVG QR matrix generation for direct mobile contact saving.
+- **Visual Canvas & Editor Polish:**
+  - Page Layer Outline drawer (`BlockOutline`) in the block editor displaying section hierarchy, visibility toggles, and fast reordering.
+  - Instant slash-style block search filter in "Add a block" for quick block insertion.
+- **Photography & Visual Craft:**
+  - Client-side EXIF camera metadata extraction (`core/media/exif.ts`) reading camera body, lens, focal length, aperture, shutter speed, and ISO with zero server CPU load.
+  - Camera settings badge component (`ExifBadge`) for displaying photography craft.
+  - Dynamic multi-column Masonry grid (`MasonryGrid`) preserving natural aspect ratios without cropping.
+  - ThumbHash and CSS gradient micro-placeholders (`core/media/thumbhash.ts`) for zero-layout-shift image loading.
+- **Mobile Link-in-Bio & Outbound Webhooks:**
+  - Dedicated mobile Link-in-Bio hub at `/bio` optimized for Instagram, TikTok, LinkedIn, and Twitter bio links.
+  - Outbound notification webhooks (`core/integrations/webhook.ts`) with rich Discord and Slack embed formatting on contact form submissions.
+- **Publishing & Analytics:**
+  - Markdown, Medium, and Substack article importer (`core/writing/importer.ts`) with YAML frontmatter parsing and block conversion.
+  - Privacy-first recruiter and job board traffic classifier (`core/analytics/referrer.ts`).
+
 ## 0.7.4 — 2026-10-27
 
 ### Fixed

@@ -33,13 +33,12 @@ to keep one: students, designers, developers, photographers, writers.
 
 <p align="center"><em>The same page in the editor. No code, no redeploy, and the address bar never leaves your own site.</em></p>
 
-> [!WARNING]
-> **Status: alpha (0.7.4).** The site, the editor and publishing all work, the
-> admin has real server-side authentication, and uploads are verified end to
-> end against both hosted object stores. The gaps are real and specific —
-> themes change the look but not the arrangement, the newsletter collects but
-> does not send, and Convex and the Cloudflare REST adapter have only been run
-> against a mock transport, not a live account. Read
+> [!TIP]
+> **Status: beta (0.8.0).** The site, the editor and publishing all work, with
+> a full career toolkit (JSON Resume, recruiter vCard QR), mobile Link-in-Bio hub,
+> EXIF photography craft badges, outbound Discord/Slack webhooks, and 10 storage
+> adapters verified. Uploads are verified against hosted object stores. Convex and
+> Cloudflare REST adapters remain mock-verified pending live credentials. Read
 > [What does not work yet](#what-does-not-work-yet) before using this for
 > anything you depend on.
 

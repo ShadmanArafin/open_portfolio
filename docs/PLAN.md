@@ -13,7 +13,7 @@
 > [§12 second pass (2026-10-20)](PROJECT-REVIEW.md#12-second-pass--2026-10-20)
 > holds Phase E, which is what remains after the admin rewrite.
 >
-> Last updated: 2026-10-27 · Version 0.7.4 · CI green on `main`.
+> Last updated: 2026-10-28 · Version 0.8.0 (Beta 1) · CI green on `main`.
 > Read [Handoff notes](#handoff-notes-for-whoever-picks-this-up) first if you
 > are starting on a new machine — it carries the running instructions, the
 > invariants, and every known bug.
@@ -35,8 +35,14 @@
 | Community + updates         | **Done**           | Reports, dedupe, update workflow, `UPDATING.md`. Repository public                           |
 | Self-hosting (Docker)       | **Done, verified** | `docker compose up`, volume survives container replacement                                   |
 | 10 — Launch                 | **Done, verified** | Marketing site deployed, demo + PWA + push shipped, release 0.7.4 live                       |
+| 11 — Career & Recruiter     | **Done, verified** | JSON Resume import/export, RFC 6350 vCard, pure SVG QR generator, /cv card                   |
+| 12 — Visual Canvas          | **Done, verified** | Layer outline drawer (`BlockOutline`), instant slash-filter search                           |
+| 13 — Photography Craft      | **Done, verified** | Client-side EXIF reader, camera badges, dynamic masonry grid, ThumbHash placeholders         |
+| 14 — Link-in-Bio & Webhooks | **Done, verified** | Mobile Link-in-Bio hub (`/bio`), outbound Discord/Slack contact form webhooks                |
+| 15 — Publishing & Importers | **Done, verified** | Markdown/Substack/Medium article importer with frontmatter conversion                        |
+| 16 — Privacy Analytics      | **Done, verified** | Privacy-first recruiter and job board traffic classifier                                     |
 
-**Where to start:** the repository is public and `v0.7.4` is tagged, with a
+**Where to start:** the repository is public and `v0.8.0` is tagged, with a
 released image. What remains is the open backlog in
 [PROJECT-REVIEW.md](PROJECT-REVIEW.md) and the remaining-work ledger in
 [HANDOVER.md](HANDOVER.md#remaining-work-updated-26-october-2026).

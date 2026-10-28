@@ -35,12 +35,43 @@ const danger = 'rounded-full bg-danger px-4 text-sm font-semibold text-bg disabl
  */
 export function BackupPanel() {
   const fileInput = useRef<HTMLInputElement>(null);
+  const resumeInput = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pendingImport, setPendingImport] = useState<{ name: string; file: File } | null>(null);
   const [resetArmed, setResetArmed] = useState(false);
   const [confirmText, setConfirmText] = useState('');
+
+  const handleResumeFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    setBusy(true);
+    setNote(null);
+    setError(null);
+    try {
+      const text = await file.text();
+      const res = await fetch('/api/admin/resume', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: text,
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        setNote(
+          `Imported JSON Resume successfully: ${data.counts.experience} roles, ${data.counts.education} schools, ${data.counts.skills} skill groups merged into your draft. Reloading…`
+        );
+        window.setTimeout(() => window.location.reload(), 1200);
+      } else {
+        setError(data.error ?? 'Invalid JSON Resume file.');
+      }
+    } catch {
+      setError('Could not import JSON Resume.');
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const runImport = async () => {
     if (!pendingImport) return;
@@ -151,6 +182,33 @@ export function BackupPanel() {
         >
           Static copy (.zip)
         </a>
+
+        <a
+          href="/api/admin/resume"
+          className={`${secondary} inline-flex no-underline`}
+          style={{ minHeight: 44, alignItems: 'center' }}
+          title="Export career data as standard JSON Resume (jsonresume.org)"
+        >
+          JSON Resume (.json)
+        </a>
+
+        <button
+          type="button"
+          onClick={() => resumeInput.current?.click()}
+          disabled={busy}
+          className={secondary}
+          style={{ minHeight: 44 }}
+          title="Import career data from a standard JSON Resume file"
+        >
+          Import resume.json
+        </button>
+        <input
+          ref={resumeInput}
+          type="file"
+          accept="application/json,.json"
+          className="hidden"
+          onChange={(e) => void handleResumeFile(e)}
+        />
 
         <button
           type="button"

@@ -155,5 +155,25 @@ export async function POST(req: Request) {
     /* The inbox carries the message either way. */
   }
 
+  // Outbound notification webhook (Discord, Slack, or custom URL). Best-effort and non-blocking.
+  const webhookUrl = process.env.OPB_CONTACT_WEBHOOK?.trim();
+  if (webhookUrl) {
+    try {
+      const { dispatchWebhook } = await import('@/core/integrations/webhook');
+      void dispatchWebhook(webhookUrl, {
+        id: entry.id,
+        name: entry.name,
+        email: entry.email,
+        company: entry.company,
+        projectType: entry.projectType,
+        message: entry.message,
+        receivedAt: entry.receivedAt,
+        siteUrl,
+      });
+    } catch {
+      /* Best-effort */
+    }
+  }
+
   return NextResponse.json({ ok: true });
 }

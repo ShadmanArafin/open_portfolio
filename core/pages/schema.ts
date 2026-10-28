@@ -30,6 +30,7 @@ export const RESERVED_TOP_LEVEL: readonly string[] = [
   'about',
   'admin',
   'api',
+  'bio',
   'case-studies',
   'contact',
   'cv',

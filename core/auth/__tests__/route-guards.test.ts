@@ -54,6 +54,8 @@ const PUBLIC_ROUTES: Record<string, string> = {
     'Called by a scheduler with nobody signed in. Authorised by the CRON_SECRET shared secret, compared in constant time, and refuses everything until one is set.',
   'preview/end':
     'Turning your own preview off grants nothing. Requiring a session here would strand someone in preview when it expired.',
+  'contact/vcard':
+    'Serves the published owner contact vCard (.vcf) for recruiters and visitors to import into their address book.',
 };
 
 function walk(dir: string): string[] {
